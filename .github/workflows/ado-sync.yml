@@ -8,6 +8,14 @@ on:
     types: [closed]
     branches: [main]
 
+# GITHUB_TOKEN se inyecta como read-only por default desde 2023.
+# Necesitamos `pull-requests: write` (alias de `issues: write` para PRs)
+# para que el paso final pueda postear el comentario "✅ Work items cerrados".
+# `contents: read` queda explícito para no romper checkout en el futuro.
+permissions:
+  pull-requests: write
+  contents: read
+
 jobs:
   close-work-items:
     name: Close Azure DevOps work items
