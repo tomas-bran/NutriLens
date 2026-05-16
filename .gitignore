@@ -56,6 +56,7 @@ test.db-journal
 # Next typed routes & build outputs adicionales
 .swc/
 .turbo/
+tsconfig.tsbuildinfo
 
 # Husky tmp
 .husky/_
