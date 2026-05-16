@@ -24,15 +24,15 @@ docs/backlog/
 
 ## Resumen del backlog
 
-| Épica | Stories | Total SP | P0 (MVP min) | P1 (MVP completo) | P2 (Polish) |
-|-------|---------|---------|--------------|-------------------|-------------|
-| **E01** Onboarding & Upload | 7 | 19 | 16 | 3 | 0 |
-| **E02** Análisis IA multimodal | 8 | 29 | 26 | 3 | 0 |
-| **E03** Clasificación, reglas y explicación | 5 | 16 | 16 | 0 | 0 |
-| **E04** Persistencia e historial | 6 | 18 | 13 | 5 | 0 |
-| **E05** Chat con RAG | 6 | 23 | 0 | 18 | 5 |
-| **E06** Pipeline observable y UX | 7 | 21 | 2 | 19 | 0 |
-| **Total** | **39** | **126** | **73** | **48** | **5** |
+| Épica                                       | Stories | Total SP | P0 (MVP min) | P1 (MVP completo) | P2 (Polish) |
+| ------------------------------------------- | ------- | -------- | ------------ | ----------------- | ----------- |
+| **E01** Onboarding & Upload                 | 7       | 19       | 16           | 3                 | 0           |
+| **E02** Análisis IA multimodal              | 8       | 29       | 26           | 3                 | 0           |
+| **E03** Clasificación, reglas y explicación | 5       | 16       | 16           | 0                 | 0           |
+| **E04** Persistencia e historial            | 6       | 18       | 13           | 5                 | 0           |
+| **E05** Chat con RAG                        | 6       | 23       | 0            | 18                | 5           |
+| **E06** Pipeline observable y UX            | 7       | 21       | 2            | 19                | 0           |
+| **Total**                                   | **39**  | **126**  | **73**       | **48**            | **5**       |
 
 > Story points totales: **126**. Para un equipo de 4 personas (~2 semanas), priorizar P0 (73 SP) garantiza el MVP mínimo demostrable.
 

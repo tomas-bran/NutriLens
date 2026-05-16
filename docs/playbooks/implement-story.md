@@ -2,7 +2,6 @@
 
 > Este documento espeja la skill `nutrilens-implement-story` (en `.claude/skills/`) para que sea legible como guía humana. Si trabajás sin Claude, seguí estos mismos pasos. Si trabajás con Claude, decile "implementemos US-XX" y va a cargar la skill automáticamente.
 
-
 # NutriLens — Implementar una user story
 
 Playbook oficial del proyecto. Seguilo en orden para cada story que tomes. Pensado para ejecutarse por un agente (Claude) con acceso al repo, pero también sirve de guía para devs humanos.
@@ -40,6 +39,7 @@ git checkout -b feat/US-XX-<slug-corto>
 ```
 
 Naming:
+
 - Story individual: `feat/US-08-endpoint-analyze`, `fix/US-12-sello-detection`.
 - Multi-story de la misma épica: `feat/E06-design-tokens`.
 - Slug: minúsculas, guiones, 3-5 palabras max.
@@ -73,16 +73,16 @@ Naming:
 
 ### 4.2 Tests mínimos por tipo de story
 
-| Tipo de story | Tests requeridos |
-|---|---|
-| **Endpoint backend** (`POST /api/...`, `GET /api/...`) | Unit del handler (mocks de deps) + integration con DB en memoria + un test por cada error code del spec |
-| **Step del pipeline** (`validate_file`, `apply_rules`, `compute_risk`, etc.) | Unit cubriendo cada rama del Gherkin + cada caso borde del spec |
-| **Provider IA** (`FoundryProvider`, `MockIaProvider`) | Unit con mocks de fetch/SDK + tests de mapeo de errores (429 → `model_rate_limited`, etc.) + test de `stripJsonFences` |
-| **Schema Zod** | Tabla de pruebas: 5+ inputs válidos / 5+ inválidos con assertion del error de Zod |
-| **Reglas / fórmulas** (`compute_risk`, blacklists) | Tabla de verdad completa del spec. Cada celda = un test |
-| **Componente UI** (Button, Card, Chip, ErrorState, etc.) | Unit con `@testing-library/react`: variantes, estados, accesibilidad básica (roles + aria) |
-| **Pantalla / página** | Unit del page (render + interacciones key) + E2E del flujo del usuario |
-| **Migración Prisma** | Integration: aplicar migración + validar shape resultante + rollback si aplica |
+| Tipo de story                                                                | Tests requeridos                                                                                                       |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Endpoint backend** (`POST /api/...`, `GET /api/...`)                       | Unit del handler (mocks de deps) + integration con DB en memoria + un test por cada error code del spec                |
+| **Step del pipeline** (`validate_file`, `apply_rules`, `compute_risk`, etc.) | Unit cubriendo cada rama del Gherkin + cada caso borde del spec                                                        |
+| **Provider IA** (`FoundryProvider`, `MockIaProvider`)                        | Unit con mocks de fetch/SDK + tests de mapeo de errores (429 → `model_rate_limited`, etc.) + test de `stripJsonFences` |
+| **Schema Zod**                                                               | Tabla de pruebas: 5+ inputs válidos / 5+ inválidos con assertion del error de Zod                                      |
+| **Reglas / fórmulas** (`compute_risk`, blacklists)                           | Tabla de verdad completa del spec. Cada celda = un test                                                                |
+| **Componente UI** (Button, Card, Chip, ErrorState, etc.)                     | Unit con `@testing-library/react`: variantes, estados, accesibilidad básica (roles + aria)                             |
+| **Pantalla / página**                                                        | Unit del page (render + interacciones key) + E2E del flujo del usuario                                                 |
+| **Migración Prisma**                                                         | Integration: aplicar migración + validar shape resultante + rollback si aplica                                         |
 
 ### 4.3 Casos borde cross-cutting que SIEMPRE testeamos
 
@@ -163,25 +163,31 @@ Auto-completado por `.github/pull_request_template.md`:
 Closes AB#<id de la US en ADO>
 
 ## Qué hace
+
 Una o dos oraciones explicando el cambio funcional.
 
 ## Cómo probarlo manualmente
+
 1. ...
 2. ...
 
 ## Acceptance criteria cubiertos
+
 - [x] Escenario 1: <nombre> → `tests/unit/foo.test.ts`
 - [x] Escenario 2: <nombre> → `tests/integration/bar.test.ts`
 - [x] Escenario 3: <nombre> → `tests/e2e/baz.spec.ts`
 
 ## Casos borde testeados
+
 - [x] <caso del spec §"Casos borde">
 - [x] <caso del spec §"Casos borde">
 
 ## Coverage
+
 - `src/lib/<modulo>`: X% lines, Y% branches (target ≥80/75)
 
 ## Follow-ups (opcional)
+
 - Refactor Z para US futura
 ```
 
@@ -205,6 +211,7 @@ Cualquiera rojo → PR bloqueado.
 **Sin acción manual.** `ado-sync.yml` parsea el body del PR mergeado, encuentra los `Closes AB#<id>` y transiciona cada work item a `Closed` con un comentario que linkea al PR.
 
 Si la action falla (típicamente PAT vencido):
+
 1. Regenerar PAT en ADO con scope `Work Items: Read, Write & Manage`.
 2. Actualizar secret `ADO_PAT` en `Settings → Secrets → Actions`.
 3. Re-correr el workflow desde la UI (no hace falta re-mergear).
@@ -240,13 +247,13 @@ Antes de marcar una US como cerrada:
 
 ## 10. Recursos clave
 
-| Recurso | Path |
-|---------|------|
-| Product Brief | `docs/backlog/product-brief.md` |
-| Épicas | `docs/backlog/epics.md` |
-| User stories | `docs/backlog/stories/E0X-*.md` |
-| Spec overview | `docs/specs/00-overview.md` |
-| Specs por épica | `docs/specs/E0X-*.md` |
-| Wireframes | `docs/wireframes/{desktop,mobile}/*.png` |
-| Design system | `docs/design-system/*.png` |
+| Recurso              | Path                                                       |
+| -------------------- | ---------------------------------------------------------- |
+| Product Brief        | `docs/backlog/product-brief.md`                            |
+| Épicas               | `docs/backlog/epics.md`                                    |
+| User stories         | `docs/backlog/stories/E0X-*.md`                            |
+| Spec overview        | `docs/specs/00-overview.md`                                |
+| Specs por épica      | `docs/specs/E0X-*.md`                                      |
+| Wireframes           | `docs/wireframes/{desktop,mobile}/*.png`                   |
+| Design system        | `docs/design-system/*.png`                                 |
 | Variables de entorno | `.env.example` (template), `.env.local` (real, gitignored) |

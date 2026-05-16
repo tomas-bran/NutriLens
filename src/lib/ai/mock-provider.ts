@@ -27,11 +27,7 @@ const FIXED_EXTRACTION: ProductExtraction = {
 };
 
 export class MockIaProvider implements IaProvider {
-  async analyzeLabel(
-    _file: Buffer,
-    _mime: string,
-    _opts: AnalyzeOpts,
-  ): Promise<IaCallResult> {
+  async analyzeLabel(_file: Buffer, _mime: string, _opts: AnalyzeOpts): Promise<IaCallResult> {
     return {
       raw: JSON.stringify(FIXED_EXTRACTION),
       usage: { in: 0, out: 0 },
@@ -39,11 +35,7 @@ export class MockIaProvider implements IaProvider {
     };
   }
 
-  async classifyLabelKind(
-    _file: Buffer,
-    _mime: string,
-    _opts: AnalyzeOpts,
-  ): Promise<IaCallResult> {
+  async classifyLabelKind(_file: Buffer, _mime: string, _opts: AnalyzeOpts): Promise<IaCallResult> {
     return {
       raw: JSON.stringify({ is_food_label: true, confidence: 0.95 }),
       usage: { in: 0, out: 0 },

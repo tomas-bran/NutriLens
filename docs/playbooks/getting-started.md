@@ -31,15 +31,15 @@ docker compose logs -f app
 
 Comandos útiles:
 
-| Comando | Para qué |
-|---------|----------|
-| `docker compose up -d` | Levantar en background |
-| `docker compose down` | Apagar containers |
-| `docker compose down -v` | Apagar y borrar el volumen de Postgres (reset total) |
-| `docker compose logs -f app` | Tail de logs de la app |
-| `docker compose exec app sh` | Shell dentro del container de la app |
-| `docker compose exec db psql -U nutrilens` | psql al Postgres del compose |
-| `docker compose up -d --build` | Rebuild después de tocar `Dockerfile*` o `package.json` |
+| Comando                                    | Para qué                                                |
+| ------------------------------------------ | ------------------------------------------------------- |
+| `docker compose up -d`                     | Levantar en background                                  |
+| `docker compose down`                      | Apagar containers                                       |
+| `docker compose down -v`                   | Apagar y borrar el volumen de Postgres (reset total)    |
+| `docker compose logs -f app`               | Tail de logs de la app                                  |
+| `docker compose exec app sh`               | Shell dentro del container de la app                    |
+| `docker compose exec db psql -U nutrilens` | psql al Postgres del compose                            |
+| `docker compose up -d --build`             | Rebuild después de tocar `Dockerfile*` o `package.json` |
 
 ## Opción B — Postgres en Docker + app en local
 
@@ -90,26 +90,26 @@ AZURE_AI_FOUNDRY_MODEL_MINI=Phi-4-mini-instruct
 
 ## Scripts disponibles
 
-| Command | What it does |
-|---------|--------------|
-| `npm run dev` | Dev server (hot reload) |
-| `npm run build` | Production build |
-| `npm run start` | Serve the production build |
-| `npm run lint` | ESLint, max 0 warnings |
-| `npm run format` | Prettier auto-fix |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run test` | Vitest unit + integration |
-| `npm run test:watch` | Vitest watch mode |
-| `npm run test:coverage` | Vitest with coverage thresholds |
-| `npm run test:e2e` | Playwright E2E (slow) |
-| `npm run test:ci` | Everything the CI runs |
-| `npm run prisma:migrate` | Prisma migrate dev |
-| `npm run prisma:studio` | Prisma Studio (DB GUI) |
-| `npm run seed` | Seed the DB with mock products |
-| `npm run docker:up` | `docker compose up -d` |
-| `npm run docker:down` | `docker compose down` |
-| `npm run docker:logs` | Tail app logs |
-| `npm run docker:rebuild` | Rebuild and restart containers |
+| Command                  | What it does                    |
+| ------------------------ | ------------------------------- |
+| `npm run dev`            | Dev server (hot reload)         |
+| `npm run build`          | Production build                |
+| `npm run start`          | Serve the production build      |
+| `npm run lint`           | ESLint, max 0 warnings          |
+| `npm run format`         | Prettier auto-fix               |
+| `npm run typecheck`      | `tsc --noEmit`                  |
+| `npm run test`           | Vitest unit + integration       |
+| `npm run test:watch`     | Vitest watch mode               |
+| `npm run test:coverage`  | Vitest with coverage thresholds |
+| `npm run test:e2e`       | Playwright E2E (slow)           |
+| `npm run test:ci`        | Everything the CI runs          |
+| `npm run prisma:migrate` | Prisma migrate dev              |
+| `npm run prisma:studio`  | Prisma Studio (DB GUI)          |
+| `npm run seed`           | Seed the DB with mock products  |
+| `npm run docker:up`      | `docker compose up -d`          |
+| `npm run docker:down`    | `docker compose down`           |
+| `npm run docker:logs`    | Tail app logs                   |
+| `npm run docker:rebuild` | Rebuild and restart containers  |
 
 ## Workflow para implementar una US
 

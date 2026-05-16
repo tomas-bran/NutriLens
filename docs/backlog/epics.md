@@ -6,14 +6,14 @@
 
 ## Resumen
 
-| ID | Épica | Prioridad MVP | Objetivo |
-|----|-------|---------------|----------|
-| **E01** | Onboarding & Upload de etiquetas | P0 (Must) | Permitir al usuario subir imagen o PDF de una etiqueta y validar la entrada |
-| **E02** | Análisis multimodal y extracción estructurada | P0 (Must) | Procesar el archivo con IA multimodal y devolver JSON consistente |
-| **E03** | Clasificación, reglas y explicación | P0 (Must) | Aplicar reglas propias para aptitud y riesgo, generar explicación simple |
-| **E04** | Persistencia e historial | P0 (Must) | Guardar productos analizados y exponerlos en un historial filtrable |
-| **E05** | Chat con RAG sobre historial | P1 (Should) | Permitir consultas en lenguaje natural sobre productos guardados |
-| **E06** | Pipeline observable y experiencia de uso | P1 (Should) | Mostrar el flujo interno del análisis y pulir la UX para la demo |
+| ID      | Épica                                         | Prioridad MVP | Objetivo                                                                    |
+| ------- | --------------------------------------------- | ------------- | --------------------------------------------------------------------------- |
+| **E01** | Onboarding & Upload de etiquetas              | P0 (Must)     | Permitir al usuario subir imagen o PDF de una etiqueta y validar la entrada |
+| **E02** | Análisis multimodal y extracción estructurada | P0 (Must)     | Procesar el archivo con IA multimodal y devolver JSON consistente           |
+| **E03** | Clasificación, reglas y explicación           | P0 (Must)     | Aplicar reglas propias para aptitud y riesgo, generar explicación simple    |
+| **E04** | Persistencia e historial                      | P0 (Must)     | Guardar productos analizados y exponerlos en un historial filtrable         |
+| **E05** | Chat con RAG sobre historial                  | P1 (Should)   | Permitir consultas en lenguaje natural sobre productos guardados            |
+| **E06** | Pipeline observable y experiencia de uso      | P1 (Should)   | Mostrar el flujo interno del análisis y pulir la UX para la demo            |
 
 ---
 

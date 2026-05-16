@@ -3,6 +3,7 @@
   item en Azure DevOps cuando este PR se mergea a main.
   Si el PR cubre varias user stories, agregá una línea Closes por cada una.
 -->
+
 Closes AB#
 
 ## Qué hace

@@ -53,11 +53,11 @@ Ejemplos de casos reales:
 
 ## Usuarios objetivo
 
-| Tipo | Descripción |
-|------|-------------|
-| **Usuario general** | Persona que quiere entender rápidamente una etiqueta alimentaria. |
+| Tipo                          | Descripción                                                                               |
+| ----------------------------- | ----------------------------------------------------------------------------------------- |
+| **Usuario general**           | Persona que quiere entender rápidamente una etiqueta alimentaria.                         |
 | **Usuario con restricciones** | Persona que quiere identificar incompatibilidades (gluten, lactosa, animales, alérgenos). |
-| **Usuario comparador** | Persona que quiere consultar productos guardados para elegir entre opciones. |
+| **Usuario comparador**        | Persona que quiere consultar productos guardados para elegir entre opciones.              |
 
 ---
 
@@ -94,9 +94,11 @@ Estos puntos pueden considerarse como funcionalidades bonus para una versión fi
 ## Funcionalidades principales
 
 ### Carga de producto
+
 El usuario puede subir foto del frente del producto, foto de ingredientes, foto de tabla nutricional o un PDF. La UI muestra estados claros: archivo cargado, procesando, análisis completado o error de archivo no soportado.
 
 ### Validación de entrada
+
 Si la imagen o PDF no corresponde a una etiqueta alimentaria, el sistema responde con un error estructurado:
 
 ```json
@@ -107,6 +109,7 @@ Si la imagen o PDF no corresponde a una etiqueta alimentaria, el sistema respond
 ```
 
 ### Extracción estructurada
+
 La IA extrae información visible y la transforma en JSON. Ejemplo:
 
 ```json
@@ -131,6 +134,7 @@ La IA extrae información visible y la transforma en JSON. Ejemplo:
 ```
 
 ### Clasificación de riesgo
+
 El sistema asigna riesgo **bajo**, **medio** o **alto** mediante reglas propias:
 
 - Si contiene gluten, no se considera apto celíaco.
@@ -140,18 +144,23 @@ El sistema asigna riesgo **bajo**, **medio** o **alto** mediante reglas propias:
 - Si la confianza de extracción es baja, se muestra advertencia.
 
 ### Explicación simple
+
 La app traduce la salida técnica a lenguaje claro:
-> *"Este producto no es recomendable para personas con celiaquía o intolerancia a la lactosa. Se detectan gluten, leche y alto contenido de azúcar."*
+
+> _"Este producto no es recomendable para personas con celiaquía o intolerancia a la lactosa. Se detectan gluten, leche y alto contenido de azúcar."_
 
 ### Historial
+
 Cada análisis queda guardado con nombre, categoría, ingredientes, alérgenos, sellos, riesgo, fecha, imagen asociada y el JSON resultado.
 
 ### Chat con RAG
+
 El usuario puede preguntar sobre productos ya cargados:
-- *"Dame galletitas con mejor perfil nutricional."*
-- *"Mostrame productos aptos para celíacos."*
-- *"¿Qué productos escaneados tienen leche?"*
-- *"Comparame estas dos opciones."*
+
+- _"Dame galletitas con mejor perfil nutricional."_
+- _"Mostrame productos aptos para celíacos."_
+- _"¿Qué productos escaneados tienen leche?"_
+- _"Comparame estas dos opciones."_
 
 El sistema recupera productos relevantes y genera una respuesta usando esos datos. Es una versión simple de **RAG** (Retrieval-Augmented Generation): buscar información guardada y usarla como contexto para que el modelo genere una respuesta fundamentada.
 
@@ -199,24 +208,24 @@ Los wireframes detallados están en [`docs/wireframes`](./docs/wireframes).
 
 ## Documentación
 
-| Sección | Ubicación |
-|--------|----------|
-| Documento funcional del MVP | [`docs/mvp/NutriLens-MVP-Documento-Funcional.pdf`](./docs/mvp/NutriLens-MVP-Documento-Funcional.pdf) |
-| Consigna del TP Integrador | [`docs/mvp/Consigna-TP-Integrador-IA-Aplicada.pdf`](./docs/mvp/Consigna-TP-Integrador-IA-Aplicada.pdf) |
-| Design system (screenshots) | [`docs/design-system`](./docs/design-system) |
-| Wireframes desktop | [`docs/wireframes/desktop`](./docs/wireframes/desktop) |
-| Wireframes mobile | [`docs/wireframes/mobile`](./docs/wireframes/mobile) |
-| Archivo fuente Pencil | [`docs/wireframes/NutriLens-Wireframes.pen`](./docs/wireframes/NutriLens-Wireframes.pen) |
+| Sección                     | Ubicación                                                                                              |
+| --------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Documento funcional del MVP | [`docs/mvp/NutriLens-MVP-Documento-Funcional.pdf`](./docs/mvp/NutriLens-MVP-Documento-Funcional.pdf)   |
+| Consigna del TP Integrador  | [`docs/mvp/Consigna-TP-Integrador-IA-Aplicada.pdf`](./docs/mvp/Consigna-TP-Integrador-IA-Aplicada.pdf) |
+| Design system (screenshots) | [`docs/design-system`](./docs/design-system)                                                           |
+| Wireframes desktop          | [`docs/wireframes/desktop`](./docs/wireframes/desktop)                                                 |
+| Wireframes mobile           | [`docs/wireframes/mobile`](./docs/wireframes/mobile)                                                   |
+| Archivo fuente Pencil       | [`docs/wireframes/NutriLens-Wireframes.pen`](./docs/wireframes/NutriLens-Wireframes.pen)               |
 
 ---
 
 ## División del equipo
 
-| Persona | Responsabilidad |
-|---------|-----------------|
-| Persona 1 | Frontend: upload, resultado, historial y UI general |
-| Persona 2 | Backend: endpoints, base de datos y persistencia |
-| Persona 3 | IA: prompts, schema JSON, extracción y explicación |
+| Persona   | Responsabilidad                                             |
+| --------- | ----------------------------------------------------------- |
+| Persona 1 | Frontend: upload, resultado, historial y UI general         |
+| Persona 2 | Backend: endpoints, base de datos y persistencia            |
+| Persona 3 | IA: prompts, schema JSON, extracción y explicación          |
 | Persona 4 | RAG, datos mockeados, testing, documentación y presentación |
 
 ---
@@ -224,6 +233,7 @@ Los wireframes detallados están en [`docs/wireframes`](./docs/wireframes).
 ## Roadmap
 
 **Semana 1**
+
 - Definir schema JSON.
 - Armar UI base.
 - Implementar upload.
@@ -232,6 +242,7 @@ Los wireframes detallados están en [`docs/wireframes`](./docs/wireframes).
 - Guardar resultados en base.
 
 **Semana 2**
+
 - Agregar historial.
 - Agregar chat/RAG básico.
 - Cargar productos mockeados.
@@ -241,6 +252,7 @@ Los wireframes detallados están en [`docs/wireframes`](./docs/wireframes).
 - Preparar presentación.
 
 **Versión final / bonus**
+
 - Integrar Open Food Facts.
 - Agregar escaneo de código de barras.
 - Búsqueda vectorial real.
