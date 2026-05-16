@@ -1,17 +1,17 @@
 // NutriLens — Prisma schema
-// Ver `docs/specs/E04-persistencia-e-historial.md §2` para el modelo de datos.
+// See `docs/specs/E04-persistencia-e-historial.md §2` for the data model rationale.
 //
-// SQLite no soporta arrays nativos: los campos `ingredientes`, `alergenos`,
-// `sellos`, `reglasAplicadas` y `pipelineTrace` se guardan como JSON
-// serializado en columnas String. Al migrar a Postgres se puede cambiar
-// a String[] real sin tocar la lógica.
+// Provider: PostgreSQL (16+). Native enum support, native arrays available
+// if we want to migrate `ingredientes`/`alergenos`/`sellos` from JSON String
+// to `String[]` later. For now we keep them as serialized JSON to allow
+// easier mocking and serialization on the application side.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -30,8 +30,8 @@ model Product {
   confidence      Float
   reglasAplicadas String   // JSON.stringify(string[])
   explanation     String?
-  jsonRaw         String
-  pipelineTrace   String   // JSON.stringify(StepTrace[])
+  jsonRaw         String   @db.Text
+  pipelineTrace   String   @db.Text  // JSON.stringify(StepTrace[])
   imagenPath      String
   promptVersion   String
   createdAt       DateTime @default(now())
