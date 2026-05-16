@@ -1,0 +1,18 @@
+{
+  "producto": "Gaseosa Cola Original",
+  "categoria": "bebidas",
+  "ingredientes_detectados": [
+    "agua carbonatada",
+    "azúcar",
+    "color caramelo",
+    "ácido fosfórico",
+    "cafeína"
+  ],
+  "alergenos": [],
+  "sellos": ["exceso en azúcares", "exceso en calorías"],
+  "apto_vegano": true,
+  "apto_celiaco": true,
+  "apto_sin_lactosa": true,
+  "riesgo": "alto",
+  "confidence": 0.95
+}

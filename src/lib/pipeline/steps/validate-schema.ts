@@ -9,8 +9,10 @@
  */
 import { ApiError } from '@schemas/errors';
 import { ProductExtractionSchema, type ProductExtraction } from '@schemas/product';
+import { sanitizeProductExtraction } from '@schemas/sanitize';
 import { stripJsonFences } from '@/lib/ai';
 import type { IaProvider } from '@/lib/ai';
+import { inferAllergensFromIngredients, mergeAllergens } from '@/lib/extract/infer-allergens';
 import type { AnalysisContext } from '@/lib/pipeline/context';
 import { makeTrace } from '@/lib/pipeline/trace';
 import { cacheExtraction, EXTRACT_PROMPT_VERSION } from './extract-with-ia';
@@ -31,7 +33,9 @@ function tryParse(raw: string): ParseAttempt {
   } catch {
     return { ok: false, reason: 'invalid_json', details: { raw } };
   }
-  const result = ProductExtractionSchema.safeParse(parsed);
+  // Drop out-of-enum values before Zod sees them (spec E02 §6).
+  const sanitized = sanitizeProductExtraction(parsed);
+  const result = ProductExtractionSchema.safeParse(sanitized);
   if (!result.success) {
     return {
       ok: false,
@@ -39,7 +43,15 @@ function tryParse(raw: string): ParseAttempt {
       details: { issues: result.error.issues, raw },
     };
   }
-  return { ok: true, product: result.data };
+  return { ok: true, product: enrich(result.data) };
+}
+
+/** Union LLM-reported allergens with keyword-inferred ones (spec E02 §6 backup). */
+function enrich(product: ProductExtraction): ProductExtraction {
+  const inferred = inferAllergensFromIngredients(product.ingredientes_detectados);
+  const merged = mergeAllergens(product.alergenos, inferred);
+  if (merged.length === product.alergenos.length) return product;
+  return { ...product, alergenos: merged };
 }
 
 export async function validate_schema(

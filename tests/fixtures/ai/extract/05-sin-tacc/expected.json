@@ -1,0 +1,12 @@
+{
+  "producto": "Galletas Sin TACC Maíz",
+  "categoria": "sin TACC",
+  "ingredientes_detectados": ["harina de maíz", "azúcar", "huevo", "aceite vegetal"],
+  "alergenos": ["huevo"],
+  "sellos": [],
+  "apto_vegano": false,
+  "apto_celiaco": true,
+  "apto_sin_lactosa": true,
+  "riesgo": "bajo",
+  "confidence": 0.85
+}

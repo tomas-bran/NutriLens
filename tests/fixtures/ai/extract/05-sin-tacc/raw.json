@@ -1,0 +1,16 @@
+{
+  "description": "Galletas sin TACC con riesgo bajo, sin alérgenos ni sellos. Edge: el modelo devuelve duplicados en alergenos ('huevo', 'huevo') y un riesgo fuera de enum ('moderado'); el sanitizer deduplica y coerce a 'bajo'.",
+  "image": "MOCK_IMAGE_GALLETAS_SIN_TACC",
+  "modelOutput": {
+    "producto": "Galletas Sin TACC Maíz",
+    "categoria": "sin TACC",
+    "ingredientes_detectados": ["harina de maíz", "azúcar", "huevo", "aceite vegetal"],
+    "alergenos": ["huevo", "huevo"],
+    "sellos": [],
+    "apto_vegano": false,
+    "apto_celiaco": true,
+    "apto_sin_lactosa": true,
+    "riesgo": "moderado",
+    "confidence": 0.85
+  }
+}

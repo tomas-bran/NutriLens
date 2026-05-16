@@ -1,0 +1,19 @@
+{
+  "producto": "Mix Saladito Premium",
+  "categoria": "snacks",
+  "ingredientes_detectados": [
+    "almendras",
+    "maní",
+    "queso en polvo",
+    "leche en polvo",
+    "sal",
+    "aceite de girasol"
+  ],
+  "alergenos": ["leche", "frutos secos", "maní"],
+  "sellos": ["exceso en sodio", "exceso en grasas saturadas"],
+  "apto_vegano": false,
+  "apto_celiaco": true,
+  "apto_sin_lactosa": false,
+  "riesgo": "medio",
+  "confidence": 0.9
+}
