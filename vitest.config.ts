@@ -27,6 +27,7 @@ export default defineConfig({
         '**/index.ts',
         '**/types.ts',
         'src/lib/ai/mock-provider.ts',
+        'src/lib/db.ts',
         // Sprint 0 placeholders — drop these entries when US-07 lands the real screens.
         'src/app/layout.tsx',
         'src/app/page.tsx',
