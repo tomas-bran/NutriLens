@@ -48,28 +48,58 @@ Exportar en el shell (idealmente en `~/.zshrc` / `~/.bashrc`):
 export AZURE_DEVOPS_PAT="<PAT con scope Work Items: Read, Write & Manage>"
 ```
 
+> **Importante para Claude**: las shells no-interactivas (el Bash tool incluido) **no leen `.zshrc` por default**. Antes de cualquier llamada a la REST API de ADO, prefijar con `source ~/.zshrc 2>/dev/null` para cargar la variable. Si después de sourcing igual sale vacía, pedirle al usuario que mueva el `export` a `~/.zshenv` (que sí se lee en todos los modos).
+
 El email del asignado se busca primero en memory (`user_ado_identity.md`) — si no existe, **preguntárselo al usuario y guardarlo** antes de seguir.
 
-### 1.5.2 Obtener el AB# id
+### 1.5.2 Obtener el AB# id automáticamente vía WIQL
 
-El AB# id no aparece en `docs/backlog/stories/`. Opciones para obtenerlo:
+**No preguntar el AB# al usuario** — buscarlo siempre con la REST API. El título del work item incluye el código `US-XX` (lo setea `azure_devops_upload.py` al crear el backlog), así que un `CONTAINS '<US-XX>'` lo resuelve:
 
-- **El usuario lo provee** al disparar la story: `"implementemos US-21 AB#123"` → Claude usa `123`.
-- **Si no lo provee**, preguntárselo antes de seguir. No inventar IDs.
+```bash
+US_CODE="US-21"   # del trigger del usuario
+AUTH=$(printf ":%s" "$AZURE_DEVOPS_PAT" | base64)
 
-### 1.5.3 Comando
+ID=$(curl -sS -X POST \
+  "https://dev.azure.com/tbranchesi/NutriLens/_apis/wit/wiql?api-version=7.0" \
+  -H "Authorization: Basic ${AUTH}" \
+  -H "Content-Type: application/json" \
+  -d "{\"query\": \"SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = 'NutriLens' AND [System.Title] CONTAINS '${US_CODE}'\"}" \
+  | python3 -c "import sys, json; d = json.load(sys.stdin); ids = [w['id'] for w in d.get('workItems', [])]; print(ids[0] if len(ids) == 1 else '')")
+
+if [ -z "$ID" ]; then
+  echo "::warning::WIQL no devolvió un único match para ${US_CODE}. Preguntarle el AB# al usuario."
+fi
+```
+
+**Solo preguntar al usuario** si:
+
+- WIQL devuelve 0 matches (la story todavía no se subió a ADO).
+- WIQL devuelve >1 matches (raro — confirmar cuál es el correcto).
+- `AZURE_DEVOPS_PAT` no está exportado.
+
+Si el usuario provee el AB# explícito al disparar la story (`"implementemos US-21 AB#27"`), usarlo directo y saltar el lookup.
+
+### 1.5.3 Asignar y transicionar
+
+Estado objetivo según el process template del proyecto (ver memory `project_ado_setup.md`):
+
+- **Basic** (NutriLens): `Doing` (única opción válida; los demás devuelven 400).
+- **Agile**: `Active`.
+- **Scrum**: `Committed`.
+- **Custom**: probar el loop completo.
 
 ```bash
 ADO_ORG=tbranchesi
 ADO_PROJECT=NutriLens
-ID=<AB#-id-numérico>
-ASSIGNEE=<email del usuario en ADO>
+ASSIGNEE=<email del usuario en ADO>  # leer de memory user_ado_identity.md
 
 AUTH=$(printf ":%s" "$AZURE_DEVOPS_PAT" | base64)
 API="https://dev.azure.com/${ADO_ORG}/${ADO_PROJECT}/_apis/wit/workitems/${ID}?api-version=7.0"
 
-# Probar estados en orden — el primero que devuelva 200 gana.
-for STATE in "Active" "Committed" "Doing" "In Progress"; do
+# Para Basic empezar por "Doing" (saltea 3 llamadas fallidas).
+# El loop sigue como red de seguridad por si cambia el process template.
+for STATE in "Doing" "Active" "Committed" "In Progress"; do
   CODE=$(curl -sS -o /tmp/ado-resp.json -w "%{http_code}" -X PATCH "$API" \
     -H "Authorization: Basic ${AUTH}" \
     -H "Content-Type: application/json-patch+json" \
