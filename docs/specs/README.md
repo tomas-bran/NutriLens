@@ -11,7 +11,7 @@ docs/specs/
 ├── README.md                              ← este índice
 ├── 00-overview.md                         ← arquitectura, stack, convenciones cross-cutting
 ├── E01-onboarding-y-upload.md             ← upload, validación, estados
-├── E02-analisis-multimodal-ia.md          ← prompt + schema + IA provider (Azure OpenAI)
+├── E02-analisis-multimodal-ia.md          ← prompt + schema + IA provider (Azure AI Foundry)
 ├── E03-clasificacion-reglas-explicacion.md ← reglas propias, riesgo, explicación
 ├── E04-persistencia-e-historial.md        ← DB, endpoints de productos, filtros
 ├── E05-chat-rag.md                        ← chat con RAG sobre el historial
@@ -22,7 +22,7 @@ docs/specs/
 
 ## Cómo leer estos specs
 
-1. **Empezar por `00-overview.md`** — contiene la arquitectura, stack confirmado (Azure AI Foundry), modelos elegidos (`gpt-4o` + `gpt-4o-mini`), schema canónico del producto y convenciones de error.
+1. **Empezar por `00-overview.md`** — contiene la arquitectura, stack confirmado (Azure AI Foundry), modelos elegidos (`Phi-4-multimodal-instruct` + `Phi-4-mini-instruct`, con `gpt-4o` como upgrade path), schema canónico del producto y convenciones de error.
 2. Cada spec por épica **referencia** el overview en vez de duplicarlo.
 3. Los specs declaran qué user stories cubren (referencias `US-XX`) y qué pantallas de los wireframes implementan.
 4. Cada spec termina con secciones de **decisiones técnicas + trade-offs**, **casos borde** y **métricas** para no quedarnos solo con el "qué" — incluye el "por qué".
@@ -46,7 +46,7 @@ docs/specs/
 
 - **Frontend:** Next.js 14+ (App Router) + TypeScript + Tailwind + design tokens CSS.
 - **Backend:** API Routes de Next.js (Node 20) + Zod.
-- **IA:** Azure AI Foundry con Azure OpenAI — `gpt-4o` (extracción multimodal) + `gpt-4o-mini` (clasificación rápida, chat, explicación).
+- **IA:** Azure AI Foundry (MaaS) — `Phi-4-multimodal-instruct` (extracción multimodal) + `Phi-4-mini-instruct` (clasificación rápida, chat, explicación). Upgrade path documentado a `gpt-4o` + `gpt-4o-mini` cuando se apruebe el acceso a Azure OpenAI.
 - **DB:** SQLite (dev) → Azure Database for PostgreSQL (demo) via Prisma.
 - **Storage:** filesystem `/uploads` (dev) → Azure Blob Storage (demo).
 - **Hosting demo:** Azure App Service Linux Node 20.
@@ -90,8 +90,8 @@ AZURE_OPENAI_DEPLOYMENT_GPT4O_MINI=nutrilens-gpt4o-mini
 | Recurso | Para qué | Spec |
 |---------|---------|------|
 | Azure AI Foundry hub + project | Catálogo de modelos, governance | overview §2.bis |
-| Deployment `gpt-4o` | Extracción multimodal | E02 §2 |
-| Deployment `gpt-4o-mini` | Clasificación rápida, chat, explicación | E01, E03, E05 |
+| Serverless deployment `Phi-4-multimodal-instruct` | Extracción multimodal + clasificación rápida | E01, E02 |
+| Serverless deployment `Phi-4-mini-instruct` | Chat RAG, parse intent, explicación | E03, E05 |
 | Document Intelligence (opcional) | OCR de PDFs problemáticos | E02 §10 |
 | Azure Database for PostgreSQL | Persistencia en demo | E04 §2 |
 | Azure Blob Storage | Imágenes en demo | E04 §4 |

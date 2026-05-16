@@ -152,13 +152,13 @@ export async function validate_file(ctx: AnalysisContext): Promise<AnalysisConte
 }
 ```
 
-`canReadPdf` usa `pdf-parse` para verificar que el PDF abra y tenga al menos una página decodificable. **No** extrae texto todavía — eso lo hace `gpt-4o` en E02 (o Document Intelligence si lo activamos).
+`canReadPdf` usa `pdf-parse` para verificar que el PDF abra y tenga al menos una página decodificable. **No** extrae texto todavía — eso lo hace `Phi-4-multimodal` en E02 (o Document Intelligence si lo activamos).
 
 ---
 
 ## 6. Step `detect_label_kind` (backend)
 
-Es la primera (y única en esta épica) llamada al modelo. Sirve de **filtro barato** antes de la extracción completa de E02. Usa `gpt-4o-mini`.
+Es la primera (y única en esta épica) llamada al modelo. Sirve de **filtro barato** antes de la extracción completa de E02. Usa **Phi-4-multimodal-instruct** (mismo deployment que usaremos para extracción). Cuando se apruebe Azure OpenAI, migrará a `gpt-4o-mini` sin cambios de prompt.
 
 ### 6.1 Prompt (versión inicial `detect_label_kind-v1.md`)
 
@@ -212,7 +212,7 @@ export const LabelKindSchema = z.object({
 
 ### 6.4 Costo estimado
 
-Una imagen de 1024×1024 con `gpt-4o-mini` para clasificación pesa ~600 tokens in + 20 out → **~$0.0001** por archivo. Con cache por hash, los re-uploads no cuestan nada.
+Una imagen de 1024×1024 con **Phi-4-multimodal** para clasificación pesa ~600 tokens in + 20 out → **~$0.0007** por archivo. Con cache por hash, los re-uploads no cuestan nada. (Si migramos a `gpt-4o-mini` baja a ~$0.0001.)
 
 ---
 
@@ -329,7 +329,7 @@ Sin contenido del archivo en logs. Solo metadata.
 |---------|----------------------|--------|
 | Validar tamaño en cliente Y en backend | solo en backend | feedback inmediato al usuario; ahorra ancho de banda |
 | Hash del archivo en cliente | hash en backend | permite cache hit antes incluso de subirlo (futuro endpoint `HEAD /api/analyze?hash=…`) |
-| `detect_label_kind` con `gpt-4o-mini` antes de `gpt-4o` | hacer todo en una sola call con `gpt-4o` | filtro barato; ahorra ~$0.012 por archivo no-alimentario |
+| `detect_label_kind` con call corta a `Phi-4-multimodal` antes de la extracción completa | hacer todo en una sola call larga | filtro barato; ahorra tokens en archivos no-alimentarios |
 | Threshold `confidence ≥ 0.6` para rechazo | rechazar siempre que `is_food_label=false` | tolera falsos negativos del filtro; deja pasar al usuario con baja confianza para que decida |
 | Cache por hash | sin cache | obligatorio para no quemar el crédito en re-uploads o tests manuales |
 | `multipart/form-data` | `base64` en JSON | streaming nativo, menos overhead, soportado por todos los browsers |

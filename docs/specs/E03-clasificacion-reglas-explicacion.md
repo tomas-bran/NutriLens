@@ -34,7 +34,7 @@
        ↓
 [compute_risk]             ← este spec
        ↓
-[generate_explanation]     ← este spec (gpt-4o-mini)
+[generate_explanation]     ← este spec (Phi-4-mini)
        ↓
 ... persist (E04)
 ```
@@ -161,7 +161,7 @@ Si `product.confidence < 0.6`, **no** modificamos el `riesgo` calculado, pero la
 
 ### 5.1 Quién la genera
 
-Usa `gpt-4o-mini` (text-only). Recibe como input el `ProductExtraction` + `RulesResult` ya calculados. **No** mandamos la imagen — eso ahorra tokens y reduce alucinación visual.
+Usa `Phi-4-mini-instruct` (text-only). Recibe como input el `ProductExtraction` + `RulesResult` ya calculados. **No** mandamos la imagen — eso ahorra tokens y reduce alucinación visual.
 
 ### 5.2 Prompt `explain_product-v1`
 
@@ -347,7 +347,7 @@ Componente: `<Disclaimer />` en `components/ui/Disclaimer.tsx`.
 |---------|----------------------|--------|
 | Reglas hardcoded en código (no en DB) | tabla en DB editable | velocidad para MVP, listas chicas, versionado por git suficiente |
 | Cálculo determinístico de riesgo | dejar al modelo decidir | reproducible, testeable, defendible en la entrega del TP |
-| Explicación con `gpt-4o-mini` | con `gpt-4o` | 10x más barato, calidad suficiente para 3 oraciones |
+| Explicación con `Phi-4-mini` (text-only) | con `Phi-4-multimodal` (multimodal) | mucho más barato y calidad suficiente para 3 oraciones sin imagen |
 | Sanitizador de output | confiar en el prompt | el modelo igual a veces se zafa con "consultá a un médico" |
 | Disclaimer obligatorio | opcional o solo en footer | obligatorio por requerimiento del TP (RNF-03) |
 | Conservador en falsos positivos | tolerante | reduce el riesgo legal/ético del MVP |

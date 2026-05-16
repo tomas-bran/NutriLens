@@ -14,7 +14,7 @@
 - Convertir una imagen o PDF de etiqueta alimentaria en un JSON estructurado con ingredientes, alérgenos, sellos, categoría y `confidence`.
 - Garantizar consistencia: el JSON cumple un schema Zod versionado.
 - Versionar el prompt para trazabilidad (saber con qué versión se generó cada producto).
-- Aislar al resto del sistema de la elección del proveedor (Azure OpenAI hoy, otro mañana) detrás de la interface `IaProvider`.
+- Aislar al resto del sistema de la elección del proveedor (Phi via Foundry hoy, GPT-4o mañana) detrás de la interface `IaProvider`.
 - Manejar timeouts, rate limits y respuestas inválidas sin romper la UX.
 
 **Non-goals**
@@ -30,9 +30,10 @@
 
 ### 2.1 Modelo
 
-- **Default:** `gpt-4o` (multimodal vision + text) deployment `nutrilens-gpt4o`.
-- **Fallback** si no hay cuota de `gpt-4o`: `gpt-4o-mini` (también multimodal). Calidad un poco menor pero aceptable; lo marcamos en `pipelineTrace.details.model`.
-- Llamada en modo **`response_format = json_object`** (Structured Outputs) para garantizar JSON.
+- **Actual:** `Phi-4-multimodal-instruct` (Microsoft) via Azure AI Foundry MaaS — multimodal vision + text.
+- **Upgrade path:** `gpt-4o` (Azure OpenAI) cuando el acceso esté aprobado. El switch es solo un cambio de implementación del `IaProvider`; el prompt y el schema no cambian.
+- **Sin `response_format: json_object` nativo:** Phi no lo soporta. Forzamos JSON estricto vía prompt y parseamos tolerando ` ```json … ``` ` o texto extra.
+- **`temperature: 0.1`** y **`max_tokens: 1500`** alcanzan para JSON de productos típicos.
 
 ### 2.2 Prompt versionado `extract_product-v1`
 
@@ -89,15 +90,15 @@ E01 cubrió la **entrada** (validate_file + detect_label_kind). E02 agrega el st
 ```
 [validate_file]            (E01)
        ↓
-[detect_label_kind]        (E01, gpt-4o-mini)
+[detect_label_kind]        (E01, Phi-4-multimodal)
        ↓
-[extract_with_ia]          (E02, gpt-4o)        ← este spec
+[extract_with_ia]          (E02, Phi-4-multimodal)   ← este spec
        ↓
-[validate_schema]          (E02)                ← este spec
+[validate_schema]          (E02)                     ← este spec
        ↓
 [apply_rules + risk]       (E03)
        ↓
-[generate_explanation]     (E03, gpt-4o-mini)
+[generate_explanation]     (E03, Phi-4-mini)
        ↓
 [persist]                  (E04)
        ↓
@@ -132,7 +133,7 @@ export async function extract_with_ia(
     extractionRaw: raw,
     trace: trace(ctx, 'extract_with_ia', 'ok', {
       tokensIn: usage.in, tokensOut: usage.out, latencyMs,
-      model: 'gpt-4o', promptVersion: 'extract_product-v1',
+      model: 'Phi-4-multimodal-instruct', promptVersion: 'extract_product-v1',
     }),
   };
 }
@@ -142,7 +143,7 @@ export async function extract_with_ia(
 
 - **Timeout 25s.** Más allá → `model_timeout`.
 - **Un solo reintento** ante `429`/`5xx` con backoff 2s. Después → `model_rate_limited` / `model_error`.
-- **`json_object` response format** (Azure OpenAI lo soporta nativo). Garantiza JSON parseable la mayor parte del tiempo.
+- **JSON forzado por prompt** (Phi no soporta `response_format: json_object` nativo). El provider llama a `stripJsonFences` sobre la salida antes de devolverla.
 - **Sin streaming.** No tiene sentido para nuestro flujo (el frontend espera el JSON entero).
 - **El raw se guarda en `ctx.extractionRaw`** y se persiste como `json_raw` (ver E04). Útil para debugging y para regenerar reglas si las cambiamos sin re-extraer.
 
@@ -246,58 +247,100 @@ Si el modelo devuelve un alérgeno o sello fuera de la lista, lo descartamos en 
 
 ---
 
-## 7. Implementación del `IaProvider` para Azure
+## 7. Implementación del `IaProvider` para Azure AI Foundry
 
 ```ts
-// lib/ai/azure_provider.ts
-import { AzureOpenAI } from 'openai';
+// lib/ai/foundry_provider.ts
+import ModelClient, { isUnexpected } from '@azure-rest/ai-inference';
+import { AzureKeyCredential } from '@azure/core-auth';
 
-export class AzureFoundryProvider implements IaProvider {
-  private client: AzureOpenAI;
-
-  constructor(cfg: AzureCfg) {
-    this.client = new AzureOpenAI({
-      endpoint: cfg.endpoint,
-      apiKey: cfg.apiKey,
-      apiVersion: cfg.apiVersion ?? '2024-10-21',
-    });
-  }
+export class FoundryPhi4Provider implements IaProvider {
+  private visionClient = ModelClient(
+    process.env.AZURE_FOUNDRY_PHI4_MM_ENDPOINT!,
+    new AzureKeyCredential(process.env.AZURE_FOUNDRY_PHI4_MM_KEY!),
+  );
+  private miniClient = ModelClient(
+    process.env.AZURE_FOUNDRY_PHI4_MINI_ENDPOINT!,
+    new AzureKeyCredential(process.env.AZURE_FOUNDRY_PHI4_MINI_KEY!),
+  );
 
   async analyzeLabel(file: Buffer, mime: string, opts) {
     const start = Date.now();
     const dataUrl = `data:${mime};base64,${file.toString('base64')}`;
-    const r = await this.client.chat.completions.create({
-      model: process.env.AZURE_OPENAI_DEPLOYMENT_GPT4O!,
-      response_format: { type: 'json_object' },
-      max_tokens: 1500,
-      temperature: 0.1,
-      messages: [
-        { role: 'system', content: PROMPTS[opts.promptVersion] },
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: 'Extraé la información de esta etiqueta.' },
-            { type: 'image_url', image_url: { url: dataUrl } },
-          ],
-        },
-      ],
+    const response = await this.visionClient.path('/chat/completions').post({
+      body: {
+        messages: [
+          { role: 'system', content: PROMPTS[opts.promptVersion] },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Extraé la información de esta etiqueta y devolvé SOLO el JSON pedido.' },
+              { type: 'image_url', image_url: { url: dataUrl } },
+            ],
+          },
+        ],
+        max_tokens: 1500,
+        temperature: 0.1,
+      },
     });
+
+    if (isUnexpected(response)) {
+      throw mapFoundryError(response);
+    }
+    const raw = response.body.choices[0].message.content ?? '';
     return {
-      raw: r.choices[0].message.content ?? '',
-      usage: { in: r.usage?.prompt_tokens ?? 0, out: r.usage?.completion_tokens ?? 0 },
+      raw: stripJsonFences(raw),
+      usage: {
+        in:  response.body.usage?.prompt_tokens ?? 0,
+        out: response.body.usage?.completion_tokens ?? 0,
+      },
       latencyMs: Date.now() - start,
     };
   }
-  // …classifyLabelKind, generateExplanation, answerWithContext (ver E01, E03, E05)
+  // …classifyLabelKind, generateExplanation, answerWithContext usan miniClient
+}
+
+/** Saca fences ```json … ``` o texto extra antes/después del JSON. */
+function stripJsonFences(text: string): string {
+  const fence = /```(?:json)?\s*([\s\S]*?)\s*```/i.exec(text);
+  if (fence) return fence[1].trim();
+  // intento extraer la primera llave balanceada
+  const first = text.indexOf('{');
+  const last  = text.lastIndexOf('}');
+  if (first >= 0 && last > first) return text.slice(first, last + 1);
+  return text.trim();
 }
 ```
 
 Notas:
 
-- **`temperature: 0.1`** para extracción (queremos determinismo).
-- **`response_format: { type: 'json_object' }`** garantiza JSON parseable.
+- Phi **no** soporta `response_format: json_object` — forzamos JSON via prompt y limpiamos la salida con `stripJsonFences`.
+- **`temperature: 0.1`** para extracción.
 - **`max_tokens: 1500`** alcanza para JSON de productos típicos.
-- **PDF**: si el archivo es `application/pdf`, lo pasamos como `data:application/pdf;base64,...` y `gpt-4o` lo acepta nativo. Si en tests vemos que no, activamos Document Intelligence como pre-step (ver §10).
+- **PDF:** Phi-4-multimodal acepta PDFs nativos via `data:application/pdf;base64,...`. Si en pruebas vemos que no rinde, activamos Document Intelligence como pre-step (ver §10).
+
+### 7.1 Implementación alternativa para Azure OpenAI (cuando se apruebe)
+
+```ts
+// lib/ai/azure_openai_provider.ts
+import { AzureOpenAI } from 'openai';
+
+export class AzureOpenAIProvider implements IaProvider {
+  private client = new AzureOpenAI({
+    endpoint: process.env.AZURE_OPENAI_ENDPOINT!,
+    apiKey:   process.env.AZURE_OPENAI_API_KEY!,
+    apiVersion: '2024-10-21',
+  });
+  async analyzeLabel(file, mime, opts) {
+    // idéntica a FoundryPhi4Provider pero:
+    //   - model: process.env.AZURE_OPENAI_DEPLOYMENT_GPT4O
+    //   - response_format: { type: 'json_object' }
+    //   - no necesita stripJsonFences (GPT-4o devuelve JSON puro)
+  }
+}
+```
+
+El switch entre providers se hace por env var `IA_PROVIDER` en el bootstrap del backend.
 
 ---
 
@@ -333,7 +376,7 @@ Todos incluyen `details.requestId` y `details.promptVersion`.
 
 ## 10. Estrategia para PDFs
 
-Plan A (default): mandar el PDF directo a `gpt-4o` como `data:application/pdf;base64,...`. `gpt-4o` lo procesa.
+Plan A (default): mandar el PDF directo a `Phi-4-multimodal` como `data:application/pdf;base64,...`. `Phi-4-multimodal` lo procesa.
 
 Plan B (si Plan A no rinde en tests): pre-step de OCR con **Azure AI Document Intelligence** `prebuilt-read`:
 
@@ -387,13 +430,13 @@ Y modificamos el prompt para mandar `pdfText` junto a una imagen renderizada de 
 
 | Decisión | Alternativa descartada | Por qué |
 |---------|----------------------|--------|
-| `gpt-4o` para extracción, `gpt-4o-mini` para clasificación rápida | usar `gpt-4o` para todo | ahorro de tokens en el filtro de E01 |
+| Una sola call multimodal por archivo (extracción + clasificación previa) | dos modelos distintos para detección y extracción | Phi-4-multimodal sirve para ambos casos; simplifica deployment |
 | `response_format: json_object` | parse libre del texto | garantiza JSON, evita errores triviales |
 | Validación con Zod fuera del provider | dentro del provider | desacopla el adaptador del dominio |
 | Un único retry correctivo | reintentos infinitos | costo controlado; mejor fallar rápido que quemar tokens |
 | `temperature: 0.1` | `0.0` | mantiene una mínima variabilidad para casos ambiguos sin perder consistencia |
 | Cache por hash + promptVersion | cache solo por hash | si cambiamos el prompt, el cache se invalida automáticamente |
-| PDF directo a `gpt-4o` antes que Doc Intelligence | activar OCR siempre | Doc Intelligence cuesta por página; lo evitamos si no hace falta |
+| PDF directo a `Phi-4-multimodal` antes que Doc Intelligence | activar OCR siempre | Doc Intelligence cuesta por página; lo evitamos si no hace falta |
 
 ---
 
