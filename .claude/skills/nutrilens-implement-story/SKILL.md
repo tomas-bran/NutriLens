@@ -31,6 +31,75 @@ Antes de tocar código:
 
 ---
 
+## 1.5. Marcar el work item como "En progreso" en Azure DevOps
+
+**Apenas se confirma que se va a tomar la story** (después de leer la US y antes de crear la branch), Claude debe:
+
+1. **Asignar el work item al usuario** (`System.AssignedTo`).
+2. **Transicionar el estado** a "Active" / "Committed" / "Doing" / "In Progress" (probamos en ese orden — depende del process template del proyecto, igual que hace `ado-sync.yml` para cerrar).
+
+Esto da visibilidad en el board de quién está agarrando qué, evita doble asignación, y empieza a contar tiempo de ciclo.
+
+### 1.5.1 Pre-requisitos (una vez por máquina)
+
+Exportar en el shell (idealmente en `~/.zshrc` / `~/.bashrc`):
+
+```bash
+export AZURE_DEVOPS_PAT="<PAT con scope Work Items: Read, Write & Manage>"
+```
+
+El email del asignado se busca primero en memory (`user_ado_identity.md`) — si no existe, **preguntárselo al usuario y guardarlo** antes de seguir.
+
+### 1.5.2 Obtener el AB# id
+
+El AB# id no aparece en `docs/backlog/stories/`. Opciones para obtenerlo:
+
+- **El usuario lo provee** al disparar la story: `"implementemos US-21 AB#123"` → Claude usa `123`.
+- **Si no lo provee**, preguntárselo antes de seguir. No inventar IDs.
+
+### 1.5.3 Comando
+
+```bash
+ADO_ORG=tbranchesi
+ADO_PROJECT=NutriLens
+ID=<AB#-id-numérico>
+ASSIGNEE=<email del usuario en ADO>
+
+AUTH=$(printf ":%s" "$AZURE_DEVOPS_PAT" | base64)
+API="https://dev.azure.com/${ADO_ORG}/${ADO_PROJECT}/_apis/wit/workitems/${ID}?api-version=7.0"
+
+# Probar estados en orden — el primero que devuelva 200 gana.
+for STATE in "Active" "Committed" "Doing" "In Progress"; do
+  CODE=$(curl -sS -o /tmp/ado-resp.json -w "%{http_code}" -X PATCH "$API" \
+    -H "Authorization: Basic ${AUTH}" \
+    -H "Content-Type: application/json-patch+json" \
+    -d "[
+      {\"op\":\"add\",\"path\":\"/fields/System.AssignedTo\",\"value\":\"${ASSIGNEE}\"},
+      {\"op\":\"add\",\"path\":\"/fields/System.State\",\"value\":\"${STATE}\"}
+    ]")
+  if [ "$CODE" = "200" ]; then
+    echo "✓ AB#${ID} asignado a ${ASSIGNEE} y movido a '${STATE}'."
+    break
+  fi
+done
+
+if [ "$CODE" != "200" ]; then
+  echo "::warning::No pudimos transicionar AB#${ID}. Último HTTP ${CODE}:"
+  cat /tmp/ado-resp.json
+fi
+```
+
+**Manejo de fallos**:
+
+- **HTTP 401 / 403**: PAT vencido o sin scope. Pedirle al usuario que regenere el PAT y actualice `AZURE_DEVOPS_PAT`.
+- **HTTP 404**: el AB# id no existe. Validar con el usuario.
+- **HTTP 400 con "Invalid State Transition"**: el flujo del work item no permite saltar al estado pedido (típicamente "Active" desde "Resolved"). Mover primero a "New" / "Approved" y reintentar.
+- **Ningún estado funciona**: avisar al usuario y seguir igual con la implementación — el board queda desactualizado pero no es bloqueante.
+
+> Si `AZURE_DEVOPS_PAT` no está exportado, **no hacer la transición silenciosamente** — avisar al usuario y preguntarle si quiere seguir sin actualizar ADO (caso típico: trabajando offline o en una máquina nueva).
+
+---
+
 ## 2. Setup — crear la branch
 
 ```bash
@@ -347,9 +416,11 @@ Cualquiera rojo → PR bloqueado.
 
 ---
 
-## 7. Post-merge — cierre del work item
+## 7. Post-merge — cierre del work item (move to Done)
 
-**Sin acción manual.** `ado-sync.yml` parsea el body del PR mergeado, encuentra los `Closes AB#<id>` y transiciona cada work item a `Closed` con un comentario que linkea al PR.
+**Sin acción manual.** Cuando el PR se mergea, `ado-sync.yml` parsea el body buscando `Closes AB#<id>` y transiciona cada work item a su estado final (`Closed` / `Done` / `Resolved`, probando en ese orden según el process template). Agrega un comentario en el work item con el link al PR.
+
+Esto cierra el loop que abrió §1.5: al inicio de la story Claude movió el ticket a "Active"/"In Progress"; al mergear, el workflow lo mueve a "Done". Claude **no** corre nada en este paso — pero sí debe **verificar que el comentario "✅ Work items cerrados" aparezca en el PR** después del merge, y si no aparece, debug igual que abajo.
 
 Si la action falla (típicamente PAT vencido):
 
@@ -357,7 +428,20 @@ Si la action falla (típicamente PAT vencido):
 2. Actualizar secret `ADO_PAT` en `Settings → Secrets → Actions`.
 3. Re-correr el workflow desde la UI (no hace falta re-mergear).
 
-Para cerrar manualmente (uso ad-hoc): `python3 docs/backlog/scripts/azure_devops_close.py US-XX --pr <url>`.
+Cierre manual ad-hoc (mismo patrón curl que §1.5 pero con `System.State=Closed`):
+
+```bash
+ID=<AB#-id>
+AUTH=$(printf ":%s" "$AZURE_DEVOPS_PAT" | base64)
+for STATE in "Closed" "Done" "Resolved"; do
+  CODE=$(curl -sS -o /dev/null -w "%{http_code}" -X PATCH \
+    "https://dev.azure.com/tbranchesi/NutriLens/_apis/wit/workitems/${ID}?api-version=7.0" \
+    -H "Authorization: Basic ${AUTH}" \
+    -H "Content-Type: application/json-patch+json" \
+    -d "[{\"op\":\"add\",\"path\":\"/fields/System.State\",\"value\":\"${STATE}\"}]")
+  [ "$CODE" = "200" ] && echo "✓ AB#${ID} → ${STATE}" && break
+done
+```
 
 ---
 
@@ -373,8 +457,10 @@ Antes de marcar una US como cerrada:
 - [ ] Antes de escribir cada E2E nuevo, el flujo se exploró con el Playwright MCP y los selectores salen del snapshot real (no inventados).
 - [ ] Cada `.spec.ts` accede a la página únicamente a través de un Page Object (`tests/e2e/pages/`). Cero locators inline, cero `expect(...)` directos sobre locators en el test (§4.4.3).
 - [ ] El PR lo abrió Claude con `gh pr create` (no el usuario manualmente) y la URL quedó devuelta al final del turn (§6.2).
+- [ ] Al **arrancar** la story, Claude asignó el work item al usuario y lo movió a "Active"/"In Progress" vía la REST API de ADO (§1.5).
 - [ ] El PR mergeó a `main` con todos los checks verdes.
-- [ ] El work item en ADO pasó a `Closed`.
+- [ ] Al **mergear**, el comentario "✅ Work items cerrados en Azure DevOps" apareció en el PR (cierre automático de `ado-sync.yml`, §7). Si no apareció, debuggear PAT/secret.
+- [ ] El work item en ADO pasó a `Closed`/`Done`/`Resolved`.
 - [ ] No hay regresiones (todos los tests previos siguen verdes).
 - [ ] Si tocó API/schema: spec actualizado en el mismo PR.
 - [ ] Si tocó UI: probada manualmente en mobile (`<768px`) y desktop (`≥1024px`).
