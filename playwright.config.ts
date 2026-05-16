@@ -38,7 +38,7 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       IA_PROVIDER: 'mock',
-      DATABASE_URL: 'file:./test.db',
+      DATABASE_URL: process.env.DATABASE_URL ?? 'postgresql://nutrilens:nutrilens@localhost:5432/nutrilens',
     },
   },
 });

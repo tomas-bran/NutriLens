@@ -1,0 +1,42 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Dependencies
+node_modules
+
+# Build outputs
+.next
+out
+build
+dist
+coverage
+playwright-report
+test-results
+
+# Env files (NEVER copy real secrets into images)
+.env
+.env.local
+.env.*.local
+
+# Editor / IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs and design assets are not needed inside the runtime image
+docs
+*.md
+!README.md
+
+# Claude config not needed at runtime
+.claude
+
+# CI / scripts not needed at runtime
+.github

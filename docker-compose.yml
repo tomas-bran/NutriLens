@@ -1,0 +1,52 @@
+name: nutrilens
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: nutrilens-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nutrilens}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nutrilens}
+      POSTGRES_DB: ${POSTGRES_DB:-nutrilens}
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-nutrilens} -d ${POSTGRES_DB:-nutrilens}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: nutrilens-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Inside the compose network, Postgres is reachable as "db".
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nutrilens}:${POSTGRES_PASSWORD:-nutrilens}@db:5432/${POSTGRES_DB:-nutrilens}
+      IA_PROVIDER: ${IA_PROVIDER:-mock}
+      AZURE_AI_FOUNDRY_ENDPOINT: ${AZURE_AI_FOUNDRY_ENDPOINT:-}
+      AZURE_AI_FOUNDRY_KEY: ${AZURE_AI_FOUNDRY_KEY:-}
+      AZURE_AI_FOUNDRY_MODEL_MULTIMODAL: ${AZURE_AI_FOUNDRY_MODEL_MULTIMODAL:-Phi-4-multimodal-instruct}
+      AZURE_AI_FOUNDRY_MODEL_MINI: ${AZURE_AI_FOUNDRY_MODEL_MINI:-Phi-4-mini-instruct}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    ports:
+      - '3000:3000'
+    volumes:
+      # Source bind mount for hot reload.
+      - .:/app
+      # Keep node_modules inside the container (avoids host/linux/darwin clashes).
+      - /app/node_modules
+      - /app/.next
+
+volumes:
+  postgres_data:
+    name: nutrilens-postgres-data

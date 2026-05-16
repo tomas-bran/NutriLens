@@ -1,0 +1,19 @@
+# Development image with hot reload.
+# Used by docker-compose for local development.
+FROM node:20-alpine
+
+WORKDIR /app
+
+RUN apk add --no-cache libc6-compat openssl
+
+COPY package.json package-lock.json* ./
+RUN npm install --no-audit --no-fund
+
+# Source code is bind-mounted by docker-compose, so we don't COPY here.
+# Prisma engines are generated at container start to ensure they match
+# the runtime architecture.
+
+ENV NEXT_TELEMETRY_DISABLED=1
+EXPOSE 3000
+
+CMD ["sh", "-c", "npx prisma generate && npx prisma migrate deploy && npm run dev"]
