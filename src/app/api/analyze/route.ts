@@ -1,20 +1,25 @@
 /**
  * POST /api/analyze — main pipeline entry point.
  *
- * Scope of US-08 / US-03: receive multipart, run validate_file, return a
- * placeholder 200 if everything passes (so the frontend can wire the round
- * trip while the IA pipeline lands in US-09+). Errors map to 4xx via
- * ApiError → structured body.
+ * Pipeline order (US-03 / US-08 / US-09 / US-14):
+ *   validate_file → extract_with_ia → validate_schema → respond 200
  *
- * See `docs/specs/E01-onboarding-y-upload.md §4-§5`.
+ * Still to land: detect_label_kind (US-05), apply_rules + compute_risk (US-13),
+ * generate_explanation (US-17), persist (US-22).
+ *
+ * See `docs/specs/E01-onboarding-y-upload.md §4-§5` and
+ * `docs/specs/E02-analisis-multimodal-ia.md §3-§5`.
  */
 import { NextResponse, type NextRequest } from 'next/server';
 import { createHash, randomUUID } from 'node:crypto';
 import { ApiError } from '@schemas/errors';
+import { getIaProvider } from '@/lib/ai';
 import { apiErrorResponse } from '@/lib/api/error-response';
 import { logger } from '@/lib/logger';
 import type { AnalysisContext } from '@/lib/pipeline/context';
+import { extract_with_ia } from '@/lib/pipeline/steps/extract-with-ia';
 import { validate_file } from '@/lib/pipeline/steps/validate-file';
+import { validate_schema } from '@/lib/pipeline/steps/validate-schema';
 
 // Force the Node.js runtime — pdf-parse uses Node APIs and the multipart
 // body parsing also benefits from the larger Node defaults.
@@ -75,18 +80,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       steps: [],
     };
 
-    const validated = await validate_file(initialCtx);
+    const ia = getIaProvider();
+    let ctx = await validate_file(initialCtx);
+    ctx = await extract_with_ia(ctx, ia);
+    ctx = await validate_schema(ctx, ia);
 
-    // PLACEHOLDER — the rest of the pipeline (detect_label_kind, extract_with_ia,
-    // apply_rules, persist) lands in US-05/US-09/US-13/US-22. For now we return a
-    // stable shape matching `docs/specs/E01-onboarding-y-upload.md §4.2` so the
-    // frontend can wire the round trip.
     return NextResponse.json(
       {
         id: randomUUID(),
-        product: null,
+        product: ctx.product,
         savedAt: new Date().toISOString(),
-        pipelineTrace: validated.steps,
+        pipelineTrace: ctx.steps,
       },
       { status: 200, headers: { 'X-Request-Id': requestId } },
     );

@@ -18,6 +18,12 @@ export type IaCallResult = {
 export type AnalyzeOpts = {
   promptVersion: string;
   timeoutMs?: number;
+  /**
+   * Free-form context passed to the prompt template (used for the corrective
+   * retry: `{ previous, problems }` is interpolated into the corrective prompt).
+   * See E02 §5.1.
+   */
+  extra?: Record<string, string>;
 };
 
 export type ExplainOpts = {
