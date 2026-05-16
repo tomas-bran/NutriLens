@@ -150,6 +150,79 @@ Esto evita la patología típica: tests que pasan porque hacen `waitForTimeout` 
 
 > Si la skill arranca en un entorno sin app levantada, **levantar el server primero** (`npm run dev` en background) antes de invocar el MCP. No simular flujos sin server real corriendo.
 
+#### 4.4.3 Page Object Model (POM) — obligatorio en E2E
+
+**Regla dura**: ningún `.spec.ts` puede referenciar locators directamente. Toda interacción con la página pasa por un **Page Object** que vive en `tests/e2e/pages/`. El test describe el QUÉ del flujo; el Page Object encapsula el CÓMO (selectores, esperas, normalización del DOM).
+
+Prohibido en `.spec.ts`:
+
+```ts
+// ❌ NO — locator inline en el test
+await page.getByRole('button', { name: 'Analizar' }).click();
+await expect(page.locator('[data-testid="result-card"]')).toBeVisible();
+await page.getByLabel('Subir foto').setInputFiles('fixture.jpg');
+```
+
+Obligatorio:
+
+```ts
+// tests/e2e/pages/upload-page.ts
+import type { Page, Locator } from '@playwright/test';
+
+export class UploadPage {
+  private readonly fileInput: Locator;
+  private readonly analyzeButton: Locator;
+  private readonly resultCard: Locator;
+
+  constructor(private readonly page: Page) {
+    this.fileInput = page.getByLabel('Subir foto');
+    this.analyzeButton = page.getByRole('button', { name: 'Analizar' });
+    this.resultCard = page.getByTestId('result-card');
+  }
+
+  async goto() {
+    await this.page.goto('/');
+  }
+
+  async uploadFixture(filename: string) {
+    await this.fileInput.setInputFiles(`tests/e2e/fixtures/${filename}`);
+  }
+
+  async submit() {
+    await this.analyzeButton.click();
+  }
+
+  async expectResultVisible() {
+    await this.resultCard.waitFor({ state: 'visible' });
+  }
+}
+```
+
+```ts
+// tests/e2e/upload-happy-path.spec.ts
+import { test } from '@playwright/test';
+import { UploadPage } from './pages/upload-page';
+
+test('analiza una etiqueta válida y muestra el resultado', async ({ page }) => {
+  const uploadPage = new UploadPage(page);
+  await uploadPage.goto();
+  await uploadPage.uploadFixture('galletitas-choco.jpg');
+  await uploadPage.submit();
+  await uploadPage.expectResultVisible();
+});
+```
+
+Reglas del POM:
+
+- **Un Page Object por pantalla/ruta** (`UploadPage`, `HistoryPage`, `ProductDetailPage`, `ChatPage`).
+- **Locators son `private readonly`** y se inicializan en el constructor.
+- **Los métodos públicos son verbos del dominio** (`uploadFixture`, `applyCategoriaFilter`, `goToDetail`), no acciones genéricas de Playwright (`clickButton`, `fillInput`).
+- **Aserciones de UI también encapsuladas** (`expectResultVisible`, `expectEmptyState`, `expectErrorBanner('image_not_supported')`). El test queda libre de `expect(...).toBeVisible()` directos sobre locators.
+- **Componentes reusables** (header, sidebar, error banner) van en `tests/e2e/components/` como mini Page Objects compuestos.
+- **Si un selector aparece en dos Page Objects distintos**, es señal de que pertenece a un componente compartido — refactorizarlo a `tests/e2e/components/`.
+
+Beneficio: cuando un `data-testid` o un label cambia en la UI, **se toca un solo archivo** (el Page Object), no decenas de `.spec.ts`. Y los tests se leen como user journeys, no como instrucciones de DOM.
+
 ### 4.5 Comandos
 
 ```bash
@@ -195,7 +268,35 @@ git rebase origin/main
 git push --force-with-lease
 ```
 
-### 6.2 Template del PR
+### 6.2 Creación del PR — Claude lo abre con `gh`
+
+**El PR lo crea siempre Claude**, no el usuario. La CLI `gh` está instalada (`gh 2.92.0+`) y autenticada contra el repo. Después de pushear la branch, abrir el PR inmediatamente con `gh pr create`, pasando el body del template completo vía HEREDOC para preservar formato y saltos de línea:
+
+```bash
+gh pr create \
+  --base main \
+  --head feat/US-XX-<slug> \
+  --title "feat(US-XX): <título corto del cambio>" \
+  --body "$(cat <<'EOF'
+Closes AB#<id de la US en ADO>
+
+## Qué hace
+...
+EOF
+)"
+```
+
+Reglas:
+
+- **Título**: Conventional Commits con scope `(US-XX)` o `(E0X)` si el PR cubre varias stories. Bajo 70 caracteres. Sin punto final.
+- **Body**: copiar el template de §6.3 y completarlo. Pegar la línea `Closes AB#<id>` aunque no se conozca el id — el usuario lo reemplaza antes de mergear o lo agrega como follow-up.
+- **No usar `gh pr create --fill`**: arrastra el último commit y se pierde el template estructurado.
+- **No agregar `--draft`** salvo que el usuario lo pida explícitamente — el flujo default es PR ready-for-review.
+- **Devolver siempre la URL del PR** al usuario al final del turn (la imprime `gh pr create` en stdout).
+
+Si `gh pr create` falla por falta de auth, pedirle al usuario que corra `gh auth login` — no intentar workarounds con tokens.
+
+### 6.3 Template del PR
 
 Auto-completado por `.github/pull_request_template.md`:
 
@@ -270,6 +371,8 @@ Antes de marcar una US como cerrada:
 - [ ] Tests de **front (unit + integration)** agregados donde la implementación los justifica (componente, hook, página, store) — no solo tests de back.
 - [ ] E2E corre verde tanto en `--project=chromium` como en `--project=mobile-web`.
 - [ ] Antes de escribir cada E2E nuevo, el flujo se exploró con el Playwright MCP y los selectores salen del snapshot real (no inventados).
+- [ ] Cada `.spec.ts` accede a la página únicamente a través de un Page Object (`tests/e2e/pages/`). Cero locators inline, cero `expect(...)` directos sobre locators en el test (§4.4.3).
+- [ ] El PR lo abrió Claude con `gh pr create` (no el usuario manualmente) y la URL quedó devuelta al final del turn (§6.2).
 - [ ] El PR mergeó a `main` con todos los checks verdes.
 - [ ] El work item en ADO pasó a `Closed`.
 - [ ] No hay regresiones (todos los tests previos siguen verdes).
