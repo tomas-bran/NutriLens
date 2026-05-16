@@ -1,0 +1,59 @@
+// NutriLens — Prisma schema
+// Ver `docs/specs/E04-persistencia-e-historial.md §2` para el modelo de datos.
+//
+// SQLite no soporta arrays nativos: los campos `ingredientes`, `alergenos`,
+// `sellos`, `reglasAplicadas` y `pipelineTrace` se guardan como JSON
+// serializado en columnas String. Al migrar a Postgres se puede cambiar
+// a String[] real sin tocar la lógica.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id              String   @id @default(uuid())
+  fileHash        String   @unique
+  nombre          String
+  categoria       Categoria
+  ingredientes    String   // JSON.stringify(string[])
+  alergenos       String   // JSON.stringify(string[])
+  sellos          String   // JSON.stringify(string[])
+  aptoVegano      Boolean
+  aptoCeliaco     Boolean
+  aptoSinLactosa  Boolean
+  riesgo          Riesgo
+  confidence      Float
+  reglasAplicadas String   // JSON.stringify(string[])
+  explanation     String?
+  jsonRaw         String
+  pipelineTrace   String   // JSON.stringify(StepTrace[])
+  imagenPath      String
+  promptVersion   String
+  createdAt       DateTime @default(now())
+
+  @@index([categoria])
+  @@index([riesgo])
+  @@index([createdAt])
+}
+
+enum Categoria {
+  galletitas
+  cereales
+  snacks
+  lacteos
+  bebidas
+  sin_tacc
+  veganos
+  otros
+}
+
+enum Riesgo {
+  bajo
+  medio
+  alto
+}

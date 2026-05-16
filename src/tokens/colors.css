@@ -1,0 +1,33 @@
+/* Design tokens — Colors
+ * Ver E06 §5.2 del spec. Si necesitás ajustar valores, hacelo acá; Tailwind
+ * referencia estas vars vía tailwind.config.ts.
+ */
+:root {
+  /* Base */
+  --color-bg: #ffffff;
+  --color-surface: #f7f8fa;
+  --color-text: #1a1f2e;
+  --color-text-muted: #6b7280;
+  --color-border: #e4e7ec;
+
+  /* Brand */
+  --color-primary: #2eb67d;
+  --color-primary-strong: #1f8e60;
+  --color-primary-soft: #e6f5ee;
+
+  /* Feedback */
+  --color-success: #2eb67d;
+  --color-warning: #f2a526;
+  --color-danger: #e5484d;
+  --color-info: #3b82f6;
+  --color-muted: #9ca3af;
+
+  /* Riesgo (alineado con E03 §6.2) */
+  --color-risk-low: var(--color-success);
+  --color-risk-medium: var(--color-warning);
+  --color-risk-high: var(--color-danger);
+
+  /* Aptitud */
+  --color-apt-true: var(--color-success);
+  --color-apt-false: var(--color-danger);
+}
