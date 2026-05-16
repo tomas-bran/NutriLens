@@ -93,47 +93,42 @@ Estamos sobre **Azure for Students** con **USD 100** de crédito. Todo el proces
 
 **Notas sobre calidad:** Phi-4-multimodal tiene buena performance en extracción estructurada (ranking competitivo en benchmarks DocVQA) y soporta JSON output via prompting. La validación "¿es etiqueta?" es trivial; la extracción detallada puede requerir prompt más rico (ver E02 §2). Si en pruebas reales vemos que Phi falla, activamos Plan B con Document Intelligence + Phi-mini.
 
-### 2.bis.3 Configuración mínima del cliente (Phi via Azure AI Inference SDK)
+### 2.bis.3 Configuración mínima del cliente (endpoint OpenAI-compatible)
 
-Los modelos de Foundry no-OpenAI se consumen con el SDK **`@azure-rest/ai-inference`**, que expone un endpoint compatible con el shape de chat completions de OpenAI pero apuntando a la URL del serverless deployment.
+Azure AI Foundry expone un **endpoint OpenAI-compatible unificado** para todos los modelos del resource (`https://<resource>.services.ai.azure.com/openai/v1`). Usamos el **SDK oficial `openai`** apuntando a ese endpoint — un único cliente para todos los deployments del recurso, los modelos se distinguen por el campo `model` en cada request.
 
 ```ts
 // lib/ai/foundry.ts
-import ModelClient from '@azure-rest/ai-inference';
-import { AzureKeyCredential } from '@azure/core-auth';
+import OpenAI from 'openai';
 
-// Un cliente por modelo (cada deployment serverless tiene su URL).
-export const visionClient = ModelClient(
-  process.env.AZURE_FOUNDRY_PHI4_MM_ENDPOINT!,
-  new AzureKeyCredential(process.env.AZURE_FOUNDRY_PHI4_MM_KEY!),
-);
+// Un solo cliente para todo el resource (Phi-multimodal, Phi-mini, …).
+export const aiClient = new OpenAI({
+  baseURL: process.env.AZURE_AI_FOUNDRY_ENDPOINT!, // https://<resource>.services.ai.azure.com/openai/v1
+  apiKey:  process.env.AZURE_AI_FOUNDRY_KEY!,
+});
 
-export const miniClient = ModelClient(
-  process.env.AZURE_FOUNDRY_PHI4_MINI_ENDPOINT!,
-  new AzureKeyCredential(process.env.AZURE_FOUNDRY_PHI4_MINI_KEY!),
-);
+// Helpers para no repetir nombres
+export const MODEL_MULTIMODAL = process.env.AZURE_AI_FOUNDRY_MODEL_MULTIMODAL!; // "Phi-4-multimodal-instruct"
+export const MODEL_MINI       = process.env.AZURE_AI_FOUNDRY_MODEL_MINI!;       // "Phi-4-mini-instruct"
 ```
 
-Variables de entorno requeridas (en `.env.local`, **nunca commiteadas**):
+Variables de entorno requeridas (en `.env.local`, **nunca commiteadas** — ver `.env.example` en la raíz):
 
 ```
 # Provider de IA: foundry (Phi) o azure-openai (gpt-4o) o mock
 IA_PROVIDER=foundry
 
-# Phi-4-multimodal-instruct (serverless deployment)
-AZURE_FOUNDRY_PHI4_MM_ENDPOINT=https://<resource>.<region>.models.ai.azure.com
-AZURE_FOUNDRY_PHI4_MM_KEY=...
-
-# Phi-4-mini-instruct (serverless deployment)
-AZURE_FOUNDRY_PHI4_MINI_ENDPOINT=https://<resource>.<region>.models.ai.azure.com
-AZURE_FOUNDRY_PHI4_MINI_KEY=...
+# Azure AI Foundry (endpoint OpenAI-compatible único, modelos por `model:` en el body)
+AZURE_AI_FOUNDRY_ENDPOINT=https://<resource>.services.ai.azure.com/openai/v1
+AZURE_AI_FOUNDRY_KEY=...
+AZURE_AI_FOUNDRY_MODEL_MULTIMODAL=Phi-4-multimodal-instruct
+AZURE_AI_FOUNDRY_MODEL_MINI=Phi-4-mini-instruct
 
 # Opcional: cuando se apruebe Azure OpenAI, se completan estos y se cambia IA_PROVIDER=azure-openai
-AZURE_OPENAI_ENDPOINT=
-AZURE_OPENAI_API_KEY=
-AZURE_OPENAI_API_VERSION=2024-10-21
-AZURE_OPENAI_DEPLOYMENT_GPT4O=
-AZURE_OPENAI_DEPLOYMENT_GPT4O_MINI=
+AZURE_OPENAI_ENDPOINT=https://<resource>.openai.azure.com/openai/v1
+AZURE_OPENAI_KEY=
+AZURE_OPENAI_MODEL_GPT4O=
+AZURE_OPENAI_MODEL_GPT4O_MINI=
 
 # Opcional: Document Intelligence
 AZURE_DOCINTEL_ENDPOINT=
@@ -142,6 +137,8 @@ AZURE_DOCINTEL_KEY=
 # Demo
 AZURE_BLOB_CONNECTION_STRING=
 ```
+
+**Por qué este patrón:** un solo SDK (`openai`) sirve tanto para Phi en Foundry como para GPT-4o en Azure OpenAI. Migrar de uno a otro es solo cambiar `baseURL` + `apiKey` + nombre del modelo — el código del provider es idéntico.
 
 ### 2.bis.4 Presupuesto y guardrails de costo
 
@@ -353,7 +350,7 @@ export interface IaProvider {
 
 Implementaciones:
 
-- **`FoundryPhi4Provider`** (default actual): usa `@azure-rest/ai-inference`, modelos `Phi-4-multimodal-instruct` y `Phi-4-mini-instruct` via MaaS endpoints separados.
+- **`FoundryProvider`** (default actual): usa el SDK oficial `openai` apuntando al endpoint OpenAI-compatible del Azure AI Services resource (`/openai/v1`). Un solo cliente sirve ambos modelos (`Phi-4-multimodal-instruct` y `Phi-4-mini-instruct`); se distinguen por el campo `model` en cada call.
 - **`AzureOpenAIProvider`** (upgrade futuro, cuando se apruebe el acceso): usa `openai` SDK con base URL Azure, modelos `gpt-4o` y `gpt-4o-mini`.
 - **`MockIaProvider`** (default en `dev` y CI): devuelve respuestas fijas a partir de fixtures en `/tests/fixtures/ai`. No consume crédito.
 
