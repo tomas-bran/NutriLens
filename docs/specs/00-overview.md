@@ -17,8 +17,9 @@
 │   (Node 20)     │  Zod para validación de schemas
 └────┬───────┬────┘
      │       │
-     │       └──────────► Azure AI Foundry
-     │                    ├── Azure OpenAI: GPT-4o (vision) + GPT-4o-mini (chat)
+     │       └──────────► Azure AI Foundry (Models-as-a-Service)
+     │                    ├── Phi-4-multimodal-instruct (multimodal)
+     │                    ├── Phi-4-mini-instruct (text-only)
      │                    └── Azure Document Intelligence (opcional, PDFs)
      │
 ┌────▼──────────┐
@@ -48,10 +49,11 @@ Decisiones globales:
 | Componentes | Custom UI kit en `/components/ui` | basados en wireframes y design system |
 | Backend | API Routes de Next.js (Route Handlers) | Node 20 runtime |
 | Validación | Zod | schemas compartidos en `/packages/schemas` |
-| IA — multimodal | **Azure OpenAI** — `gpt-4o` (vision + text) via Azure AI Foundry | analiza imagen/PDF y devuelve JSON estructurado |
-| IA — LLM (chat/explicación) | **Azure OpenAI** — `gpt-4o-mini` via Azure AI Foundry | barato para chat RAG y generación de explicación |
-| OCR de PDFs (opcional) | **Azure AI Document Intelligence** (prebuilt-read / prebuilt-layout) | solo si el PDF no es procesable directo por GPT-4o |
+| IA — multimodal | **Phi-4-multimodal-instruct** (Microsoft) via Azure AI Foundry MaaS | analiza imagen/PDF y devuelve JSON estructurado |
+| IA — LLM (chat/explicación) | **Phi-4-mini-instruct** (Microsoft) via Azure AI Foundry MaaS | barato para chat RAG y generación de explicación |
+| OCR de PDFs (opcional) | **Azure AI Document Intelligence** (prebuilt-read / prebuilt-layout) | solo si el PDF no es procesable directo por Phi-vision |
 | Abstracción IA | `IaProvider` con implementación `AzureFoundryProvider` + `MockIaProvider` | un único punto de cambio si migramos de modelo |
+| Upgrade path | `gpt-4o` + `gpt-4o-mini` (Azure OpenAI) cuando se apruebe el acceso | mismo `IaProvider`, otra implementación |
 | Base de datos | SQLite (dev) → Azure Database for PostgreSQL Flexible Server (demo) | Prisma ORM |
 | Storage de imágenes | Filesystem local en dev → **Azure Blob Storage** en demo | container `nutrilens-uploads` |
 | Logging | `pino` o `console` estructurado | JSON, una línea por evento |
@@ -61,58 +63,84 @@ Decisiones globales:
 
 ## 2.bis Azure AI Foundry — plataforma de IA
 
-Estamos sobre **Azure for Students** con **USD 100** de crédito. Todo el procesamiento de IA pasa por **Azure AI Foundry** (hub que expone Azure OpenAI Service + catálogo de modelos + Document Intelligence + Speech, etc., bajo una sola región y políticas).
+Estamos sobre **Azure for Students** con **USD 100** de crédito. Todo el procesamiento de IA pasa por **Azure AI Foundry**, que expone tanto **Azure OpenAI** como un **catálogo de modelos de terceros** (Microsoft Phi, Meta Llama, Mistral, etc.) via **Models-as-a-Service (MaaS)**.
+
+> **Decisión activa:** el acceso a `gpt-4o`/`gpt-4o-mini` requiere aprobación de Azure OpenAI Service que aún no tenemos (el modelo aparece en el catálogo pero al desplegarlo Azure dice "no regions available"). Por eso arrancamos con **Phi-4-multimodal-instruct** y **Phi-4-mini-instruct** (Microsoft, disponibles sin trámite para Students). El `IaProvider` permite migrar a GPT-4o cambiando solo una clase cuando llegue la aprobación.
 
 ### 2.bis.1 Recursos Azure a aprovisionar
 
 | Recurso Azure | Para qué | Notas |
 |--------------|---------|-------|
-| **Azure AI Foundry** (hub + project) | Punto de entrada al catálogo de modelos | una resource group única `rg-nutrilens` |
-| **Azure OpenAI** (deployment) | Despliegue de `gpt-4o` (vision) y `gpt-4o-mini` (chat) | mismo endpoint, dos deployments |
-| **Azure AI Document Intelligence** (opcional) | OCR de PDFs si GPT-4o no rinde con el archivo | activar solo si hace falta |
+| **Azure AI Foundry** (hub + project) | Punto de entrada al catálogo de modelos | resource group `rg-nutrilens-ai` |
+| **Serverless deployment de `Phi-4-multimodal-instruct`** | Multimodal: extracción imagen→JSON y validación "¿es etiqueta?" | MaaS, pay-per-token |
+| **Serverless deployment de `Phi-4-mini-instruct`** | Text-only: chat RAG, parse intent, explicación | MaaS, mucho más barato |
+| **Azure AI Document Intelligence** (opcional) | OCR de PDFs si Phi-vision no rinde | activar solo si hace falta |
 | **Azure Blob Storage** | Persistencia de imágenes subidas en demo | container `nutrilens-uploads` |
 | **Azure Database for PostgreSQL** (Flexible Server, Burstable B1ms) | DB de productos en demo | tier más barato disponible |
 | **Azure App Service** (Free F1 o Basic B1) | Hosting del Next.js | F1 alcanza para demo |
 | **Application Insights** | Telemetría y logs | plan free |
 
-> Disponibilidad de modelos en student tier: hay que pedir acceso a Azure OpenAI (formulario). Si `gpt-4o` no está disponible en la región del student account, usar **`gpt-4o-mini`** también para extracción (es multimodal) o caer a OCR + LLM text-only.
-
 ### 2.bis.2 Modelos seleccionados
 
-| Tarea | Modelo | Por qué |
-|------|--------|---------|
-| Extracción multimodal (imagen/PDF → JSON) | `gpt-4o` | mejor calidad vision; fallback `gpt-4o-mini` si no hay cuota |
-| Validación rápida "¿es etiqueta alimentaria?" | `gpt-4o-mini` (vision) | barato y suficiente como filtro |
-| Explicación en lenguaje simple | `gpt-4o-mini` | tarea text-only, no requiere modelo grande |
-| Chat RAG sobre historial | `gpt-4o-mini` | text-only, contexto pequeño |
-| OCR de PDFs problemáticos | `Document Intelligence prebuilt-read` | solo si hace falta, cuesta por página |
+| Tarea | Modelo actual (Phi) | Upgrade futuro (Azure OpenAI) |
+|------|--------------------|------------------------------|
+| Extracción multimodal (imagen/PDF → JSON) | **Phi-4-multimodal-instruct** | `gpt-4o` |
+| Validación rápida "¿es etiqueta alimentaria?" | **Phi-4-multimodal-instruct** (misma call/deployment) | `gpt-4o-mini` |
+| Explicación en lenguaje simple | **Phi-4-mini-instruct** | `gpt-4o-mini` |
+| Parse intent del chat | **Phi-4-mini-instruct** | `gpt-4o-mini` |
+| Chat RAG (respuesta final) | **Phi-4-mini-instruct** | `gpt-4o-mini` |
+| OCR de PDFs problemáticos | `Document Intelligence prebuilt-read` | igual |
 
-### 2.bis.3 Configuración mínima del cliente
+**Notas sobre calidad:** Phi-4-multimodal tiene buena performance en extracción estructurada (ranking competitivo en benchmarks DocVQA) y soporta JSON output via prompting. La validación "¿es etiqueta?" es trivial; la extracción detallada puede requerir prompt más rico (ver E02 §2). Si en pruebas reales vemos que Phi falla, activamos Plan B con Document Intelligence + Phi-mini.
 
-Usamos el SDK oficial `@azure/openai` (compatible con OpenAI SDK con base URL apuntando a Azure).
+### 2.bis.3 Configuración mínima del cliente (Phi via Azure AI Inference SDK)
+
+Los modelos de Foundry no-OpenAI se consumen con el SDK **`@azure-rest/ai-inference`**, que expone un endpoint compatible con el shape de chat completions de OpenAI pero apuntando a la URL del serverless deployment.
 
 ```ts
-// lib/ai/azure.ts
-import { AzureOpenAI } from 'openai';
+// lib/ai/foundry.ts
+import ModelClient from '@azure-rest/ai-inference';
+import { AzureKeyCredential } from '@azure/core-auth';
 
-export const azure = new AzureOpenAI({
-  endpoint: process.env.AZURE_OPENAI_ENDPOINT!,         // https://<resource>.openai.azure.com
-  apiKey:   process.env.AZURE_OPENAI_API_KEY!,
-  apiVersion: '2024-10-21',
-  deployment: process.env.AZURE_OPENAI_DEPLOYMENT_GPT4O!, // nombre del deployment, no del modelo
-});
+// Un cliente por modelo (cada deployment serverless tiene su URL).
+export const visionClient = ModelClient(
+  process.env.AZURE_FOUNDRY_PHI4_MM_ENDPOINT!,
+  new AzureKeyCredential(process.env.AZURE_FOUNDRY_PHI4_MM_KEY!),
+);
+
+export const miniClient = ModelClient(
+  process.env.AZURE_FOUNDRY_PHI4_MINI_ENDPOINT!,
+  new AzureKeyCredential(process.env.AZURE_FOUNDRY_PHI4_MINI_KEY!),
+);
 ```
 
 Variables de entorno requeridas (en `.env.local`, **nunca commiteadas**):
 
 ```
-AZURE_OPENAI_ENDPOINT=https://<resource>.openai.azure.com
-AZURE_OPENAI_API_KEY=...
-AZURE_OPENAI_DEPLOYMENT_GPT4O=gpt-4o
-AZURE_OPENAI_DEPLOYMENT_GPT4O_MINI=gpt-4o-mini
-AZURE_DOCINTEL_ENDPOINT=https://<resource>.cognitiveservices.azure.com   # opcional
-AZURE_DOCINTEL_KEY=...                                                    # opcional
-AZURE_BLOB_CONNECTION_STRING=...                                          # demo
+# Provider de IA: foundry (Phi) o azure-openai (gpt-4o) o mock
+IA_PROVIDER=foundry
+
+# Phi-4-multimodal-instruct (serverless deployment)
+AZURE_FOUNDRY_PHI4_MM_ENDPOINT=https://<resource>.<region>.models.ai.azure.com
+AZURE_FOUNDRY_PHI4_MM_KEY=...
+
+# Phi-4-mini-instruct (serverless deployment)
+AZURE_FOUNDRY_PHI4_MINI_ENDPOINT=https://<resource>.<region>.models.ai.azure.com
+AZURE_FOUNDRY_PHI4_MINI_KEY=...
+
+# Opcional: cuando se apruebe Azure OpenAI, se completan estos y se cambia IA_PROVIDER=azure-openai
+AZURE_OPENAI_ENDPOINT=
+AZURE_OPENAI_API_KEY=
+AZURE_OPENAI_API_VERSION=2024-10-21
+AZURE_OPENAI_DEPLOYMENT_GPT4O=
+AZURE_OPENAI_DEPLOYMENT_GPT4O_MINI=
+
+# Opcional: Document Intelligence
+AZURE_DOCINTEL_ENDPOINT=
+AZURE_DOCINTEL_KEY=
+
+# Demo
+AZURE_BLOB_CONNECTION_STRING=
 ```
 
 ### 2.bis.4 Presupuesto y guardrails de costo
@@ -121,7 +149,7 @@ El crédito de $100 USD impone disciplina. Reglas de diseño:
 
 - **Cachear extracciones por hash de imagen**: si el mismo archivo se sube dos veces no se vuelve a llamar al modelo (ya estaba en el plan E04 — acá se vuelve obligatorio).
 - **Caché de explicaciones** por `(productId, promptVersion)`: si la entrada no cambia, no regeneramos.
-- **`gpt-4o-mini` por defecto** para todo lo que no sea extracción visual.
+- **`Phi-4-mini-instruct` por defecto** para todo lo que no sea extracción visual.
 - **Truncar prompts del chat** a los top-K (K = 5) productos del retrieval.
 - **Timeouts agresivos**: 25 s para extracción, 10 s para chat. Más allá de eso, error controlado (ahorra tokens si el modelo se queda colgado).
 - **Azure Budget Alert** en el portal: notificación al 50% / 80% / 95% del consumo.
@@ -129,13 +157,15 @@ El crédito de $100 USD impone disciplina. Reglas de diseño:
 
 ### 2.bis.5 Estimación gruesa de costos (referencia)
 
-| Acción | Tokens aprox | Costo aprox (USD) |
-|--------|-------------|-------------------|
-| 1 extracción con `gpt-4o` (1 imagen ~1024x1024, prompt + JSON salida) | ~1500 in + 500 out | ~$0.012 |
-| 1 explicación con `gpt-4o-mini` | ~500 in + 200 out | ~$0.0003 |
-| 1 consulta chat RAG con `gpt-4o-mini` (5 productos en contexto) | ~2000 in + 400 out | ~$0.0008 |
+Phi-4 vía Foundry MaaS es **~10x más barato** que GPT-4o (precio público al momento: ~$0.0001 / 1k tokens input para Phi-4-mini, ~$0.001 / 1k tokens para Phi-4-multimodal con imagen).
 
-Con $100 USD podemos correr **~6000 extracciones**, holgado para el MVP y la demo. La amenaza real es dejar un loop infinito o un test que no usa el mock.
+| Acción | Modelo | Tokens aprox | Costo aprox (USD) |
+|--------|--------|-------------|-------------------|
+| 1 extracción (1 imagen ~1024x1024) | Phi-4-multimodal | ~1500 in + 500 out | ~$0.002 |
+| 1 explicación | Phi-4-mini | ~500 in + 200 out | ~$0.00005 |
+| 1 consulta chat RAG (parse + answer) | Phi-4-mini | ~2500 in + 500 out | ~$0.0001 |
+
+Con $100 USD el techo teórico es enorme (>40k extracciones). La amenaza real sigue siendo dejar un loop infinito o un test que no usa el mock. Mantenemos los guardrails y el budget alert.
 
 ### 2.bis.6 Despliegue
 
@@ -323,16 +353,18 @@ export interface IaProvider {
 
 Implementaciones:
 
-- **`AzureFoundryProvider`** (default en `demo`/`prod`): usa `@azure/openai` SDK, modelos `gpt-4o` y `gpt-4o-mini`.
+- **`FoundryPhi4Provider`** (default actual): usa `@azure-rest/ai-inference`, modelos `Phi-4-multimodal-instruct` y `Phi-4-mini-instruct` via MaaS endpoints separados.
+- **`AzureOpenAIProvider`** (upgrade futuro, cuando se apruebe el acceso): usa `openai` SDK con base URL Azure, modelos `gpt-4o` y `gpt-4o-mini`.
 - **`MockIaProvider`** (default en `dev` y CI): devuelve respuestas fijas a partir de fixtures en `/tests/fixtures/ai`. No consume crédito.
 
 Reglas comunes:
 
-- Prompts viven en `/lib/ai/prompts/{name}-v{N}.md` y se versionan junto al código.
+- Prompts viven en `/lib/ai/prompts/{name}-v{N}.md` y se versionan junto al código. **El mismo prompt funciona para Phi y para GPT-4o** (con ajustes menores documentados en los specs por épica).
 - Cada call loguea: `provider`, `model`, `promptVersion`, `tokensIn`, `tokensOut`, `latencyMs`, `requestId`.
-- Provider configurable por `IA_PROVIDER` env var (`azure` | `mock`).
-- Si Azure devuelve `429` o `5xx`, el provider hace **un único reintento** con backoff de 2 s y después falla con `model_rate_limited` / `model_error`.
-- Si Azure devuelve un JSON que no parsea, el provider devuelve el `raw` igual — la validación de schema queda en el caller (ver E02).
+- Provider configurable por `IA_PROVIDER` env var (`foundry` | `azure-openai` | `mock`).
+- Si el endpoint devuelve `429` o `5xx`, el provider hace **un único reintento** con backoff de 2 s y después falla con `model_rate_limited` / `model_error`.
+- Si el modelo devuelve un JSON que no parsea, el provider devuelve el `raw` igual — la validación de schema queda en el caller (ver E02).
+- Phi no soporta `response_format: json_object` nativo; lo forzamos con prompt + parsing tolerante a fences ` ```json … ``` `.
 
 ---
 

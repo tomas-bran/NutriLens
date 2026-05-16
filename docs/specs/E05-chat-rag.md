@@ -32,7 +32,7 @@
 ```
 [Pregunta del usuario]
        ↓
-[parse_intent]              (gpt-4o-mini, salida JSON con filtros)
+[parse_intent]              (Phi-4-mini, salida JSON con filtros)
        ↓
 [retrieve_products]         (consulta a la DB con filtros del intent)
        ↓
@@ -40,7 +40,7 @@
        │
    no  │  sí
        ▼   ▼
-  [empty_response]    [generate_answer]   (gpt-4o-mini con contexto)
+  [empty_response]    [generate_answer]   (Phi-4-mini con contexto)
        │                    │
        └────────────┬───────┘
                     ▼
@@ -163,8 +163,8 @@ export type ChatIntent = z.infer<typeof ChatIntentSchema>;
 
 ### 4.3 Modelo y config
 
-- **Modelo:** `gpt-4o-mini`.
-- **`response_format: json_object`**.
+- **Modelo:** `Phi-4-mini-instruct`.
+- **JSON forzado por prompt** (Phi no soporta `response_format: json_object` nativo). El provider aplica `stripJsonFences` antes de devolver.
 - **`temperature: 0`** (queremos determinismo absoluto en parsing).
 - **Timeout:** 8s.
 - **Max tokens:** 200.
@@ -286,7 +286,7 @@ Reusa el `sanitize` de E03 §5.5 (mismo blocklist) y agrega validación de que e
 
 ### 6.3 Modelo y config
 
-- **Modelo:** `gpt-4o-mini`.
+- **Modelo:** `Phi-4-mini-instruct`.
 - **`temperature: 0.2`**.
 - **Timeout:** 10s.
 - **Max tokens:** 350.
@@ -421,7 +421,7 @@ Cuando el chat está vacío, mostramos 3 chips de ejemplo (envían directamente 
 | Top-K = 5 productos | K más grande | controlar costo y mantener respuesta enfocada |
 | Conversación en memoria del cliente | persistir en DB | reduce scope; no es objetivo del MVP |
 | Sin streaming | streaming tokens | scope; respuesta completa es suficiente para 350 tokens |
-| `gpt-4o-mini` para ambas calls | `gpt-4o` | calidad alcanza, costo 10x menor |
+| `Phi-4-mini` (text-only) para ambas calls | `Phi-4-multimodal` (multimodal) | costo menor, no necesitamos imagen para el chat |
 
 ---
 
