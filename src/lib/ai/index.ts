@@ -11,7 +11,9 @@
  * switch only knows the mock; when implementing FoundryProvider, wire
  * its branch here.
  */
+import { FoundryProvider } from './foundry-provider';
 import { MockIaProvider } from './mock-provider';
+import { logger } from '@/lib/logger';
 import type { IaProvider } from './types';
 
 let cached: IaProvider | null = null;
@@ -24,26 +26,29 @@ export function getIaProvider(): IaProvider {
       cached = new MockIaProvider();
       break;
     case 'foundry':
-      // TODO(US-08): instantiate real FoundryProvider.
-      console.warn(
-        '[ia] IA_PROVIDER=foundry requested but FoundryProvider is not implemented yet. Falling back to MockIaProvider.',
-      );
-      cached = new MockIaProvider();
+      cached = new FoundryProvider();
       break;
     case 'azure-openai':
       // TODO(post-approval): instantiate real AzureOpenAIProvider.
-      console.warn(
-        '[ia] IA_PROVIDER=azure-openai requested but AzureOpenAIProvider is not implemented yet. Falling back to MockIaProvider.',
-      );
+      logger.warn('ia.fallback_to_mock', {
+        requested: 'azure-openai',
+        reason: 'AzureOpenAIProvider not implemented yet',
+      });
       cached = new MockIaProvider();
       break;
     default:
-      console.warn(`[ia] Unknown IA_PROVIDER='${kind}'. Falling back to MockIaProvider.`);
+      logger.warn('ia.fallback_to_mock', { requested: kind, reason: 'unknown provider' });
       cached = new MockIaProvider();
   }
   return cached;
 }
 
+/** Test-only: reset the cached singleton so swapping IA_PROVIDER in tests works. */
+export function _resetIaProvider(): void {
+  cached = null;
+}
+
+export { FoundryProvider } from './foundry-provider';
 export { MockIaProvider } from './mock-provider';
 export { stripJsonFences } from './strip-json-fences';
 export type {
