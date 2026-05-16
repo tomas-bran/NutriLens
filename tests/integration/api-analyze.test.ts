@@ -384,3 +384,110 @@ describe('POST /api/analyze — IA pipeline (US-09 + US-14)', () => {
     expect((await res.json()).error).toBe('model_error');
   });
 });
+
+describe('POST /api/analyze — detect_label_kind gate (US-05)', () => {
+  function spyOnClassifyLabelKind() {
+    const ia = getIaProvider();
+    if (!(ia instanceof MockIaProvider)) throw new Error('IA_PROVIDER must be mock');
+    return vi.spyOn(ia, 'classifyLabelKind');
+  }
+
+  it('Escenario 1: returns 422 image_not_supported when classifier reports not-food with high confidence', async () => {
+    const spy = spyOnClassifyLabelKind();
+    spy.mockResolvedValue({
+      raw: JSON.stringify({ is_food_label: false, confidence: 0.93 }),
+      usage: { in: 0, out: 0 },
+      latencyMs: 1,
+    });
+    const analyzeSpy = spyOnAnalyzeLabel();
+
+    const res = await POST(makeRequest({ body: Buffer.from('paisaje-' + Math.random()) }) as never);
+
+    expect(res.status).toBe(422);
+    const body = await res.json();
+    expect(body).toMatchObject({
+      error: 'image_not_supported',
+      details: { confidence: 0.93 },
+    });
+    // The pipeline must abort before hitting the expensive extraction step.
+    expect(analyzeSpy).not.toHaveBeenCalled();
+  });
+
+  it('Escenario 2: passes through to extract_with_ia when classifier reports food label', async () => {
+    const res = await POST(
+      makeRequest({ body: Buffer.from('etiqueta-' + Math.random()) }) as never,
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.labelKind).toMatchObject({
+      is_food_label: true,
+      confidence: 0.95,
+      lowConfidence: false,
+    });
+    const trace = (body.pipelineTrace as Array<{ name: string }>).map((t) => t.name);
+    expect(trace).toEqual([
+      'validate_file',
+      'detect_label_kind',
+      'extract_with_ia',
+      'validate_schema',
+    ]);
+  });
+
+  it('Escenario 3: low confidence (< 0.6) passes with lowConfidence flag for UI badge', async () => {
+    const spy = spyOnClassifyLabelKind();
+    spy.mockResolvedValue({
+      raw: JSON.stringify({ is_food_label: true, confidence: 0.42 }),
+      usage: { in: 0, out: 0 },
+      latencyMs: 1,
+    });
+
+    const res = await POST(makeRequest({ body: Buffer.from('borrosa-' + Math.random()) }) as never);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.labelKind).toMatchObject({
+      is_food_label: true,
+      confidence: 0.42,
+      lowConfidence: true,
+    });
+    const detectTrace = (
+      body.pipelineTrace as Array<{ name: string; details?: Record<string, unknown> }>
+    ).find((t) => t.name === 'detect_label_kind');
+    expect(detectTrace?.details).toMatchObject({ lowConfidence: true });
+  });
+
+  it('Cache: second upload of the same buffer skips the classifier (1 h TTL)', async () => {
+    const spy = spyOnClassifyLabelKind();
+    const buffer = Buffer.from('label-cache-' + Math.random());
+
+    const r1 = await POST(makeRequest({ body: buffer }) as never);
+    expect(r1.status).toBe(200);
+    expect(spy).toHaveBeenCalledOnce();
+
+    const r2 = await POST(makeRequest({ body: buffer }) as never);
+    expect(r2.status).toBe(200);
+    expect(spy).toHaveBeenCalledOnce(); // unchanged → cache hit
+
+    const detectTrace = (
+      (await r2.json()).pipelineTrace as Array<{ name: string; details?: Record<string, unknown> }>
+    ).find((t) => t.name === 'detect_label_kind');
+    expect(detectTrace?.details).toMatchObject({ cached: true });
+  });
+
+  it('Cache: re-uploading a known not-food file short-circuits 422 without calling the classifier', async () => {
+    const spy = spyOnClassifyLabelKind();
+    spy.mockResolvedValue({
+      raw: JSON.stringify({ is_food_label: false, confidence: 0.9 }),
+      usage: { in: 0, out: 0 },
+      latencyMs: 1,
+    });
+    const buffer = Buffer.from('cached-reject-' + Math.random());
+
+    const r1 = await POST(makeRequest({ body: buffer }) as never);
+    expect(r1.status).toBe(422);
+    expect(spy).toHaveBeenCalledOnce();
+
+    const r2 = await POST(makeRequest({ body: buffer }) as never);
+    expect(r2.status).toBe(422);
+    expect(spy).toHaveBeenCalledOnce();
+  });
+});
