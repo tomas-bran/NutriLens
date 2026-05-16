@@ -20,13 +20,20 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
       reportsDirectory: './coverage',
-      include: ['src/lib/**/*.{ts,tsx}', 'src/packages/schemas/**/*.ts'],
+      include: [
+        'src/lib/**/*.{ts,tsx}',
+        'src/packages/schemas/**/*.ts',
+        'src/app/**/*.tsx',
+      ],
       exclude: [
         '**/*.test.{ts,tsx}',
         '**/*.spec.{ts,tsx}',
         '**/index.ts',
         '**/types.ts',
         'src/lib/ai/mock-provider.ts',
+        // Sprint 0 placeholders — drop these entries when US-07 lands the real screens.
+        'src/app/layout.tsx',
+        'src/app/page.tsx',
       ],
       // Hard thresholds — CI fails if any drops below.
       thresholds: {
