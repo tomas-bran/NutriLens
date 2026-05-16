@@ -13,7 +13,12 @@
  * test) and because the route uses Node-only crypto + pdf-parse anyway.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { APIConnectionTimeoutError, APIError } from 'openai';
 import { POST } from '@/app/api/analyze/route';
+import { MockIaProvider, getIaProvider, _resetIaProvider } from '@/lib/ai';
+import { cache } from '@/lib/cache';
+import type { IaCallResult } from '@/lib/ai/types';
+import { mapProviderError } from '@/lib/ai/foundry-provider';
 
 const MINIMAL_VALID_PDF = Buffer.from(
   `%PDF-1.0
@@ -73,11 +78,33 @@ let stderrWrite: WriteSpy;
 beforeEach(() => {
   stdoutWrite = installWriteSpy(process.stdout);
   stderrWrite = installWriteSpy(process.stderr);
+  cache.clear();
+  _resetIaProvider();
+  process.env.IA_PROVIDER = 'mock';
 });
 
 afterEach(() => {
   vi.restoreAllMocks();
+  cache.clear();
+  _resetIaProvider();
 });
+
+const VALID_RAW = JSON.stringify({
+  producto: 'Mock Product',
+  categoria: 'otros',
+  ingredientes_detectados: [],
+  alergenos: [],
+  sellos: [],
+  apto_vegano: true,
+  apto_celiaco: true,
+  apto_sin_lactosa: true,
+  riesgo: 'bajo',
+  confidence: 0.9,
+});
+
+function callResult(raw: string): IaCallResult {
+  return { raw, usage: { in: 0, out: 0 }, latencyMs: 1 };
+}
 
 function logLines(spy: WriteSpy): Record<string, unknown>[] {
   return spy.mock.calls
@@ -87,7 +114,7 @@ function logLines(spy: WriteSpy): Record<string, unknown>[] {
 }
 
 describe('POST /api/analyze — happy path (US-08 Escenario 1)', () => {
-  it('returns 200 with placeholder shape for a valid JPG', async () => {
+  it('returns 200 with the validated product for a valid JPG', async () => {
     const res = await POST(makeRequest() as never);
     expect(res.status).toBe(200);
     expect(res.headers.get('X-Request-Id')).toMatch(UUID_RE);
@@ -95,10 +122,15 @@ describe('POST /api/analyze — happy path (US-08 Escenario 1)', () => {
     const body = await res.json();
     expect(body).toMatchObject({
       id: expect.stringMatching(UUID_RE),
-      product: null,
+      product: expect.objectContaining({
+        producto: expect.any(String),
+        confidence: expect.any(Number),
+      }),
       savedAt: expect.any(String),
       pipelineTrace: expect.arrayContaining([
         expect.objectContaining({ name: 'validate_file', status: 'ok' }),
+        expect.objectContaining({ name: 'extract_with_ia', status: 'ok' }),
+        expect.objectContaining({ name: 'validate_schema', status: 'ok' }),
       ]),
     });
   });
@@ -240,5 +272,115 @@ describe('POST /api/analyze — structured 4xx (US-08 Escenario 1, all error cod
     );
     expect(res.headers.get('Content-Type')).toMatch(/application\/json/);
     expect(res.headers.get('X-Request-Id')).toBe(requestId);
+  });
+});
+
+// Helper for the IA-pipeline integration tests: spy on the singleton's
+// analyzeLabel and feed it a controllable sequence of responses.
+function spyOnAnalyzeLabel() {
+  const ia = getIaProvider();
+  if (!(ia instanceof MockIaProvider)) {
+    throw new Error('Test setup invariant: IA_PROVIDER must be mock in this suite.');
+  }
+  return vi.spyOn(ia, 'analyzeLabel');
+}
+
+describe('POST /api/analyze — IA pipeline (US-09 + US-14)', () => {
+  it('caches the extraction by file hash: second request for the same buffer skips the provider', async () => {
+    const buffer = Buffer.from('cached-bytes-' + Math.random());
+    const spy = spyOnAnalyzeLabel();
+
+    const r1 = await POST(makeRequest({ body: buffer }) as never);
+    expect(r1.status).toBe(200);
+    expect(spy).toHaveBeenCalledOnce();
+
+    const r2 = await POST(makeRequest({ body: buffer }) as never);
+    expect(r2.status).toBe(200);
+    expect(spy).toHaveBeenCalledOnce(); // unchanged → cache hit
+
+    const body = await r2.json();
+    const extractTrace = (
+      body.pipelineTrace as Array<{ name: string; details?: Record<string, unknown> }>
+    ).find((t) => t.name === 'extract_with_ia');
+    expect(extractTrace?.details).toMatchObject({ cached: true });
+  });
+
+  it('records promptVersion in the pipelineTrace for traceability (US-09 Escenario 3)', async () => {
+    const res = await POST(
+      makeRequest({ body: Buffer.from('trace-prompt-' + Math.random()) }) as never,
+    );
+    const body = await res.json();
+    const extractTrace = (
+      body.pipelineTrace as Array<{ name: string; details?: Record<string, unknown> }>
+    ).find((t) => t.name === 'extract_with_ia');
+    expect(extractTrace?.details).toMatchObject({ promptVersion: 'extract_product-v1' });
+  });
+
+  it('triggers corrective retry when the first IA response violates the schema (US-14 Escenario 3)', async () => {
+    const spy = spyOnAnalyzeLabel();
+    spy.mockResolvedValueOnce(callResult('{"producto": 123}')); // bad schema
+    spy.mockResolvedValueOnce(callResult(VALID_RAW)); // corrective ok
+
+    const res = await POST(
+      makeRequest({ body: Buffer.from('corrective-' + Math.random()) }) as never,
+    );
+
+    expect(res.status).toBe(200);
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy.mock.calls[1]?.[2]).toMatchObject({
+      promptVersion: 'extract_product-v1-corrective',
+    });
+    const body = await res.json();
+    const trace = (
+      body.pipelineTrace as Array<{ name: string; details?: Record<string, unknown> }>
+    ).find((t) => t.name === 'validate_schema');
+    expect(trace?.details).toMatchObject({ attempt: 2, corrective: true });
+  });
+
+  it('returns 422 extraction_invalid when both extraction attempts fail schema (US-14 Escenario 3)', async () => {
+    const spy = spyOnAnalyzeLabel();
+    spy.mockResolvedValueOnce(callResult('{"producto": 123}'));
+    spy.mockResolvedValueOnce(callResult('{"still": "bad"}'));
+
+    const res = await POST(
+      makeRequest({ body: Buffer.from('still-bad-' + Math.random()) }) as never,
+    );
+    expect(res.status).toBe(422);
+    const body = await res.json();
+    expect(body).toMatchObject({
+      error: 'extraction_invalid',
+      details: { firstReason: 'schema_violation', secondReason: 'schema_violation' },
+    });
+  });
+
+  it('maps APIConnectionTimeoutError from the provider → 504 model_timeout', async () => {
+    const spy = spyOnAnalyzeLabel();
+    spy.mockImplementation(() => {
+      throw mapProviderError(new APIConnectionTimeoutError({ message: 'timeout' }));
+    });
+
+    const res = await POST(makeRequest({ body: Buffer.from('timeout-' + Math.random()) }) as never);
+    expect(res.status).toBe(504);
+    expect((await res.json()).error).toBe('model_timeout');
+  });
+
+  it('maps APIError 429 from the provider → 429 model_rate_limited', async () => {
+    const spy = spyOnAnalyzeLabel();
+    spy.mockImplementation(() => {
+      throw mapProviderError(new APIError(429, undefined as never, 'rate', undefined));
+    });
+    const res = await POST(makeRequest({ body: Buffer.from('429-' + Math.random()) }) as never);
+    expect(res.status).toBe(429);
+    expect((await res.json()).error).toBe('model_rate_limited');
+  });
+
+  it('maps APIError 503 from the provider → 502 model_error', async () => {
+    const spy = spyOnAnalyzeLabel();
+    spy.mockImplementation(() => {
+      throw mapProviderError(new APIError(503, undefined as never, 'down', undefined));
+    });
+    const res = await POST(makeRequest({ body: Buffer.from('503-' + Math.random()) }) as never);
+    expect(res.status).toBe(502);
+    expect((await res.json()).error).toBe('model_error');
   });
 });
