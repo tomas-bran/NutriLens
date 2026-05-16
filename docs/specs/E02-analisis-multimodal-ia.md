@@ -247,64 +247,70 @@ Si el modelo devuelve un alérgeno o sello fuera de la lista, lo descartamos en 
 
 ---
 
-## 7. Implementación del `IaProvider` para Azure AI Foundry
+## 7. Implementación del `IaProvider` (SDK OpenAI sobre Azure AI Foundry)
+
+Azure AI Foundry expone un endpoint **OpenAI-compatible** (`/openai/v1`), así que usamos directamente el SDK `openai` apuntando al baseURL del resource. Un solo cliente sirve para todos los modelos del recurso (Phi-4-multimodal y Phi-4-mini), se distinguen por el campo `model` en cada request.
 
 ```ts
 // lib/ai/foundry_provider.ts
-import ModelClient, { isUnexpected } from '@azure-rest/ai-inference';
-import { AzureKeyCredential } from '@azure/core-auth';
+import OpenAI from 'openai';
 
-export class FoundryPhi4Provider implements IaProvider {
-  private visionClient = ModelClient(
-    process.env.AZURE_FOUNDRY_PHI4_MM_ENDPOINT!,
-    new AzureKeyCredential(process.env.AZURE_FOUNDRY_PHI4_MM_KEY!),
-  );
-  private miniClient = ModelClient(
-    process.env.AZURE_FOUNDRY_PHI4_MINI_ENDPOINT!,
-    new AzureKeyCredential(process.env.AZURE_FOUNDRY_PHI4_MINI_KEY!),
-  );
+export class FoundryProvider implements IaProvider {
+  private client = new OpenAI({
+    baseURL: process.env.AZURE_AI_FOUNDRY_ENDPOINT!,  // .../openai/v1
+    apiKey:  process.env.AZURE_AI_FOUNDRY_KEY!,
+  });
+  private MM   = process.env.AZURE_AI_FOUNDRY_MODEL_MULTIMODAL!; // "Phi-4-multimodal-instruct"
+  private MINI = process.env.AZURE_AI_FOUNDRY_MODEL_MINI!;       // "Phi-4-mini-instruct"
 
   async analyzeLabel(file: Buffer, mime: string, opts) {
     const start = Date.now();
     const dataUrl = `data:${mime};base64,${file.toString('base64')}`;
-    const response = await this.visionClient.path('/chat/completions').post({
-      body: {
-        messages: [
-          { role: 'system', content: PROMPTS[opts.promptVersion] },
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: 'Extraé la información de esta etiqueta y devolvé SOLO el JSON pedido.' },
-              { type: 'image_url', image_url: { url: dataUrl } },
-            ],
-          },
-        ],
-        max_tokens: 1500,
-        temperature: 0.1,
-      },
+
+    const r = await this.client.chat.completions.create({
+      model: this.MM,                  // Phi-4-multimodal-instruct
+      max_tokens: 1500,
+      temperature: 0.1,
+      messages: [
+        { role: 'system', content: PROMPTS[opts.promptVersion] },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Extraé la información de esta etiqueta y devolvé SOLO el JSON pedido.' },
+            { type: 'image_url', image_url: { url: dataUrl } },
+          ],
+        },
+      ],
     });
 
-    if (isUnexpected(response)) {
-      throw mapFoundryError(response);
-    }
-    const raw = response.body.choices[0].message.content ?? '';
+    const raw = r.choices[0]?.message?.content ?? '';
     return {
       raw: stripJsonFences(raw),
       usage: {
-        in:  response.body.usage?.prompt_tokens ?? 0,
-        out: response.body.usage?.completion_tokens ?? 0,
+        in:  r.usage?.prompt_tokens     ?? 0,
+        out: r.usage?.completion_tokens ?? 0,
       },
       latencyMs: Date.now() - start,
     };
   }
-  // …classifyLabelKind, generateExplanation, answerWithContext usan miniClient
+
+  async classifyLabelKind(file, mime, opts) {
+    // mismo cliente, mismo modelo MM, prompt corto detect_label_kind-v1.
+  }
+
+  async generateExplanation(product, opts) {
+    // mismo cliente, model: this.MINI, sin imagen, max_tokens 200.
+  }
+
+  async answerWithContext(question, products, opts) {
+    // mismo cliente, model: this.MINI, prompt RAG con productos en contexto.
+  }
 }
 
 /** Saca fences ```json … ``` o texto extra antes/después del JSON. */
 function stripJsonFences(text: string): string {
   const fence = /```(?:json)?\s*([\s\S]*?)\s*```/i.exec(text);
   if (fence) return fence[1].trim();
-  // intento extraer la primera llave balanceada
   const first = text.indexOf('{');
   const last  = text.lastIndexOf('}');
   if (first >= 0 && last > first) return text.slice(first, last + 1);
@@ -314,33 +320,43 @@ function stripJsonFences(text: string): string {
 
 Notas:
 
-- Phi **no** soporta `response_format: json_object` — forzamos JSON via prompt y limpiamos la salida con `stripJsonFences`.
+- **Un solo cliente HTTP** comparte conexión TCP y reintentos para ambos modelos. Cambia solo el `model` en cada call.
+- Phi vía Foundry **no soporta `response_format: { type: 'json_object' }`** de forma confiable hoy — forzamos JSON via prompt y limpiamos con `stripJsonFences`. Si en pruebas vemos que sí lo soporta consistentemente, lo activamos y removemos `stripJsonFences`.
 - **`temperature: 0.1`** para extracción.
 - **`max_tokens: 1500`** alcanza para JSON de productos típicos.
 - **PDF:** Phi-4-multimodal acepta PDFs nativos via `data:application/pdf;base64,...`. Si en pruebas vemos que no rinde, activamos Document Intelligence como pre-step (ver §10).
+- **Errores:** el SDK `openai` lanza `APIError` con `status`. Mapeamos: `429 → model_rate_limited`, `408|504 → model_timeout`, `>=500 → model_error`. Un único reintento con backoff 2s antes de fallar.
 
-### 7.1 Implementación alternativa para Azure OpenAI (cuando se apruebe)
+### 7.1 Mismo provider para Azure OpenAI (cuando se apruebe el acceso)
+
+Como el endpoint de Azure OpenAI **también es OpenAI-compatible** (`https://<resource>.openai.azure.com/openai/v1`), la implementación es **literalmente la misma clase** apuntando a otras env vars:
 
 ```ts
 // lib/ai/azure_openai_provider.ts
-import { AzureOpenAI } from 'openai';
-
-export class AzureOpenAIProvider implements IaProvider {
-  private client = new AzureOpenAI({
-    endpoint: process.env.AZURE_OPENAI_ENDPOINT!,
-    apiKey:   process.env.AZURE_OPENAI_API_KEY!,
-    apiVersion: '2024-10-21',
-  });
-  async analyzeLabel(file, mime, opts) {
-    // idéntica a FoundryPhi4Provider pero:
-    //   - model: process.env.AZURE_OPENAI_DEPLOYMENT_GPT4O
-    //   - response_format: { type: 'json_object' }
-    //   - no necesita stripJsonFences (GPT-4o devuelve JSON puro)
+export class AzureOpenAIProvider extends FoundryProvider {
+  constructor() {
+    super();
+    (this as any).client = new OpenAI({
+      baseURL: process.env.AZURE_OPENAI_ENDPOINT!,
+      apiKey:  process.env.AZURE_OPENAI_KEY!,
+    });
+    (this as any).MM   = process.env.AZURE_OPENAI_MODEL_GPT4O!;
+    (this as any).MINI = process.env.AZURE_OPENAI_MODEL_GPT4O_MINI!;
   }
 }
 ```
 
-El switch entre providers se hace por env var `IA_PROVIDER` en el bootstrap del backend.
+El switch entre providers se hace por env var `IA_PROVIDER` en el bootstrap:
+
+```ts
+// lib/ai/index.ts
+export const ia: IaProvider =
+  process.env.IA_PROVIDER === 'azure-openai' ? new AzureOpenAIProvider()
+  : process.env.IA_PROVIDER === 'foundry'    ? new FoundryProvider()
+  :                                            new MockIaProvider();
+```
+
+**Migrar de Phi a GPT-4o cuando aprueben el acceso es solo cambiar las 4 env vars y `IA_PROVIDER=azure-openai`.** El código del provider y los prompts no cambian.
 
 ---
 

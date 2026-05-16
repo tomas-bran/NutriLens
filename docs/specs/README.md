@@ -63,7 +63,7 @@ IaProvider
 └── MockIaProvider         ← dev/CI (default, sin gastar tokens)
 ```
 
-Switch por env var `IA_PROVIDER=azure|mock`. Detalles en `00-overview.md` §7 y `E02 §7`.
+Switch por env var `IA_PROVIDER=foundry|azure-openai|mock`. Detalles en `00-overview.md` §7 y `E02 §7`.
 
 ---
 
@@ -72,15 +72,22 @@ Switch por env var `IA_PROVIDER=azure|mock`. Detalles en `00-overview.md` §7 y 
 Template completo en `.env.example` en la raíz del repo. Mínimas para arrancar:
 
 ```bash
-# Dev sin Azure
+# Dev sin Azure (fixtures locales, no consume crédito)
 IA_PROVIDER=mock
 
-# Demo con Azure
-IA_PROVIDER=azure
-AZURE_OPENAI_ENDPOINT=https://<resource>.openai.azure.com
-AZURE_OPENAI_API_KEY=...
-AZURE_OPENAI_DEPLOYMENT_GPT4O=nutrilens-gpt4o
-AZURE_OPENAI_DEPLOYMENT_GPT4O_MINI=nutrilens-gpt4o-mini
+# Demo con Phi-4 en Azure AI Foundry (default actual)
+IA_PROVIDER=foundry
+AZURE_AI_FOUNDRY_ENDPOINT=https://<resource>.services.ai.azure.com/openai/v1
+AZURE_AI_FOUNDRY_KEY=...
+AZURE_AI_FOUNDRY_MODEL_MULTIMODAL=Phi-4-multimodal-instruct
+AZURE_AI_FOUNDRY_MODEL_MINI=Phi-4-mini-instruct
+
+# Upgrade futuro: GPT-4o cuando se apruebe el acceso a Azure OpenAI
+# IA_PROVIDER=azure-openai
+# AZURE_OPENAI_ENDPOINT=https://<resource>.openai.azure.com/openai/v1
+# AZURE_OPENAI_KEY=...
+# AZURE_OPENAI_MODEL_GPT4O=...
+# AZURE_OPENAI_MODEL_GPT4O_MINI=...
 ```
 
 ---
