@@ -4,6 +4,13 @@
 .LSOverride
 Icon
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
 # Node / Next.js (para cuando arranque el código)
 node_modules/
 .next/
