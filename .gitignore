@@ -17,9 +17,16 @@ node_modules/
 out/
 build/
 dist/
+
+# Variables de entorno con secrets (NUNCA commitearlas).
+# .env.example si se commitea como template.
 .env
 .env.local
 .env.*.local
+
+# Uploads locales (imágenes subidas por usuarios en dev)
+uploads/
+public/uploads/
 *.log
 npm-debug.log*
 yarn-debug.log*
