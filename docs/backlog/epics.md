@@ -1,6 +1,6 @@
 # Épicas — NutriLens
 
-> 6 épicas que cubren todo el producto. Cada épica agrupa user stories priorizadas para asegurar un MVP funcional mínimo demostrable.
+> 7 épicas que cubren todo el producto. Cada épica agrupa user stories priorizadas para asegurar un MVP funcional mínimo demostrable.
 
 ---
 
@@ -14,6 +14,7 @@
 | **E04** | Persistencia e historial                      | P0 (Must)     | Guardar productos analizados y exponerlos en un historial filtrable         |
 | **E05** | Chat con RAG sobre historial                  | P1 (Should)   | Permitir consultas en lenguaje natural sobre productos guardados            |
 | **E06** | Pipeline observable y experiencia de uso      | P1 (Should)   | Mostrar el flujo interno del análisis y pulir la UX para la demo            |
+| **E07** | Quality assurance y evaluación de modelos     | P1 (Should)   | Medir calidad del output del LLM con dataset propio + iterar prompts        |
 
 ---
 
@@ -30,9 +31,11 @@ P1 — MVP funcional completo
     E05: Chat RAG sobre historial
     E04: Filtros e historial avanzado
     E06: Pipeline visible + JSON expandible
+    E07: Eval dataset + iteración de prompts
 
 P2 — Polish para presentación
     E06: Responsive, animaciones, datos mockeados para demo estable
+    E07: Eval del chat RAG
 ```
 
 ---
@@ -100,3 +103,15 @@ P2 — Polish para presentación
 **Pantallas asociadas:** todas (consistencia visual y de estados).
 
 **Stories:** ver [`stories/E06-pipeline-observable-y-ux.md`](./stories/E06-pipeline-observable-y-ux.md)
+
+---
+
+## E07 — Quality assurance y evaluación de modelos
+
+**Objetivo:** medir cuantitativamente la calidad del output del LLM (extracción, clasificación de etiquetas, explicación, chat RAG) con un dataset propio + dataset de Open Food Facts. Permite detectar regresiones cuando cambia un prompt e iterar antes de la demo.
+
+**Cubre los RNF:** RNF-08 (rendimiento). **Foco operativo**: confianza para tomar decisiones de release.
+
+**Spec técnico:** [`../specs/E07-evaluation-strategy.md`](../specs/E07-evaluation-strategy.md).
+
+**Stories:** ver [`stories/E07-quality-evaluation.md`](./stories/E07-quality-evaluation.md)
