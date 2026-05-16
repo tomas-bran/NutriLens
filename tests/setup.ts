@@ -1,7 +1,7 @@
 /**
- * Setup global para Vitest.
- * - jest-dom matchers para @testing-library
- * - garantiza IA_PROVIDER=mock en todos los tests
+ * Global setup for Vitest.
+ * - jest-dom matchers from @testing-library
+ * - ensures IA_PROVIDER=mock for every test
  */
 import '@testing-library/jest-dom/vitest';
 

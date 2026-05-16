@@ -22,12 +22,12 @@ describe('ProductExtractionSchema', () => {
     confidence: 0.92,
   };
 
-  it('acepta un producto válido', () => {
+  it('accepts a valid product', () => {
     const r = ProductExtractionSchema.safeParse(baseValid);
     expect(r.success).toBe(true);
   });
 
-  it('aplica defaults a arrays cuando no vienen', () => {
+  it('applies array defaults when missing', () => {
     const { ingredientes_detectados, alergenos, sellos, ...rest } = baseValid;
     void ingredientes_detectados;
     void alergenos;
@@ -38,53 +38,53 @@ describe('ProductExtractionSchema', () => {
     expect(r.sellos).toEqual([]);
   });
 
-  it('rechaza producto vacío', () => {
+  it('rejects an empty product name', () => {
     const r = ProductExtractionSchema.safeParse({ ...baseValid, producto: '' });
     expect(r.success).toBe(false);
   });
 
-  it('rechaza categoría fuera del enum', () => {
-    const r = ProductExtractionSchema.safeParse({ ...baseValid, categoria: 'inventado' });
+  it('rejects categoria outside the enum', () => {
+    const r = ProductExtractionSchema.safeParse({ ...baseValid, categoria: 'unknown' });
     expect(r.success).toBe(false);
   });
 
-  it('rechaza alérgeno fuera del enum', () => {
+  it('rejects an alergeno outside the enum', () => {
     const r = ProductExtractionSchema.safeParse({
       ...baseValid,
-      alergenos: ['gluten', 'inventado'],
+      alergenos: ['gluten', 'unknown'],
     });
     expect(r.success).toBe(false);
   });
 
-  it('rechaza sello fuera del enum', () => {
+  it('rejects a sello outside the enum', () => {
     const r = ProductExtractionSchema.safeParse({
       ...baseValid,
-      sellos: ['inventado'],
+      sellos: ['unknown'],
     });
     expect(r.success).toBe(false);
   });
 
-  it('rechaza riesgo fuera del enum', () => {
+  it('rejects a riesgo outside the enum', () => {
     const r = ProductExtractionSchema.safeParse({ ...baseValid, riesgo: 'criticx' });
     expect(r.success).toBe(false);
   });
 
-  it('rechaza confidence < 0', () => {
+  it('rejects confidence < 0', () => {
     const r = ProductExtractionSchema.safeParse({ ...baseValid, confidence: -0.1 });
     expect(r.success).toBe(false);
   });
 
-  it('rechaza confidence > 1', () => {
+  it('rejects confidence > 1', () => {
     const r = ProductExtractionSchema.safeParse({ ...baseValid, confidence: 1.5 });
     expect(r.success).toBe(false);
   });
 
-  it('rechaza apto_vegano no booleano', () => {
+  it('rejects non-boolean apto_vegano', () => {
     const r = ProductExtractionSchema.safeParse({ ...baseValid, apto_vegano: 'no' });
     expect(r.success).toBe(false);
   });
 
-  it('soporta producto sin alérgenos ni sellos', () => {
+  it('accepts a product without alergenos and sellos', () => {
     const r = ProductExtractionSchema.safeParse({
       ...baseValid,
       alergenos: [],
@@ -96,29 +96,29 @@ describe('ProductExtractionSchema', () => {
 });
 
 describe('LabelKindSchema', () => {
-  it('acepta is_food_label=true con confidence válida', () => {
+  it('accepts is_food_label=true with a valid confidence', () => {
     expect(LabelKindSchema.safeParse({ is_food_label: true, confidence: 0.8 }).success).toBe(true);
   });
-  it('rechaza si falta is_food_label', () => {
+  it('rejects payload missing is_food_label', () => {
     expect(LabelKindSchema.safeParse({ confidence: 0.8 }).success).toBe(false);
   });
-  it('rechaza confidence fuera de rango', () => {
+  it('rejects confidence out of range', () => {
     expect(LabelKindSchema.safeParse({ is_food_label: true, confidence: 2 }).success).toBe(false);
   });
 });
 
-describe('enums exportados', () => {
-  it('tiene los 10 alérgenos definidos', () => {
+describe('exported enums', () => {
+  it('exposes the 10 supported alergenos', () => {
     expect(ALERGENOS).toHaveLength(10);
   });
-  it('tiene los 5 sellos argentinos', () => {
+  it('exposes the 5 Argentine sellos', () => {
     expect(SELLOS).toHaveLength(5);
   });
-  it('tiene 8 categorías incluyendo "otros"', () => {
+  it('exposes 8 categorias including "otros"', () => {
     expect(CATEGORIAS).toHaveLength(8);
     expect(CATEGORIAS).toContain('otros');
   });
-  it('tiene los 3 niveles de riesgo', () => {
+  it('exposes the 3 risk levels', () => {
     expect(RIESGOS).toEqual(['bajo', 'medio', 'alto']);
   });
 });

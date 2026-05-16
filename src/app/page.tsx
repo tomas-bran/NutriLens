@@ -1,8 +1,8 @@
 /**
- * Home / inicio.
+ * Home / landing page.
  *
- * Esta página es un placeholder del Sprint 0. La implementación real vive en
- * la US-07 (E01) — ver `docs/specs/E01-onboarding-y-upload.md §8`.
+ * Sprint 0 placeholder. The real implementation belongs to US-07 (E01) —
+ * see `docs/specs/E01-onboarding-y-upload.md §8`.
  */
 export default function HomePage() {
   return (

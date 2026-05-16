@@ -1,8 +1,8 @@
 /**
- * Prisma seed — placeholder del Sprint 0.
+ * Prisma seed — Sprint 0 placeholder.
  *
- * El seed real con 25 productos se implementa en la US-38 (E06).
- * Por ahora dejamos la estructura lista y un seed vacío que no rompa CI.
+ * The real seed with 25 products is implemented in US-38 (E06).
+ * For now we keep the file structure and a no-op so CI doesn't break.
  */
 import { PrismaClient } from '@prisma/client';
 
@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.warn(
-    '[seed] Sprint 0: seed placeholder, no se insertan productos. Ver US-38 para la implementación final.',
+    '[seed] Sprint 0: placeholder seed — no products are inserted. See US-38 for the final implementation.',
   );
 }
 

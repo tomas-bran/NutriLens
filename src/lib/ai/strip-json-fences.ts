@@ -1,25 +1,25 @@
 /**
- * Limpia un string que vino del LLM y puede tener:
- *   1. Fences ```json ... ```
- *   2. Texto pre/post el JSON ("Aquí está tu respuesta: { ... }")
+ * Cleans up a string that came from an LLM and may contain:
+ *   1. Triple-backtick fences (```json ... ``` or ``` ... ```)
+ *   2. Prose around the JSON ("Here's your response: { ... }")
  *
- * Devuelve la mejor aproximación a JSON parseable. Si no encuentra
- * llaves, devuelve el texto trimmed (que probablemente falle al
- * parsear y caerá en el manejo de error del caller).
+ * Returns the best parseable JSON candidate. If no curly braces are found,
+ * returns the trimmed text (which will likely fail to parse and trigger
+ * the caller's error handling).
  *
- * Ver `docs/specs/E02 §7`.
+ * See `docs/specs/E02 §7`.
  */
 export function stripJsonFences(text: string): string {
   if (!text) return '';
   const trimmed = text.trim();
 
-  // 1. Fence con ```json o ```
+  // 1. Fenced block, ```json or plain ```
   const fenceMatch = /```(?:json)?\s*([\s\S]*?)\s*```/i.exec(trimmed);
   if (fenceMatch?.[1]) {
     return fenceMatch[1].trim();
   }
 
-  // 2. Primera llave balanceada
+  // 2. Pick the outermost balanced braces, if any.
   const first = trimmed.indexOf('{');
   const last = trimmed.lastIndexOf('}');
   if (first >= 0 && last > first) {

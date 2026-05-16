@@ -1,15 +1,15 @@
 /**
- * Bootstrap del IaProvider según `IA_PROVIDER`.
- * Ver `docs/specs/00-overview.md §7` y `.env.example`.
+ * IaProvider bootstrap, selected via `IA_PROVIDER` env var.
+ * See `docs/specs/00-overview.md §7` and `.env.example`.
  *
- * Valores soportados:
- *   - "mock"          → MockIaProvider (default fail-safe)
+ * Supported values:
+ *   - "mock"          → MockIaProvider (fail-safe default)
  *   - "foundry"       → FoundryProvider (Azure AI Foundry, Phi-4)
  *   - "azure-openai"  → AzureOpenAIProvider (Azure OpenAI, gpt-4o)
  *
- * Los providers reales se implementan en US-08 / US-09 (E02). Por ahora
- * el switch solo conoce el mock; al implementar FoundryProvider, agregar
- * la rama correspondiente.
+ * Real providers are implemented in US-08 / US-09 (E02). For now the
+ * switch only knows the mock; when implementing FoundryProvider, wire
+ * its branch here.
  */
 import { MockIaProvider } from './mock-provider';
 import type { IaProvider } from './types';
@@ -24,21 +24,21 @@ export function getIaProvider(): IaProvider {
       cached = new MockIaProvider();
       break;
     case 'foundry':
-      // TODO(US-08): instanciar FoundryProvider real.
+      // TODO(US-08): instantiate real FoundryProvider.
       console.warn(
-        '[ia] IA_PROVIDER=foundry pedido pero FoundryProvider aún no está implementado. Usando MockIaProvider.',
+        '[ia] IA_PROVIDER=foundry requested but FoundryProvider is not implemented yet. Falling back to MockIaProvider.',
       );
       cached = new MockIaProvider();
       break;
     case 'azure-openai':
-      // TODO(post-aprobación): instanciar AzureOpenAIProvider real.
+      // TODO(post-approval): instantiate real AzureOpenAIProvider.
       console.warn(
-        '[ia] IA_PROVIDER=azure-openai pedido pero AzureOpenAIProvider aún no está implementado. Usando MockIaProvider.',
+        '[ia] IA_PROVIDER=azure-openai requested but AzureOpenAIProvider is not implemented yet. Falling back to MockIaProvider.',
       );
       cached = new MockIaProvider();
       break;
     default:
-      console.warn(`[ia] IA_PROVIDER='${kind}' desconocido. Usando MockIaProvider.`);
+      console.warn(`[ia] Unknown IA_PROVIDER='${kind}'. Falling back to MockIaProvider.`);
       cached = new MockIaProvider();
   }
   return cached;
@@ -46,4 +46,12 @@ export function getIaProvider(): IaProvider {
 
 export { MockIaProvider } from './mock-provider';
 export { stripJsonFences } from './strip-json-fences';
-export type { IaProvider, IaCallResult, TokenUsage, AnalyzeOpts, ExplainOpts, AnswerOpts, SavedProductLite } from './types';
+export type {
+  IaProvider,
+  IaCallResult,
+  TokenUsage,
+  AnalyzeOpts,
+  ExplainOpts,
+  AnswerOpts,
+  SavedProductLite,
+} from './types';

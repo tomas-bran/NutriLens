@@ -5,7 +5,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Re-export de los design tokens CSS para uso con clases utilitarias
+        // Re-export of the CSS design tokens so they are available as utility classes.
         bg: 'var(--color-bg)',
         surface: 'var(--color-surface)',
         text: 'var(--color-text)',

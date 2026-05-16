@@ -1,6 +1,6 @@
 /* Design tokens — Colors
- * Ver E06 §5.2 del spec. Si necesitás ajustar valores, hacelo acá; Tailwind
- * referencia estas vars vía tailwind.config.ts.
+ * See `docs/specs/E06-pipeline-observable-y-ux.md §5.2`. If you need to
+ * tweak values, edit them here; Tailwind references them via tailwind.config.ts.
  */
 :root {
   /* Base */
@@ -22,7 +22,7 @@
   --color-info: #3b82f6;
   --color-muted: #9ca3af;
 
-  /* Riesgo (alineado con E03 §6.2) */
+  /* Risk (aligned with E03 §6.2) */
   --color-risk-low: var(--color-success);
   --color-risk-medium: var(--color-warning);
   --color-risk-high: var(--color-danger);

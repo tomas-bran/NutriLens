@@ -1,6 +1,6 @@
 /**
- * Schemas del pipeline trace.
- * Ver `docs/specs/E06-pipeline-observable-y-ux.md §2`.
+ * Pipeline trace schemas.
+ * See `docs/specs/E06-pipeline-observable-y-ux.md §2`.
  */
 import { z } from 'zod';
 

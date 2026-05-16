@@ -1,6 +1,10 @@
 /**
- * Schemas canónicos del producto.
- * Ver `docs/specs/00-overview.md §6` y `E02 §6`.
+ * Canonical product schemas.
+ * See `docs/specs/00-overview.md §6` and `E02 §6`.
+ *
+ * NOTE: domain enum *values* (categorias, alergenos, sellos) are intentionally
+ * kept in Spanish — they are the canonical labels the model produces and the
+ * UI displays. Field names and types follow English conventions.
  */
 import { z } from 'zod';
 
@@ -46,9 +50,9 @@ export const RIESGOS = ['bajo', 'medio', 'alto'] as const;
 export type Riesgo = (typeof RIESGOS)[number];
 
 /**
- * ProductExtractionSchema — la salida del modelo de IA tras `extract_with_ia`.
- * Lo persistimos casi tal cual; las flags `apto_*` y `riesgo` se sobreescriben
- * con las reglas propias de E03 antes de guardar.
+ * ProductExtractionSchema — the model output of `extract_with_ia`.
+ * Persisted almost as-is; the `apto_*` flags and `riesgo` are overwritten
+ * with our own rules in E03 before saving.
  */
 export const ProductExtractionSchema = z.object({
   producto: z.string().min(1).max(200),
@@ -66,7 +70,7 @@ export const ProductExtractionSchema = z.object({
 export type ProductExtraction = z.infer<typeof ProductExtractionSchema>;
 
 /**
- * LabelKindSchema — output del step `detect_label_kind` (E01 §6).
+ * LabelKindSchema — output of the `detect_label_kind` step (E01 §6).
  */
 export const LabelKindSchema = z.object({
   is_food_label: z.boolean(),

@@ -26,9 +26,9 @@ export default defineConfig({
         '**/*.spec.{ts,tsx}',
         '**/index.ts',
         '**/types.ts',
-        'src/lib/ai/mock_provider.ts',
+        'src/lib/ai/mock-provider.ts',
       ],
-      // Thresholds duros: el CI falla si bajamos de esto
+      // Hard thresholds — CI fails if any drops below.
       thresholds: {
         lines: 80,
         branches: 75,

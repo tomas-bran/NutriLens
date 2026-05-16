@@ -1,6 +1,6 @@
 /**
- * Tipos compartidos del IaProvider.
- * Ver `docs/specs/00-overview.md §7` y `E02 §7`.
+ * Shared types for the IaProvider abstraction.
+ * See `docs/specs/00-overview.md §7` and `E02 §7`.
  */
 import type { ProductExtraction } from '@schemas/product';
 

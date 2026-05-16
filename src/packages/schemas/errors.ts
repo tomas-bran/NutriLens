@@ -1,6 +1,9 @@
 /**
- * Errores estructurados de la API.
- * Ver `docs/specs/00-overview.md §4.1`.
+ * Structured API errors.
+ * See `docs/specs/00-overview.md §4.1`.
+ *
+ * NOTE: `reason` strings are user-facing (the UI shows them) so they stay
+ * in Spanish at the call site. Error codes are stable English snake_case.
  */
 import { z } from 'zod';
 
@@ -31,7 +34,7 @@ export const ApiErrorSchema = z.object({
 export type ApiErrorBody = z.infer<typeof ApiErrorSchema>;
 
 /**
- * Excepción interna que se mapea a una respuesta de error estructurada.
+ * Internal exception mapped to a structured error response by the API layer.
  */
 export class ApiError extends Error {
   constructor(
