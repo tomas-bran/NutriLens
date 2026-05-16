@@ -1,0 +1,16 @@
+{
+  "description": "Yogur entero. El modelo reporta categoría con leve drift ('lácteo' vs 'lácteos'); el sanitizer la coerce a 'otros' al no estar en el enum exacto. Para el caso real esperamos que el modelo devuelva 'lácteos' bien; este fixture documenta el fallback defensivo.",
+  "image": "MOCK_IMAGE_YOGUR_ENTERO",
+  "modelOutput": {
+    "producto": "Yogur Entero Natural",
+    "categoria": "lácteo",
+    "ingredientes_detectados": ["leche entera", "fermentos lácticos"],
+    "alergenos": [],
+    "sellos": [],
+    "apto_vegano": false,
+    "apto_celiaco": true,
+    "apto_sin_lactosa": false,
+    "riesgo": "bajo",
+    "confidence": 0.88
+  }
+}

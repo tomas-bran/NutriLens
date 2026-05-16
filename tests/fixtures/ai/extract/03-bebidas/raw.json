@@ -1,0 +1,22 @@
+{
+  "description": "Gaseosa con sellos múltiples + sello fuera de enum ('exceso en grasas', sin 'totales' ni 'saturadas'); el sanitizer lo descarta. Categoría correcta, ingredientes sin alérgenos.",
+  "image": "MOCK_IMAGE_GASEOSA_COLA",
+  "modelOutput": {
+    "producto": "Gaseosa Cola Original",
+    "categoria": "bebidas",
+    "ingredientes_detectados": [
+      "agua carbonatada",
+      "azúcar",
+      "color caramelo",
+      "ácido fosfórico",
+      "cafeína"
+    ],
+    "alergenos": [],
+    "sellos": ["exceso en azúcares", "exceso en calorías", "exceso en grasas"],
+    "apto_vegano": true,
+    "apto_celiaco": true,
+    "apto_sin_lactosa": true,
+    "riesgo": "alto",
+    "confidence": 0.95
+  }
+}

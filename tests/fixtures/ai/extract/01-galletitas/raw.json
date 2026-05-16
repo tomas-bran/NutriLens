@@ -1,0 +1,22 @@
+{
+  "description": "Galletitas dulces con sellos múltiples. El modelo lista bien los ingredientes pero olvida 'gluten' y mezcla 'leche' con un valor fuera-de-enum ('lechita'); el sanitizer + enricher deben terminar con gluten + leche.",
+  "image": "MOCK_IMAGE_GALLETITAS_CHOCO_CRUNCH",
+  "modelOutput": {
+    "producto": "Galletitas Choco Crunch",
+    "categoria": "galletitas",
+    "ingredientes_detectados": [
+      "harina de trigo",
+      "azúcar",
+      "leche en polvo",
+      "cacao",
+      "aceite vegetal"
+    ],
+    "alergenos": ["lechita"],
+    "sellos": ["exceso en azúcares", "exceso en grasas saturadas"],
+    "apto_vegano": false,
+    "apto_celiaco": false,
+    "apto_sin_lactosa": false,
+    "riesgo": "alto",
+    "confidence": 0.92
+  }
+}

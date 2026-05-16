@@ -1,0 +1,12 @@
+{
+  "producto": "Yogur Entero Natural",
+  "categoria": "otros",
+  "ingredientes_detectados": ["leche entera", "fermentos lácticos"],
+  "alergenos": ["leche"],
+  "sellos": [],
+  "apto_vegano": false,
+  "apto_celiaco": true,
+  "apto_sin_lactosa": false,
+  "riesgo": "bajo",
+  "confidence": 0.88
+}
