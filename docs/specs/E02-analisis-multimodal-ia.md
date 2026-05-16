@@ -118,22 +118,28 @@ export async function extract_with_ia(
   // Cache por hash
   const cached = await cache.get(`extract:${ctx.file.hash}:extract_product-v1`);
   if (cached) {
-    return { ...ctx, product: cached, trace: trace(ctx, 'extract_with_ia', 'ok', { cached: true }) };
+    return {
+      ...ctx,
+      product: cached,
+      trace: trace(ctx, 'extract_with_ia', 'ok', { cached: true }),
+    };
   }
 
-  const { raw, usage, latencyMs } = await ia.analyzeLabel(
-    ctx.file.buffer,
-    ctx.file.mime,
-    { promptVersion: 'extract_product-v1', timeoutMs: 25_000 },
-  );
+  const { raw, usage, latencyMs } = await ia.analyzeLabel(ctx.file.buffer, ctx.file.mime, {
+    promptVersion: 'extract_product-v1',
+    timeoutMs: 25_000,
+  });
 
   // Solo guardamos el raw aquí; la validación es un step aparte
   return {
     ...ctx,
     extractionRaw: raw,
     trace: trace(ctx, 'extract_with_ia', 'ok', {
-      tokensIn: usage.in, tokensOut: usage.out, latencyMs,
-      model: 'Phi-4-multimodal-instruct', promptVersion: 'extract_product-v1',
+      tokensIn: usage.in,
+      tokensOut: usage.out,
+      latencyMs,
+      model: 'Phi-4-multimodal-instruct',
+      promptVersion: 'extract_product-v1',
     }),
   };
 }
@@ -173,9 +179,12 @@ export async function validate_schema(ctx: AnalysisContext, ia: IaProvider) {
 
 async function retryOrFail(ctx, ia, reason, details = {}) {
   if (ctx.retries.validate_schema >= 1) {
-    throw new ApiError('extraction_invalid',
+    throw new ApiError(
+      'extraction_invalid',
       'No pudimos interpretar el resultado del análisis. Probá con otra imagen.',
-      422, { reason, ...details });
+      422,
+      { reason, ...details },
+    );
   }
   // Single corrective retry: pedimos al modelo que ajuste su respuesta.
   const { raw } = await ia.analyzeLabel(ctx.file.buffer, ctx.file.mime, {
@@ -213,18 +222,35 @@ Si el segundo intento también falla, devolvemos `extraction_invalid` y NO persi
 import { z } from 'zod';
 
 export const ALERGENOS = [
-  'gluten', 'leche', 'huevo', 'soja', 'frutos secos', 'maní',
-  'pescado', 'crustáceos', 'sulfitos', 'sésamo',
+  'gluten',
+  'leche',
+  'huevo',
+  'soja',
+  'frutos secos',
+  'maní',
+  'pescado',
+  'crustáceos',
+  'sulfitos',
+  'sésamo',
 ] as const;
 
 export const SELLOS = [
-  'exceso en azúcares', 'exceso en sodio', 'exceso en grasas saturadas',
-  'exceso en grasas totales', 'exceso en calorías',
+  'exceso en azúcares',
+  'exceso en sodio',
+  'exceso en grasas saturadas',
+  'exceso en grasas totales',
+  'exceso en calorías',
 ] as const;
 
 export const CATEGORIAS = [
-  'galletitas', 'cereales', 'snacks', 'lácteos', 'bebidas',
-  'sin TACC', 'veganos', 'otros',
+  'galletitas',
+  'cereales',
+  'snacks',
+  'lácteos',
+  'bebidas',
+  'sin TACC',
+  'veganos',
+  'otros',
 ] as const;
 
 export const ProductExtractionSchema = z.object({
@@ -251,24 +277,24 @@ Si el modelo devuelve un alérgeno o sello fuera de la lista, lo descartamos en 
 
 Azure AI Foundry expone un endpoint **OpenAI-compatible** (`/openai/v1`), así que usamos directamente el SDK `openai` apuntando al baseURL del resource. Un solo cliente sirve para todos los modelos del recurso (Phi-4-multimodal y Phi-4-mini), se distinguen por el campo `model` en cada request.
 
-```ts
+````ts
 // lib/ai/foundry_provider.ts
 import OpenAI from 'openai';
 
 export class FoundryProvider implements IaProvider {
   private client = new OpenAI({
-    baseURL: process.env.AZURE_AI_FOUNDRY_ENDPOINT!,  // .../openai/v1
-    apiKey:  process.env.AZURE_AI_FOUNDRY_KEY!,
+    baseURL: process.env.AZURE_AI_FOUNDRY_ENDPOINT!, // .../openai/v1
+    apiKey: process.env.AZURE_AI_FOUNDRY_KEY!,
   });
-  private MM   = process.env.AZURE_AI_FOUNDRY_MODEL_MULTIMODAL!; // "Phi-4-multimodal-instruct"
-  private MINI = process.env.AZURE_AI_FOUNDRY_MODEL_MINI!;       // "Phi-4-mini-instruct"
+  private MM = process.env.AZURE_AI_FOUNDRY_MODEL_MULTIMODAL!; // "Phi-4-multimodal-instruct"
+  private MINI = process.env.AZURE_AI_FOUNDRY_MODEL_MINI!; // "Phi-4-mini-instruct"
 
   async analyzeLabel(file: Buffer, mime: string, opts) {
     const start = Date.now();
     const dataUrl = `data:${mime};base64,${file.toString('base64')}`;
 
     const r = await this.client.chat.completions.create({
-      model: this.MM,                  // Phi-4-multimodal-instruct
+      model: this.MM, // Phi-4-multimodal-instruct
       max_tokens: 1500,
       temperature: 0.1,
       messages: [
@@ -276,7 +302,10 @@ export class FoundryProvider implements IaProvider {
         {
           role: 'user',
           content: [
-            { type: 'text', text: 'Extraé la información de esta etiqueta y devolvé SOLO el JSON pedido.' },
+            {
+              type: 'text',
+              text: 'Extraé la información de esta etiqueta y devolvé SOLO el JSON pedido.',
+            },
             { type: 'image_url', image_url: { url: dataUrl } },
           ],
         },
@@ -287,7 +316,7 @@ export class FoundryProvider implements IaProvider {
     return {
       raw: stripJsonFences(raw),
       usage: {
-        in:  r.usage?.prompt_tokens     ?? 0,
+        in: r.usage?.prompt_tokens ?? 0,
         out: r.usage?.completion_tokens ?? 0,
       },
       latencyMs: Date.now() - start,
@@ -312,11 +341,11 @@ function stripJsonFences(text: string): string {
   const fence = /```(?:json)?\s*([\s\S]*?)\s*```/i.exec(text);
   if (fence) return fence[1].trim();
   const first = text.indexOf('{');
-  const last  = text.lastIndexOf('}');
+  const last = text.lastIndexOf('}');
   if (first >= 0 && last > first) return text.slice(first, last + 1);
   return text.trim();
 }
-```
+````
 
 Notas:
 
@@ -338,9 +367,9 @@ export class AzureOpenAIProvider extends FoundryProvider {
     super();
     (this as any).client = new OpenAI({
       baseURL: process.env.AZURE_OPENAI_ENDPOINT!,
-      apiKey:  process.env.AZURE_OPENAI_KEY!,
+      apiKey: process.env.AZURE_OPENAI_KEY!,
     });
-    (this as any).MM   = process.env.AZURE_OPENAI_MODEL_GPT4O!;
+    (this as any).MM = process.env.AZURE_OPENAI_MODEL_GPT4O!;
     (this as any).MINI = process.env.AZURE_OPENAI_MODEL_GPT4O_MINI!;
   }
 }
@@ -351,9 +380,11 @@ El switch entre providers se hace por env var `IA_PROVIDER` en el bootstrap:
 ```ts
 // lib/ai/index.ts
 export const ia: IaProvider =
-  process.env.IA_PROVIDER === 'azure-openai' ? new AzureOpenAIProvider()
-  : process.env.IA_PROVIDER === 'foundry'    ? new FoundryProvider()
-  :                                            new MockIaProvider();
+  process.env.IA_PROVIDER === 'azure-openai'
+    ? new AzureOpenAIProvider()
+    : process.env.IA_PROVIDER === 'foundry'
+      ? new FoundryProvider()
+      : new MockIaProvider();
 ```
 
 **Migrar de Phi a GPT-4o cuando aprueben el acceso es solo cambiar las 4 env vars y `IA_PROVIDER=azure-openai`.** El código del provider y los prompts no cambian.
@@ -379,12 +410,12 @@ Fixtures en `tests/fixtures/ai/extract/<hash>.json`. El CI no consume tokens.
 
 ## 9. Errores específicos de E02
 
-| Código | HTTP | Cuándo |
-|-------|------|--------|
-| `model_timeout` | 504 | `analyzeLabel` no responde en 25s |
-| `model_rate_limited` | 429 | Azure devuelve 429 incluso tras el retry |
-| `model_error` | 502 | Cualquier 5xx del proveedor tras el retry |
-| `extraction_invalid` | 422 | El JSON no parsea o no cumple schema, incluso tras el retry correctivo |
+| Código               | HTTP | Cuándo                                                                 |
+| -------------------- | ---- | ---------------------------------------------------------------------- |
+| `model_timeout`      | 504  | `analyzeLabel` no responde en 25s                                      |
+| `model_rate_limited` | 429  | Azure devuelve 429 incluso tras el retry                               |
+| `model_error`        | 502  | Cualquier 5xx del proveedor tras el retry                              |
+| `extraction_invalid` | 422  | El JSON no parsea o no cumple schema, incluso tras el retry correctivo |
 
 Todos incluyen `details.requestId` y `details.promptVersion`.
 
@@ -412,13 +443,13 @@ Y modificamos el prompt para mandar `pdfText` junto a una imagen renderizada de 
 
 ## 11. Logging
 
-| Evento | Campos clave |
-|--------|--------------|
-| `extract.started` | `requestId`, `mime`, `fileHash`, `promptVersion`, `model` |
-| `extract.completed` | `requestId`, `tokensIn`, `tokensOut`, `latencyMs`, `confidence` |
-| `extract.cache_hit` | `requestId`, `fileHash` |
-| `extract.schema_failed` | `requestId`, `issues`, `attempt` |
-| `extract.failed` | `requestId`, `error`, `reason` |
+| Evento                  | Campos clave                                                    |
+| ----------------------- | --------------------------------------------------------------- |
+| `extract.started`       | `requestId`, `mime`, `fileHash`, `promptVersion`, `model`       |
+| `extract.completed`     | `requestId`, `tokensIn`, `tokensOut`, `latencyMs`, `confidence` |
+| `extract.cache_hit`     | `requestId`, `fileHash`                                         |
+| `extract.schema_failed` | `requestId`, `issues`, `attempt`                                |
+| `extract.failed`        | `requestId`, `error`, `reason`                                  |
 
 ---
 
@@ -444,15 +475,15 @@ Y modificamos el prompt para mandar `pdfText` junto a una imagen renderizada de 
 
 ## 13. Decisiones técnicas y trade-offs
 
-| Decisión | Alternativa descartada | Por qué |
-|---------|----------------------|--------|
-| Una sola call multimodal por archivo (extracción + clasificación previa) | dos modelos distintos para detección y extracción | Phi-4-multimodal sirve para ambos casos; simplifica deployment |
-| `response_format: json_object` | parse libre del texto | garantiza JSON, evita errores triviales |
-| Validación con Zod fuera del provider | dentro del provider | desacopla el adaptador del dominio |
-| Un único retry correctivo | reintentos infinitos | costo controlado; mejor fallar rápido que quemar tokens |
-| `temperature: 0.1` | `0.0` | mantiene una mínima variabilidad para casos ambiguos sin perder consistencia |
-| Cache por hash + promptVersion | cache solo por hash | si cambiamos el prompt, el cache se invalida automáticamente |
-| PDF directo a `Phi-4-multimodal` antes que Doc Intelligence | activar OCR siempre | Doc Intelligence cuesta por página; lo evitamos si no hace falta |
+| Decisión                                                                 | Alternativa descartada                            | Por qué                                                                      |
+| ------------------------------------------------------------------------ | ------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Una sola call multimodal por archivo (extracción + clasificación previa) | dos modelos distintos para detección y extracción | Phi-4-multimodal sirve para ambos casos; simplifica deployment               |
+| `response_format: json_object`                                           | parse libre del texto                             | garantiza JSON, evita errores triviales                                      |
+| Validación con Zod fuera del provider                                    | dentro del provider                               | desacopla el adaptador del dominio                                           |
+| Un único retry correctivo                                                | reintentos infinitos                              | costo controlado; mejor fallar rápido que quemar tokens                      |
+| `temperature: 0.1`                                                       | `0.0`                                             | mantiene una mínima variabilidad para casos ambiguos sin perder consistencia |
+| Cache por hash + promptVersion                                           | cache solo por hash                               | si cambiamos el prompt, el cache se invalida automáticamente                 |
+| PDF directo a `Phi-4-multimodal` antes que Doc Intelligence              | activar OCR siempre                               | Doc Intelligence cuesta por página; lo evitamos si no hace falta             |
 
 ---
 

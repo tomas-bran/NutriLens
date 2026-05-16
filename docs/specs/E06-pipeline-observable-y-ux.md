@@ -111,11 +111,11 @@ Renderizado:
 
 ### 3.2 Estados visuales por status
 
-| `status` | Icono | Color |
-|----------|-------|-------|
-| `ok`     | `✓`   | `--color-success` (verde) |
-| `skipped`| `–`   | `--color-muted` (gris) |
-| `error`  | `✗`   | `--color-danger` (rojo) |
+| `status`  | Icono | Color                     |
+| --------- | ----- | ------------------------- |
+| `ok`      | `✓`   | `--color-success` (verde) |
+| `skipped` | `–`   | `--color-muted` (gris)    |
+| `error`   | `✗`   | `--color-danger` (rojo)   |
 
 Si algún step es `error`, el mismo step muestra el mensaje de `details.error`/`details.reason` en una línea adicional.
 
@@ -188,32 +188,32 @@ Todos importados en `app/globals.css`.
 /* tokens/colors.css */
 :root {
   /* base */
-  --color-bg:                #FFFFFF;
-  --color-surface:           #F7F8FA;
-  --color-text:              #1A1F2E;
-  --color-text-muted:        #6B7280;
-  --color-border:            #E4E7EC;
+  --color-bg: #ffffff;
+  --color-surface: #f7f8fa;
+  --color-text: #1a1f2e;
+  --color-text-muted: #6b7280;
+  --color-border: #e4e7ec;
 
   /* brand */
-  --color-primary:           #2EB67D;   /* verde NutriLens */
-  --color-primary-strong:    #1F8E60;
-  --color-primary-soft:      #E6F5EE;
+  --color-primary: #2eb67d; /* verde NutriLens */
+  --color-primary-strong: #1f8e60;
+  --color-primary-soft: #e6f5ee;
 
   /* feedback */
-  --color-success:           #2EB67D;
-  --color-warning:           #F2A526;
-  --color-danger:            #E5484D;
-  --color-info:              #3B82F6;
-  --color-muted:             #9CA3AF;
+  --color-success: #2eb67d;
+  --color-warning: #f2a526;
+  --color-danger: #e5484d;
+  --color-info: #3b82f6;
+  --color-muted: #9ca3af;
 
   /* riesgo (alineado con E03 §6.2) */
-  --color-risk-low:          var(--color-success);
-  --color-risk-medium:       var(--color-warning);
-  --color-risk-high:         var(--color-danger);
+  --color-risk-low: var(--color-success);
+  --color-risk-medium: var(--color-warning);
+  --color-risk-high: var(--color-danger);
 
   /* aptitud (badges ✓/✗) */
-  --color-apt-true:          var(--color-success);
-  --color-apt-false:         var(--color-danger);
+  --color-apt-true: var(--color-success);
+  --color-apt-false: var(--color-danger);
 }
 
 /* tokens/typography.css */
@@ -262,17 +262,17 @@ Todos importados en `app/globals.css`.
 
 ### 5.3 Componentes base en `components/ui/`
 
-| Componente | API mínima | Uso |
-|-----------|-----------|----|
-| `<Button variant="primary" \| "ghost" \| "danger">` | `onClick`, `disabled`, `children`, `size?: "sm"\|"md"\|"lg"` | CTA, secundarios |
-| `<Card>` | `children`, `padding?` | Contenedor con bordes redondeados y sombra suave |
-| `<Badge variant="risk-low" \| "risk-medium" \| "risk-high" \| "neutral">` | `children` | Riesgos, categorías |
-| `<Chip onClick?, removable?>` | `children` | Filtros, alérgenos, productos referenciados en chat |
-| `<Disclaimer>` | sin props | Frase fija "NutriLens es un asistente informativo…" |
-| `<ErrorState title, description, action>` | — | Vista de error reusable |
-| `<EmptyState illustration, title, description, action>` | — | Estado vacío reusable |
-| `<Spinner size?>` | — | Loading inline |
-| `<Skeleton width, height>` | — | Loaders de listado |
+| Componente                                                                | API mínima                                                   | Uso                                                 |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------- |
+| `<Button variant="primary" \| "ghost" \| "danger">`                       | `onClick`, `disabled`, `children`, `size?: "sm"\|"md"\|"lg"` | CTA, secundarios                                    |
+| `<Card>`                                                                  | `children`, `padding?`                                       | Contenedor con bordes redondeados y sombra suave    |
+| `<Badge variant="risk-low" \| "risk-medium" \| "risk-high" \| "neutral">` | `children`                                                   | Riesgos, categorías                                 |
+| `<Chip onClick?, removable?>`                                             | `children`                                                   | Filtros, alérgenos, productos referenciados en chat |
+| `<Disclaimer>`                                                            | sin props                                                    | Frase fija "NutriLens es un asistente informativo…" |
+| `<ErrorState title, description, action>`                                 | —                                                            | Vista de error reusable                             |
+| `<EmptyState illustration, title, description, action>`                   | —                                                            | Estado vacío reusable                               |
+| `<Spinner size?>`                                                         | —                                                            | Loading inline                                      |
+| `<Skeleton width, height>`                                                | —                                                            | Loaders de listado                                  |
 
 ---
 
@@ -280,13 +280,13 @@ Todos importados en `app/globals.css`.
 
 ### 6.1 Breakpoints (Tailwind defaults)
 
-| Nombre | Ancho | Uso |
-|--------|-------|----|
-| `sm`   | 640px | mobile landscape |
-| `md`   | 768px | tablet portrait |
-| `lg`   | 1024px | desktop chico |
+| Nombre | Ancho  | Uso              |
+| ------ | ------ | ---------------- |
+| `sm`   | 640px  | mobile landscape |
+| `md`   | 768px  | tablet portrait  |
+| `lg`   | 1024px | desktop chico    |
 | `xl`   | 1280px | desktop estándar |
-| `2xl`  | 1536px | desktop grande |
+| `2xl`  | 1536px | desktop grande   |
 
 ### 6.2 Layout principal
 
@@ -298,13 +298,13 @@ Todos importados en `app/globals.css`.
 
 ### 6.3 Reglas por pantalla
 
-| Pantalla | Mobile | Desktop |
-|---------|--------|--------|
-| Home | hero + CTA + ejemplos en columna | hero a la izquierda + imagen de demo a la derecha |
-| Upload | dropzone full-width + CTA "Tomar foto" | dropzone más ancha + drag&drop activo |
-| Resultado | secciones apiladas; pipeline cerrado por default | dos columnas (izquierda info, derecha imagen) |
-| Historial | tarjetas en 1 columna | grilla de 2 columnas (`lg`) o 3 (`xl`) |
-| Chat | thread full-width; input fijo al bottom | layout centrado, max-width 720px |
+| Pantalla  | Mobile                                           | Desktop                                           |
+| --------- | ------------------------------------------------ | ------------------------------------------------- |
+| Home      | hero + CTA + ejemplos en columna                 | hero a la izquierda + imagen de demo a la derecha |
+| Upload    | dropzone full-width + CTA "Tomar foto"           | dropzone más ancha + drag&drop activo             |
+| Resultado | secciones apiladas; pipeline cerrado por default | dos columnas (izquierda info, derecha imagen)     |
+| Historial | tarjetas en 1 columna                            | grilla de 2 columnas (`lg`) o 3 (`xl`)            |
+| Chat      | thread full-width; input fijo al bottom          | layout centrado, max-width 720px                  |
 
 ### 6.4 Touch targets
 
@@ -348,15 +348,15 @@ Componente `<EmptyState>` análogo, con ilustración opcional.
 
 Carga 25 productos cubriendo:
 
-| Categoría | Cantidad | Distribución de riesgo |
-|----------|---------|----------------------|
-| galletitas | 5 | 2 alto, 2 medio, 1 bajo |
-| cereales | 4 | 1 alto, 2 medio, 1 bajo |
-| snacks | 4 | 2 alto, 1 medio, 1 bajo |
-| lácteos | 3 | 1 alto, 1 medio, 1 bajo |
-| bebidas | 3 | 1 alto, 1 medio, 1 bajo |
-| sin TACC | 3 | 0 alto, 1 medio, 2 bajo |
-| veganos | 3 | 0 alto, 1 medio, 2 bajo |
+| Categoría  | Cantidad | Distribución de riesgo  |
+| ---------- | -------- | ----------------------- |
+| galletitas | 5        | 2 alto, 2 medio, 1 bajo |
+| cereales   | 4        | 1 alto, 2 medio, 1 bajo |
+| snacks     | 4        | 2 alto, 1 medio, 1 bajo |
+| lácteos    | 3        | 1 alto, 1 medio, 1 bajo |
+| bebidas    | 3        | 1 alto, 1 medio, 1 bajo |
+| sin TACC   | 3        | 0 alto, 1 medio, 2 bajo |
+| veganos    | 3        | 0 alto, 1 medio, 2 bajo |
 
 Cada producto tiene los 11 campos del schema (E04 §2) completos, una imagen placeholder en `/uploads/seed/*.jpg` y un `jsonRaw` realista.
 
@@ -442,15 +442,15 @@ Mínimo viable: enviar errores no recuperables a un endpoint `POST /api/client-e
 
 ## 13. Decisiones técnicas y trade-offs
 
-| Decisión | Alternativa descartada | Por qué |
-|---------|----------------------|--------|
-| Tailwind + CSS vars como tokens | una lib de UI (shadcn, etc.) | scope acotado, control total, sin runtime extra |
-| Tokens en CSS vars | tokens en JS/TS | facilita modo oscuro futuro y consistencia con CSS |
-| Pipeline visible en UI | solo en logs | requisito explícito del TP (RF-15) + buen showcase de "cómo trabaja el sistema" |
-| Seed con UUIDs fijos | UUIDs random en cada seed | tests E2E reproducibles |
-| Imágenes de seed commiteadas | descarga al seedear | sin red en seed → más rápido y reproducible |
-| Sin streaming de respuestas IA | streaming token-by-token | scope; respuestas son cortas |
-| No agregar lib de animaciones | framer-motion | bundle más liviano; CSS transitions alcanzan |
+| Decisión                        | Alternativa descartada       | Por qué                                                                         |
+| ------------------------------- | ---------------------------- | ------------------------------------------------------------------------------- |
+| Tailwind + CSS vars como tokens | una lib de UI (shadcn, etc.) | scope acotado, control total, sin runtime extra                                 |
+| Tokens en CSS vars              | tokens en JS/TS              | facilita modo oscuro futuro y consistencia con CSS                              |
+| Pipeline visible en UI          | solo en logs                 | requisito explícito del TP (RF-15) + buen showcase de "cómo trabaja el sistema" |
+| Seed con UUIDs fijos            | UUIDs random en cada seed    | tests E2E reproducibles                                                         |
+| Imágenes de seed commiteadas    | descarga al seedear          | sin red en seed → más rápido y reproducible                                     |
+| Sin streaming de respuestas IA  | streaming token-by-token     | scope; respuestas son cortas                                                    |
+| No agregar lib de animaciones   | framer-motion                | bundle más liviano; CSS transitions alcanzan                                    |
 
 ---
 

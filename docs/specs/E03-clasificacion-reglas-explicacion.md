@@ -52,23 +52,56 @@ Viven en `lib/rules/blacklists.ts` y se exportan como `const`:
 ```ts
 export const NO_CELIAC = [
   // ingredientes que contienen gluten
-  'trigo', 'harina de trigo', 'cebada', 'malta', 'malta de cebada',
-  'centeno', 'avena', // avena no certificada
-  'gluten', 'sémola', 'cuscús', 'bulgur', 'almidón de trigo',
+  'trigo',
+  'harina de trigo',
+  'cebada',
+  'malta',
+  'malta de cebada',
+  'centeno',
+  'avena', // avena no certificada
+  'gluten',
+  'sémola',
+  'cuscús',
+  'bulgur',
+  'almidón de trigo',
 ];
 
 export const NO_LACTOSE = [
-  'leche', 'leche en polvo', 'leche entera', 'leche descremada',
-  'lactosa', 'suero', 'suero de leche', 'caseína', 'caseinato',
-  'manteca', 'crema', 'yogur', 'queso', 'ricota', 'requesón',
+  'leche',
+  'leche en polvo',
+  'leche entera',
+  'leche descremada',
+  'lactosa',
+  'suero',
+  'suero de leche',
+  'caseína',
+  'caseinato',
+  'manteca',
+  'crema',
+  'yogur',
+  'queso',
+  'ricota',
+  'requesón',
 ];
 
 export const NO_VEGAN = [
   ...NO_LACTOSE,
   // animal (excepto lácteos, ya cubiertos arriba)
-  'carne', 'pollo', 'cerdo', 'pescado', 'atún', 'salmón',
-  'gelatina', 'huevo', 'clara de huevo', 'yema', 'miel',
-  'cochinilla', 'carmín', 'ácido carmínico', 'shellac',
+  'carne',
+  'pollo',
+  'cerdo',
+  'pescado',
+  'atún',
+  'salmón',
+  'gelatina',
+  'huevo',
+  'clara de huevo',
+  'yema',
+  'miel',
+  'cochinilla',
+  'carmín',
+  'ácido carmínico',
+  'shellac',
 ];
 ```
 
@@ -84,24 +117,24 @@ export type RulesResult = {
   apto_vegano: boolean;
   apto_celiaco: boolean;
   apto_sin_lactosa: boolean;
-  reglas_aplicadas: string[];   // ej. ["contiene_gluten", "contiene_lactosa"]
+  reglas_aplicadas: string[]; // ej. ["contiene_gluten", "contiene_lactosa"]
 };
 
 export function apply_rules(product: ProductExtraction): RulesResult {
   const ingredientes = product.ingredientes_detectados.map(normalize);
-  const alergenos    = product.alergenos.map(normalize);
+  const alergenos = product.alergenos.map(normalize);
 
   const matches = (haystack: string[], needles: string[]) =>
     needles.some((n) => haystack.some((h) => h.includes(n)));
 
-  const tieneGluten   = alergenos.includes('gluten') || matches(ingredientes, NO_CELIAC);
-  const tieneLacteos  = alergenos.includes('leche')  || matches(ingredientes, NO_LACTOSE);
-  const tieneAnimal   = matches(ingredientes, NO_VEGAN) || product.alergenos.includes('huevo');
+  const tieneGluten = alergenos.includes('gluten') || matches(ingredientes, NO_CELIAC);
+  const tieneLacteos = alergenos.includes('leche') || matches(ingredientes, NO_LACTOSE);
+  const tieneAnimal = matches(ingredientes, NO_VEGAN) || product.alergenos.includes('huevo');
 
   const reglas: string[] = [];
-  if (tieneGluten)  reglas.push('contiene_gluten');
+  if (tieneGluten) reglas.push('contiene_gluten');
   if (tieneLacteos) reglas.push('contiene_lacteos');
-  if (tieneAnimal)  reglas.push('contiene_origen_animal');
+  if (tieneAnimal) reglas.push('contiene_origen_animal');
 
   return {
     apto_celiaco: !tieneGluten,
@@ -126,8 +159,8 @@ export function apply_rules(product: ProductExtraction): RulesResult {
 
 ```ts
 // lib/rules/risk.ts
-export function compute_risk(p: ProductExtraction, r: RulesResult): 'bajo'|'medio'|'alto' {
-  const sellos    = p.sellos.length;
+export function compute_risk(p: ProductExtraction, r: RulesResult): 'bajo' | 'medio' | 'alto' {
+  const sellos = p.sellos.length;
   const alergenos = p.alergenos.length;
 
   if (sellos >= 2) return 'alto';
@@ -144,12 +177,12 @@ export function compute_risk(p: ProductExtraction, r: RulesResult): 'bajo'|'medi
 ### 4.2 Tabla de verdad (resumen)
 
 | `sellos` | `alergenos` | `reglas_aplicadas` | `riesgo` |
-|---------|------------|-------------------|---------|
-| 0       | 0          | 0                 | bajo    |
-| 0       | ≥1         | cualquiera        | medio   |
-| 1       | 0–1        | cualquiera        | medio   |
-| 1       | ≥2         | cualquiera        | alto    |
-| ≥2      | cualquiera | cualquiera        | alto    |
+| -------- | ----------- | ------------------ | -------- |
+| 0        | 0           | 0                  | bajo     |
+| 0        | ≥1          | cualquiera         | medio    |
+| 1        | 0–1         | cualquiera         | medio    |
+| 1        | ≥2          | cualquiera         | alto     |
+| ≥2       | cualquiera  | cualquiera         | alto     |
 
 ### 4.3 Override por baja confianza
 
@@ -203,12 +236,12 @@ export async function generate_explanation(ctx: AnalysisContext, ia: IaProvider)
   const cached = await cache.get(key);
   if (cached) return { ...ctx, explanation: cached };
 
-  const { text, usage, latencyMs } = await ia.generateExplanation(
-    ctx.product!,
-    { promptVersion: 'explain_product-v1', timeoutMs: 10_000 }
-  );
+  const { text, usage, latencyMs } = await ia.generateExplanation(ctx.product!, {
+    promptVersion: 'explain_product-v1',
+    timeoutMs: 10_000,
+  });
 
-  const explanation = sanitize(text);          // ver §5.5
+  const explanation = sanitize(text); // ver §5.5
   await cache.set(key, explanation, { ttlSeconds: 3600 * 24 });
   return { ...ctx, explanation };
 }
@@ -277,11 +310,11 @@ Si removemos algo, logueamos `explanation.sanitized` con la frase encontrada (si
 
 ### 6.2 Colores de riesgo (tokens del design system, ver E06)
 
-| `riesgo` | Token | Uso visual |
-|---------|------|-----------|
-| `bajo`  | `--color-risk-low`  (verde)  | badge + borde sutil |
-| `medio` | `--color-risk-medium` (ámbar) | idem |
-| `alto`  | `--color-risk-high`  (rojo)  | idem |
+| `riesgo` | Token                         | Uso visual          |
+| -------- | ----------------------------- | ------------------- |
+| `bajo`   | `--color-risk-low` (verde)    | badge + borde sutil |
+| `medio`  | `--color-risk-medium` (ámbar) | idem                |
+| `alto`   | `--color-risk-high` (rojo)    | idem                |
 
 ### 6.3 Badge "Confianza baja"
 
@@ -311,13 +344,13 @@ Componente: `<Disclaimer />` en `components/ui/Disclaimer.tsx`.
 
 ## 7. Logging
 
-| Evento | Cuándo | Campos clave |
-|--------|--------|-------------|
-| `rules.applied` | Termina `apply_rules` | `requestId`, `reglas_aplicadas` |
-| `risk.computed` | Termina `compute_risk` | `requestId`, `riesgo`, `sellos`, `alergenos` |
+| Evento                  | Cuándo                            | Campos clave                                                |
+| ----------------------- | --------------------------------- | ----------------------------------------------------------- |
+| `rules.applied`         | Termina `apply_rules`             | `requestId`, `reglas_aplicadas`                             |
+| `risk.computed`         | Termina `compute_risk`            | `requestId`, `riesgo`, `sellos`, `alergenos`                |
 | `explanation.generated` | Termina `generate_explanation` ok | `requestId`, `tokensIn`, `tokensOut`, `latencyMs`, `cached` |
-| `explanation.failed` | Falla la generación | `requestId`, `error` |
-| `explanation.sanitized` | Sanitizamos texto | `requestId`, `pattern` |
+| `explanation.failed`    | Falla la generación               | `requestId`, `error`                                        |
+| `explanation.sanitized` | Sanitizamos texto                 | `requestId`, `pattern`                                      |
 
 ---
 
@@ -343,14 +376,14 @@ Componente: `<Disclaimer />` en `components/ui/Disclaimer.tsx`.
 
 ## 9. Decisiones técnicas y trade-offs
 
-| Decisión | Alternativa descartada | Por qué |
-|---------|----------------------|--------|
-| Reglas hardcoded en código (no en DB) | tabla en DB editable | velocidad para MVP, listas chicas, versionado por git suficiente |
-| Cálculo determinístico de riesgo | dejar al modelo decidir | reproducible, testeable, defendible en la entrega del TP |
+| Decisión                                 | Alternativa descartada              | Por qué                                                           |
+| ---------------------------------------- | ----------------------------------- | ----------------------------------------------------------------- |
+| Reglas hardcoded en código (no en DB)    | tabla en DB editable                | velocidad para MVP, listas chicas, versionado por git suficiente  |
+| Cálculo determinístico de riesgo         | dejar al modelo decidir             | reproducible, testeable, defendible en la entrega del TP          |
 | Explicación con `Phi-4-mini` (text-only) | con `Phi-4-multimodal` (multimodal) | mucho más barato y calidad suficiente para 3 oraciones sin imagen |
-| Sanitizador de output | confiar en el prompt | el modelo igual a veces se zafa con "consultá a un médico" |
-| Disclaimer obligatorio | opcional o solo en footer | obligatorio por requerimiento del TP (RNF-03) |
-| Conservador en falsos positivos | tolerante | reduce el riesgo legal/ético del MVP |
+| Sanitizador de output                    | confiar en el prompt                | el modelo igual a veces se zafa con "consultá a un médico"        |
+| Disclaimer obligatorio                   | opcional o solo en footer           | obligatorio por requerimiento del TP (RNF-03)                     |
+| Conservador en falsos positivos          | tolerante                           | reduce el riesgo legal/ético del MVP                              |
 
 ---
 

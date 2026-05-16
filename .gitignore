@@ -43,6 +43,23 @@ yarn-error.log*
 # Coverage / testing
 coverage/
 .nyc_output/
+playwright-report/
+test-results/
+playwright/.cache/
+
+# Prisma local DB
+prisma/dev.db
+prisma/dev.db-journal
+test.db
+test.db-journal
+
+# Next typed routes & build outputs adicionales
+.swc/
+.turbo/
+tsconfig.tsbuildinfo
+
+# Husky tmp
+.husky/_
 
 # Misc
 .cache/

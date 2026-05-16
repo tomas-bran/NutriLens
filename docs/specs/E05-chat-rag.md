@@ -48,6 +48,7 @@
 ```
 
 Dos llamadas al LLM por consulta:
+
 1. **Parse intent** → barata, output JSON con filtros.
 2. **Generate answer** → con los productos como contexto.
 
@@ -150,9 +151,12 @@ EJEMPLOS
 ```ts
 export const ChatIntentSchema = z.object({
   kind: z.enum(['filter', 'compare', 'info', 'unknown']),
-  categoria: z.enum([...CATEGORIAS, '']).nullable().transform(v => v === '' ? null : v),
-  riesgo_max: z.enum(['bajo','medio','alto']).nullable(),
-  apto: z.enum(['vegano','celiaco','sin_lactosa']).nullable(),
+  categoria: z
+    .enum([...CATEGORIAS, ''])
+    .nullable()
+    .transform((v) => (v === '' ? null : v)),
+  riesgo_max: z.enum(['bajo', 'medio', 'alto']).nullable(),
+  apto: z.enum(['vegano', 'celiaco', 'sin_lactosa']).nullable(),
   alergeno_excluido: z.string().nullable(),
   keywords: z.array(z.string()).default([]),
   comparar: z.array(z.string()).default([]),
@@ -181,7 +185,7 @@ export async function retrieve_products(intent: ChatIntent): Promise<SavedProduc
   if (intent.kind === 'compare') {
     return await db.product.findMany({
       where: {
-        OR: intent.comparar.map(n => ({ nombre: { contains: n, mode: 'insensitive' } })),
+        OR: intent.comparar.map((n) => ({ nombre: { contains: n, mode: 'insensitive' } })),
       },
       take: 10,
     });
@@ -190,17 +194,18 @@ export async function retrieve_products(intent: ChatIntent): Promise<SavedProduc
   const where: Prisma.ProductWhereInput = {};
   if (intent.categoria) where.categoria = intent.categoria;
   if (intent.riesgo_max) {
-    where.riesgo = intent.riesgo_max === 'bajo'
-      ? 'bajo'
-      : intent.riesgo_max === 'medio'
-      ? { in: ['bajo', 'medio'] }
-      : { in: ['bajo', 'medio', 'alto'] };
+    where.riesgo =
+      intent.riesgo_max === 'bajo'
+        ? 'bajo'
+        : intent.riesgo_max === 'medio'
+          ? { in: ['bajo', 'medio'] }
+          : { in: ['bajo', 'medio', 'alto'] };
   }
-  if (intent.apto === 'vegano')      where.aptoVegano = true;
-  if (intent.apto === 'celiaco')     where.aptoCeliaco = true;
+  if (intent.apto === 'vegano') where.aptoVegano = true;
+  if (intent.apto === 'celiaco') where.aptoCeliaco = true;
   if (intent.apto === 'sin_lactosa') where.aptoSinLactosa = true;
   if (intent.keywords.length > 0) {
-    where.OR = intent.keywords.map(k => ({
+    where.OR = intent.keywords.map((k) => ({
       OR: [
         { nombre: { contains: k, mode: 'insensitive' } },
         { ingredientes: { contains: k.toLowerCase() } },
@@ -215,7 +220,7 @@ export async function retrieve_products(intent: ChatIntent): Promise<SavedProduc
   return await db.product.findMany({
     where,
     orderBy: { createdAt: 'desc' },
-    take: 5,   // TOP-K = 5 para mantener el contexto chico
+    take: 5, // TOP-K = 5 para mantener el contexto chico
   });
 }
 ```
@@ -270,14 +275,11 @@ Texto plano, sin markdown.
 ### 6.2 Implementación
 
 ```ts
-export async function generate_answer(
-  question: string,
-  products: SavedProduct[],
-  ia: IaProvider,
-) {
-  const { text, usage, latencyMs } = await ia.answerWithContext(
-    question, products, { promptVersion: 'chat_answer-v1', timeoutMs: 10_000 }
-  );
+export async function generate_answer(question: string, products: SavedProduct[], ia: IaProvider) {
+  const { text, usage, latencyMs } = await ia.answerWithContext(question, products, {
+    promptVersion: 'chat_answer-v1',
+    timeoutMs: 10_000,
+  });
   return { answer: sanitize(text), tokensUsed: usage, latencyMs };
 }
 ```
@@ -299,7 +301,8 @@ Cuando `retrieve_products` devuelve `[]`:
 
 ```ts
 return {
-  answer: 'No tengo productos guardados que respondan a esa pregunta. Subí más etiquetas para enriquecer tu historial.',
+  answer:
+    'No tengo productos guardados que respondan a esa pregunta. Subí más etiquetas para enriquecer tu historial.',
   products: [],
   intent,
   tokensUsed: { in: 0, out: 0 },
@@ -316,7 +319,8 @@ Si el parser no entendió la pregunta:
 
 ```ts
 return {
-  answer: 'No te entendí bien. Probá con preguntas como "mostrame productos sin gluten" o "qué galletitas tengo guardadas".',
+  answer:
+    'No te entendí bien. Probá con preguntas como "mostrame productos sin gluten" o "qué galletitas tengo guardadas".',
   products: [],
   intent,
   tokensUsed: { in: 0, out: 0 },
@@ -360,11 +364,11 @@ Botón "Nueva conversación" → resetea la lista a `[]`.
 
 ### 9.4 Estados visuales
 
-| Estado | UI |
-|--------|----|
-| `IDLE` | Input habilitado. |
+| Estado     | UI                                                                     |
+| ---------- | ---------------------------------------------------------------------- |
+| `IDLE`     | Input habilitado.                                                      |
 | `THINKING` | Burbuja del assistant con tres puntos animados ("…"). Input bloqueado. |
-| `ERROR` | Toast "Algo salió mal" + botón "Reintentar último mensaje". |
+| `ERROR`    | Toast "Algo salió mal" + botón "Reintentar último mensaje".            |
 
 ### 9.5 Sugerencias iniciales
 
@@ -378,14 +382,14 @@ Cuando el chat está vacío, mostramos 3 chips de ejemplo (envían directamente 
 
 ## 10. Logging
 
-| Evento | Campos |
-|--------|--------|
-| `chat.received` | `requestId`, `questionLen` (no contenido por privacidad) |
+| Evento               | Campos                                                                  |
+| -------------------- | ----------------------------------------------------------------------- |
+| `chat.received`      | `requestId`, `questionLen` (no contenido por privacidad)                |
 | `chat.intent_parsed` | `requestId`, `intent.kind`, `intent.categoria`, `tokensIn`, `tokensOut` |
-| `chat.retrieved` | `requestId`, `count` |
-| `chat.no_context` | `requestId`, `intent.kind` |
-| `chat.answered` | `requestId`, `tokensIn`, `tokensOut`, `latencyMs` |
-| `chat.failed` | `requestId`, `error` |
+| `chat.retrieved`     | `requestId`, `count`                                                    |
+| `chat.no_context`    | `requestId`, `intent.kind`                                              |
+| `chat.answered`      | `requestId`, `tokensIn`, `tokensOut`, `latencyMs`                       |
+| `chat.failed`        | `requestId`, `error`                                                    |
 
 ---
 
@@ -413,15 +417,15 @@ Cuando el chat está vacío, mostramos 3 chips de ejemplo (envían directamente 
 
 ## 12. Decisiones técnicas y trade-offs
 
-| Decisión | Alternativa descartada | Por qué |
-|---------|----------------------|--------|
-| Parse intent → SQL filter (sin embeddings) | búsqueda vectorial | overkill para MVP con ≤50 productos |
-| 2 calls al LLM por pregunta | 1 sola call | aislar parsing de generación, debug más fácil, mejor calidad |
-| `temperature=0` en parsing, `0.2` en answer | misma temperatura | parsing necesita determinismo; answer tolera variedad |
-| Top-K = 5 productos | K más grande | controlar costo y mantener respuesta enfocada |
-| Conversación en memoria del cliente | persistir en DB | reduce scope; no es objetivo del MVP |
-| Sin streaming | streaming tokens | scope; respuesta completa es suficiente para 350 tokens |
-| `Phi-4-mini` (text-only) para ambas calls | `Phi-4-multimodal` (multimodal) | costo menor, no necesitamos imagen para el chat |
+| Decisión                                    | Alternativa descartada          | Por qué                                                      |
+| ------------------------------------------- | ------------------------------- | ------------------------------------------------------------ |
+| Parse intent → SQL filter (sin embeddings)  | búsqueda vectorial              | overkill para MVP con ≤50 productos                          |
+| 2 calls al LLM por pregunta                 | 1 sola call                     | aislar parsing de generación, debug más fácil, mejor calidad |
+| `temperature=0` en parsing, `0.2` en answer | misma temperatura               | parsing necesita determinismo; answer tolera variedad        |
+| Top-K = 5 productos                         | K más grande                    | controlar costo y mantener respuesta enfocada                |
+| Conversación en memoria del cliente         | persistir en DB                 | reduce scope; no es objetivo del MVP                         |
+| Sin streaming                               | streaming tokens                | scope; respuesta completa es suficiente para 350 tokens      |
+| `Phi-4-mini` (text-only) para ambas calls   | `Phi-4-multimodal` (multimodal) | costo menor, no necesitamos imagen para el chat              |
 
 ---
 

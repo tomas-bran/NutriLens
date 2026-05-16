@@ -14,11 +14,11 @@ La propuesta resuelve un problema cotidiano: muchas personas no entienden rápid
 
 ## 2. Usuarios objetivo
 
-| Perfil | Necesidad principal | Caso de uso típico |
-|--------|--------------------|-------------------|
-| **Usuario general** | Entender rápidamente una etiqueta alimentaria | Saca foto a un producto y obtiene un resumen claro |
-| **Usuario con restricciones alimentarias** | Identificar incompatibilidades (gluten, lactosa, alérgenos, origen animal) | Verifica si un producto es apto antes de comprarlo |
-| **Usuario comparador** | Elegir entre opciones consultando productos ya guardados | Pregunta "dame galletitas con mejor perfil nutricional" |
+| Perfil                                     | Necesidad principal                                                        | Caso de uso típico                                      |
+| ------------------------------------------ | -------------------------------------------------------------------------- | ------------------------------------------------------- |
+| **Usuario general**                        | Entender rápidamente una etiqueta alimentaria                              | Saca foto a un producto y obtiene un resumen claro      |
+| **Usuario con restricciones alimentarias** | Identificar incompatibilidades (gluten, lactosa, alérgenos, origen animal) | Verifica si un producto es apto antes de comprarlo      |
+| **Usuario comparador**                     | Elegir entre opciones consultando productos ya guardados                   | Pregunta "dame galletitas con mejor perfil nutricional" |
 
 ---
 
@@ -80,14 +80,14 @@ El MVP se considera entregable cuando:
 
 ## 6. Riesgos y mitigaciones
 
-| Riesgo | Impacto | Mitigación |
-|--------|---------|-----------|
-| Imagen borrosa o de baja calidad | Extracción incorrecta | Mostrar `confidence` y pedir nueva imagen si está por debajo de umbral |
-| La IA inventa datos (hallucination) | Alto | Validar schema JSON estricto + aplicar reglas propias por encima del modelo |
-| Producto no está en base externa | Medio | Permitir análisis 100% por imagen + base propia (sin dependencia de OFF) |
-| Respuestas que parecen médicas | Alto | Disclaimers visibles, lenguaje informativo, nunca afirmar aptitud absoluta |
-| Tiempo de desarrollo acotado | Alto | Recortar a flujo core: upload → JSON → riesgo → historial → chat simple |
-| Etiqueta en otro idioma | Medio | Detección de idioma + fallback a inglés/español o mensaje claro |
+| Riesgo                              | Impacto               | Mitigación                                                                  |
+| ----------------------------------- | --------------------- | --------------------------------------------------------------------------- |
+| Imagen borrosa o de baja calidad    | Extracción incorrecta | Mostrar `confidence` y pedir nueva imagen si está por debajo de umbral      |
+| La IA inventa datos (hallucination) | Alto                  | Validar schema JSON estricto + aplicar reglas propias por encima del modelo |
+| Producto no está en base externa    | Medio                 | Permitir análisis 100% por imagen + base propia (sin dependencia de OFF)    |
+| Respuestas que parecen médicas      | Alto                  | Disclaimers visibles, lenguaje informativo, nunca afirmar aptitud absoluta  |
+| Tiempo de desarrollo acotado        | Alto                  | Recortar a flujo core: upload → JSON → riesgo → historial → chat simple     |
+| Etiqueta en otro idioma             | Medio                 | Detección de idioma + fallback a inglés/español o mensaje claro             |
 
 ---
 
@@ -103,9 +103,9 @@ El MVP se considera entregable cuando:
 
 ## 8. Equipo y responsabilidades
 
-| Persona | Rol principal |
-|---------|--------------|
-| Persona 1 | Frontend: upload, resultado, historial y UI general |
-| Persona 2 | Backend: endpoints, base de datos y persistencia |
-| Persona 3 | IA: prompts, schema JSON, extracción y explicación |
+| Persona   | Rol principal                                               |
+| --------- | ----------------------------------------------------------- |
+| Persona 1 | Frontend: upload, resultado, historial y UI general         |
+| Persona 2 | Backend: endpoints, base de datos y persistencia            |
+| Persona 3 | IA: prompts, schema JSON, extracción y explicación          |
 | Persona 4 | RAG, datos mockeados, testing, documentación y presentación |

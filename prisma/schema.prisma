@@ -1,0 +1,59 @@
+// NutriLens — Prisma schema
+// See `docs/specs/E04-persistencia-e-historial.md §2` for the data model rationale.
+//
+// Provider: PostgreSQL (16+). Native enum support, native arrays available
+// if we want to migrate `ingredientes`/`alergenos`/`sellos` from JSON String
+// to `String[]` later. For now we keep them as serialized JSON to allow
+// easier mocking and serialization on the application side.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id              String   @id @default(uuid())
+  fileHash        String   @unique
+  nombre          String
+  categoria       Categoria
+  ingredientes    String   // JSON.stringify(string[])
+  alergenos       String   // JSON.stringify(string[])
+  sellos          String   // JSON.stringify(string[])
+  aptoVegano      Boolean
+  aptoCeliaco     Boolean
+  aptoSinLactosa  Boolean
+  riesgo          Riesgo
+  confidence      Float
+  reglasAplicadas String   // JSON.stringify(string[])
+  explanation     String?
+  jsonRaw         String   @db.Text
+  pipelineTrace   String   @db.Text  // JSON.stringify(StepTrace[])
+  imagenPath      String
+  promptVersion   String
+  createdAt       DateTime @default(now())
+
+  @@index([categoria])
+  @@index([riesgo])
+  @@index([createdAt])
+}
+
+enum Categoria {
+  galletitas
+  cereales
+  snacks
+  lacteos
+  bebidas
+  sin_tacc
+  veganos
+  otros
+}
+
+enum Riesgo {
+  bajo
+  medio
+  alto
+}

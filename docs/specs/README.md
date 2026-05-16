@@ -31,14 +31,14 @@ docs/specs/
 
 ## Mapa épica → spec → user stories
 
-| Épica | Spec | User stories | Foco |
-|-------|------|--------------|------|
-| E01 | [`E01-onboarding-y-upload.md`](./E01-onboarding-y-upload.md) | US-01 a US-07 | Upload + validación + clasificación rápida |
-| E02 | [`E02-analisis-multimodal-ia.md`](./E02-analisis-multimodal-ia.md) | US-08 a US-15 | Endpoint `/api/analyze`, prompt, schema, IA |
-| E03 | [`E03-clasificacion-reglas-explicacion.md`](./E03-clasificacion-reglas-explicacion.md) | US-16 a US-20 | Reglas propias, riesgo, explicación, disclaimers |
-| E04 | [`E04-persistencia-e-historial.md`](./E04-persistencia-e-historial.md) | US-21 a US-26 | DB Prisma, endpoints, filtros, detalle |
-| E05 | [`E05-chat-rag.md`](./E05-chat-rag.md) | US-27 a US-32 | Chat, retrieval, generación con contexto |
-| E06 | [`E06-pipeline-observable-y-ux.md`](./E06-pipeline-observable-y-ux.md) | US-33 a US-39 | Pipeline visible, JSON viewer, design system, seed |
+| Épica | Spec                                                                                   | User stories  | Foco                                               |
+| ----- | -------------------------------------------------------------------------------------- | ------------- | -------------------------------------------------- |
+| E01   | [`E01-onboarding-y-upload.md`](./E01-onboarding-y-upload.md)                           | US-01 a US-07 | Upload + validación + clasificación rápida         |
+| E02   | [`E02-analisis-multimodal-ia.md`](./E02-analisis-multimodal-ia.md)                     | US-08 a US-15 | Endpoint `/api/analyze`, prompt, schema, IA        |
+| E03   | [`E03-clasificacion-reglas-explicacion.md`](./E03-clasificacion-reglas-explicacion.md) | US-16 a US-20 | Reglas propias, riesgo, explicación, disclaimers   |
+| E04   | [`E04-persistencia-e-historial.md`](./E04-persistencia-e-historial.md)                 | US-21 a US-26 | DB Prisma, endpoints, filtros, detalle             |
+| E05   | [`E05-chat-rag.md`](./E05-chat-rag.md)                                                 | US-27 a US-32 | Chat, retrieval, generación con contexto           |
+| E06   | [`E06-pipeline-observable-y-ux.md`](./E06-pipeline-observable-y-ux.md)                 | US-33 a US-39 | Pipeline visible, JSON viewer, design system, seed |
 
 ---
 
@@ -94,17 +94,17 @@ AZURE_AI_FOUNDRY_MODEL_MINI=Phi-4-mini-instruct
 
 ## Recursos Azure a aprovisionar
 
-| Recurso | Para qué | Spec |
-|---------|---------|------|
-| Azure AI Foundry hub + project | Catálogo de modelos, governance | overview §2.bis |
-| Serverless deployment `Phi-4-multimodal-instruct` | Extracción multimodal + clasificación rápida | E01, E02 |
-| Serverless deployment `Phi-4-mini-instruct` | Chat RAG, parse intent, explicación | E03, E05 |
-| Document Intelligence (opcional) | OCR de PDFs problemáticos | E02 §10 |
-| Azure Database for PostgreSQL | Persistencia en demo | E04 §2 |
-| Azure Blob Storage | Imágenes en demo | E04 §4 |
-| Azure App Service | Hosting del Next.js | overview §2.bis.6 |
-| Application Insights | Telemetría | overview §8 |
-| Budget Alert | Guardrail de costo | overview §2.bis.4 |
+| Recurso                                           | Para qué                                     | Spec              |
+| ------------------------------------------------- | -------------------------------------------- | ----------------- |
+| Azure AI Foundry hub + project                    | Catálogo de modelos, governance              | overview §2.bis   |
+| Serverless deployment `Phi-4-multimodal-instruct` | Extracción multimodal + clasificación rápida | E01, E02          |
+| Serverless deployment `Phi-4-mini-instruct`       | Chat RAG, parse intent, explicación          | E03, E05          |
+| Document Intelligence (opcional)                  | OCR de PDFs problemáticos                    | E02 §10           |
+| Azure Database for PostgreSQL                     | Persistencia en demo                         | E04 §2            |
+| Azure Blob Storage                                | Imágenes en demo                             | E04 §4            |
+| Azure App Service                                 | Hosting del Next.js                          | overview §2.bis.6 |
+| Application Insights                              | Telemetría                                   | overview §8       |
+| Budget Alert                                      | Guardrail de costo                           | overview §2.bis.4 |
 
 Detalle de regiones y disponibilidad en `00-overview.md`.
 

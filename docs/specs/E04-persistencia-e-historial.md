@@ -114,23 +114,23 @@ export async function persist(ctx: AnalysisContext): Promise<AnalysisContext> {
 
   const saved = await db.product.create({
     data: {
-      fileHash:       ctx.file.hash,
-      nombre:         ctx.product!.producto,
-      categoria:      mapCategoria(ctx.product!.categoria),
-      ingredientes:   JSON.stringify(ctx.product!.ingredientes_detectados),
-      alergenos:      JSON.stringify(ctx.product!.alergenos),
-      sellos:         JSON.stringify(ctx.product!.sellos),
-      aptoVegano:     ctx.rules!.apto_vegano,
-      aptoCeliaco:    ctx.rules!.apto_celiaco,
+      fileHash: ctx.file.hash,
+      nombre: ctx.product!.producto,
+      categoria: mapCategoria(ctx.product!.categoria),
+      ingredientes: JSON.stringify(ctx.product!.ingredientes_detectados),
+      alergenos: JSON.stringify(ctx.product!.alergenos),
+      sellos: JSON.stringify(ctx.product!.sellos),
+      aptoVegano: ctx.rules!.apto_vegano,
+      aptoCeliaco: ctx.rules!.apto_celiaco,
       aptoSinLactosa: ctx.rules!.apto_sin_lactosa,
-      riesgo:         ctx.product!.riesgo,
-      confidence:     ctx.product!.confidence,
+      riesgo: ctx.product!.riesgo,
+      confidence: ctx.product!.confidence,
       reglasAplicadas: JSON.stringify(ctx.rules!.reglas_aplicadas),
-      explanation:    ctx.explanation ?? null,
-      jsonRaw:        ctx.extractionRaw!,
-      pipelineTrace:  JSON.stringify(ctx.steps),
+      explanation: ctx.explanation ?? null,
+      jsonRaw: ctx.extractionRaw!,
+      pipelineTrace: JSON.stringify(ctx.steps),
       imagenPath,
-      promptVersion:  'extract_product-v1',
+      promptVersion: 'extract_product-v1',
     },
   });
 
@@ -177,16 +177,16 @@ export const storage: Storage = process.env.AZURE_BLOB_CONNECTION_STRING
 
 Query params:
 
-| Param | Tipo | Default | Descripción |
-|-------|------|---------|-------------|
-| `categoria` | enum | — | Filtra por categoría exacta |
-| `riesgo` | enum | — | Filtra por riesgo exacto |
-| `alergeno` | string | — | Devuelve productos cuyo `alergenos` contiene el valor |
-| `apto` | `vegano`\|`celiaco`\|`sin_lactosa` | — | Devuelve solo productos aptos para esa restricción |
-| `q` | string | — | Búsqueda libre por `nombre` (LIKE `%q%`) |
-| `page` | int | 1 | Página (1-indexed) |
-| `pageSize` | int | 20 | Tamaño de página (max 50) |
-| `sort` | `createdAt:desc` (default) \| `nombre:asc` | `createdAt:desc` | Orden |
+| Param       | Tipo                                       | Default          | Descripción                                           |
+| ----------- | ------------------------------------------ | ---------------- | ----------------------------------------------------- |
+| `categoria` | enum                                       | —                | Filtra por categoría exacta                           |
+| `riesgo`    | enum                                       | —                | Filtra por riesgo exacto                              |
+| `alergeno`  | string                                     | —                | Devuelve productos cuyo `alergenos` contiene el valor |
+| `apto`      | `vegano`\|`celiaco`\|`sin_lactosa`         | —                | Devuelve solo productos aptos para esa restricción    |
+| `q`         | string                                     | —                | Búsqueda libre por `nombre` (LIKE `%q%`)              |
+| `page`      | int                                        | 1                | Página (1-indexed)                                    |
+| `pageSize`  | int                                        | 20               | Tamaño de página (max 50)                             |
+| `sort`      | `createdAt:desc` (default) \| `nombre:asc` | `createdAt:desc` | Orden                                                 |
 
 Response:
 
@@ -307,23 +307,23 @@ Es la misma vista que la pantalla de resultado post-análisis (E03 §6.1), reusa
 
 ## 7. Errores específicos
 
-| `error` | HTTP | Cuándo |
-|--------|------|--------|
-| `not_found` | 404 | `GET /api/products/[id]` con id inexistente |
-| `invalid_query` | 400 | query param inválido (ej. `page=abc`, `pageSize=999`) |
-| `internal_error` | 500 | catch-all |
+| `error`          | HTTP | Cuándo                                                |
+| ---------------- | ---- | ----------------------------------------------------- |
+| `not_found`      | 404  | `GET /api/products/[id]` con id inexistente           |
+| `invalid_query`  | 400  | query param inválido (ej. `page=abc`, `pageSize=999`) |
+| `internal_error` | 500  | catch-all                                             |
 
 ---
 
 ## 8. Logging
 
-| Evento | Campos |
-|--------|--------|
-| `persist.created` | `requestId`, `productId`, `riesgo` |
-| `persist.skipped_duplicate` | `requestId`, `existingId`, `fileHash` |
-| `history.listed` | `requestId`, `filters`, `total`, `page` |
-| `history.detail_viewed` | `requestId`, `productId` |
-| `history.not_found` | `requestId`, `productId` |
+| Evento                      | Campos                                  |
+| --------------------------- | --------------------------------------- |
+| `persist.created`           | `requestId`, `productId`, `riesgo`      |
+| `persist.skipped_duplicate` | `requestId`, `existingId`, `fileHash`   |
+| `history.listed`            | `requestId`, `filters`, `total`, `page` |
+| `history.detail_viewed`     | `requestId`, `productId`                |
+| `history.not_found`         | `requestId`, `productId`                |
 
 ---
 
@@ -351,15 +351,15 @@ Es la misma vista que la pantalla de resultado post-análisis (E03 §6.1), reusa
 
 ## 10. Decisiones técnicas y trade-offs
 
-| Decisión | Alternativa descartada | Por qué |
-|---------|----------------------|--------|
-| Prisma + SQLite en dev | conexión directa a Postgres siempre | onboarding sin docker, demo más simple |
-| Deduplicación por `fileHash` único | sin dedup | ahorra crédito de IA y storage |
-| Filtros server-side | filtros client-side sobre el JSON completo | escala mejor, payload chico, paginación correcta |
-| Filtros vía query params | estado en zustand/context | URLs compartibles + back/forward funciona |
-| Imagen como `nombre = hash + ext` | nombre original del usuario | evita PII y colisiones |
-| Sin endpoints de mutación pública | exponer PUT/DELETE | reduce superficie de bugs en MVP |
-| Listado sin `jsonRaw` ni `pipelineTrace` | devolver todo | payload chico, refleja la UX (no se usan en list) |
+| Decisión                                 | Alternativa descartada                     | Por qué                                           |
+| ---------------------------------------- | ------------------------------------------ | ------------------------------------------------- |
+| Prisma + SQLite en dev                   | conexión directa a Postgres siempre        | onboarding sin docker, demo más simple            |
+| Deduplicación por `fileHash` único       | sin dedup                                  | ahorra crédito de IA y storage                    |
+| Filtros server-side                      | filtros client-side sobre el JSON completo | escala mejor, payload chico, paginación correcta  |
+| Filtros vía query params                 | estado en zustand/context                  | URLs compartibles + back/forward funciona         |
+| Imagen como `nombre = hash + ext`        | nombre original del usuario                | evita PII y colisiones                            |
+| Sin endpoints de mutación pública        | exponer PUT/DELETE                         | reduce superficie de bugs en MVP                  |
+| Listado sin `jsonRaw` ni `pipelineTrace` | devolver todo                              | payload chico, refleja la UX (no se usan en list) |
 
 ---
 

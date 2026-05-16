@@ -55,12 +55,12 @@ Si en cualquier paso hay un error → respuesta `4xx`/`5xx` con shape estructura
 
 Antes de hacer la request al backend, la UI valida y rechaza si:
 
-| Regla | Detalle | Mensaje al usuario |
-|------|---------|-------------------|
-| MIME permitido | `image/jpeg`, `image/png`, `application/pdf` | "Formato no soportado. Subí una imagen (JPG/PNG) o un PDF." |
-| Extensión coincide con MIME | extra robustez (`.jpg`, `.jpeg`, `.png`, `.pdf`) | mismo mensaje |
-| Tamaño máximo | `≤ 10 MB` (10 \* 1024 \* 1024 bytes) | "El archivo supera el tamaño máximo de 10 MB." |
-| Archivo no vacío | `> 0 bytes` | "El archivo está vacío." |
+| Regla                       | Detalle                                          | Mensaje al usuario                                          |
+| --------------------------- | ------------------------------------------------ | ----------------------------------------------------------- |
+| MIME permitido              | `image/jpeg`, `image/png`, `application/pdf`     | "Formato no soportado. Subí una imagen (JPG/PNG) o un PDF." |
+| Extensión coincide con MIME | extra robustez (`.jpg`, `.jpeg`, `.png`, `.pdf`) | mismo mensaje                                               |
+| Tamaño máximo               | `≤ 10 MB` (10 \* 1024 \* 1024 bytes)             | "El archivo supera el tamaño máximo de 10 MB."              |
+| Archivo no vacío            | `> 0 bytes`                                      | "El archivo está vacío."                                    |
 
 El cliente calcula el hash SHA-256 del archivo y lo manda como header `X-File-Hash` para que el backend pueda cachear (ver §6.2).
 
@@ -112,17 +112,17 @@ Shape común (ver `00-overview.md` §4.1):
 }
 ```
 
-| Código | HTTP | Cuándo |
-|--------|------|--------|
-| `unsupported_file_type` | 400 | MIME no permitido o sin `file` |
-| `file_too_large` | 400 | `Content-Length` > 10 MB o el stream supera el límite |
-| `empty_file` | 400 | archivo de 0 bytes |
-| `pdf_unreadable` | 400 | PDF dañado / cifrado / sin texto ni imagen interpretable |
-| `image_not_supported` | 422 | el modelo dictamina que no es etiqueta alimentaria |
-| `model_timeout` | 504 | la validación de la IA superó el timeout |
-| `model_rate_limited` | 429 | el proveedor devolvió 429 |
-| `model_error` | 502 | otro error del proveedor |
-| `internal_error` | 500 | catch-all |
+| Código                  | HTTP | Cuándo                                                   |
+| ----------------------- | ---- | -------------------------------------------------------- |
+| `unsupported_file_type` | 400  | MIME no permitido o sin `file`                           |
+| `file_too_large`        | 400  | `Content-Length` > 10 MB o el stream supera el límite    |
+| `empty_file`            | 400  | archivo de 0 bytes                                       |
+| `pdf_unreadable`        | 400  | PDF dañado / cifrado / sin texto ni imagen interpretable |
+| `image_not_supported`   | 422  | el modelo dictamina que no es etiqueta alimentaria       |
+| `model_timeout`         | 504  | la validación de la IA superó el timeout                 |
+| `model_rate_limited`    | 429  | el proveedor devolvió 429                                |
+| `model_error`           | 502  | otro error del proveedor                                 |
+| `internal_error`        | 500  | catch-all                                                |
 
 ---
 
@@ -140,13 +140,20 @@ export async function validate_file(ctx: AnalysisContext): Promise<AnalysisConte
 
   const allowed = ['image/jpeg', 'image/png', 'application/pdf'];
   if (!allowed.includes(file.mime))
-    throw new ApiError('unsupported_file_type',
-      'Formato no soportado. Subí una imagen (JPG/PNG) o un PDF.', 400);
+    throw new ApiError(
+      'unsupported_file_type',
+      'Formato no soportado. Subí una imagen (JPG/PNG) o un PDF.',
+      400,
+    );
 
   if (file.mime === 'application/pdf') {
     const ok = await canReadPdf(file.buffer);
-    if (!ok) throw new ApiError('pdf_unreadable',
-      'No pudimos leer el PDF. Intentá con otro archivo.', 400);
+    if (!ok)
+      throw new ApiError(
+        'pdf_unreadable',
+        'No pudimos leer el PDF. Intentá con otro archivo.',
+        400,
+      );
   }
   return ctx;
 }
@@ -191,9 +198,12 @@ export async function detect_label_kind(ctx: AnalysisContext, ia: IaProvider) {
   await cache.set(`label_kind:${ctx.file.hash}`, parsed, { ttlSeconds: 3600 });
 
   if (!parsed.is_food_label && parsed.confidence >= 0.6) {
-    throw new ApiError('image_not_supported',
-      'La imagen no parece corresponder a una etiqueta alimentaria.', 422,
-      { confidence: parsed.confidence });
+    throw new ApiError(
+      'image_not_supported',
+      'La imagen no parece corresponder a una etiqueta alimentaria.',
+      422,
+      { confidence: parsed.confidence },
+    );
   }
   // Si confidence < 0.6 dejamos pasar y avisamos en UI con badge "Confianza baja"
   // (la advertencia final la maneja E03).
@@ -245,14 +255,14 @@ start →│  IDLE   │──────────────→│ SELECTE
 
 Estados visuales (de los wireframes):
 
-| Estado | UI |
-|--------|----|
-| `IDLE` | Dropzone con CTA "Subir foto o PDF". Botón "Analizar" deshabilitado. |
-| `SELECTED` | Preview de la imagen / nombre del PDF + botón "Analizar producto". |
-| `UPLOADING` | Barra de progreso del upload (XHR progress). Texto "Subiendo archivo…". |
-| `PROCESSING` | Spinner + texto "Procesando imagen…". El backend ya tiene el archivo. |
-| `COMPLETED` | Redirige a `/analizar/[id]` con el resultado. |
-| `ERROR` | `<ErrorState>` con icono + título según `error` + descripción = `reason` + botón "Probar con otro archivo" (vuelve a `IDLE`). |
+| Estado       | UI                                                                                                                            |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `IDLE`       | Dropzone con CTA "Subir foto o PDF". Botón "Analizar" deshabilitado.                                                          |
+| `SELECTED`   | Preview de la imagen / nombre del PDF + botón "Analizar producto".                                                            |
+| `UPLOADING`  | Barra de progreso del upload (XHR progress). Texto "Subiendo archivo…".                                                       |
+| `PROCESSING` | Spinner + texto "Procesando imagen…". El backend ya tiene el archivo.                                                         |
+| `COMPLETED`  | Redirige a `/analizar/[id]` con el resultado.                                                                                 |
+| `ERROR`      | `<ErrorState>` con icono + título según `error` + descripción = `reason` + botón "Probar con otro archivo" (vuelve a `IDLE`). |
 
 ---
 
@@ -272,16 +282,16 @@ El layout es responsive (ver E06): en mobile el bloque "Ejemplos" pasa a carruse
 
 ## 9. Errores: mapeo `error code` → UI
 
-| `error` | Título UI | Descripción UI | Acción primaria |
-|--------|-----------|---------------|------------------|
-| `unsupported_file_type` | "Formato no soportado" | usa `reason` | "Probar con otro archivo" |
-| `file_too_large` | "Archivo muy grande" | "El archivo supera el límite de 10 MB. Subí una imagen más liviana." | "Probar con otro archivo" |
-| `empty_file` | "Archivo vacío" | "No pudimos leer el archivo. Probá con otro." | "Probar con otro archivo" |
-| `pdf_unreadable` | "PDF ilegible" | "No pudimos abrir el PDF. Probá con una foto." | "Probar con otro archivo" |
-| `image_not_supported` | "No parece una etiqueta" | usa `reason` + sugerencia "Subí una foto del frente, ingredientes o tabla nutricional." | "Probar con otro archivo" |
-| `model_timeout` | "Tardamos demasiado" | "El análisis se demoró más de lo esperado." | "Reintentar" (mismo archivo) |
-| `model_rate_limited` | "Demasiadas solicitudes" | "Esperá unos segundos y volvé a intentar." | "Reintentar" |
-| `model_error` / `internal_error` | "Algo salió mal" | "Tuvimos un problema procesando tu archivo." | "Reintentar" + "Probar con otro archivo" |
+| `error`                          | Título UI                | Descripción UI                                                                          | Acción primaria                          |
+| -------------------------------- | ------------------------ | --------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `unsupported_file_type`          | "Formato no soportado"   | usa `reason`                                                                            | "Probar con otro archivo"                |
+| `file_too_large`                 | "Archivo muy grande"     | "El archivo supera el límite de 10 MB. Subí una imagen más liviana."                    | "Probar con otro archivo"                |
+| `empty_file`                     | "Archivo vacío"          | "No pudimos leer el archivo. Probá con otro."                                           | "Probar con otro archivo"                |
+| `pdf_unreadable`                 | "PDF ilegible"           | "No pudimos abrir el PDF. Probá con una foto."                                          | "Probar con otro archivo"                |
+| `image_not_supported`            | "No parece una etiqueta" | usa `reason` + sugerencia "Subí una foto del frente, ingredientes o tabla nutricional." | "Probar con otro archivo"                |
+| `model_timeout`                  | "Tardamos demasiado"     | "El análisis se demoró más de lo esperado."                                             | "Reintentar" (mismo archivo)             |
+| `model_rate_limited`             | "Demasiadas solicitudes" | "Esperá unos segundos y volvé a intentar."                                              | "Reintentar"                             |
+| `model_error` / `internal_error` | "Algo salió mal"         | "Tuvimos un problema procesando tu archivo."                                            | "Reintentar" + "Probar con otro archivo" |
 
 Todos los errores loguean en la UI el `X-Request-Id` para que el evaluador del TP pueda correlacionar con los logs del backend.
 
@@ -291,12 +301,12 @@ Todos los errores loguean en la UI el `X-Request-Id` para que el evaluador del T
 
 Eventos a emitir desde esta épica:
 
-| Evento | Cuándo | Campos clave |
-|--------|--------|-------------|
-| `upload.received` | El backend recibió el multipart | `requestId`, `mime`, `sizeBytes`, `fileHash` |
-| `upload.rejected_by_validation` | Falló `validate_file` | `requestId`, `error`, `details` |
-| `label_kind.checked` | Terminó `detect_label_kind` | `requestId`, `is_food_label`, `confidence`, `latencyMs`, `cached` |
-| `upload.rejected_by_classification` | `is_food_label=false` con confidence ≥ 0.6 | `requestId`, `confidence` |
+| Evento                              | Cuándo                                     | Campos clave                                                      |
+| ----------------------------------- | ------------------------------------------ | ----------------------------------------------------------------- |
+| `upload.received`                   | El backend recibió el multipart            | `requestId`, `mime`, `sizeBytes`, `fileHash`                      |
+| `upload.rejected_by_validation`     | Falló `validate_file`                      | `requestId`, `error`, `details`                                   |
+| `label_kind.checked`                | Terminó `detect_label_kind`                | `requestId`, `is_food_label`, `confidence`, `latencyMs`, `cached` |
+| `upload.rejected_by_classification` | `is_food_label=false` con confidence ≥ 0.6 | `requestId`, `confidence`                                         |
 
 Sin contenido del archivo en logs. Solo metadata.
 
@@ -325,14 +335,14 @@ Sin contenido del archivo en logs. Solo metadata.
 
 ## 12. Decisiones técnicas y trade-offs
 
-| Decisión | Alternativa descartada | Por qué |
-|---------|----------------------|--------|
-| Validar tamaño en cliente Y en backend | solo en backend | feedback inmediato al usuario; ahorra ancho de banda |
-| Hash del archivo en cliente | hash en backend | permite cache hit antes incluso de subirlo (futuro endpoint `HEAD /api/analyze?hash=…`) |
-| `detect_label_kind` con call corta a `Phi-4-multimodal` antes de la extracción completa | hacer todo en una sola call larga | filtro barato; ahorra tokens en archivos no-alimentarios |
-| Threshold `confidence ≥ 0.6` para rechazo | rechazar siempre que `is_food_label=false` | tolera falsos negativos del filtro; deja pasar al usuario con baja confianza para que decida |
-| Cache por hash | sin cache | obligatorio para no quemar el crédito en re-uploads o tests manuales |
-| `multipart/form-data` | `base64` en JSON | streaming nativo, menos overhead, soportado por todos los browsers |
+| Decisión                                                                                | Alternativa descartada                     | Por qué                                                                                      |
+| --------------------------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| Validar tamaño en cliente Y en backend                                                  | solo en backend                            | feedback inmediato al usuario; ahorra ancho de banda                                         |
+| Hash del archivo en cliente                                                             | hash en backend                            | permite cache hit antes incluso de subirlo (futuro endpoint `HEAD /api/analyze?hash=…`)      |
+| `detect_label_kind` con call corta a `Phi-4-multimodal` antes de la extracción completa | hacer todo en una sola call larga          | filtro barato; ahorra tokens en archivos no-alimentarios                                     |
+| Threshold `confidence ≥ 0.6` para rechazo                                               | rechazar siempre que `is_food_label=false` | tolera falsos negativos del filtro; deja pasar al usuario con baja confianza para que decida |
+| Cache por hash                                                                          | sin cache                                  | obligatorio para no quemar el crédito en re-uploads o tests manuales                         |
+| `multipart/form-data`                                                                   | `base64` en JSON                           | streaming nativo, menos overhead, soportado por todos los browsers                           |
 
 ---
 
