@@ -15,6 +15,8 @@ export interface AnalysisContext {
   startedAt: string;
   file: AnalysisFile;
   steps: StepTrace[];
+  /** Raw text returned by extract_with_ia, validated downstream by validate_schema. */
+  extractionRaw?: string;
   product?: ProductExtraction;
   explanation?: string;
   error?: ApiError;
