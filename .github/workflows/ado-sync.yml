@@ -1,0 +1,132 @@
+name: Azure DevOps Sync
+
+# Cierra automáticamente los work items de Azure DevOps mencionados en el body
+# de un PR como "Closes AB#NNN" cuando se mergea a main.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  close-work-items:
+    name: Close Azure DevOps work items
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+
+    env:
+      ADO_ORG: tbranchesi
+      ADO_PROJECT: NutriLens
+
+    steps:
+      - name: Find AB# mentions in PR body
+        id: find
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || '';
+            // Acepta: "Closes AB#123", "closes ab#123", "Fixes AB#123", "Resolves AB#123"
+            const regex = /(?:close[sd]?|fixe[sd]?|resolve[sd]?)\s+AB#(\d+)/gi;
+            const ids = new Set();
+            let match;
+            while ((match = regex.exec(body)) !== null) {
+              ids.add(parseInt(match[1], 10));
+            }
+            const list = Array.from(ids);
+            core.setOutput('ids', JSON.stringify(list));
+            core.setOutput('count', list.length);
+            console.log(`Found ${list.length} work item(s) to close: ${list.join(', ')}`);
+            return list;
+
+      - name: No work items to close
+        if: steps.find.outputs.count == '0'
+        run: |
+          echo "PR body has no 'Closes AB#NNN' references — skipping ADO sync."
+          echo "If this was intentional, no action needed. Otherwise add 'Closes AB#NNN' to the PR body."
+
+      - name: Close work items via Azure DevOps REST API
+        if: steps.find.outputs.count != '0'
+        env:
+          ADO_PAT: ${{ secrets.ADO_PAT }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          IDS: ${{ steps.find.outputs.ids }}
+        run: |
+          if [ -z "$ADO_PAT" ]; then
+            echo "::error::Secret ADO_PAT no está configurado en este repo."
+            echo "::error::Settings → Secrets and variables → Actions → New repository secret"
+            echo "::error::Name: ADO_PAT, Value: <PAT de Azure DevOps con scope Work Items: Read, Write & Manage>"
+            exit 1
+          fi
+
+          AUTH=$(printf ":%s" "$ADO_PAT" | base64 -w 0)
+          API="https://dev.azure.com/${ADO_ORG}/${ADO_PROJECT}/_apis/wit/workitems"
+          API_VER="api-version=7.0"
+
+          # Detectar estado final segun process del proyecto
+          # Agile: Closed, Scrum: Done, Basic: Done
+          # Probamos primero "Closed", si falla con Scrum/Basic, fallback a "Done"
+          IDS_LIST=$(echo "$IDS" | jq -r '.[]')
+          FAILED=0
+
+          for ID in $IDS_LIST; do
+            echo "→ Cerrando work item AB#${ID}..."
+
+            # 1) Transicion a Closed (Agile) o Done (Scrum/Basic) — probamos Closed primero
+            for STATE in "Closed" "Done" "Resolved"; do
+              RESP=$(curl -sS -w "\nHTTP:%{http_code}" -X PATCH \
+                "${API}/${ID}?${API_VER}" \
+                -H "Authorization: Basic ${AUTH}" \
+                -H "Content-Type: application/json-patch+json" \
+                -d "[{\"op\":\"add\",\"path\":\"/fields/System.State\",\"value\":\"${STATE}\"}]")
+              CODE=$(echo "$RESP" | tail -n1 | sed 's/HTTP://')
+              if [ "$CODE" = "200" ]; then
+                echo "  ✓ Estado: ${STATE}"
+                break
+              fi
+            done
+
+            if [ "$CODE" != "200" ]; then
+              echo "::warning::No pudimos transicionar AB#${ID} (último HTTP ${CODE}). Hay que cerrarlo a mano."
+              FAILED=$((FAILED+1))
+              continue
+            fi
+
+            # 2) Agregar comentario con link al PR
+            COMMENT="Cerrado automaticamente por <a href=\"${PR_URL}\">PR #${PR_NUMBER}</a>: ${PR_TITLE}"
+            curl -sS -X POST \
+              "${API}/${ID}/comments?api-version=7.0-preview.3" \
+              -H "Authorization: Basic ${AUTH}" \
+              -H "Content-Type: application/json" \
+              -d "{\"text\":\"${COMMENT}\"}" > /dev/null
+
+            echo "  ✓ Comentario agregado con link al PR"
+          done
+
+          if [ "$FAILED" -gt "0" ]; then
+            echo "::warning::${FAILED} work item(s) no pudieron cerrarse automáticamente."
+            exit 1
+          fi
+          echo "✓ Todos los work items cerrados correctamente."
+
+      - name: Comment on PR
+        if: always() && steps.find.outputs.count != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ids = JSON.parse('${{ steps.find.outputs.ids }}');
+            const links = ids.map(id =>
+              `[AB#${id}](https://dev.azure.com/${{ env.ADO_ORG }}/${{ env.ADO_PROJECT }}/_workitems/edit/${id})`
+            ).join(', ');
+            const status = '${{ job.status }}';
+            const emoji = status === 'success' ? '✅' : '⚠️';
+            const msg = status === 'success'
+              ? `${emoji} Work items ${links} cerrados en Azure DevOps.`
+              : `${emoji} La acción de cierre falló. Verificá los work items ${links} manualmente.`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: msg,
+            });
