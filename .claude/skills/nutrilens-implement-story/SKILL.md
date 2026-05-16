@@ -116,13 +116,49 @@ tests/e2e/
 
 Cada E2E usa **`MockIaProvider` + seed de fixture** (no consume tokens, es reproducible). Para tests que requieran el provider real (esporádicos), usar `@smoke` tag y correrlos manualmente.
 
+#### 4.4.1 Dual target obligatorio: chrome **y** mobile-web
+
+Toda story con UI corre sus E2E en **dos proyectos de Playwright**:
+
+- `chromium` — desktop, viewport `1280x800`.
+- `mobile-web` — Pixel 5 / iPhone 13 emulado (`devices['Pixel 5']`), viewport `375x667` o `390x844`, touch + user agent móvil.
+
+`playwright.config.ts` debe declarar ambos `projects`. Si un test no aplica a uno de los dos targets (caso raro), justificarlo en un comentario `// @desktop-only` o `// @mobile-only` y skippearlo con `test.skip` condicional — **nunca borrarlo**.
+
+```bash
+npm run test:e2e -- --project=chromium
+npm run test:e2e -- --project=mobile-web
+npm run test:e2e                        # corre ambos
+```
+
+El CI corre **los dos proyectos**; si uno falla, el PR queda bloqueado.
+
+#### 4.4.2 Usar el Playwright MCP para explorar antes de escribir el spec
+
+El MCP `playwright` (instalado a nivel user, `npx @playwright/mcp@latest`) expone tools como `mcp__playwright__browser_navigate`, `browser_snapshot`, `browser_click`, `browser_fill_form`, `browser_evaluate`, `browser_resize`, `browser_take_screenshot`, etc.
+
+**Workflow obligatorio** antes de escribir un `.spec.ts` nuevo:
+
+1. **Levantar la app local** (`npm run dev`) o usar la build de preview.
+2. **Abrir el flujo con el MCP** (`mcp__playwright__browser_navigate` a la ruta de la story).
+3. **Capturar el snapshot accesible** (`browser_snapshot`) para descubrir los roles/labels/test-ids reales que existen en el DOM renderizado. No inventar selectores: leerlos del snapshot.
+4. **Recorrer el happy path y los edge cases manualmente** con las tools del MCP. Validar que el estado responde como dice el AC.
+5. **Repetir el recorrido en viewport mobile** (`browser_resize` a `375x667`, o navegar emulando `Pixel 5`) para confirmar que el mismo flujo funciona y los selectores siguen siendo válidos.
+6. **Recién entonces** escribir el `.spec.ts` reutilizando los selectores que el snapshot confirmó. Si un selector no aparece en el snapshot, **no se usa**: pedir agregar `data-testid` o `aria-label` en el componente primero.
+
+Esto evita la patología típica: tests que pasan porque hacen `waitForTimeout` y nunca tocan el elemento real, o que rompen al primer cambio de markup porque dependen de CSS frágil.
+
+> Si la skill arranca en un entorno sin app levantada, **levantar el server primero** (`npm run dev` en background) antes de invocar el MCP. No simular flujos sin server real corriendo.
+
 ### 4.5 Comandos
 
 ```bash
 npm run test           # Vitest unit + integration (rápido)
 npm run test:watch     # Vitest watch mode (durante dev)
 npm run test:coverage  # Vitest con reporte de coverage
-npm run test:e2e       # Playwright E2E (lento, requiere build)
+npm run test:e2e       # Playwright E2E (lento, requiere build) — corre chromium + mobile-web
+npm run test:e2e -- --project=chromium     # solo desktop
+npm run test:e2e -- --project=mobile-web   # solo mobile
 npm run test:e2e:ui    # Playwright UI mode (para debug)
 npm run test:ci        # Lo que corre la CI (lint + types + unit + integration + build + e2e)
 npm run lint
@@ -231,6 +267,9 @@ Antes de marcar una US como cerrada:
 - [ ] Todos los escenarios Gherkin tienen test verde.
 - [ ] Todos los casos borde del spec tienen test verde.
 - [ ] Coverage de `src/lib/**` ≥80% lines / ≥75% branches.
+- [ ] Tests de **front (unit + integration)** agregados donde la implementación los justifica (componente, hook, página, store) — no solo tests de back.
+- [ ] E2E corre verde tanto en `--project=chromium` como en `--project=mobile-web`.
+- [ ] Antes de escribir cada E2E nuevo, el flujo se exploró con el Playwright MCP y los selectores salen del snapshot real (no inventados).
 - [ ] El PR mergeó a `main` con todos los checks verdes.
 - [ ] El work item en ADO pasó a `Closed`.
 - [ ] No hay regresiones (todos los tests previos siguen verdes).
