@@ -31,6 +31,105 @@ Antes de tocar código:
 
 ---
 
+## 1.5. Marcar el work item como "En progreso" en Azure DevOps
+
+**Apenas se confirma que se va a tomar la story** (después de leer la US y antes de crear la branch), Claude debe:
+
+1. **Asignar el work item al usuario** (`System.AssignedTo`).
+2. **Transicionar el estado** a "Active" / "Committed" / "Doing" / "In Progress" (probamos en ese orden — depende del process template del proyecto, igual que hace `ado-sync.yml` para cerrar).
+
+Esto da visibilidad en el board de quién está agarrando qué, evita doble asignación, y empieza a contar tiempo de ciclo.
+
+### 1.5.1 Pre-requisitos (una vez por máquina)
+
+Exportar en el shell (idealmente en `~/.zshrc` / `~/.bashrc`):
+
+```bash
+export AZURE_DEVOPS_PAT="<PAT con scope Work Items: Read, Write & Manage>"
+```
+
+> **Importante para Claude**: las shells no-interactivas (el Bash tool incluido) **no leen `.zshrc` por default**. Antes de cualquier llamada a la REST API de ADO, prefijar con `source ~/.zshrc 2>/dev/null` para cargar la variable. Si después de sourcing igual sale vacía, pedirle al usuario que mueva el `export` a `~/.zshenv` (que sí se lee en todos los modos).
+
+El email del asignado se busca primero en memory (`user_ado_identity.md`) — si no existe, **preguntárselo al usuario y guardarlo** antes de seguir.
+
+### 1.5.2 Obtener el AB# id automáticamente vía WIQL
+
+**No preguntar el AB# al usuario** — buscarlo siempre con la REST API. El título del work item incluye el código `US-XX` (lo setea `azure_devops_upload.py` al crear el backlog), así que un `CONTAINS '<US-XX>'` lo resuelve:
+
+```bash
+US_CODE="US-21"   # del trigger del usuario
+AUTH=$(printf ":%s" "$AZURE_DEVOPS_PAT" | base64)
+
+ID=$(curl -sS -X POST \
+  "https://dev.azure.com/tbranchesi/NutriLens/_apis/wit/wiql?api-version=7.0" \
+  -H "Authorization: Basic ${AUTH}" \
+  -H "Content-Type: application/json" \
+  -d "{\"query\": \"SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = 'NutriLens' AND [System.Title] CONTAINS '${US_CODE}'\"}" \
+  | python3 -c "import sys, json; d = json.load(sys.stdin); ids = [w['id'] for w in d.get('workItems', [])]; print(ids[0] if len(ids) == 1 else '')")
+
+if [ -z "$ID" ]; then
+  echo "::warning::WIQL no devolvió un único match para ${US_CODE}. Preguntarle el AB# al usuario."
+fi
+```
+
+**Solo preguntar al usuario** si:
+
+- WIQL devuelve 0 matches (la story todavía no se subió a ADO).
+- WIQL devuelve >1 matches (raro — confirmar cuál es el correcto).
+- `AZURE_DEVOPS_PAT` no está exportado.
+
+Si el usuario provee el AB# explícito al disparar la story (`"implementemos US-21 AB#27"`), usarlo directo y saltar el lookup.
+
+### 1.5.3 Asignar y transicionar
+
+Estado objetivo según el process template del proyecto (ver memory `project_ado_setup.md`):
+
+- **Basic** (NutriLens): `Doing` (única opción válida; los demás devuelven 400).
+- **Agile**: `Active`.
+- **Scrum**: `Committed`.
+- **Custom**: probar el loop completo.
+
+```bash
+ADO_ORG=tbranchesi
+ADO_PROJECT=NutriLens
+ASSIGNEE=<email del usuario en ADO>  # leer de memory user_ado_identity.md
+
+AUTH=$(printf ":%s" "$AZURE_DEVOPS_PAT" | base64)
+API="https://dev.azure.com/${ADO_ORG}/${ADO_PROJECT}/_apis/wit/workitems/${ID}?api-version=7.0"
+
+# Para Basic empezar por "Doing" (saltea 3 llamadas fallidas).
+# El loop sigue como red de seguridad por si cambia el process template.
+for STATE in "Doing" "Active" "Committed" "In Progress"; do
+  CODE=$(curl -sS -o /tmp/ado-resp.json -w "%{http_code}" -X PATCH "$API" \
+    -H "Authorization: Basic ${AUTH}" \
+    -H "Content-Type: application/json-patch+json" \
+    -d "[
+      {\"op\":\"add\",\"path\":\"/fields/System.AssignedTo\",\"value\":\"${ASSIGNEE}\"},
+      {\"op\":\"add\",\"path\":\"/fields/System.State\",\"value\":\"${STATE}\"}
+    ]")
+  if [ "$CODE" = "200" ]; then
+    echo "✓ AB#${ID} asignado a ${ASSIGNEE} y movido a '${STATE}'."
+    break
+  fi
+done
+
+if [ "$CODE" != "200" ]; then
+  echo "::warning::No pudimos transicionar AB#${ID}. Último HTTP ${CODE}:"
+  cat /tmp/ado-resp.json
+fi
+```
+
+**Manejo de fallos**:
+
+- **HTTP 401 / 403**: PAT vencido o sin scope. Pedirle al usuario que regenere el PAT y actualice `AZURE_DEVOPS_PAT`.
+- **HTTP 404**: el AB# id no existe. Validar con el usuario.
+- **HTTP 400 con "Invalid State Transition"**: el flujo del work item no permite saltar al estado pedido (típicamente "Active" desde "Resolved"). Mover primero a "New" / "Approved" y reintentar.
+- **Ningún estado funciona**: avisar al usuario y seguir igual con la implementación — el board queda desactualizado pero no es bloqueante.
+
+> Si `AZURE_DEVOPS_PAT` no está exportado, **no hacer la transición silenciosamente** — avisar al usuario y preguntarle si quiere seguir sin actualizar ADO (caso típico: trabajando offline o en una máquina nueva).
+
+---
+
 ## 2. Setup — crear la branch
 
 ```bash
@@ -150,6 +249,79 @@ Esto evita la patología típica: tests que pasan porque hacen `waitForTimeout` 
 
 > Si la skill arranca en un entorno sin app levantada, **levantar el server primero** (`npm run dev` en background) antes de invocar el MCP. No simular flujos sin server real corriendo.
 
+#### 4.4.3 Page Object Model (POM) — obligatorio en E2E
+
+**Regla dura**: ningún `.spec.ts` puede referenciar locators directamente. Toda interacción con la página pasa por un **Page Object** que vive en `tests/e2e/pages/`. El test describe el QUÉ del flujo; el Page Object encapsula el CÓMO (selectores, esperas, normalización del DOM).
+
+Prohibido en `.spec.ts`:
+
+```ts
+// ❌ NO — locator inline en el test
+await page.getByRole('button', { name: 'Analizar' }).click();
+await expect(page.locator('[data-testid="result-card"]')).toBeVisible();
+await page.getByLabel('Subir foto').setInputFiles('fixture.jpg');
+```
+
+Obligatorio:
+
+```ts
+// tests/e2e/pages/upload-page.ts
+import type { Page, Locator } from '@playwright/test';
+
+export class UploadPage {
+  private readonly fileInput: Locator;
+  private readonly analyzeButton: Locator;
+  private readonly resultCard: Locator;
+
+  constructor(private readonly page: Page) {
+    this.fileInput = page.getByLabel('Subir foto');
+    this.analyzeButton = page.getByRole('button', { name: 'Analizar' });
+    this.resultCard = page.getByTestId('result-card');
+  }
+
+  async goto() {
+    await this.page.goto('/');
+  }
+
+  async uploadFixture(filename: string) {
+    await this.fileInput.setInputFiles(`tests/e2e/fixtures/${filename}`);
+  }
+
+  async submit() {
+    await this.analyzeButton.click();
+  }
+
+  async expectResultVisible() {
+    await this.resultCard.waitFor({ state: 'visible' });
+  }
+}
+```
+
+```ts
+// tests/e2e/upload-happy-path.spec.ts
+import { test } from '@playwright/test';
+import { UploadPage } from './pages/upload-page';
+
+test('analiza una etiqueta válida y muestra el resultado', async ({ page }) => {
+  const uploadPage = new UploadPage(page);
+  await uploadPage.goto();
+  await uploadPage.uploadFixture('galletitas-choco.jpg');
+  await uploadPage.submit();
+  await uploadPage.expectResultVisible();
+});
+```
+
+Reglas del POM:
+
+- **Un Page Object por pantalla/ruta** (`UploadPage`, `HistoryPage`, `ProductDetailPage`, `ChatPage`).
+- **Locators son `private readonly`** y se inicializan en el constructor.
+- **Los métodos públicos son verbos del dominio** (`uploadFixture`, `applyCategoriaFilter`, `goToDetail`), no acciones genéricas de Playwright (`clickButton`, `fillInput`).
+- **Aserciones de UI también encapsuladas** (`expectResultVisible`, `expectEmptyState`, `expectErrorBanner('image_not_supported')`). El test queda libre de `expect(...).toBeVisible()` directos sobre locators.
+- **Componentes reusables** (header, sidebar, error banner) van en `tests/e2e/components/` como mini Page Objects compuestos.
+- **Si un selector aparece en dos Page Objects distintos**, es señal de que pertenece a un componente compartido — refactorizarlo a `tests/e2e/components/`.
+
+Beneficio: cuando un `data-testid` o un label cambia en la UI, **se toca un solo archivo** (el Page Object), no decenas de `.spec.ts`. Y los tests se leen como user journeys, no como instrucciones de DOM.
+
 ### 4.5 Comandos
 
 ```bash
@@ -195,7 +367,35 @@ git rebase origin/main
 git push --force-with-lease
 ```
 
-### 6.2 Template del PR
+### 6.2 Creación del PR — Claude lo abre con `gh`
+
+**El PR lo crea siempre Claude**, no el usuario. La CLI `gh` está instalada (`gh 2.92.0+`) y autenticada contra el repo. Después de pushear la branch, abrir el PR inmediatamente con `gh pr create`, pasando el body del template completo vía HEREDOC para preservar formato y saltos de línea:
+
+```bash
+gh pr create \
+  --base main \
+  --head feat/US-XX-<slug> \
+  --title "feat(US-XX): <título corto del cambio>" \
+  --body "$(cat <<'EOF'
+Closes AB#<id de la US en ADO>
+
+## Qué hace
+...
+EOF
+)"
+```
+
+Reglas:
+
+- **Título**: Conventional Commits con scope `(US-XX)` o `(E0X)` si el PR cubre varias stories. Bajo 70 caracteres. Sin punto final.
+- **Body**: copiar el template de §6.3 y completarlo. Pegar la línea `Closes AB#<id>` aunque no se conozca el id — el usuario lo reemplaza antes de mergear o lo agrega como follow-up.
+- **No usar `gh pr create --fill`**: arrastra el último commit y se pierde el template estructurado.
+- **No agregar `--draft`** salvo que el usuario lo pida explícitamente — el flujo default es PR ready-for-review.
+- **Devolver siempre la URL del PR** al usuario al final del turn (la imprime `gh pr create` en stdout).
+
+Si `gh pr create` falla por falta de auth, pedirle al usuario que corra `gh auth login` — no intentar workarounds con tokens.
+
+### 6.3 Template del PR
 
 Auto-completado por `.github/pull_request_template.md`:
 
@@ -246,9 +446,11 @@ Cualquiera rojo → PR bloqueado.
 
 ---
 
-## 7. Post-merge — cierre del work item
+## 7. Post-merge — cierre del work item (move to Done)
 
-**Sin acción manual.** `ado-sync.yml` parsea el body del PR mergeado, encuentra los `Closes AB#<id>` y transiciona cada work item a `Closed` con un comentario que linkea al PR.
+**Sin acción manual.** Cuando el PR se mergea, `ado-sync.yml` parsea el body buscando `Closes AB#<id>` y transiciona cada work item a su estado final (`Closed` / `Done` / `Resolved`, probando en ese orden según el process template). Agrega un comentario en el work item con el link al PR.
+
+Esto cierra el loop que abrió §1.5: al inicio de la story Claude movió el ticket a "Active"/"In Progress"; al mergear, el workflow lo mueve a "Done". Claude **no** corre nada en este paso — pero sí debe **verificar que el comentario "✅ Work items cerrados" aparezca en el PR** después del merge, y si no aparece, debug igual que abajo.
 
 Si la action falla (típicamente PAT vencido):
 
@@ -256,7 +458,20 @@ Si la action falla (típicamente PAT vencido):
 2. Actualizar secret `ADO_PAT` en `Settings → Secrets → Actions`.
 3. Re-correr el workflow desde la UI (no hace falta re-mergear).
 
-Para cerrar manualmente (uso ad-hoc): `python3 docs/backlog/scripts/azure_devops_close.py US-XX --pr <url>`.
+Cierre manual ad-hoc (mismo patrón curl que §1.5 pero con `System.State=Closed`):
+
+```bash
+ID=<AB#-id>
+AUTH=$(printf ":%s" "$AZURE_DEVOPS_PAT" | base64)
+for STATE in "Closed" "Done" "Resolved"; do
+  CODE=$(curl -sS -o /dev/null -w "%{http_code}" -X PATCH \
+    "https://dev.azure.com/tbranchesi/NutriLens/_apis/wit/workitems/${ID}?api-version=7.0" \
+    -H "Authorization: Basic ${AUTH}" \
+    -H "Content-Type: application/json-patch+json" \
+    -d "[{\"op\":\"add\",\"path\":\"/fields/System.State\",\"value\":\"${STATE}\"}]")
+  [ "$CODE" = "200" ] && echo "✓ AB#${ID} → ${STATE}" && break
+done
+```
 
 ---
 
@@ -270,8 +485,12 @@ Antes de marcar una US como cerrada:
 - [ ] Tests de **front (unit + integration)** agregados donde la implementación los justifica (componente, hook, página, store) — no solo tests de back.
 - [ ] E2E corre verde tanto en `--project=chromium` como en `--project=mobile-web`.
 - [ ] Antes de escribir cada E2E nuevo, el flujo se exploró con el Playwright MCP y los selectores salen del snapshot real (no inventados).
+- [ ] Cada `.spec.ts` accede a la página únicamente a través de un Page Object (`tests/e2e/pages/`). Cero locators inline, cero `expect(...)` directos sobre locators en el test (§4.4.3).
+- [ ] El PR lo abrió Claude con `gh pr create` (no el usuario manualmente) y la URL quedó devuelta al final del turn (§6.2).
+- [ ] Al **arrancar** la story, Claude asignó el work item al usuario y lo movió a "Active"/"In Progress" vía la REST API de ADO (§1.5).
 - [ ] El PR mergeó a `main` con todos los checks verdes.
-- [ ] El work item en ADO pasó a `Closed`.
+- [ ] Al **mergear**, el comentario "✅ Work items cerrados en Azure DevOps" apareció en el PR (cierre automático de `ado-sync.yml`, §7). Si no apareció, debuggear PAT/secret.
+- [ ] El work item en ADO pasó a `Closed`/`Done`/`Resolved`.
 - [ ] No hay regresiones (todos los tests previos siguen verdes).
 - [ ] Si tocó API/schema: spec actualizado en el mismo PR.
 - [ ] Si tocó UI: probada manualmente en mobile (`<768px`) y desktop (`≥1024px`).
