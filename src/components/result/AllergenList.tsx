@@ -1,16 +1,28 @@
 /**
- * Allergen chips. Pencil ref: `UNhqy` Component/Allergen/Gluten and siblings
- * — pink-tinted chip with a small allergen icon. Section is hidden when
- * the array is empty.
+ * Allergen chips. Each chip pairs the canonical Spanish label with a glyph
+ * representing what the allergen is (wheat ear for gluten, milk carton for
+ * leche, etc.). Generic `allergen` icon for unmapped values.
+ *
+ * Pencil refs: `UNhqy` / `LUXgO` / `WMV94` / `l5IHa` / `PVrFW` (allergen
+ * component family).
  */
 import { Icon, type IconName } from '@/components/ui/Icon';
 
 const ALLERGEN_ICON: Record<string, IconName> = {
-  gluten: 'check', // small dot — placeholder for an allergen-specific glyph
-  leche: 'check',
-  huevo: 'check',
-  soja: 'check',
-  pescado: 'check',
+  gluten: 'wheat',
+  leche: 'milk',
+  lactosa: 'milk',
+  huevo: 'egg',
+  soja: 'soy',
+  pescado: 'fish',
+  crustáceos: 'shrimp',
+  crustaceos: 'shrimp',
+  'frutos secos': 'nut',
+  maní: 'nut',
+  mani: 'nut',
+  sésamo: 'allergen',
+  sesamo: 'allergen',
+  sulfitos: 'allergen',
 };
 
 export function AllergenList({ allergens }: { allergens: ReadonlyArray<string> }) {
@@ -22,19 +34,37 @@ export function AllergenList({ allergens }: { allergens: ReadonlyArray<string> }
       </h2>
       <div className="flex flex-wrap gap-2" data-testid="allergen-chips" role="list">
         {allergens.map((a) => (
-          <span
-            key={a}
-            role="listitem"
-            data-testid={`allergen-${a}`}
-            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-danger-bg)] bg-[var(--color-danger-bg)] px-3 py-1 text-[12px] font-bold text-[var(--color-risk-high)]"
-          >
-            <Icon name={ALLERGEN_ICON[a] ?? 'check'} className="h-3 w-3" strokeWidth={2.5} />
-            {capitalize(a)}
-          </span>
+          <AllergenChip key={a} name={a} />
         ))}
       </div>
     </section>
   );
+}
+
+function AllergenChip({ name }: { name: string }) {
+  const iconName = resolveIcon(name);
+  return (
+    <span
+      role="listitem"
+      data-testid={`allergen-${normalizeTestId(name)}`}
+      data-icon={iconName}
+      className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-danger-bg)] bg-[var(--color-danger-bg)] px-3 py-1 text-[12px] font-bold text-[var(--color-risk-high)]"
+    >
+      <Icon name={iconName} className="h-3.5 w-3.5" strokeWidth={2} />
+      {capitalize(name)}
+    </span>
+  );
+}
+
+function resolveIcon(name: string): IconName {
+  return ALLERGEN_ICON[name.toLowerCase()] ?? 'allergen';
+}
+
+function normalizeTestId(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
 }
 
 function capitalize(s: string): string {
