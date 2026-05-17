@@ -12,13 +12,19 @@
  * roundtrip strips empty file parts (breaking the empty_file integration
  * test) and because the route uses Node-only crypto + pdf-parse anyway.
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { APIConnectionTimeoutError, APIError } from 'openai';
+import { PrismaClient } from '@prisma/client';
+import { existsSync, readdirSync, rmSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { POST } from '@/app/api/analyze/route';
 import { MockIaProvider, getIaProvider, _resetIaProvider } from '@/lib/ai';
 import { cache } from '@/lib/cache';
 import type { IaCallResult } from '@/lib/ai/types';
 import { mapProviderError } from '@/lib/ai/foundry-provider';
+
+const prisma = new PrismaClient();
+const UPLOADS_DIR = resolve(process.cwd(), 'uploads');
 
 const MINIMAL_VALID_PDF = Buffer.from(
   `%PDF-1.0
@@ -83,10 +89,25 @@ beforeEach(() => {
   process.env.IA_PROVIDER = 'mock';
 });
 
-afterEach(() => {
+afterEach(async () => {
   vi.restoreAllMocks();
   cache.clear();
   _resetIaProvider();
+  // The pipeline now persists rows + writes images. Clean both so subsequent
+  // test files start with an empty database.
+  await prisma.product.deleteMany();
+});
+
+afterAll(async () => {
+  // Best-effort cleanup of any stray image files created by the POST path.
+  if (existsSync(UPLOADS_DIR)) {
+    for (const f of readdirSync(UPLOADS_DIR)) {
+      if (/^[a-f0-9]{64}\.(jpg|png|pdf|bin)$/.test(f)) {
+        rmSync(resolve(UPLOADS_DIR, f), { force: true });
+      }
+    }
+  }
+  await prisma.$disconnect();
 });
 
 const VALID_RAW = JSON.stringify({
@@ -433,6 +454,7 @@ describe('POST /api/analyze — detect_label_kind gate (US-05)', () => {
       'apply_rules',
       'compute_risk',
       'generate_explanation',
+      'persist',
     ]);
   });
 

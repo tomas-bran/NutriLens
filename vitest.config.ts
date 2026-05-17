@@ -16,6 +16,12 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     include: ['tests/unit/**/*.test.{ts,tsx}', 'tests/integration/**/*.test.{ts,tsx}'],
     exclude: ['tests/e2e/**', 'node_modules', '.next'],
+    // Integration tests share a single Postgres + a single /uploads directory;
+    // running test files in parallel causes deleteMany() in one file to wipe
+    // rows another file is asserting against. Disable file-level parallelism
+    // to keep tests deterministic. Unit tests still run synchronously within
+    // a file so the overall hit is small (~2x).
+    fileParallelism: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
