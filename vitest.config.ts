@@ -30,6 +30,7 @@ export default defineConfig({
         'src/lib/**/*.{ts,tsx}',
         'src/packages/schemas/**/*.ts',
         'src/app/**/*.tsx',
+        'src/components/**/*.{ts,tsx}',
         // E07 eval harness — only the pure modules. The CLI entry (`run-eval.ts`)
         // is an executable wrapper with process.exit + console.* and isn't worth
         // testing through coverage.
