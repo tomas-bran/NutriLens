@@ -28,7 +28,16 @@ export type IconName =
   | 'shield-check'
   | 'sparkles'
   | 'line-chart'
-  | 'arrow-right';
+  | 'arrow-right'
+  // Allergens — hand-rolled glyphs (no lucide equivalents).
+  | 'wheat'
+  | 'milk'
+  | 'egg'
+  | 'soy'
+  | 'fish'
+  | 'nut'
+  | 'shrimp'
+  | 'allergen';
 
 interface IconPathDef {
   paths: ReadonlyArray<string>;
@@ -135,6 +144,63 @@ const ICON_PATHS: Record<IconName, IconPathDef> = {
   },
   'arrow-right': {
     paths: ['M5 12h14', 'M13 5l7 7-7 7'],
+  },
+  // Wheat ear — gluten allergen.
+  wheat: {
+    paths: [
+      'M12 22V8',
+      'M12 8c-2-2-2-4 0-6 2 2 2 4 0 6z',
+      'M12 12c-2.5-2.5-5-2.5-7 0 2 2.5 4.5 2.5 7 0z',
+      'M12 12c2.5-2.5 5-2.5 7 0-2 2.5-4.5 2.5-7 0z',
+      'M12 17c-2.5-2.5-5-2.5-7 0 2 2.5 4.5 2.5 7 0z',
+      'M12 17c2.5-2.5 5-2.5 7 0-2 2.5-4.5 2.5-7 0z',
+    ],
+  },
+  // Milk carton — leche allergen.
+  milk: {
+    paths: ['M8 2h8', 'M8 2v3l-2 3v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8l-2-3V2', 'M8 14h8'],
+  },
+  // Egg — huevo allergen.
+  egg: {
+    paths: ['M12 22a7 7 0 0 1-7-7c0-5 3-13 7-13s7 8 7 13a7 7 0 0 1-7 7z'],
+  },
+  // Soy bean — soja allergen. Two beans inside a pod.
+  soy: {
+    paths: ['M4 12c0-5 4-9 9-9 5 0 7 4 7 8s-2 9-7 9-9-3-9-8z'],
+    circles: [
+      { cx: 10, cy: 10, r: 1.5 },
+      { cx: 14, cy: 14, r: 1.5 },
+    ],
+  },
+  // Fish — pescado allergen.
+  fish: {
+    paths: [
+      'M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.47-3.44 6-7 6s-7.56-2.53-8.5-6z',
+      'M18 12v.5',
+      'M2 12c2-1 4-1 6 0',
+      'M2 12c2 1 4 1 6 0',
+    ],
+  },
+  // Walnut / generic nut — frutos secos / maní.
+  nut: {
+    paths: ['M12 2C7 2 4 6 4 11s3 9 8 11c5-2 8-6 8-11s-3-9-8-9z', 'M12 2v20', 'M8 8c2 2 6 2 8 0'],
+  },
+  // Shrimp — crustáceos.
+  shrimp: {
+    paths: [
+      'M3 13c0-3 3-6 7-6h5a4 4 0 0 1 4 4v2',
+      'M19 13c0 3-3 6-7 6H5l3-3',
+      'M9 9l-2-2',
+      'M12 9l-2-2',
+    ],
+  },
+  // Generic allergen — fallback for sulfitos / sésamo / unmapped values.
+  allergen: {
+    paths: [
+      'M12 9v4',
+      'M12 17h.01',
+      'M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z',
+    ],
   },
 };
 

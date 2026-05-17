@@ -211,3 +211,33 @@ describe('<ResultView> — product image + confidence pill', () => {
     expect(screen.getByTestId('confidence-pill')).toHaveTextContent('Confianza 88%');
   });
 });
+
+describe('<ResultView> — historial detail variant (spec E04 §6.5)', () => {
+  it('defaults back link to /analizar when no `back` is passed', () => {
+    render(<ResultView product={mkProduct()} />);
+    expect(screen.getByTestId('result-back')).toHaveAttribute('href', '/analizar');
+    expect(screen.getByTestId('result-back')).toHaveAttribute('aria-label', 'Volver al upload');
+  });
+
+  it('respects an explicit `back` override (e.g. historial detail page)', () => {
+    render(
+      <ResultView
+        product={mkProduct()}
+        back={{ href: '/historial', label: 'Volver al historial' }}
+      />,
+    );
+    const back = screen.getByTestId('result-back');
+    expect(back).toHaveAttribute('href', '/historial');
+    expect(back).toHaveAttribute('aria-label', 'Volver al historial');
+  });
+
+  it('renders the `contextLabel` eyebrow above the category when provided', () => {
+    render(<ResultView product={mkProduct()} contextLabel="Producto guardado" />);
+    expect(screen.getByTestId('result-context')).toHaveTextContent('Producto guardado');
+  });
+
+  it('omits the context eyebrow by default', () => {
+    render(<ResultView product={mkProduct()} />);
+    expect(screen.queryByTestId('result-context')).not.toBeInTheDocument();
+  });
+});
