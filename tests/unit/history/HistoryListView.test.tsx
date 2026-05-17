@@ -56,7 +56,9 @@ describe('<HistoryListView> — empty state (US-26)', () => {
 describe('<HistoryListView> — populated grid (US-23)', () => {
   it('renders one card per item', () => {
     const items = [mkItem({ id: 'a' }), mkItem({ id: 'b' }), mkItem({ id: 'c' })];
-    render(<HistoryListView items={items} page={1} totalPages={1} total={3} filters={{ page: 1 }} />);
+    render(
+      <HistoryListView items={items} page={1} totalPages={1} total={3} filters={{ page: 1 }} />,
+    );
     // Each card has a stable testid; the generic `listitem` role would also
     // pick up nested allergen <li> elements inside each card.
     expect(screen.getByTestId('history-item-a')).toBeInTheDocument();
@@ -66,7 +68,9 @@ describe('<HistoryListView> — populated grid (US-23)', () => {
 
   it('every card links to /historial/[id]', () => {
     const items = [mkItem({ id: 'aaa' }), mkItem({ id: 'bbb' })];
-    render(<HistoryListView items={items} page={1} totalPages={1} total={2} filters={{ page: 1 }} />);
+    render(
+      <HistoryListView items={items} page={1} totalPages={1} total={2} filters={{ page: 1 }} />,
+    );
     expect(screen.getByTestId('history-item-aaa')).toHaveAttribute('href', '/historial/aaa');
     expect(screen.getByTestId('history-item-bbb')).toHaveAttribute('href', '/historial/bbb');
   });
@@ -77,7 +81,9 @@ describe('<HistoryListView> — populated grid (US-23)', () => {
       mkItem({ id: 'md', riesgo: 'medio' }),
       mkItem({ id: 'hi', riesgo: 'alto' }),
     ];
-    render(<HistoryListView items={items} page={1} totalPages={1} total={3} filters={{ page: 1 }} />);
+    render(
+      <HistoryListView items={items} page={1} totalPages={1} total={3} filters={{ page: 1 }} />,
+    );
     expect(screen.getByTestId('history-item-lo')).toHaveTextContent('Bajo');
     expect(screen.getByTestId('history-item-md')).toHaveTextContent('Medio');
     expect(screen.getByTestId('history-item-hi')).toHaveTextContent('Alto');
@@ -85,7 +91,9 @@ describe('<HistoryListView> — populated grid (US-23)', () => {
 
   it('renders the allergen chips when the array is non-empty', () => {
     const items = [mkItem({ id: 'p', alergenos: ['gluten', 'leche'] })];
-    render(<HistoryListView items={items} page={1} totalPages={1} total={1} filters={{ page: 1 }} />);
+    render(
+      <HistoryListView items={items} page={1} totalPages={1} total={1} filters={{ page: 1 }} />,
+    );
     const card = screen.getByTestId('history-item-p');
     const chips = within(card).getByTestId('history-item-allergens');
     expect(within(chips).getAllByRole('listitem')).toHaveLength(2);
@@ -93,59 +101,95 @@ describe('<HistoryListView> — populated grid (US-23)', () => {
 
   it('omits the allergen list when the item has no allergens', () => {
     const items = [mkItem({ id: 'p', alergenos: [] })];
-    render(<HistoryListView items={items} page={1} totalPages={1} total={1} filters={{ page: 1 }} />);
+    render(
+      <HistoryListView items={items} page={1} totalPages={1} total={1} filters={{ page: 1 }} />,
+    );
     expect(screen.queryByTestId('history-item-allergens')).not.toBeInTheDocument();
   });
 });
 
 describe('<HistoryListView> — header copy', () => {
   it('shows singular copy when total is 1', () => {
-    render(<HistoryListView items={[mkItem()]} page={1} totalPages={1} total={1} filters={{ page: 1 }} />);
+    render(
+      <HistoryListView
+        items={[mkItem()]}
+        page={1}
+        totalPages={1}
+        total={1}
+        filters={{ page: 1 }}
+      />,
+    );
     expect(screen.getByTestId('history-total')).toHaveTextContent('1 producto analizado');
   });
 
   it('shows plural copy when total > 1', () => {
     const items = Array.from({ length: 5 }, (_, i) => mkItem({ id: `p-${i}` }));
-    render(<HistoryListView items={items} page={1} totalPages={1} total={42} filters={{ page: 1 }} />);
+    render(
+      <HistoryListView items={items} page={1} totalPages={1} total={42} filters={{ page: 1 }} />,
+    );
     expect(screen.getByTestId('history-total')).toHaveTextContent('42 productos analizados');
   });
 
   it('"Nuevo análisis" CTA always links to /analizar', () => {
-    render(<HistoryListView items={[mkItem()]} page={1} totalPages={1} total={1} filters={{ page: 1 }} />);
+    render(
+      <HistoryListView
+        items={[mkItem()]}
+        page={1}
+        totalPages={1}
+        total={1}
+        filters={{ page: 1 }}
+      />,
+    );
     expect(screen.getByTestId('history-new-analysis')).toHaveAttribute('href', '/analizar');
   });
 });
 
 describe('<HistoryListView> — pagination', () => {
   it('omits pagination when totalPages <= 1', () => {
-    render(<HistoryListView items={[mkItem()]} page={1} totalPages={1} total={1} filters={{ page: 1 }} />);
+    render(
+      <HistoryListView
+        items={[mkItem()]}
+        page={1}
+        totalPages={1}
+        total={1}
+        filters={{ page: 1 }}
+      />,
+    );
     expect(screen.queryByTestId('history-pagination')).not.toBeInTheDocument();
   });
 
   it('renders pagination when totalPages > 1', () => {
     const items = Array.from({ length: 12 }, (_, i) => mkItem({ id: `p-${i}` }));
-    render(<HistoryListView items={items} page={1} totalPages={3} total={36} filters={{ page: 1 }} />);
+    render(
+      <HistoryListView items={items} page={1} totalPages={3} total={36} filters={{ page: 1 }} />,
+    );
     expect(screen.getByTestId('history-pagination')).toBeInTheDocument();
     expect(screen.getByText('Página 1 de 3')).toBeInTheDocument();
   });
 
   it('disables prev when on page 1', () => {
     const items = Array.from({ length: 12 }, (_, i) => mkItem({ id: `p-${i}` }));
-    render(<HistoryListView items={items} page={1} totalPages={3} total={36} filters={{ page: 1 }} />);
+    render(
+      <HistoryListView items={items} page={1} totalPages={3} total={36} filters={{ page: 1 }} />,
+    );
     const prev = screen.getByTestId('history-page-prev');
     expect(prev).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('disables next when on the last page', () => {
     const items = Array.from({ length: 12 }, (_, i) => mkItem({ id: `p-${i}` }));
-    render(<HistoryListView items={items} page={3} totalPages={3} total={36} filters={{ page: 1 }} />);
+    render(
+      <HistoryListView items={items} page={3} totalPages={3} total={36} filters={{ page: 1 }} />,
+    );
     const next = screen.getByTestId('history-page-next');
     expect(next).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('enables both prev and next on a middle page', () => {
     const items = Array.from({ length: 12 }, (_, i) => mkItem({ id: `p-${i}` }));
-    render(<HistoryListView items={items} page={2} totalPages={3} total={36} filters={{ page: 1 }} />);
+    render(
+      <HistoryListView items={items} page={2} totalPages={3} total={36} filters={{ page: 1 }} />,
+    );
     expect(screen.getByTestId('history-page-prev')).toHaveAttribute('href', '/historial');
     expect(screen.getByTestId('history-page-next')).toHaveAttribute('href', '/historial?page=3');
   });

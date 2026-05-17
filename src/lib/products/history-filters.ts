@@ -5,7 +5,14 @@
  * Filters live in the URL so back/forward navigation works without state.
  * Changing any filter resets `page=1`; only the `page` mutator preserves it.
  */
-import { ALERGENOS, CATEGORIAS, RIESGOS, type Alergeno, type Categoria, type Riesgo } from '@schemas/product';
+import {
+  ALERGENOS,
+  CATEGORIAS,
+  RIESGOS,
+  type Alergeno,
+  type Categoria,
+  type Riesgo,
+} from '@schemas/product';
 import { APTO_VALUES, type Apto } from '@/lib/products/query-schema';
 
 export interface HistoryFilters {
@@ -111,7 +118,11 @@ const RIESGO_LABEL: Record<Riesgo, string> = {
 export function describeActiveFilters(filters: HistoryFilters): ReadonlyArray<ActiveFilter> {
   const out: ActiveFilter[] = [];
   if (filters.categoria) {
-    out.push({ key: 'categoria', label: `Categoría: ${filters.categoria}`, value: filters.categoria });
+    out.push({
+      key: 'categoria',
+      label: `Categoría: ${filters.categoria}`,
+      value: filters.categoria,
+    });
   }
   if (filters.riesgo) {
     out.push({ key: 'riesgo', label: RIESGO_LABEL[filters.riesgo], value: filters.riesgo });

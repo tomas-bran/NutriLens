@@ -15,7 +15,10 @@ import { HistoryItemCard } from './HistoryItemCard';
 import { HistoryNoResults } from './HistoryNoResults';
 import { HistoryPagination } from './HistoryPagination';
 import { Icon } from '@/components/ui/Icon';
-import { hasActiveFilters, type HistoryFilters as HistoryFiltersValue } from '@/lib/products/history-filters';
+import {
+  hasActiveFilters,
+  type HistoryFilters as HistoryFiltersValue,
+} from '@/lib/products/history-filters';
 import type { ProductListItem } from '@/lib/products/serializers';
 
 export interface HistoryListViewProps {
@@ -26,13 +29,7 @@ export interface HistoryListViewProps {
   filters: HistoryFiltersValue;
 }
 
-export function HistoryListView({
-  items,
-  page,
-  totalPages,
-  total,
-  filters,
-}: HistoryListViewProps) {
+export function HistoryListView({ items, page, totalPages, total, filters }: HistoryListViewProps) {
   const filtersActive = hasActiveFilters(filters);
   return (
     <div className="flex flex-col gap-6 px-4 py-2 md:px-6 md:py-6" data-testid="history-view">
@@ -41,7 +38,13 @@ export function HistoryListView({
       <HistoryFilters value={filters} />
       <ActiveFilterChips filters={filters} />
 
-      {total === 0 ? filtersActive ? <HistoryNoResults /> : <HistoryEmpty /> : (
+      {total === 0 ? (
+        filtersActive ? (
+          <HistoryNoResults />
+        ) : (
+          <HistoryEmpty />
+        )
+      ) : (
         <>
           <ul
             role="list"

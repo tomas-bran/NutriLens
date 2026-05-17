@@ -54,7 +54,9 @@ test.describe('Filtros del historial (US-24)', () => {
     await history.expectActiveChip('riesgo');
   });
 
-  test('combinación sin resultados → muestra mensaje + botón Limpiar funciona', async ({ page }) => {
+  test('combinación sin resultados → muestra mensaje + botón Limpiar funciona', async ({
+    page,
+  }) => {
     const history = new HistoryPage(page);
     await history.goto();
 

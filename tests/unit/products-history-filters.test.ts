@@ -126,14 +126,11 @@ describe('setFilter', () => {
 
 describe('clearFilter', () => {
   it('drops the specified filter and resets page', () => {
-    const next = clearFilter(
-      { categoria: 'galletitas', riesgo: 'alto', page: 3 },
-      'categoria',
-    );
+    const next = clearFilter({ categoria: 'galletitas', riesgo: 'alto', page: 3 }, 'categoria');
     expect(next).toEqual({ riesgo: 'alto', page: 1 });
   });
 
-  it('is a no-op for filters that weren\'t set (still resets page)', () => {
+  it("is a no-op for filters that weren't set (still resets page)", () => {
     const next = clearFilter({ page: 4 }, 'q');
     expect(next).toEqual({ page: 1 });
   });
@@ -166,13 +163,7 @@ describe('describeActiveFilters', () => {
       q: 'choco',
       page: 1,
     });
-    expect(chips.map((c) => c.key)).toEqual([
-      'categoria',
-      'riesgo',
-      'alergeno',
-      'apto',
-      'q',
-    ]);
+    expect(chips.map((c) => c.key)).toEqual(['categoria', 'riesgo', 'alergeno', 'apto', 'q']);
     expect(chips.find((c) => c.key === 'riesgo')?.label).toBe('Riesgo alto');
     expect(chips.find((c) => c.key === 'apto')?.label).toBe('Apto celíaco');
     expect(chips.find((c) => c.key === 'q')?.label).toBe('“choco”');

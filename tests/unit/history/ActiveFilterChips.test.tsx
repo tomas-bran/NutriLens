@@ -6,7 +6,16 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('next/link', () => ({
-  default: ({ href, children, scroll: _scroll, ...rest }: { href: string; children: React.ReactNode; scroll?: boolean }) => (
+  default: ({
+    href,
+    children,
+    scroll: _scroll,
+    ...rest
+  }: {
+    href: string;
+    children: React.ReactNode;
+    scroll?: boolean;
+  }) => (
     <a href={href} {...rest}>
       {children}
     </a>
@@ -33,9 +42,7 @@ describe('<ActiveFilterChips>', () => {
   });
 
   it('each chip links to the historial URL without that filter', () => {
-    render(
-      <ActiveFilterChips filters={{ categoria: 'galletitas', riesgo: 'alto', page: 1 }} />,
-    );
+    render(<ActiveFilterChips filters={{ categoria: 'galletitas', riesgo: 'alto', page: 1 }} />);
     // Removing `categoria` leaves only `riesgo`.
     expect(screen.getByTestId('filter-chip-categoria')).toHaveAttribute(
       'href',
@@ -49,14 +56,10 @@ describe('<ActiveFilterChips>', () => {
   });
 
   it('shows "Limpiar todo" only when more than one filter is active', () => {
-    const { rerender } = render(
-      <ActiveFilterChips filters={{ categoria: 'snacks', page: 1 }} />,
-    );
+    const { rerender } = render(<ActiveFilterChips filters={{ categoria: 'snacks', page: 1 }} />);
     expect(screen.queryByTestId('filter-clear-all')).not.toBeInTheDocument();
 
-    rerender(
-      <ActiveFilterChips filters={{ categoria: 'snacks', riesgo: 'medio', page: 1 }} />,
-    );
+    rerender(<ActiveFilterChips filters={{ categoria: 'snacks', riesgo: 'medio', page: 1 }} />);
     expect(screen.getByTestId('filter-clear-all')).toHaveAttribute('href', '/historial');
   });
 });
