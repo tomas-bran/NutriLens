@@ -94,6 +94,70 @@ describe('FoundryProvider.analyzeLabel — happy path', () => {
   });
 });
 
+describe('FoundryProvider.generateExplanation (US-18)', () => {
+  const PRODUCT = {
+    producto: 'Galletitas Test',
+    categoria: 'galletitas' as const,
+    ingredientes_detectados: ['harina de trigo'],
+    alergenos: ['gluten' as const],
+    sellos: ['exceso en azúcares' as const],
+    apto_vegano: false,
+    apto_celiaco: false,
+    apto_sin_lactosa: true,
+    riesgo: 'medio' as const,
+    confidence: 0.88,
+  };
+
+  it('uses the Phi-4-mini text-only model (NOT multimodal) per spec §5.1', async () => {
+    const create = vi
+      .fn()
+      .mockResolvedValue(
+        okCompletion('Producto con gluten. Recordá que NutriLens es un asistente informativo.'),
+      );
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+    await provider.generateExplanation(PRODUCT, { promptVersion: 'explain_product-v1' });
+    const [body] = create.mock.calls[0] as [Record<string, unknown>];
+    expect(body.model).toBe('Phi-4-mini-instruct');
+  });
+
+  it('renders the prompt with product fields + reglas_aplicadas from opts.extra', async () => {
+    const create = vi.fn().mockResolvedValue(okCompletion('ok'));
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+    await provider.generateExplanation(PRODUCT, {
+      promptVersion: 'explain_product-v1',
+      extra: { reglas_aplicadas: 'contiene_gluten' },
+    });
+    const [body] = create.mock.calls[0] as [Record<string, unknown>];
+    const messages = body.messages as Array<{ role: string; content: unknown }>;
+    const systemContent = String(messages[0]?.content);
+    expect(systemContent).toContain('Galletitas Test');
+    expect(systemContent).toContain('galletitas');
+    expect(systemContent).toContain('contiene_gluten');
+    expect(systemContent).toContain('exceso en azúcares');
+  });
+
+  it('defaults to a 10s timeout for the explanation call (cheaper than extract 25s)', async () => {
+    const create = vi.fn().mockResolvedValue(okCompletion('ok'));
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+    await provider.generateExplanation(PRODUCT, { promptVersion: 'explain_product-v1' });
+    const reqOpts = (create.mock.calls[0] as unknown[])[1] as { timeout: number };
+    expect(reqOpts.timeout).toBe(10_000);
+  });
+
+  it('sends "ninguno" when alergenos/sellos arrays are empty (prompt placeholder safety)', async () => {
+    const create = vi.fn().mockResolvedValue(okCompletion('ok'));
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+    await provider.generateExplanation(
+      { ...PRODUCT, alergenos: [], sellos: [] },
+      { promptVersion: 'explain_product-v1' },
+    );
+    const [body] = create.mock.calls[0] as [Record<string, unknown>];
+    const systemContent = String((body.messages as Array<{ content: unknown }>)[0]?.content);
+    expect(systemContent).toMatch(/Alérgenos detectados: ninguno/);
+    expect(systemContent).toMatch(/Sellos: ninguno/);
+  });
+});
+
 describe('FoundryProvider.classifyLabelKind (US-05)', () => {
   it('sends the detect_label_kind-v1 system prompt + image to the multimodal model', async () => {
     const create = vi

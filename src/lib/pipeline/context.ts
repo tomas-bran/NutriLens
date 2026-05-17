@@ -1,6 +1,7 @@
 import type { ApiError } from '@schemas/errors';
 import type { LabelKind, ProductExtraction } from '@schemas/product';
 import type { StepTrace } from '@schemas/pipeline';
+import type { RulesResult } from '@/lib/rules/apply';
 
 export interface AnalysisFile {
   name: string;
@@ -30,6 +31,9 @@ export interface AnalysisContext {
   /** Raw text returned by extract_with_ia, validated downstream by validate_schema. */
   extractionRaw?: string;
   product?: ProductExtraction;
+  /** Filled by apply_rules; overrides product.apto_* + drives compute_risk. */
+  rules?: RulesResult;
+  /** Final explanation text (sanitized). Optional — failure tolerated per spec E03 §5.4. */
   explanation?: string;
   error?: ApiError;
 }

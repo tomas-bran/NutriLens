@@ -14,12 +14,14 @@ import { join } from 'node:path';
 export type PromptVersion =
   | 'extract_product-v1'
   | 'extract_product-v1-corrective'
-  | 'detect_label_kind-v1';
+  | 'detect_label_kind-v1'
+  | 'explain_product-v1';
 
 const PROMPT_FILES: Record<PromptVersion, string> = {
   'extract_product-v1': 'extract_product-v1.md',
   'extract_product-v1-corrective': 'extract_product-v1-corrective.md',
   'detect_label_kind-v1': 'detect_label_kind-v1.md',
+  'explain_product-v1': 'explain_product-v1.md',
 };
 
 const cache = new Map<PromptVersion, string>();
