@@ -29,6 +29,8 @@ export type AnalyzeOpts = {
 export type ExplainOpts = {
   promptVersion: string;
   timeoutMs?: number;
+  /** Free-form context interpolated into the explain prompt (e.g. reglas_aplicadas). */
+  extra?: Record<string, string>;
 };
 
 export type AnswerOpts = {

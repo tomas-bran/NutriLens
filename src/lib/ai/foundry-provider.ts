@@ -31,14 +31,16 @@ import type {
 const DEFAULT_TIMEOUT_MS = 25_000;
 const BACKOFF_MS = 2_000;
 
+const EXPLAIN_DEFAULT_TIMEOUT_MS = 10_000;
+
 export class FoundryProvider implements IaProvider {
   private readonly client: OpenAI;
   private readonly multimodalModel: string;
-  // private readonly miniModel: string; // wired in US-17 (generate_explanation)
+  private readonly miniModel: string;
 
   constructor(deps?: { client?: OpenAI }) {
     this.multimodalModel = required('AZURE_AI_FOUNDRY_MODEL_MULTIMODAL');
-    // this.miniModel = required('AZURE_AI_FOUNDRY_MODEL_MINI');
+    this.miniModel = required('AZURE_AI_FOUNDRY_MODEL_MINI');
     this.client =
       deps?.client ??
       new OpenAI({
@@ -93,11 +95,34 @@ export class FoundryProvider implements IaProvider {
     });
   }
 
-  async generateExplanation(
-    _product: ProductExtraction,
-    _opts: ExplainOpts,
-  ): Promise<IaCallResult> {
-    throw new Error('generateExplanation not implemented in FoundryProvider yet (US-17)');
+  async generateExplanation(product: ProductExtraction, opts: ExplainOpts): Promise<IaCallResult> {
+    // eslint-disable-next-line testing-library/render-result-naming-convention -- false positive: renderPrompt is a prompt-template renderer, not @testing-library/react
+    const systemPrompt = renderPrompt(opts.promptVersion as never, {
+      producto: product.producto,
+      categoria: product.categoria,
+      alergenos: product.alergenos.join(', ') || 'ninguno',
+      sellos: product.sellos.join(', ') || 'ninguno',
+      apto_vegano: String(product.apto_vegano),
+      apto_celiaco: String(product.apto_celiaco),
+      apto_sin_lactosa: String(product.apto_sin_lactosa),
+      riesgo: product.riesgo,
+      // reglas_aplicadas viene calculado por apply_rules — el step lo pasa
+      // como override en opts.extra cuando lo tiene.
+      reglas_aplicadas: opts.extra?.reglas_aplicadas ?? '',
+      confidence: product.confidence.toFixed(2),
+    });
+
+    return this.callChat({
+      model: this.miniModel,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        {
+          role: 'user',
+          content: 'Generá la explicación para este producto siguiendo las reglas de tono.',
+        },
+      ],
+      timeoutMs: opts.timeoutMs ?? EXPLAIN_DEFAULT_TIMEOUT_MS,
+    });
   }
 
   async answerWithContext(

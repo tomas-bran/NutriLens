@@ -43,13 +43,20 @@ export class MockIaProvider implements IaProvider {
     };
   }
 
-  async generateExplanation(
-    _product: ProductExtraction,
-    _opts: ExplainOpts,
-  ): Promise<IaCallResult> {
+  async generateExplanation(product: ProductExtraction, _opts: ExplainOpts): Promise<IaCallResult> {
     // User-facing string kept in Spanish on purpose: it's the product output.
+    // Includes the disclaimer marker so sanitizeExplanation is idempotent on mock output.
+    const restricciones = [
+      product.alergenos.length > 0 ? `alérgenos: ${product.alergenos.join(', ')}` : null,
+      product.sellos.length > 0 ? `sellos: ${product.sellos.join(', ')}` : null,
+    ]
+      .filter(Boolean)
+      .join('; ');
+    const body = restricciones
+      ? `${product.producto} (${product.categoria}) — riesgo ${product.riesgo}. ${restricciones}.`
+      : `${product.producto} (${product.categoria}) — sin restricciones detectadas, riesgo ${product.riesgo}.`;
     return {
-      raw: 'Explicación mock. NutriLens es un asistente informativo.',
+      raw: `${body} Recordá que NutriLens es un asistente informativo.`,
       usage: { in: 0, out: 0 },
       latencyMs: 3,
     };
