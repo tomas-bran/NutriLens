@@ -67,7 +67,16 @@
         "producto": { "type": "string" },
         "categoria": {
           "type": "string",
-          "enum": ["galletitas", "cereales", "snacks", "lácteos", "bebidas", "sin TACC", "veganos", "otros"]
+          "enum": [
+            "galletitas",
+            "cereales",
+            "snacks",
+            "lácteos",
+            "bebidas",
+            "sin TACC",
+            "veganos",
+            "otros"
+          ]
         },
         "ingredientes_detectados": {
           "type": "array",
@@ -76,13 +85,30 @@
         "alergenos": {
           "type": "array",
           "items": {
-            "enum": ["gluten", "leche", "huevo", "soja", "frutos secos", "maní", "pescado", "crustáceos", "sulfitos", "sésamo"]
+            "enum": [
+              "gluten",
+              "leche",
+              "huevo",
+              "soja",
+              "frutos secos",
+              "maní",
+              "pescado",
+              "crustáceos",
+              "sulfitos",
+              "sésamo"
+            ]
           }
         },
         "sellos": {
           "type": "array",
           "items": {
-            "enum": ["exceso en azúcares", "exceso en sodio", "exceso en grasas saturadas", "exceso en grasas totales", "exceso en calorías"]
+            "enum": [
+              "exceso en azúcares",
+              "exceso en sodio",
+              "exceso en grasas saturadas",
+              "exceso en grasas totales",
+              "exceso en calorías"
+            ]
           }
         },
         "apto_vegano": { "type": "boolean" },

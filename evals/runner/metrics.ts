@@ -103,9 +103,11 @@ export function confusionMatrix(
  * Confidence calibration: how much higher is the avg confidence on correct
  * cases vs incorrect ones. > 0 means the model "knows when it doesn't know".
  */
-export function confidenceCalibration(
-  samples: { confidence: number; correct: boolean }[],
-): { meanCorrect: number; meanWrong: number; diff: number } {
+export function confidenceCalibration(samples: { confidence: number; correct: boolean }[]): {
+  meanCorrect: number;
+  meanWrong: number;
+  diff: number;
+} {
   const correct = samples.filter((s) => s.correct);
   const wrong = samples.filter((s) => !s.correct);
   const mean = (arr: typeof samples) =>
@@ -129,7 +131,9 @@ export const EXTRACT_WEIGHTS = {
   riesgo: 0.15,
 } as const;
 
-export function aggregateExtractScore(scores: Record<keyof typeof EXTRACT_WEIGHTS, number>): number {
+export function aggregateExtractScore(
+  scores: Record<keyof typeof EXTRACT_WEIGHTS, number>,
+): number {
   let total = 0;
   for (const k of Object.keys(EXTRACT_WEIGHTS) as Array<keyof typeof EXTRACT_WEIGHTS>) {
     total += scores[k] * EXTRACT_WEIGHTS[k];

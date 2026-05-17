@@ -20,26 +20,39 @@
         "question": { "type": "string", "minLength": 1 },
         "expected": {
           "type": "object",
-          "required": ["kind", "categoria", "riesgo_max", "apto", "alergeno_excluido", "keywords", "comparar"],
+          "required": [
+            "kind",
+            "categoria",
+            "riesgo_max",
+            "apto",
+            "alergeno_excluido",
+            "keywords",
+            "comparar"
+          ],
           "properties": {
             "kind": { "enum": ["filter", "compare", "info", "unknown"] },
             "categoria": {
               "anyOf": [
                 { "type": "null" },
-                { "enum": ["galletitas", "cereales", "snacks", "lácteos", "bebidas", "sin TACC", "veganos", "otros"] }
+                {
+                  "enum": [
+                    "galletitas",
+                    "cereales",
+                    "snacks",
+                    "lácteos",
+                    "bebidas",
+                    "sin TACC",
+                    "veganos",
+                    "otros"
+                  ]
+                }
               ]
             },
             "riesgo_max": {
-              "anyOf": [
-                { "type": "null" },
-                { "enum": ["bajo", "medio", "alto"] }
-              ]
+              "anyOf": [{ "type": "null" }, { "enum": ["bajo", "medio", "alto"] }]
             },
             "apto": {
-              "anyOf": [
-                { "type": "null" },
-                { "enum": ["vegano", "celiaco", "sin_lactosa"] }
-              ]
+              "anyOf": [{ "type": "null" }, { "enum": ["vegano", "celiaco", "sin_lactosa"] }]
             },
             "alergeno_excluido": {
               "anyOf": [{ "type": "null" }, { "type": "string" }]

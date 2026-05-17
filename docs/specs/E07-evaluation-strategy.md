@@ -30,12 +30,12 @@
 
 ### 2.1 Composición (mix 15 propias + 10 de Open Food Facts)
 
-| Bucket | Cantidad | Notas |
-|--------|---------|-------|
-| Fotos propias del super | 15 | Sacadas con celular, calidades variadas (representativas del usuario real) |
-| Open Food Facts (OFF) | 10 | Productos argentinos seleccionados de `world.openfoodfacts.org` (CC) |
-| PDFs | 2-3 | Fichas técnicas para validar el flujo PDF |
-| Non-food (para `detect_label_kind`) | 10 | Paisajes, gente, capturas, objetos sin etiqueta |
+| Bucket                              | Cantidad | Notas                                                                      |
+| ----------------------------------- | -------- | -------------------------------------------------------------------------- |
+| Fotos propias del super             | 15       | Sacadas con celular, calidades variadas (representativas del usuario real) |
+| Open Food Facts (OFF)               | 10       | Productos argentinos seleccionados de `world.openfoodfacts.org` (CC)       |
+| PDFs                                | 2-3      | Fichas técnicas para validar el flujo PDF                                  |
+| Non-food (para `detect_label_kind`) | 10       | Paisajes, gente, capturas, objetos sin etiqueta                            |
 
 **Total:** ~37 archivos.
 
@@ -43,16 +43,16 @@
 
 Cada caso tiene tags. La distribución mínima esperada:
 
-| Eje | Requerimiento |
-|-----|---------------|
+| Eje                | Requerimiento                                                                                              |
+| ------------------ | ---------------------------------------------------------------------------------------------------------- |
 | Categoría producto | al menos 2 casos por cada una de las 7 (galletitas, cereales, snacks, lácteos, bebidas, sin TACC, veganos) |
-| Riesgo esperado | ~8 bajo, ~8 medio, ~9 alto |
-| Calidad imagen | 60% nítidas, 30% con problemas leves (reflejo, ángulo), 10% borrosas |
-| Sellos | 30% sin sellos, 30% con 1 sello, 40% con ≥2 sellos |
-| Alérgenos | cada uno de los 10 alérgenos del enum aparece en al menos 1 caso |
-| Aptitudes | al menos 3 casos apto vegano, 3 apto celíaco, 3 apto sin lactosa |
-| Idioma | 80% español, 20% inglés/portugués |
-| Edge cases | al menos 1 caso por cada uno: etiqueta cortada, imagen muy oscura, producto en bolsa transparente |
+| Riesgo esperado    | ~8 bajo, ~8 medio, ~9 alto                                                                                 |
+| Calidad imagen     | 60% nítidas, 30% con problemas leves (reflejo, ángulo), 10% borrosas                                       |
+| Sellos             | 30% sin sellos, 30% con 1 sello, 40% con ≥2 sellos                                                         |
+| Alérgenos          | cada uno de los 10 alérgenos del enum aparece en al menos 1 caso                                           |
+| Aptitudes          | al menos 3 casos apto vegano, 3 apto celíaco, 3 apto sin lactosa                                           |
+| Idioma             | 80% español, 20% inglés/portugués                                                                          |
+| Edge cases         | al menos 1 caso por cada uno: etiqueta cortada, imagen muy oscura, producto en bolsa transparente          |
 
 ### 2.3 Estructura
 
@@ -176,16 +176,16 @@ npm run eval -- --prompt extract_product-v1 --cache-only
 
 Por campo del JSON:
 
-| Field | Métrica | Cómo se calcula |
-|-------|---------|-----------------|
-| `producto` | Fuzzy match | Levenshtein normalizada, threshold 0.7 cuenta como match |
-| `categoria` | Exact match | 1 si igual, 0 si no |
-| `ingredientes_detectados` | F1 sobre sets | `2*precision*recall / (precision+recall)` |
-| `alergenos` | F1 sobre sets | idem |
-| `sellos` | F1 sobre sets | idem |
-| `apto_vegano`, `apto_celiaco`, `apto_sin_lactosa` | Exact match | 1 si igual booleano |
-| `riesgo` (después de reglas) | Exact match | 1 si igual |
-| `confidence` calibration | Diff de means | `mean(confidence \| correct) - mean(confidence \| wrong)` |
+| Field                                             | Métrica       | Cómo se calcula                                           |
+| ------------------------------------------------- | ------------- | --------------------------------------------------------- |
+| `producto`                                        | Fuzzy match   | Levenshtein normalizada, threshold 0.7 cuenta como match  |
+| `categoria`                                       | Exact match   | 1 si igual, 0 si no                                       |
+| `ingredientes_detectados`                         | F1 sobre sets | `2*precision*recall / (precision+recall)`                 |
+| `alergenos`                                       | F1 sobre sets | idem                                                      |
+| `sellos`                                          | F1 sobre sets | idem                                                      |
+| `apto_vegano`, `apto_celiaco`, `apto_sin_lactosa` | Exact match   | 1 si igual booleano                                       |
+| `riesgo` (después de reglas)                      | Exact match   | 1 si igual                                                |
+| `confidence` calibration                          | Diff de means | `mean(confidence \| correct) - mean(confidence \| wrong)` |
 
 **Score agregado** (weighted):
 
@@ -203,10 +203,10 @@ score = 0.10 * fuzzy(producto)
 
 Confusion matrix sobre el bucket food + non-food:
 
-| | Predicted: food | Predicted: not-food |
-|---|---|---|
-| **Actual: food** | TP | FN |
-| **Actual: not-food** | FP | TN |
+|                      | Predicted: food | Predicted: not-food |
+| -------------------- | --------------- | ------------------- |
+| **Actual: food**     | TP              | FN                  |
+| **Actual: not-food** | FP              | TN                  |
 
 Métricas: Precision = TP/(TP+FP), Recall = TP/(TP+FN), F1.
 
@@ -214,54 +214,54 @@ Métricas: Precision = TP/(TP+FP), Recall = TP/(TP+FN), F1.
 
 Heurísticas (no se llama a otro LLM para no quemar tokens):
 
-| Check | Pass condition |
-|-------|---------------|
-| Longitud | 80 ≤ chars ≤ 500 |
-| Disclaimer presente | contiene "NutriLens es un asistente informativo" |
-| Sin frases bloqueadas | no matchea blocklist (`consulta a un médico`, `no consumir`, `tóxico`, etc.) |
-| Menciona restricciones | si el producto tiene alérgenos detectados, el texto los menciona |
-| Tone informativo | no tiene "!" final ni mayúsculas sostenidas |
+| Check                  | Pass condition                                                               |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| Longitud               | 80 ≤ chars ≤ 500                                                             |
+| Disclaimer presente    | contiene "NutriLens es un asistente informativo"                             |
+| Sin frases bloqueadas  | no matchea blocklist (`consulta a un médico`, `no consumir`, `tóxico`, etc.) |
+| Menciona restricciones | si el producto tiene alérgenos detectados, el texto los menciona             |
+| Tone informativo       | no tiene "!" final ni mayúsculas sostenidas                                  |
 
 ### 4.4 `chat_parse_intent-v*`
 
 Sobre `evals/chat/intents.json` (15 preguntas anotadas con su intent esperado):
 
-| Field del intent | Métrica |
-|-------|---------|
-| `kind` | Exact match |
-| `categoria` | Exact match (con null como valor válido) |
-| `apto` | Exact match |
-| `alergeno_excluido` | Exact match |
-| `keywords` | F1 sobre sets |
+| Field del intent    | Métrica                                  |
+| ------------------- | ---------------------------------------- |
+| `kind`              | Exact match                              |
+| `categoria`         | Exact match (con null como valor válido) |
+| `apto`              | Exact match                              |
+| `alergeno_excluido` | Exact match                              |
+| `keywords`          | F1 sobre sets                            |
 
 ### 4.5 `chat_answer-v*`
 
-| Check | Pass condition |
-|-------|---------------|
-| Faithfulness | La respuesta menciona solo productos del contexto (regex check sobre nombres) |
-| Disclaimer presente | contiene "Basado en productos analizados por vos" |
-| Sin productos inventados | ningún nombre fuera del contexto pasa al output |
-| Longitud razonable | 50 ≤ chars ≤ 800 |
+| Check                    | Pass condition                                                                |
+| ------------------------ | ----------------------------------------------------------------------------- |
+| Faithfulness             | La respuesta menciona solo productos del contexto (regex check sobre nombres) |
+| Disclaimer presente      | contiene "Basado en productos analizados por vos"                             |
+| Sin productos inventados | ningún nombre fuera del contexto pasa al output                               |
+| Longitud razonable       | 50 ≤ chars ≤ 800                                                              |
 
 ---
 
 ## 5. Thresholds
 
-| Métrica | MVP | Demo | Producción |
-|---------|-----|------|-----------|
-| `extract.producto` fuzzy | ≥0.70 | ≥0.85 | ≥0.90 |
-| `extract.categoria` exact | ≥0.80 | ≥0.90 | ≥0.95 |
-| `extract.ingredientes` F1 | ≥0.65 | ≥0.80 | ≥0.85 |
-| `extract.alergenos` F1 | ≥0.80 | ≥0.90 | ≥0.95 |
-| `extract.sellos` F1 | ≥0.85 | ≥0.95 | ≥0.95 |
-| `extract.aptitudes` exact | ≥0.75 | ≥0.90 | ≥0.95 |
-| `extract.riesgo` exact | ≥0.85 | ≥0.95 | ≥0.97 |
-| `extract.confidence_calibration` diff | ≥0.15 | ≥0.20 | ≥0.20 |
-| `extract.aggregate_score` | ≥0.75 | ≥0.88 | ≥0.93 |
-| `detect_label_kind` F1 | ≥0.85 | ≥0.95 | ≥0.97 |
-| `explain` pass rate | ≥0.85 | ≥0.95 | ≥0.98 |
-| `chat_parse_intent.kind` exact | ≥0.85 | ≥0.95 | ≥0.97 |
-| `chat_answer` faithfulness | ≥0.95 | ≥0.98 | ≥0.99 |
+| Métrica                               | MVP   | Demo  | Producción |
+| ------------------------------------- | ----- | ----- | ---------- |
+| `extract.producto` fuzzy              | ≥0.70 | ≥0.85 | ≥0.90      |
+| `extract.categoria` exact             | ≥0.80 | ≥0.90 | ≥0.95      |
+| `extract.ingredientes` F1             | ≥0.65 | ≥0.80 | ≥0.85      |
+| `extract.alergenos` F1                | ≥0.80 | ≥0.90 | ≥0.95      |
+| `extract.sellos` F1                   | ≥0.85 | ≥0.95 | ≥0.95      |
+| `extract.aptitudes` exact             | ≥0.75 | ≥0.90 | ≥0.95      |
+| `extract.riesgo` exact                | ≥0.85 | ≥0.95 | ≥0.97      |
+| `extract.confidence_calibration` diff | ≥0.15 | ≥0.20 | ≥0.20      |
+| `extract.aggregate_score`             | ≥0.75 | ≥0.88 | ≥0.93      |
+| `detect_label_kind` F1                | ≥0.85 | ≥0.95 | ≥0.97      |
+| `explain` pass rate                   | ≥0.85 | ≥0.95 | ≥0.98      |
+| `chat_parse_intent.kind` exact        | ≥0.85 | ≥0.95 | ≥0.97      |
+| `chat_answer` faithfulness            | ≥0.95 | ≥0.98 | ≥0.99      |
 
 > **Política:** safety-críticos (`alergenos`, `sellos`, `riesgo`, `chat_answer.faithfulness`) deben cumplir **threshold demo** incluso para el MVP. Es preferible una demo con menos productos bien analizados que una con muchos errores en alérgenos.
 
@@ -321,13 +321,13 @@ Sobre `evals/chat/intents.json` (15 preguntas anotadas con su intent esperado):
 
 ## 7. Cuándo se corre
 
-| Trigger | Quien | Frecuencia |
-|---------|-------|-----------|
-| Cambio de prompt | dev local | siempre (antes de PR) |
-| Cambio de provider o modelo | dev local | siempre |
-| Cambio en reglas (E03) | dev local | siempre (afecta `riesgo`) |
-| Pre-merge a `main` de PRs que tocan IA | dev local | manualmente |
-| (Opcional) Nightly schedule | GitHub Action | una vez por noche, commitea reporte |
+| Trigger                                | Quien         | Frecuencia                          |
+| -------------------------------------- | ------------- | ----------------------------------- |
+| Cambio de prompt                       | dev local     | siempre (antes de PR)               |
+| Cambio de provider o modelo            | dev local     | siempre                             |
+| Cambio en reglas (E03)                 | dev local     | siempre (afecta `riesgo`)           |
+| Pre-merge a `main` de PRs que tocan IA | dev local     | manualmente                         |
+| (Opcional) Nightly schedule            | GitHub Action | una vez por noche, commitea reporte |
 
 **No corre en CI por PR** — el costo en tokens lo hace prohibitivo para feature branches.
 
@@ -337,14 +337,14 @@ Sobre `evals/chat/intents.json` (15 preguntas anotadas con su intent esperado):
 
 Sobre ~25 imágenes + 10 non-food + 10 preguntas chat:
 
-| Eval | Llamadas | Tokens aprox | Costo aprox (USD) |
-|------|---------|-------------|-------------------|
-| `extract_product` | 25 | ~50k in + 12k out | ~$0.05 |
-| `detect_label_kind` | 35 (incluye non-food) | ~20k in + 1k out | ~$0.02 |
-| `explain_product` | 10 | ~5k in + 2k out | ~$0.001 |
-| `chat_parse_intent` | 15 | ~5k in + 1k out | ~$0.001 |
-| `chat_answer` | 10 | ~20k in + 4k out | ~$0.004 |
-| **Total por corrida full** | ~95 | | **~$0.08** |
+| Eval                       | Llamadas              | Tokens aprox      | Costo aprox (USD) |
+| -------------------------- | --------------------- | ----------------- | ----------------- |
+| `extract_product`          | 25                    | ~50k in + 12k out | ~$0.05            |
+| `detect_label_kind`        | 35 (incluye non-food) | ~20k in + 1k out  | ~$0.02            |
+| `explain_product`          | 10                    | ~5k in + 2k out   | ~$0.001           |
+| `chat_parse_intent`        | 15                    | ~5k in + 1k out   | ~$0.001           |
+| `chat_answer`              | 10                    | ~20k in + 4k out  | ~$0.004           |
+| **Total por corrida full** | ~95                   |                   | **~$0.08**        |
 
 Con caché de respuestas en `evals/.cache/`, una segunda corrida (sin cambio de prompt) es $0.
 
@@ -372,12 +372,14 @@ Cada reporte vive en `evals/results/<prompt>-<version>-<timestamp>.md` y se comm
 # Eval Report — extract_product-v1 — 2026-05-16 14:32
 
 ## Config
+
 - Provider: foundry
 - Model: Phi-4-multimodal-instruct
 - Prompt version: extract_product-v1
 - Dataset: 25 cases (15 own + 10 OFF), 0 errors loading
 
 ## Summary
+
 - Cases evaluated: 25
 - Pass thresholds: ✓ MVP (8/8), ✗ Demo (5/8)
 - Total tokens: 50,420 in / 12,210 out
@@ -385,33 +387,38 @@ Cada reporte vive en `evals/results/<prompt>-<version>-<timestamp>.md` y se comm
 - p95 latency: 4.8s
 
 ## Aggregate score
+
 - 0.79 (weighted, see spec §4.1)
 - Thresholds: MVP 0.75 ✓ | Demo 0.88 ✗
 
 ## Métricas por campo
-| Field | Metric | Value | MVP | Demo | Status |
-|-------|--------|-------|-----|------|--------|
-| producto | fuzzy | 0.86 | 0.70 | 0.85 | ✓ |
-| categoria | exact | 0.92 | 0.80 | 0.90 | ✓ |
-| ingredientes | F1 | 0.71 | 0.65 | 0.80 | ⚠ MVP |
-| alergenos | F1 | 0.84 | 0.80 | 0.90 | ✓ MVP, ✗ Demo |
-| sellos | F1 | 0.92 | 0.85 | 0.95 | ✓ MVP, ✗ Demo |
-| aptitudes | exact | 0.84 | 0.75 | 0.90 | ✓ MVP, ✗ Demo |
-| riesgo | exact | 0.96 | 0.85 | 0.95 | ✓ |
-| confidence diff | diff | 0.22 | 0.15 | 0.20 | ✓ |
+
+| Field           | Metric | Value | MVP  | Demo | Status        |
+| --------------- | ------ | ----- | ---- | ---- | ------------- |
+| producto        | fuzzy  | 0.86  | 0.70 | 0.85 | ✓             |
+| categoria       | exact  | 0.92  | 0.80 | 0.90 | ✓             |
+| ingredientes    | F1     | 0.71  | 0.65 | 0.80 | ⚠ MVP         |
+| alergenos       | F1     | 0.84  | 0.80 | 0.90 | ✓ MVP, ✗ Demo |
+| sellos          | F1     | 0.92  | 0.85 | 0.95 | ✓ MVP, ✗ Demo |
+| aptitudes       | exact  | 0.84  | 0.75 | 0.90 | ✓ MVP, ✗ Demo |
+| riesgo          | exact  | 0.96  | 0.85 | 0.95 | ✓             |
+| confidence diff | diff   | 0.22  | 0.15 | 0.20 | ✓             |
 
 ## Top failing cases
+
 1. [005 galletitas-sin-tacc] alergenos: missed "soja"
 2. [007 yogur-griego] categoria: predicted "bebidas", expected "lácteos"
 3. [012 cereal-kelloggs] sellos: missed "exceso en azúcares"
 4. ...
 
 ## Diffs vs baseline (extract_product-v0)
+
 - alergenos F1: +0.05 (mejor)
 - sellos F1: +0.08 (mejor)
 - producto fuzzy: -0.02 (regresión leve, aceptable)
 
 ## Recommendations
+
 - Mejorar detección de soja en lista de ingredientes (varios casos lo confunden con otros).
 - Considerar few-shot example con etiqueta de yogur para fix de categoria.
 ```
@@ -442,10 +449,10 @@ Script auxiliar `evals/scripts/fetch-off.ts` (a implementar) toma una lista de b
 
 ## 13. Riesgos
 
-| Riesgo | Mitigación |
-|--------|-----------|
-| El dataset es muy chico (25 casos) | Compensamos con cobertura cuidada por categoría/tag |
-| Sesgo del dataset hacia productos comunes | Documentar limitaciones en el reporte; pedir al evaluador del TP que pruebe con productos fuera del dataset |
-| Caché desincronizada (cambió el prompt pero el caché no se invalidó) | Caché key incluye sha del prompt; `--no-cache` flag para forzar |
-| OFF tiene datos desactualizados | `notes` en cada caso indica si los datos esperados se verificaron manualmente |
-| Threshold inalcanzable con Phi-4 | Plan B documentado: subir Document Intelligence para PDFs, o esperar acceso a GPT-4o |
+| Riesgo                                                               | Mitigación                                                                                                  |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| El dataset es muy chico (25 casos)                                   | Compensamos con cobertura cuidada por categoría/tag                                                         |
+| Sesgo del dataset hacia productos comunes                            | Documentar limitaciones en el reporte; pedir al evaluador del TP que pruebe con productos fuera del dataset |
+| Caché desincronizada (cambió el prompt pero el caché no se invalidó) | Caché key incluye sha del prompt; `--no-cache` flag para forzar                                             |
+| OFF tiene datos desactualizados                                      | `notes` en cada caso indica si los datos esperados se verificaron manualmente                               |
+| Threshold inalcanzable con Phi-4                                     | Plan B documentado: subir Document Intelligence para PDFs, o esperar acceso a GPT-4o                        |

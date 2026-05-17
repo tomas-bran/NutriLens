@@ -80,7 +80,8 @@ export function renderMarkdownReport(r: Report): string {
     '| Field | Metric | Value | MVP | Demo | Status |',
     '|-------|--------|------:|----:|-----:|:------|',
     ...r.thresholdResults.map((t) => {
-      const emoji = t.status === 'demo' ? '✓ demo' : t.status === 'mvp-only' ? '⚠ MVP only' : '✗ fail';
+      const emoji =
+        t.status === 'demo' ? '✓ demo' : t.status === 'mvp-only' ? '⚠ MVP only' : '✗ fail';
       return `| ${t.field} | ${t.metric} | ${t.value.toFixed(3)} | ${t.mvpThreshold} | ${t.demoThreshold} | ${emoji} |`;
     }),
     '',
