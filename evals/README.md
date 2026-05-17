@@ -6,6 +6,26 @@
 > [`docs/specs/E07-evaluation-strategy.md`](../docs/specs/E07-evaluation-strategy.md)
 > for the full strategy.
 
+## Does not run in CI
+
+By design, **`npm run eval` never runs as part of the GitHub Actions pipeline**.
+A full corrida burns ~$0.08 in tokens (see spec §8); multiplied across feature
+branches this would quickly add up to a non-trivial monthly bill — and we'd
+get noisy red builds for prompt regressions we'd rather inspect manually.
+
+Cadence (per spec §7):
+
+| Trigger                      | Who       | When                      |
+| ---------------------------- | --------- | ------------------------- |
+| Cambio de prompt             | dev local | siempre antes de PR       |
+| Cambio de provider o modelo  | dev local | siempre                   |
+| Cambio en reglas (E03)       | dev local | siempre (afecta `riesgo`) |
+| Pre-merge a `main` de PRs IA | dev local | a mano                    |
+
+Tests that DO run in CI cover the harness itself (pure metrics, reporter,
+CLI parsing). They live in `tests/unit/eval-*.test.ts` and require zero
+tokens.
+
 ## Folder layout
 
 ```
