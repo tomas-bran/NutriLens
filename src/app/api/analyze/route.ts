@@ -1,11 +1,9 @@
 /**
  * POST /api/analyze — main pipeline entry point.
  *
- * Pipeline order (US-03 / US-05 / US-08 / US-09 / US-14 / US-16 / US-17 / US-18):
+ * Pipeline order (US-03 / US-05 / US-08 / US-09 / US-14 / US-16 / US-17 / US-18 / US-22):
  *   validate_file → detect_label_kind → extract_with_ia → validate_schema →
- *   apply_rules → compute_risk → generate_explanation → respond 200
- *
- * Still to land: persist (US-22).
+ *   apply_rules → compute_risk → generate_explanation → persist → respond 200
  *
  * See `docs/specs/E01-onboarding-y-upload.md §4-§5`,
  * `docs/specs/E02-analisis-multimodal-ia.md §3-§5`,
@@ -23,6 +21,7 @@ import { compute_risk } from '@/lib/pipeline/steps/compute-risk';
 import { detect_label_kind } from '@/lib/pipeline/steps/detect-label-kind';
 import { extract_with_ia } from '@/lib/pipeline/steps/extract-with-ia';
 import { generate_explanation } from '@/lib/pipeline/steps/generate-explanation';
+import { persist } from '@/lib/pipeline/steps/persist';
 import { validate_file } from '@/lib/pipeline/steps/validate-file';
 import { validate_schema } from '@/lib/pipeline/steps/validate-schema';
 
@@ -93,10 +92,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     ctx = await apply_rules(ctx);
     ctx = await compute_risk(ctx);
     ctx = await generate_explanation(ctx, ia);
+    ctx = await persist(ctx);
 
+    if (!ctx.saved) {
+      throw new Error('analyze: persist step did not produce a saved product');
+    }
+
+    // Shape per spec E01 §4.2 + the rules/explanation/disclaimer additions
+    // from E03. `id` and `savedAt` come from the persisted row (so re-uploads
+    // via dedup return the same id), while `product` stays as the in-memory
+    // ProductExtraction the frontend has been consuming since US-09/US-14.
     return NextResponse.json(
       {
-        id: randomUUID(),
+        id: ctx.saved.id,
         product: ctx.product,
         rules: ctx.rules,
         labelKind: ctx.labelKind,
@@ -105,7 +113,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         // regardless of whether the explanation generation succeeded (US-19).
         disclaimer:
           'NutriLens es un asistente informativo, no reemplaza el consejo de un profesional de nutrición.',
-        savedAt: new Date().toISOString(),
+        savedAt: ctx.saved.createdAt.toISOString(),
+        cachedFromDedup: ctx.cachedFromDedup === true,
         pipelineTrace: ctx.steps,
       },
       { status: 200, headers: { 'X-Request-Id': requestId } },

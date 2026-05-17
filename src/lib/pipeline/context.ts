@@ -1,3 +1,4 @@
+import type { Product as PrismaProduct } from '@prisma/client';
 import type { ApiError } from '@schemas/errors';
 import type { LabelKind, ProductExtraction } from '@schemas/product';
 import type { StepTrace } from '@schemas/pipeline';
@@ -35,5 +36,9 @@ export interface AnalysisContext {
   rules?: RulesResult;
   /** Final explanation text (sanitized). Optional — failure tolerated per spec E03 §5.4. */
   explanation?: string;
+  /** Persisted product row (filled by the persist step; spec E04 §3). */
+  saved?: PrismaProduct;
+  /** True when persist reused an existing row by fileHash (dedup; spec E04 §3.1). */
+  cachedFromDedup?: boolean;
   error?: ApiError;
 }
