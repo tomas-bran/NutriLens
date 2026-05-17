@@ -11,7 +11,6 @@ const FIXTURES_DIR = path.resolve(__dirname, '..', 'fixtures');
  * dropzone DOM changes, only this file should need updates.
  */
 export class UploadPage {
-  private readonly heading: Locator;
   private readonly dropzone: Locator;
   private readonly fileInput: Locator;
   private readonly submitButton: Locator;
@@ -21,7 +20,6 @@ export class UploadPage {
   private readonly progressBar: Locator;
 
   constructor(private readonly page: Page) {
-    this.heading = page.getByRole('heading', { name: '¿Qué vamos a analizar hoy?' });
     this.dropzone = page.getByTestId('dropzone');
     // The gallery input has the "Subir foto o PDF" aria-label; the camera and
     // PDF inputs have distinct labels. Targeting the gallery input keeps the
@@ -36,7 +34,9 @@ export class UploadPage {
 
   async goto() {
     await this.page.goto('/analizar');
-    await expect(this.heading).toBeVisible();
+    // The page header h1 is `hidden md:flex`, so on mobile we anchor on the
+    // dropzone instead (visible on every viewport).
+    await expect(this.dropzone).toBeVisible();
   }
 
   async expectDropzoneVisible() {
