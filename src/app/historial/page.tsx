@@ -1,15 +1,18 @@
 /**
- * `/historial` — listado paginado de productos analizados.
- * Spec: `docs/specs/E04-persistencia-e-historial.md §6.1 / §6.2` (US-23, US-26).
+ * `/historial` — listado paginado y filtrable.
+ * Spec: `docs/specs/E04 §6.1 / §6.4` (US-23, US-24, US-26).
  *
- * Server Component. Pagina por search param `?page=N`. La paginación
- * server-side mantiene el back/forward del navegador funcional sin JS.
+ * Server Component. Lee `searchParams`, los pasa por `parseHistoryFilters`
+ * para coercear/validar, y traduce a un `Prisma.ProductWhereInput`. Cualquier
+ * combinación produce un AND (US-24 §AC4). Page se mantiene en el URL.
  */
+import type { Prisma } from '@prisma/client';
 import { AppShell } from '@/components/layout/AppShell';
 import { HistoryListView } from '@/components/history/HistoryListView';
 import { prisma } from '@/lib/db';
 import { getHistorialCount } from '@/lib/products/count';
-import { toListItem } from '@/lib/products/serializers';
+import { parseHistoryFilters, type RawSearchParams } from '@/lib/products/history-filters';
+import { mapCategoriaToPrisma, toListItem } from '@/lib/products/serializers';
 
 export const metadata = {
   title: 'Historial · NutriLens',
@@ -20,35 +23,48 @@ export const dynamic = 'force-dynamic';
 const PAGE_SIZE = 12;
 
 interface PageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<RawSearchParams>;
 }
 
 export default async function HistorialPage({ searchParams }: PageProps) {
-  const params = await searchParams;
-  const page = parsePage(params.page);
+  const raw = await searchParams;
+  const filters = parseHistoryFilters(raw);
+
+  const where: Prisma.ProductWhereInput = {};
+  if (filters.categoria) where.categoria = mapCategoriaToPrisma(filters.categoria);
+  if (filters.riesgo) where.riesgo = filters.riesgo;
+  if (filters.q) where.nombre = { contains: filters.q, mode: 'insensitive' };
+  if (filters.alergeno) {
+    // `alergenos` is JSON-stringified text in Postgres; substring search on
+    // the quoted token is good enough (same approach as GET /api/products).
+    where.alergenos = { contains: `"${filters.alergeno}"` };
+  }
+  if (filters.apto === 'vegano') where.aptoVegano = true;
+  if (filters.apto === 'celiaco') where.aptoCeliaco = true;
+  if (filters.apto === 'sin_lactosa') where.aptoSinLactosa = true;
 
   const [items, total, historialCount] = await Promise.all([
     prisma.product.findMany({
+      where,
       orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * PAGE_SIZE,
+      skip: (filters.page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
-    prisma.product.count(),
+    prisma.product.count({ where }),
     getHistorialCount(),
   ]);
 
   const totalPages = total === 0 ? 0 : Math.ceil(total / PAGE_SIZE);
-  const listItems = items.map(toListItem);
 
   return (
     <AppShell active="historial" historialCount={historialCount}>
-      <HistoryListView items={listItems} page={page} totalPages={totalPages} total={total} />
+      <HistoryListView
+        items={items.map(toListItem)}
+        page={filters.page}
+        totalPages={totalPages}
+        total={total}
+        filters={filters}
+      />
     </AppShell>
   );
-}
-
-function parsePage(raw: string | undefined): number {
-  const n = Number(raw);
-  if (!Number.isFinite(n) || n < 1) return 1;
-  return Math.floor(n);
 }

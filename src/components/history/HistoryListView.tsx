@@ -1,14 +1,24 @@
 /**
- * <HistoryListView> — `/historial` body (spec E04 §6.1).
+ * <HistoryListView> — `/historial` body (spec E04 §6.1 / §6.3 / §6.4).
  *
  * Pure presentational: parent Server Component fetches items via Prisma,
- * passes the list + pagination params. Empty state when total === 0.
+ * passes the list + pagination + filter state. Three terminal states:
+ *   - total === 0 && no filters    → <HistoryEmpty>      (US-26)
+ *   - total === 0 && has filters   → <HistoryNoResults>  (US-24 §AC5)
+ *   - total > 0                    → grid + pagination
  */
 import Link from 'next/link';
+import { ActiveFilterChips } from './ActiveFilterChips';
 import { HistoryEmpty } from './HistoryEmpty';
+import { HistoryFilters } from './HistoryFilters';
 import { HistoryItemCard } from './HistoryItemCard';
+import { HistoryNoResults } from './HistoryNoResults';
 import { HistoryPagination } from './HistoryPagination';
 import { Icon } from '@/components/ui/Icon';
+import {
+  hasActiveFilters,
+  type HistoryFilters as HistoryFiltersValue,
+} from '@/lib/products/history-filters';
 import type { ProductListItem } from '@/lib/products/serializers';
 
 export interface HistoryListViewProps {
@@ -16,35 +26,40 @@ export interface HistoryListViewProps {
   page: number;
   totalPages: number;
   total: number;
+  filters: HistoryFiltersValue;
 }
 
-export function HistoryListView({ items, page, totalPages, total }: HistoryListViewProps) {
-  if (total === 0) {
-    return (
-      <div className="flex flex-col gap-6 px-4 py-2 md:px-6 md:py-6" data-testid="history-view">
-        <HistoryHeader total={0} />
-        <HistoryEmpty />
-      </div>
-    );
-  }
-
+export function HistoryListView({ items, page, totalPages, total, filters }: HistoryListViewProps) {
+  const filtersActive = hasActiveFilters(filters);
   return (
     <div className="flex flex-col gap-6 px-4 py-2 md:px-6 md:py-6" data-testid="history-view">
       <HistoryHeader total={total} />
 
-      <ul
-        role="list"
-        data-testid="history-grid"
-        className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"
-      >
-        {items.map((item) => (
-          <li key={item.id}>
-            <HistoryItemCard item={item} />
-          </li>
-        ))}
-      </ul>
+      <HistoryFilters value={filters} />
+      <ActiveFilterChips filters={filters} />
 
-      <HistoryPagination page={page} totalPages={totalPages} />
+      {total === 0 ? (
+        filtersActive ? (
+          <HistoryNoResults />
+        ) : (
+          <HistoryEmpty />
+        )
+      ) : (
+        <>
+          <ul
+            role="list"
+            data-testid="history-grid"
+            className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"
+          >
+            {items.map((item) => (
+              <li key={item.id}>
+                <HistoryItemCard item={item} />
+              </li>
+            ))}
+          </ul>
+          <HistoryPagination page={page} totalPages={totalPages} filters={filters} />
+        </>
+      )}
     </div>
   );
 }
