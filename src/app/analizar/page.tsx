@@ -11,10 +11,10 @@ export const metadata = {
 
 export default function AnalizarPage() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 px-4 py-10 md:px-6">
+    <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-8 px-4 py-10 md:px-6 md:py-12">
       <header className="flex flex-col gap-1">
         <p className="text-sm text-[var(--color-text-muted)]">Hola</p>
-        <h1 className="text-3xl font-bold text-[var(--color-text)]">
+        <h1 className="text-3xl font-bold text-[var(--color-text)] md:text-4xl">
           ¿Qué vamos a analizar hoy?
         </h1>
       </header>

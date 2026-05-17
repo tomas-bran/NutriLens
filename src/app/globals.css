@@ -21,3 +21,22 @@
     outline-offset: 2px;
   }
 }
+
+/* Scanning-line animation used by the analyzing-preview panel
+ * (wireframe D02-Loading). Travels top→bottom→top on a 2s loop.
+ */
+@keyframes scanline {
+  0% {
+    transform: translateY(-160px);
+  }
+  50% {
+    transform: translateY(160px);
+  }
+  100% {
+    transform: translateY(-160px);
+  }
+}
+
+.animate-scanline {
+  animation: scanline 2.4s ease-in-out infinite;
+}

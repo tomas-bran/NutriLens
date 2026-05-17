@@ -7,10 +7,11 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   children: ReactNode;
 }
 
+// Pencil source: `--risk-*-bg` / `--risk-*-fg` variables.
 const variantClasses: Record<BadgeVariant, string> = {
-  'risk-low': 'text-[var(--color-risk-low)] bg-[#e6f5ee]',
-  'risk-medium': 'text-[var(--color-risk-medium)] bg-[#fef3e2]',
-  'risk-high': 'text-[var(--color-risk-high)] bg-[#fde8e8]',
+  'risk-low': 'text-[var(--color-risk-low)] bg-[var(--color-risk-low-bg)]',
+  'risk-medium': 'text-[var(--color-risk-medium)] bg-[var(--color-risk-medium-bg)]',
+  'risk-high': 'text-[var(--color-risk-high)] bg-[var(--color-risk-high-bg)]',
   neutral: 'text-[var(--color-text-muted)] bg-[var(--color-surface)]',
 };
 

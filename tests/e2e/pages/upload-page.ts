@@ -23,7 +23,10 @@ export class UploadPage {
   constructor(private readonly page: Page) {
     this.heading = page.getByRole('heading', { name: '¿Qué vamos a analizar hoy?' });
     this.dropzone = page.getByTestId('dropzone');
-    this.fileInput = page.locator('input[type="file"]');
+    // The gallery input has the "Subir foto o PDF" aria-label; the camera and
+    // PDF inputs have distinct labels. Targeting the gallery input keeps the
+    // E2E behavior aligned with how users typically pick a saved image.
+    this.fileInput = page.getByLabel('Subir foto o PDF');
     this.submitButton = page.getByRole('button', { name: 'Analizar producto' });
     this.chooseOtherFileButton = page.getByRole('button', { name: 'Elegir otro archivo' });
     this.uploadingState = page.getByTestId('uploading-state');

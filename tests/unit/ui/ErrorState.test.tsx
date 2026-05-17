@@ -102,6 +102,6 @@ describe('ErrorState', () => {
   it('applies error background color', () => {
     const { container } = render(<ErrorState title="Error" />);
     const root = container.firstChild as HTMLElement;
-    expect(root.className).toContain('#fde8e8');
+    expect(root.className).toContain('var(--color-risk-high-bg)');
   });
 });

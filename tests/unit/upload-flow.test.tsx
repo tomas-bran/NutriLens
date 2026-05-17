@@ -29,9 +29,23 @@ describe('<UploadFlow> — IDLE', () => {
     expect(screen.getByText(/Arrastrá una foto o PDF/i)).toBeInTheDocument();
   });
 
-  it('exposes a file input labeled "Subir foto o PDF"', () => {
+  it('renders the 3 upload CTAs from wireframe D01 (Cámara / Galería / PDF)', () => {
     render(<UploadFlow />);
-    expect(screen.getByLabelText('Subir foto o PDF')).toBeInTheDocument();
+    expect(screen.getByTestId('upload-cta-group')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Cámara/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Galería/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /PDF/ })).toBeInTheDocument();
+  });
+
+  it('exposes 3 distinct file inputs with the right accept semantics', () => {
+    render(<UploadFlow />);
+    const camera = screen.getByLabelText('Tomar foto con la cámara') as HTMLInputElement;
+    const gallery = screen.getByLabelText('Subir foto o PDF') as HTMLInputElement;
+    const pdf = screen.getByLabelText('Subir PDF') as HTMLInputElement;
+    expect(camera).toHaveAttribute('accept', 'image/*');
+    expect(camera).toHaveAttribute('capture', 'environment');
+    expect(gallery).toHaveAttribute('accept', 'image/jpeg,image/png');
+    expect(pdf).toHaveAttribute('accept', 'application/pdf');
   });
 });
 
@@ -121,5 +135,19 @@ describe('<UploadFlow> — client-side rejection (US-06 + spec §9)', () => {
 
     expect(screen.queryByRole('heading', { name: 'Formato no soportado' })).not.toBeInTheDocument();
     expect(screen.getByTestId('dropzone')).toBeInTheDocument();
+  });
+});
+
+describe('<UploadFlow> — SELECTED preview (wireframe D01)', () => {
+  it('shows file size and MIME alongside the filename', async () => {
+    const user = userEvent.setup();
+    render(<UploadFlow />);
+    const input = screen.getByLabelText('Subir foto o PDF') as HTMLInputElement;
+    await user.upload(input, mkFile('etiqueta.jpg', 'image/jpeg', 2048));
+
+    expect(screen.getByTestId('selected-file')).toBeInTheDocument();
+    expect(screen.getByText('etiqueta.jpg')).toBeInTheDocument();
+    expect(screen.getByText(/2\.0 KB/)).toBeInTheDocument();
+    expect(screen.getByText(/image\/jpeg/)).toBeInTheDocument();
   });
 });
