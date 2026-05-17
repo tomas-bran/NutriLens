@@ -77,11 +77,12 @@ export class UploadPage {
 
   /**
    * After a successful analysis, the flow navigates to `/analizar/[id]`.
-   * Wait until the URL changes and the result heading shows up.
+   * Wait until the URL changes and the result view mounts. We anchor on the
+   * `result-view` testid (the heading now carries the product name).
    */
   async expectRedirectToResult() {
     await this.page.waitForURL(/\/analizar\/[^/]+$/, { timeout: 30_000 });
-    await expect(this.page.getByRole('heading', { name: 'Análisis completado' })).toBeVisible();
+    await expect(this.page.getByTestId('result-view')).toBeVisible();
   }
 
   async expectErrorState(title: string) {

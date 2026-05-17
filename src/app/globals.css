@@ -74,3 +74,22 @@
   --toast-border: var(--color-info-bg);
   --toast-shadow: rgba(59, 130, 246, 0.2);
 }
+
+/* Risk-banner variants — consumed by <RiskBanner> via
+ * `bg-[var(--risk-banner-bg)] text-[var(--risk-banner-fg)]`.
+ * Maps to spec E03 §6.2 tokens.
+ */
+.risk-banner-low {
+  --risk-banner-bg: var(--color-risk-low-bg);
+  --risk-banner-fg: var(--color-risk-low);
+}
+
+.risk-banner-medium {
+  --risk-banner-bg: var(--color-risk-medium-bg);
+  --risk-banner-fg: var(--color-risk-medium);
+}
+
+.risk-banner-high {
+  --risk-banner-bg: var(--color-risk-high-bg);
+  --risk-banner-fg: var(--color-risk-high);
+}
