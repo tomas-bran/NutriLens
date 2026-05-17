@@ -25,7 +25,7 @@ export function ErrorState({
     <div
       role="status"
       aria-live="polite"
-      className="flex flex-col items-center gap-4 rounded-xl bg-[#fde8e8] p-8 text-center"
+      className="flex flex-col items-center gap-4 rounded-xl bg-[var(--color-risk-high-bg)] p-8 text-center"
     >
       {icon && (
         <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-white text-[var(--color-danger)]">

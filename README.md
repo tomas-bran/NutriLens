@@ -210,6 +210,7 @@ Los wireframes detallados están en [`docs/wireframes`](./docs/wireframes).
 
 | Sección                     | Ubicación                                                                                              |
 | --------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Guía para desarrolladores   | [`DEVELOPMENT.md`](./DEVELOPMENT.md)                                                                   |
 | Documento funcional del MVP | [`docs/mvp/NutriLens-MVP-Documento-Funcional.pdf`](./docs/mvp/NutriLens-MVP-Documento-Funcional.pdf)   |
 | Consigna del TP Integrador  | [`docs/mvp/Consigna-TP-Integrador-IA-Aplicada.pdf`](./docs/mvp/Consigna-TP-Integrador-IA-Aplicada.pdf) |
 | Design system (screenshots) | [`docs/design-system`](./docs/design-system)                                                           |

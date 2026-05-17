@@ -9,13 +9,16 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
 }
 
+// Drop-shadow values come from the Pencil design system (`S1Vi2z` Primary,
+// `bz7jC` Danger): rgba(22,163,74,0.25) and rgba(239,68,68,0.25) respectively,
+// with blur=8, y=2 — encoded as Tailwind arbitrary shadow utilities below.
 const variantClasses: Record<Variant, string> = {
   primary:
-    'bg-primary text-white hover:bg-primary-strong focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:bg-muted',
+    'bg-primary text-white shadow-[0_2px_8px_0_rgba(22,163,74,0.25)] hover:bg-primary-strong focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:bg-muted disabled:shadow-none',
   ghost:
     'bg-transparent border border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-surface)] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:text-muted',
   danger:
-    'bg-danger text-white hover:bg-[#c73b40] focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2 disabled:bg-muted',
+    'bg-danger text-white shadow-[0_2px_8px_0_rgba(239,68,68,0.25)] hover:bg-[#dc2626] focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2 disabled:bg-muted disabled:shadow-none',
 };
 
 const sizeClasses: Record<Size, string> = {

@@ -1,33 +1,40 @@
 /* Design tokens — Colors
- * See `docs/specs/E06-pipeline-observable-y-ux.md §5.2`. If you need to
- * tweak values, edit them here; Tailwind references them via tailwind.config.ts.
+ *
+ * Source of truth: `docs/wireframes/NutriLens-Wireframes.pen` (variables panel).
+ * Values here mirror the Pencil tokens 1:1 so what gets implemented matches
+ * the design system the team designs against. The earlier spec text in
+ * `docs/specs/E06-pipeline-observable-y-ux.md §5.2` listed approximate hexes;
+ * the Pencil values supersede them.
  */
 :root {
   /* Base */
-  --color-bg: #ffffff;
-  --color-surface: #f7f8fa;
-  --color-text: #1a1f2e;
-  --color-text-muted: #6b7280;
-  --color-border: #e4e7ec;
+  --color-bg: #fafbf7;
+  --color-surface: #f1f5f0;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
 
-  /* Brand */
-  --color-primary: #2eb67d;
-  --color-primary-strong: #1f8e60;
-  --color-primary-soft: #e6f5ee;
+  /* Brand (green) */
+  --color-primary: #16a34a;
+  --color-primary-strong: #15803d;
+  --color-primary-soft: #f0fdf4;
 
   /* Feedback */
-  --color-success: #2eb67d;
-  --color-warning: #f2a526;
-  --color-danger: #e5484d;
+  --color-success: #16a34a;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
   --color-info: #3b82f6;
-  --color-muted: #9ca3af;
+  --color-muted: #94a3b8;
 
-  /* Risk (aligned with E03 §6.2) */
-  --color-risk-low: var(--color-success);
-  --color-risk-medium: var(--color-warning);
-  --color-risk-high: var(--color-danger);
+  /* Risk — bg/fg pairs aligned with Pencil `--risk-*-bg` / `--risk-*-fg` */
+  --color-risk-low: #15803d;
+  --color-risk-low-bg: #dcfce7;
+  --color-risk-medium: #b45309;
+  --color-risk-medium-bg: #fef3c7;
+  --color-risk-high: #b91c1c;
+  --color-risk-high-bg: #fee2e2;
 
   /* Aptitud */
-  --color-apt-true: var(--color-success);
-  --color-apt-false: var(--color-danger);
+  --color-apt-true: #16a34a;
+  --color-apt-false: #ef4444;
 }

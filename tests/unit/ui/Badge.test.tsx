@@ -18,20 +18,21 @@ describe('Badge', () => {
     const { container } = render(<Badge variant="risk-low">Bajo</Badge>);
     const badge = container.firstChild as HTMLElement;
     expect(badge.className).toContain('text-[var(--color-risk-low)]');
-    expect(badge.className).toContain('#e6f5ee');
+    expect(badge.className).toContain('bg-[var(--color-risk-low-bg)]');
   });
 
   it('variant risk-medium applies warning colors', () => {
     const { container } = render(<Badge variant="risk-medium">Medio</Badge>);
     const badge = container.firstChild as HTMLElement;
     expect(badge.className).toContain('text-[var(--color-risk-medium)]');
+    expect(badge.className).toContain('bg-[var(--color-risk-medium-bg)]');
   });
 
   it('variant risk-high applies danger colors', () => {
     const { container } = render(<Badge variant="risk-high">Alto</Badge>);
     const badge = container.firstChild as HTMLElement;
     expect(badge.className).toContain('text-[var(--color-risk-high)]');
-    expect(badge.className).toContain('#fde8e8');
+    expect(badge.className).toContain('bg-[var(--color-risk-high-bg)]');
   });
 
   it('risk variants show a dot indicator', () => {
