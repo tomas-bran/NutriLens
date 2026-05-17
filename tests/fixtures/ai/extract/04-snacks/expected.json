@@ -14,6 +14,6 @@
   "apto_vegano": false,
   "apto_celiaco": true,
   "apto_sin_lactosa": false,
-  "riesgo": "medio",
+  "riesgo": "alto",
   "confidence": 0.9
 }

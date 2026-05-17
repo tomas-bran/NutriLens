@@ -430,6 +430,9 @@ describe('POST /api/analyze — detect_label_kind gate (US-05)', () => {
       'detect_label_kind',
       'extract_with_ia',
       'validate_schema',
+      'apply_rules',
+      'compute_risk',
+      'generate_explanation',
     ]);
   });
 
@@ -471,6 +474,57 @@ describe('POST /api/analyze — detect_label_kind gate (US-05)', () => {
       (await r2.json()).pipelineTrace as Array<{ name: string; details?: Record<string, unknown> }>
     ).find((t) => t.name === 'detect_label_kind');
     expect(detectTrace?.details).toMatchObject({ cached: true });
+  });
+
+  it('always includes the legally-required disclaimer in the response (US-19)', async () => {
+    const res = await POST(
+      makeRequest({ body: Buffer.from('disclaimer-' + Math.random()) }) as never,
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.disclaimer).toBe(
+      'NutriLens es un asistente informativo, no reemplaza el consejo de un profesional de nutrición.',
+    );
+  });
+
+  it('exposes rules + risk-overridden product after apply_rules + compute_risk (US-16 + US-17)', async () => {
+    const res = await POST(makeRequest({ body: Buffer.from('rules-' + Math.random()) }) as never);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.rules).toMatchObject({
+      apto_vegano: expect.any(Boolean),
+      apto_celiaco: expect.any(Boolean),
+      apto_sin_lactosa: expect.any(Boolean),
+      reglas_aplicadas: expect.any(Array),
+    });
+    // The Mock returns a no-restrictions product → all apto + low risk.
+    expect(body.product.apto_celiaco).toBe(true);
+    expect(body.product.riesgo).toBe('bajo');
+  });
+
+  it('returns an explanation that already contains the disclaimer (US-18 + sanitize)', async () => {
+    const res = await POST(makeRequest({ body: Buffer.from('expl-' + Math.random()) }) as never);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.explanation).toContain('NutriLens es un asistente informativo');
+  });
+
+  it('still responds 200 with explanation=null when the model fails (graceful skip, spec §5.4)', async () => {
+    const ia = getIaProvider();
+    if (!(ia instanceof MockIaProvider)) throw new Error('IA_PROVIDER must be mock');
+    vi.spyOn(ia, 'generateExplanation').mockRejectedValue(new Error('mini model down'));
+
+    const res = await POST(makeRequest({ body: Buffer.from('no-expl-' + Math.random()) }) as never);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.explanation).toBeNull();
+    // Disclaimer + product still present.
+    expect(body.disclaimer).toContain('NutriLens es un asistente informativo');
+    expect(body.product).not.toBeNull();
+    const explTrace = (body.pipelineTrace as Array<{ name: string; status: string }>).find(
+      (t) => t.name === 'generate_explanation',
+    );
+    expect(explTrace?.status).toBe('skipped');
   });
 
   it('Cache: re-uploading a known not-food file short-circuits 422 without calling the classifier', async () => {

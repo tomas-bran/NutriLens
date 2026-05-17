@@ -1,15 +1,15 @@
 /**
  * POST /api/analyze — main pipeline entry point.
  *
-
- * Pipeline order (US-03 / US-05 / US-08 / US-09 / US-14):
- *   validate_file → detect_label_kind → extract_with_ia → validate_schema → respond 200
+ * Pipeline order (US-03 / US-05 / US-08 / US-09 / US-14 / US-16 / US-17 / US-18):
+ *   validate_file → detect_label_kind → extract_with_ia → validate_schema →
+ *   apply_rules → compute_risk → generate_explanation → respond 200
  *
- * Still to land: apply_rules + compute_risk (E03), generate_explanation
- * (US-17), persist (US-22).
+ * Still to land: persist (US-22).
  *
- * See `docs/specs/E01-onboarding-y-upload.md §4-§5` and
- * `docs/specs/E02-analisis-multimodal-ia.md §3-§5`.
+ * See `docs/specs/E01-onboarding-y-upload.md §4-§5`,
+ * `docs/specs/E02-analisis-multimodal-ia.md §3-§5`,
+ * and `docs/specs/E03-clasificacion-reglas-explicacion.md`.
  */
 import { NextResponse, type NextRequest } from 'next/server';
 import { createHash, randomUUID } from 'node:crypto';
@@ -18,8 +18,11 @@ import { getIaProvider } from '@/lib/ai';
 import { apiErrorResponse } from '@/lib/api/error-response';
 import { logger } from '@/lib/logger';
 import type { AnalysisContext } from '@/lib/pipeline/context';
+import { apply_rules } from '@/lib/pipeline/steps/apply-rules';
+import { compute_risk } from '@/lib/pipeline/steps/compute-risk';
 import { detect_label_kind } from '@/lib/pipeline/steps/detect-label-kind';
 import { extract_with_ia } from '@/lib/pipeline/steps/extract-with-ia';
+import { generate_explanation } from '@/lib/pipeline/steps/generate-explanation';
 import { validate_file } from '@/lib/pipeline/steps/validate-file';
 import { validate_schema } from '@/lib/pipeline/steps/validate-schema';
 
@@ -87,12 +90,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     ctx = await detect_label_kind(ctx, ia);
     ctx = await extract_with_ia(ctx, ia);
     ctx = await validate_schema(ctx, ia);
+    ctx = await apply_rules(ctx);
+    ctx = await compute_risk(ctx);
+    ctx = await generate_explanation(ctx, ia);
 
     return NextResponse.json(
       {
         id: randomUUID(),
         product: ctx.product,
+        rules: ctx.rules,
         labelKind: ctx.labelKind,
+        explanation: ctx.explanation ?? null,
+        // Always sent so the UI can render the legally-required disclaimer
+        // regardless of whether the explanation generation succeeded (US-19).
+        disclaimer:
+          'NutriLens es un asistente informativo, no reemplaza el consejo de un profesional de nutrición.',
         savedAt: new Date().toISOString(),
         pipelineTrace: ctx.steps,
       },
