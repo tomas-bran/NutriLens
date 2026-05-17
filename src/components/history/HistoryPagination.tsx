@@ -1,17 +1,19 @@
 /**
  * Server-rendered prev / next pagination for `/historial`.
- * URL-driven (query param `page=N`) so back/forward works.
+ * Preserves active filters in each page link so navigating doesn't reset them.
  */
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/cn';
+import { buildHistoryUrl, type HistoryFilters } from '@/lib/products/history-filters';
 
 export interface HistoryPaginationProps {
   page: number;
   totalPages: number;
+  filters: HistoryFilters;
 }
 
-export function HistoryPagination({ page, totalPages }: HistoryPaginationProps) {
+export function HistoryPagination({ page, totalPages, filters }: HistoryPaginationProps) {
   if (totalPages <= 1) return null;
   const hasPrev = page > 1;
   const hasNext = page < totalPages;
@@ -26,8 +28,8 @@ export function HistoryPagination({ page, totalPages }: HistoryPaginationProps) 
         Página {page} de {totalPages}
       </p>
       <div className="flex items-center gap-2">
-        <PageLink page={page - 1} enabled={hasPrev} direction="prev" />
-        <PageLink page={page + 1} enabled={hasNext} direction="next" />
+        <PageLink page={page - 1} filters={filters} enabled={hasPrev} direction="prev" />
+        <PageLink page={page + 1} filters={filters} enabled={hasNext} direction="next" />
       </div>
     </nav>
   );
@@ -35,10 +37,12 @@ export function HistoryPagination({ page, totalPages }: HistoryPaginationProps) 
 
 function PageLink({
   page,
+  filters,
   enabled,
   direction,
 }: {
   page: number;
+  filters: HistoryFilters;
   enabled: boolean;
   direction: 'prev' | 'next';
 }) {
@@ -61,9 +65,10 @@ function PageLink({
   }
   return (
     <Link
-      href={`/historial?page=${page}`}
+      href={buildHistoryUrl({ ...filters, page })}
       className={className}
       data-testid={`history-page-${direction}`}
+      scroll={false}
     >
       {direction === 'prev' && <Icon name="arrow-right" className="h-3.5 w-3.5 rotate-180" />}
       {label}
