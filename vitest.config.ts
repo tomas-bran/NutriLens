@@ -20,7 +20,17 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
       reportsDirectory: './coverage',
-      include: ['src/lib/**/*.{ts,tsx}', 'src/packages/schemas/**/*.ts', 'src/app/**/*.tsx'],
+      include: [
+        'src/lib/**/*.{ts,tsx}',
+        'src/packages/schemas/**/*.ts',
+        'src/app/**/*.tsx',
+        // E07 eval harness — only the pure modules. The CLI entry (`run-eval.ts`)
+        // is an executable wrapper with process.exit + console.* and isn't worth
+        // testing through coverage.
+        'evals/runner/metrics.ts',
+        'evals/runner/reporter.ts',
+        'evals/runner/cli.ts',
+      ],
       exclude: [
         '**/*.test.{ts,tsx}',
         '**/*.spec.{ts,tsx}',

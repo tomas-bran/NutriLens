@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChatIntentsManifest",
+  "description": "Schema for evals/chat/intents.json. Used by US-42 to evaluate chat_parse_intent. See docs/specs/E05-chat-rag.md §4.2 for the intent schema.",
+  "type": "object",
+  "required": ["version", "cases"],
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "cases": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/IntentCase" }
+    }
+  },
+  "definitions": {
+    "IntentCase": {
+      "type": "object",
+      "required": ["id", "question", "expected"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[0-9]{3}$" },
+        "question": { "type": "string", "minLength": 1 },
+        "expected": {
+          "type": "object",
+          "required": [
+            "kind",
+            "categoria",
+            "riesgo_max",
+            "apto",
+            "alergeno_excluido",
+            "keywords",
+            "comparar"
+          ],
+          "properties": {
+            "kind": { "enum": ["filter", "compare", "info", "unknown"] },
+            "categoria": {
+              "anyOf": [
+                { "type": "null" },
+                {
+                  "enum": [
+                    "galletitas",
+                    "cereales",
+                    "snacks",
+                    "lácteos",
+                    "bebidas",
+                    "sin TACC",
+                    "veganos",
+                    "otros"
+                  ]
+                }
+              ]
+            },
+            "riesgo_max": {
+              "anyOf": [{ "type": "null" }, { "enum": ["bajo", "medio", "alto"] }]
+            },
+            "apto": {
+              "anyOf": [{ "type": "null" }, { "enum": ["vegano", "celiaco", "sin_lactosa"] }]
+            },
+            "alergeno_excluido": {
+              "anyOf": [{ "type": "null" }, { "type": "string" }]
+            },
+            "keywords": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "comparar": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

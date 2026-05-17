@@ -1,6 +1,6 @@
 # Backlog — NutriLens
 
-> Desglose del producto en Product Brief + 6 Épicas + User Stories con criterios de aceptación en Gherkin y story points Fibonacci. Pensado como entrada para el equipo y para cargar como work items en Azure DevOps.
+> Desglose del producto en Product Brief + 7 Épicas + User Stories con criterios de aceptación en Gherkin y story points Fibonacci. Pensado como entrada para el equipo y para cargar como work items en Azure DevOps.
 
 ---
 
@@ -10,14 +10,15 @@
 docs/backlog/
 ├── README.md                    ← este índice
 ├── product-brief.md             ← visión, usuarios, MVP, criterios, riesgos
-├── epics.md                     ← las 6 épicas con prioridad MVP
+├── epics.md                     ← las 7 épicas con prioridad MVP
 └── stories/
     ├── E01-onboarding-y-upload.md
     ├── E02-analisis-multimodal-ia.md
     ├── E03-clasificacion-reglas-explicacion.md
     ├── E04-persistencia-e-historial.md
     ├── E05-chat-rag.md
-    └── E06-pipeline-observable-y-ux.md
+    ├── E06-pipeline-observable-y-ux.md
+    └── E07-quality-evaluation.md
 ```
 
 ---
@@ -32,9 +33,10 @@ docs/backlog/
 | **E04** Persistencia e historial            | 6       | 18       | 13           | 5                 | 0           |
 | **E05** Chat con RAG                        | 6       | 23       | 0            | 18                | 5           |
 | **E06** Pipeline observable y UX            | 7       | 21       | 2            | 19                | 0           |
-| **Total**                                   | **39**  | **126**  | **73**       | **48**            | **5**       |
+| **E07** Quality assurance y eval modelos    | 3       | 16       | 0            | 13                | 3           |
+| **Total**                                   | **42**  | **142**  | **73**       | **61**            | **8**       |
 
-> Story points totales: **126**. Para un equipo de 4 personas (~2 semanas), priorizar P0 (73 SP) garantiza el MVP mínimo demostrable.
+> Story points totales: **142**. Para un equipo de 4 personas (~2 semanas), priorizar P0 (73 SP) garantiza el MVP mínimo demostrable. E07 corre en paralelo con E02-E03 una vez que el provider real esté implementado.
 
 ---
 

@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EvalManifest",
+  "description": "Schema for evals/dataset/manifest.json. See docs/specs/E07-evaluation-strategy.md §2.4.",
+  "type": "object",
+  "required": ["version", "cases"],
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "cases": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Case" }
+    }
+  },
+  "definitions": {
+    "Case": {
+      "type": "object",
+      "required": ["id", "file", "mime", "source", "license", "tags", "expected"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9]{3}$",
+          "description": "Three-digit zero-padded id, e.g. '001'."
+        },
+        "file": {
+          "type": "string",
+          "description": "Path relative to evals/dataset/, e.g. 'images/001-galletitas.jpg' or 'pdfs/001-bebida.pdf' or 'non-food/001-paisaje.jpg'."
+        },
+        "mime": {
+          "type": "string",
+          "enum": ["image/jpeg", "image/png", "application/pdf"]
+        },
+        "source": {
+          "type": "string",
+          "enum": ["own", "openfoodfacts"]
+        },
+        "license": {
+          "type": "string",
+          "description": "License of the asset, e.g. 'internal', 'CC-BY-SA-3.0', 'ODbL'."
+        },
+        "off_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Open Food Facts URL when source == 'openfoodfacts'."
+        },
+        "category": {
+          "type": "string",
+          "description": "Bucket for filtering, e.g. 'galletitas-con-sellos', 'non-food-landscape'."
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Free-form tags: quality (high-quality/low-quality/blurry), angle (frontal/tilted), language (es/en/pt), edge cases (cut-off, dark)."
+        },
+        "expected": {
+          "$ref": "#/definitions/Expected"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "Expected": {
+      "type": "object",
+      "description": "Ground truth. For food cases all fields are required; for non-food cases only is_food_label and confidence (it goes against detect_label_kind, not extract).",
+      "properties": {
+        "is_food_label": { "type": "boolean" },
+        "producto": { "type": "string" },
+        "categoria": {
+          "type": "string",
+          "enum": [
+            "galletitas",
+            "cereales",
+            "snacks",
+            "lácteos",
+            "bebidas",
+            "sin TACC",
+            "veganos",
+            "otros"
+          ]
+        },
+        "ingredientes_detectados": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "alergenos": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "gluten",
+              "leche",
+              "huevo",
+              "soja",
+              "frutos secos",
+              "maní",
+              "pescado",
+              "crustáceos",
+              "sulfitos",
+              "sésamo"
+            ]
+          }
+        },
+        "sellos": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "exceso en azúcares",
+              "exceso en sodio",
+              "exceso en grasas saturadas",
+              "exceso en grasas totales",
+              "exceso en calorías"
+            ]
+          }
+        },
+        "apto_vegano": { "type": "boolean" },
+        "apto_celiaco": { "type": "boolean" },
+        "apto_sin_lactosa": { "type": "boolean" },
+        "riesgo": {
+          "type": "string",
+          "enum": ["bajo", "medio", "alto"]
+        }
+      }
+    }
+  }
+}
