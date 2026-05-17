@@ -1,15 +1,15 @@
 /**
- * Sprint 0 smoke E2E — checks the app boots and renders the home page.
- * Per-flow E2E tests (upload, history, chat) live in their own US.
+ * Cheap smoke E2E — verifies the app boots and serves the home document.
+ * Detailed home behavior lives in `home.spec.ts` (US-07).
  */
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
-test('home shows the NutriLens title', async ({ page }) => {
+test('home document loads with the NutriLens metadata title', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'NutriLens', level: 1 })).toBeVisible();
+  await expect(page).toHaveTitle(/NutriLens/);
 });
 
-test('home mentions it is an informational assistant', async ({ page }) => {
+test('home mentions it is an informational assistant (disclaimer)', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText(/asistente informativo/i)).toBeVisible();
 });

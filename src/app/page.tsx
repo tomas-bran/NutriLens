@@ -1,20 +1,31 @@
 /**
- * Home / landing page.
+ * `/` — Home (US-07, spec `docs/specs/E01-onboarding-y-upload.md §8`).
  *
- * Sprint 0 placeholder. The real implementation belongs to US-07 (E01) —
- * see `docs/specs/E01-onboarding-y-upload.md §8`.
+ * Server Component: counts persisted products via Prisma to decide whether
+ * to render the "Tu historial" card. If the DB is unreachable (dev without
+ * docker up, build-time, etc.) we treat the count as 0 — the card hides
+ * gracefully and the rest of the page still renders.
  */
-export default function HomePage() {
-  return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-start justify-center gap-6 px-6 py-12">
-      <h1 className="text-3xl font-bold text-text">NutriLens</h1>
-      <p className="text-lg text-text-muted">
-        Asistente informativo que analiza etiquetas alimentarias con IA multimodal.
-      </p>
-      <p className="text-sm text-text-muted">
-        Sprint 0 — bootstrap. Las pantallas reales vienen en los siguientes sprints (ver{' '}
-        <code className="font-mono text-xs">docs/specs/</code>).
-      </p>
-    </main>
-  );
+import { HomeView } from '@/components/home/HomeView';
+import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
+
+// History count depends on persisted state; opting out of static rendering
+// avoids serving a stale "0 productos" card on prod after a successful upload.
+export const dynamic = 'force-dynamic';
+
+export default async function HomePage() {
+  const historyCount = await safeCountProducts();
+  return <HomeView historyCount={historyCount} />;
+}
+
+async function safeCountProducts(): Promise<number> {
+  try {
+    return await prisma.product.count();
+  } catch (err) {
+    logger.warn('home.product_count_failed', {
+      message: err instanceof Error ? err.message : String(err),
+    });
+    return 0;
+  }
 }

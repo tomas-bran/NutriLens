@@ -17,6 +17,8 @@ import type { RefObject } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { useToast } from '@/components/ui/Toaster';
+import { PipelineStepper } from '@/components/upload/PipelineStepper';
 import { mapErrorCodeToUi, resolveErrorDescription } from '@/lib/upload/error-ui-mapping';
 import { computeFileHash } from '@/lib/upload/hash';
 import { initialState, transition, type UploadEvent, type UploadState } from '@/lib/upload/machine';
@@ -29,6 +31,7 @@ function reducer(state: UploadState, event: UploadEvent): UploadState {
 
 export function UploadFlow() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [state, dispatch] = useReducer(reducer, initialState);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -41,34 +44,50 @@ export function UploadFlow() {
     }
   }, [state, router]);
 
-  const handleFileSelected = useCallback((file: File) => {
-    const result = validateClientFile(file);
-    if (!result.ok) {
-      dispatch({
-        type: 'FAIL',
-        error: result.error,
-        reason: result.reason,
-        requestId: null,
-      });
-      return;
-    }
-    dispatch({ type: 'SELECT', file });
-  }, []);
+  const handleFileSelected = useCallback(
+    (file: File) => {
+      const result = validateClientFile(file);
+      if (!result.ok) {
+        const ui = mapErrorCodeToUi(result.error);
+        showToast({
+          variant: 'error',
+          title: ui.title,
+          description: result.reason,
+        });
+        dispatch({
+          type: 'FAIL',
+          error: result.error,
+          reason: result.reason,
+          requestId: null,
+        });
+        return;
+      }
+      dispatch({ type: 'SELECT', file });
+    },
+    [showToast],
+  );
 
   const handleSubmit = useCallback(async () => {
     if (state.kind !== 'SELECTED') return;
     const file = state.file;
 
     dispatch({ type: 'SUBMIT' });
+    showToast({
+      variant: 'info',
+      title: 'Analizando…',
+      description: 'Esto puede tardar unos segundos.',
+    });
 
     let fileHash: string;
     try {
       fileHash = await computeFileHash(file);
     } catch {
+      const reason = 'No pudimos preparar el archivo para subirlo.';
+      showToast({ variant: 'error', title: 'Algo salió mal', description: reason });
       dispatch({
         type: 'FAIL',
         error: 'internal_error',
-        reason: 'No pudimos preparar el archivo para subirlo.',
+        reason,
         requestId: null,
       });
       return;
@@ -82,8 +101,19 @@ export function UploadFlow() {
     });
 
     if (result.kind === 'success') {
+      showToast({
+        variant: 'success',
+        title: 'Producto guardado',
+        description: 'Lo encontrás en tu historial.',
+      });
       dispatch({ type: 'COMPLETE', id: result.id });
     } else {
+      const ui = mapErrorCodeToUi(result.error);
+      showToast({
+        variant: 'error',
+        title: ui.title,
+        description: resolveErrorDescription(result.error, result.reason),
+      });
       dispatch({
         type: 'FAIL',
         error: result.error,
@@ -91,7 +121,7 @@ export function UploadFlow() {
         requestId: result.requestId,
       });
     }
-  }, [state]);
+  }, [state, showToast]);
 
   const handleRetry = useCallback(() => {
     if (state.kind !== 'ERROR') return;
@@ -314,10 +344,21 @@ interface AnalyzingPanelProps {
   stage: 'UPLOADING' | 'PROCESSING';
 }
 
+/**
+ * Two-column panel mirroring D02-Loading:
+ *   - Left: dark image preview with scan line (animation taken from globals).
+ *   - Right: <PipelineStepper> showing the 5 backend pipeline stages.
+ *
+ * The stepper is driven client-side from a simulated timeline. The real
+ * server response only marks the terminal redirect — the visual progression
+ * is decoupled because the mock provider responds instantly. Spec target
+ * times come from E06 §9 (p50 5-8s, p95 <20s).
+ */
 function AnalyzingPanel({ file, progress, stage }: AnalyzingPanelProps) {
   const previewUrl = useFilePreviewUrl(file);
   const percent = Math.round(progress * 100);
   const isImage = file.type.startsWith('image/');
+  const currentStepIndex = useSimulatedPipelineStep(stage);
 
   return (
     <div
@@ -327,65 +368,107 @@ function AnalyzingPanel({ file, progress, stage }: AnalyzingPanelProps) {
       aria-live="polite"
     >
       <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-bold text-[var(--color-text)]">Analizando etiqueta</h2>
-        <p className="text-sm text-[var(--color-text-muted)]">
+        <h2 className="text-[22px] font-bold text-[var(--color-text)]">Analizando etiqueta</h2>
+        <p className="text-[13px] text-[var(--color-text-muted)]">
           {file.name} · {formatFileSize(file.size)}
         </p>
       </div>
 
-      <div
-        className="relative flex min-h-[360px] items-center justify-center overflow-hidden rounded-2xl bg-[var(--color-primary)] p-8"
-        data-testid="analyzing-preview"
-      >
-        {isImage && previewUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={previewUrl}
-            alt="Vista previa de la etiqueta"
-            className="max-h-72 max-w-full rotate-[-4deg] rounded-lg bg-white object-contain p-3 shadow-2xl"
-          />
-        ) : (
-          <div className="flex h-56 w-72 rotate-[-4deg] flex-col items-start gap-2 rounded-lg bg-white p-4 shadow-2xl">
-            <p className="text-lg font-bold text-[var(--color-text)]">{file.name}</p>
-            <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
-              PDF · {formatFileSize(file.size)}
-            </p>
-          </div>
-        )}
-
-        <div className="animate-scanline pointer-events-none absolute inset-x-6 top-1/2 h-[3px] origin-center rounded-full bg-[var(--color-warning)] shadow-[0_0_12px_rgba(242,165,38,0.7)]" />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <p className="text-base font-semibold text-[var(--color-text)]">
-          {stage === 'UPLOADING' ? 'Subiendo archivo…' : 'Procesando etiqueta'}
-        </p>
-        <p className="text-sm text-[var(--color-text-muted)]">
-          {stage === 'UPLOADING'
-            ? 'Estamos enviando la imagen al servidor.'
-            : 'Esto suele tardar 8–15 segundos.'}
-        </p>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_1fr]">
+        {/* Left: preview + scan line */}
         <div
-          className="h-2 w-full overflow-hidden rounded-full bg-[var(--color-surface)]"
-          role="progressbar"
-          aria-label="Progreso del upload"
-          aria-valuenow={percent}
-          aria-valuemin={0}
-          aria-valuemax={100}
+          className="relative flex min-h-[360px] items-center justify-center overflow-hidden rounded-[20px] bg-[#0f172a] p-6 md:p-8"
+          data-testid="analyzing-preview"
         >
-          <div
-            className={[
-              'h-full transition-[width] duration-300',
-              stage === 'UPLOADING'
-                ? 'bg-[var(--color-primary)]'
-                : 'animate-pulse bg-[var(--color-primary)]',
-            ].join(' ')}
-            style={{ width: stage === 'UPLOADING' ? `${percent}%` : '100%' }}
-          />
+          {isImage && previewUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={previewUrl}
+              alt="Vista previa de la etiqueta"
+              className="max-h-72 max-w-full rotate-[-3deg] rounded-[12px] bg-white object-contain p-3 shadow-[0_16px_40px_rgba(0,0,0,0.4)]"
+            />
+          ) : (
+            <div className="flex h-56 w-72 rotate-[-3deg] flex-col items-start gap-2 rounded-[12px] bg-white p-4 shadow-[0_16px_40px_rgba(0,0,0,0.4)]">
+              <p className="text-lg font-bold text-[var(--color-text)]">{file.name}</p>
+              <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+                PDF · {formatFileSize(file.size)}
+              </p>
+            </div>
+          )}
+
+          <div className="animate-scanline pointer-events-none absolute inset-x-10 top-1/2 h-[3px] origin-center rounded-full bg-[#a3e635] shadow-[0_0_12px_rgba(163,230,53,0.6)]" />
+
+          {stage === 'UPLOADING' && (
+            <div className="absolute inset-x-6 bottom-6 flex flex-col gap-2">
+              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-white/80">
+                <span>Subiendo archivo</span>
+                <span>{percent}%</span>
+              </div>
+              <div
+                className="h-1.5 w-full overflow-hidden rounded-full bg-white/20"
+                role="progressbar"
+                aria-label="Progreso del upload"
+                aria-valuenow={percent}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
+                <div
+                  className="h-full bg-white transition-[width] duration-300"
+                  style={{ width: `${percent}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Right: pipeline stepper */}
+        <PipelineStepper currentStepIndex={currentStepIndex} />
       </div>
     </div>
   );
+}
+
+/**
+ * Drives the pipeline stepper visual progression based on elapsed time.
+ *
+ * Target durations (E06 §9 mid-range, total ~8.6s):
+ *   1. Validación de etiqueta        ~0.8s
+ *   2. OCR + extracción multimodal   ~4.2s
+ *   3. Clasificando alérgenos        ~1.5s
+ *   4. Cálculo de riesgo             ~0.5s
+ *   5. Generar explicación + guardar ~1.6s
+ *
+ * While the upload bytes are still in flight (`stage === 'UPLOADING'`),
+ * we keep step 1 active. Once the server starts processing we walk the
+ * remaining steps on the timeline. The component above transitions to
+ * COMPLETED via the COMPLETE event, at which point the stepper is replaced.
+ */
+function useSimulatedPipelineStep(stage: 'UPLOADING' | 'PROCESSING'): number {
+  const [stepIndex, setStepIndex] = useState(0);
+  const startedAtRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (stage !== 'PROCESSING') {
+      // While uploading bytes, step 0 (Validación) is the live one.
+      setStepIndex(0);
+      startedAtRef.current = null;
+      return;
+    }
+    startedAtRef.current = performance.now();
+    setStepIndex(1); // entering server processing → step 2 active
+
+    const timeline = [800, 5000, 6500, 7000, 8600];
+    const intervalId = window.setInterval(() => {
+      if (startedAtRef.current === null) return;
+      const elapsed = performance.now() - startedAtRef.current;
+      const next = timeline.findIndex((threshold) => elapsed < threshold);
+      setStepIndex(next === -1 ? timeline.length - 1 : Math.max(next, 1));
+    }, 120);
+
+    return () => window.clearInterval(intervalId);
+  }, [stage]);
+
+  return stepIndex;
 }
 
 function useFilePreviewUrl(file: File): string | null {

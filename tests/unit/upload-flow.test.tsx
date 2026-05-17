@@ -3,9 +3,12 @@
  * Covers the state-driven render branches without exercising the full
  * XHR pipeline (that's covered by the E2E specs).
  */
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render as rtlRender, screen } from '@testing-library/react';
+import type { RenderOptions } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ToastProvider } from '@/components/ui/Toaster';
 
 const pushMock = vi.fn();
 vi.mock('next/navigation', () => ({
@@ -13,6 +16,11 @@ vi.mock('next/navigation', () => ({
 }));
 
 import { UploadFlow } from '@/components/upload/UploadFlow';
+
+// <UploadFlow> calls useToast(); every render needs to be wrapped.
+function render(ui: ReactElement, options?: RenderOptions) {
+  return rtlRender(ui, { wrapper: ToastProvider, ...options });
+}
 
 function mkFile(name: string, type: string, size = 1024): File {
   return new File([new Uint8Array(size)], name, { type });
@@ -108,7 +116,9 @@ describe('<UploadFlow> — client-side rejection (US-06 + spec §9)', () => {
     dropFileOnInput(input, mkFile('big.jpg', 'image/jpeg', 11 * 1024 * 1024));
 
     expect(screen.getByRole('heading', { name: 'Archivo muy grande' })).toBeInTheDocument();
-    expect(screen.getByText(/10 MB/)).toBeInTheDocument();
+    // The "10 MB" mention now appears in both the ErrorState body and the
+    // toast — assert it's present in at least one place.
+    expect(screen.getAllByText(/10 MB/).length).toBeGreaterThan(0);
   });
 
   it('shows ErrorState "Archivo vacío" when selecting a 0-byte file', () => {
