@@ -36,47 +36,27 @@ describe('ErrorState', () => {
   });
 
   it('renders primary action button with correct label', () => {
-    render(
-      <ErrorState
-        title="Error"
-        primaryAction={{ label: 'Reintentar', onClick: vi.fn() }}
-      />,
-    );
+    render(<ErrorState title="Error" primaryAction={{ label: 'Reintentar', onClick: vi.fn() }} />);
     expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
   });
 
   it('primary action button triggers callback on click', async () => {
     const user = userEvent.setup();
     const onClick = vi.fn();
-    render(
-      <ErrorState
-        title="Error"
-        primaryAction={{ label: 'Reintentar', onClick }}
-      />,
-    );
+    render(<ErrorState title="Error" primaryAction={{ label: 'Reintentar', onClick }} />);
     await user.click(screen.getByRole('button', { name: 'Reintentar' }));
     expect(onClick).toHaveBeenCalledOnce();
   });
 
   it('renders secondary action button with correct label', () => {
-    render(
-      <ErrorState
-        title="Error"
-        secondaryAction={{ label: 'Volver', onClick: vi.fn() }}
-      />,
-    );
+    render(<ErrorState title="Error" secondaryAction={{ label: 'Volver', onClick: vi.fn() }} />);
     expect(screen.getByRole('button', { name: 'Volver' })).toBeInTheDocument();
   });
 
   it('secondary action button triggers callback on click', async () => {
     const user = userEvent.setup();
     const onBack = vi.fn();
-    render(
-      <ErrorState
-        title="Error"
-        secondaryAction={{ label: 'Volver', onClick: onBack }}
-      />,
-    );
+    render(<ErrorState title="Error" secondaryAction={{ label: 'Volver', onClick: onBack }} />);
     await user.click(screen.getByRole('button', { name: 'Volver' }));
     expect(onBack).toHaveBeenCalledOnce();
   });

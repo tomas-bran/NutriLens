@@ -37,7 +37,7 @@ export function Badge({ variant = 'neutral', children, className = '', ...rest }
       {showDot && (
         <span
           aria-hidden="true"
-          className={['h-1.5 w-1.5 rounded-full flex-shrink-0', dotClasses[variant]].join(' ')}
+          className={['h-1.5 w-1.5 flex-shrink-0 rounded-full', dotClasses[variant]].join(' ')}
         />
       )}
       {children}

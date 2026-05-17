@@ -14,7 +14,13 @@ interface ErrorStateProps {
   secondaryAction?: Action;
 }
 
-export function ErrorState({ icon, title, description, primaryAction, secondaryAction }: ErrorStateProps) {
+export function ErrorState({
+  icon,
+  title,
+  description,
+  primaryAction,
+  secondaryAction,
+}: ErrorStateProps) {
   return (
     <div
       role="status"
@@ -31,13 +37,11 @@ export function ErrorState({ icon, title, description, primaryAction, secondaryA
 
       <div className="flex flex-col gap-1">
         <h2 className="text-xl font-bold text-[var(--color-text)]">{title}</h2>
-        {description && (
-          <p className="text-sm text-[var(--color-text-muted)]">{description}</p>
-        )}
+        {description && <p className="text-sm text-[var(--color-text-muted)]">{description}</p>}
       </div>
 
       {(primaryAction || secondaryAction) && (
-        <div className="flex flex-col gap-2 w-full max-w-xs">
+        <div className="flex w-full max-w-xs flex-col gap-2">
           {primaryAction && (
             <Button variant="primary" onClick={primaryAction.onClick}>
               {primaryAction.label}

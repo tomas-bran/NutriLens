@@ -42,10 +42,7 @@ describe('EmptyState', () => {
 
   it('renders action button with correct label', () => {
     render(
-      <EmptyState
-        title="Vacío"
-        action={{ label: 'Analizar primer producto', onClick: vi.fn() }}
-      />,
+      <EmptyState title="Vacío" action={{ label: 'Analizar primer producto', onClick: vi.fn() }} />,
     );
     expect(screen.getByRole('button', { name: 'Analizar primer producto' })).toBeInTheDocument();
   });
@@ -53,12 +50,7 @@ describe('EmptyState', () => {
   it('action button triggers callback on click', async () => {
     const user = userEvent.setup();
     const onClick = vi.fn();
-    render(
-      <EmptyState
-        title="Vacío"
-        action={{ label: 'Analizar primer producto', onClick }}
-      />,
-    );
+    render(<EmptyState title="Vacío" action={{ label: 'Analizar primer producto', onClick }} />);
     await user.click(screen.getByRole('button', { name: 'Analizar primer producto' }));
     expect(onClick).toHaveBeenCalledOnce();
   });

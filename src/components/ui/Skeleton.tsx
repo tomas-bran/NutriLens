@@ -12,10 +12,7 @@ export function Skeleton({ width, height, className = '', style, ...rest }: Skel
       aria-hidden="true"
       role="presentation"
       style={{ width, height, ...style }}
-      className={[
-        'animate-pulse rounded-md bg-[var(--color-surface)]',
-        className,
-      ]
+      className={['animate-pulse rounded-md bg-[var(--color-surface)]', className]
         .filter(Boolean)
         .join(' ')}
     />
