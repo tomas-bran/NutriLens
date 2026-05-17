@@ -1,20 +1,23 @@
 /**
  * Post-process the LLM explanation before returning it to the user.
  *
- * Two responsibilities, per spec E03 §5.5:
+ * Two responsibilities, per spec E03 §5.5 (explanation) y E05 §6.1 (chat):
  *   1. Strip "clinical" phrases the model might emit despite the prompt
  *      asking it not to ("consultá a un médico", "no consumir", etc).
  *      We replace them with "[texto removido]" so the censoring is visible
  *      and reviewable, not silent.
  *   2. Ensure the disclaimer "NutriLens es un asistente informativo" is
  *      present somewhere in the output. If the model omits it, we append
- *      a canonical closing.
+ *      a canonical closing — el tail por default es el de E03; los callers
+ *      pueden pasar uno propio (ej. el chat usa el tail de E05 §6.1).
  *
  * Idempotent: sanitize(sanitize(x)) === sanitize(x).
  */
 export const REMOVED_MARKER = '[texto removido]';
 export const DISCLAIMER_NEEDLE = 'NutriLens es un asistente informativo';
 export const DISCLAIMER_TAIL = 'Recordá que NutriLens es un asistente informativo.';
+export const CHAT_DISCLAIMER_TAIL =
+  'Basado en productos analizados por vos. NutriLens es un asistente informativo.';
 
 /** Phrases the model is asked NOT to emit; if it does, we replace them. */
 export const BLOCKED_PHRASES: ReadonlyArray<RegExp> = [
@@ -34,7 +37,13 @@ export interface SanitizeResult {
 
 const PATTERN_LABELS = ['consulta_medico', 'peligroso_salud', 'no_consumir', 'es_toxico'] as const;
 
-export function sanitizeExplanation(raw: string): SanitizeResult {
+export interface SanitizeOpts {
+  /** Override the canonical closing appended when the disclaimer is missing. */
+  disclaimerTail?: string;
+}
+
+export function sanitizeExplanation(raw: string, opts: SanitizeOpts = {}): SanitizeResult {
+  const tail = opts.disclaimerTail ?? DISCLAIMER_TAIL;
   let text = raw.trim();
   const matchedPatterns: string[] = [];
 
@@ -48,7 +57,7 @@ export function sanitizeExplanation(raw: string): SanitizeResult {
 
   let disclaimerAppended = false;
   if (!text.includes(DISCLAIMER_NEEDLE)) {
-    text = text.length > 0 ? `${text} ${DISCLAIMER_TAIL}` : DISCLAIMER_TAIL;
+    text = text.length > 0 ? `${text} ${tail}` : tail;
     disclaimerAppended = true;
   }
 

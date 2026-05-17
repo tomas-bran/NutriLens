@@ -38,6 +38,11 @@ export type AnswerOpts = {
   timeoutMs?: number;
 };
 
+export type ParseIntentOpts = {
+  promptVersion: string;
+  timeoutMs?: number;
+};
+
 export type SavedProductLite = {
   id: string;
   nombre: string;
@@ -51,6 +56,11 @@ export interface IaProvider {
   analyzeLabel(file: Buffer, mime: string, opts: AnalyzeOpts): Promise<IaCallResult>;
   classifyLabelKind(file: Buffer, mime: string, opts: AnalyzeOpts): Promise<IaCallResult>;
   generateExplanation(product: ProductExtraction, opts: ExplainOpts): Promise<IaCallResult>;
+  /**
+   * Parsea la pregunta del usuario y devuelve el intent como JSON (string raw).
+   * Spec: `E05 §4` — modelo text-only, `temperature: 0`, `max_tokens: 200`.
+   */
+  parseIntent(question: string, opts: ParseIntentOpts): Promise<IaCallResult>;
   answerWithContext(
     question: string,
     products: SavedProductLite[],
