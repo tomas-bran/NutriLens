@@ -76,8 +76,7 @@ export function transition(state: UploadState, event: UploadEvent): UploadState 
     case 'SELECTED':
       if (event.type === 'SELECT') return { kind: 'SELECTED', file: event.file };
       if (event.type === 'CLEAR') return { kind: 'IDLE' };
-      if (event.type === 'SUBMIT')
-        return { kind: 'UPLOADING', file: state.file, progress: 0 };
+      if (event.type === 'SUBMIT') return { kind: 'UPLOADING', file: state.file, progress: 0 };
       // A user can pick a new (invalid) file while one is already SELECTED.
       if (event.type === 'FAIL')
         return {

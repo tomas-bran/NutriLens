@@ -4,10 +4,7 @@
  * `docs/specs/E01-onboarding-y-upload.md §9` is faithfully implemented.
  */
 import { describe, expect, it } from 'vitest';
-import {
-  mapErrorCodeToUi,
-  resolveErrorDescription,
-} from '@/lib/upload/error-ui-mapping';
+import { mapErrorCodeToUi, resolveErrorDescription } from '@/lib/upload/error-ui-mapping';
 
 describe('mapErrorCodeToUi — title per error code (spec §9)', () => {
   const expectedTitles: Record<string, string> = {

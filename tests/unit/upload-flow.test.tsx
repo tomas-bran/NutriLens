@@ -94,10 +94,7 @@ describe('<UploadFlow> — client-side rejection (US-06 + spec §9)', () => {
 
     dropFileOnInput(
       input,
-      mkFile(
-        'doc.docx',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      ),
+      mkFile('doc.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
     );
 
     expect(screen.getByRole('heading', { name: 'Formato no soportado' })).toBeInTheDocument();

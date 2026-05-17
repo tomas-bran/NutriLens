@@ -17,17 +17,9 @@ import type { RefObject } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { ErrorState } from '@/components/ui/ErrorState';
-import {
-  mapErrorCodeToUi,
-  resolveErrorDescription,
-} from '@/lib/upload/error-ui-mapping';
+import { mapErrorCodeToUi, resolveErrorDescription } from '@/lib/upload/error-ui-mapping';
 import { computeFileHash } from '@/lib/upload/hash';
-import {
-  initialState,
-  transition,
-  type UploadEvent,
-  type UploadState,
-} from '@/lib/upload/machine';
+import { initialState, transition, type UploadEvent, type UploadState } from '@/lib/upload/machine';
 import { validateClientFile } from '@/lib/upload/validate-client';
 import { xhrUpload } from '@/lib/upload/xhr-upload';
 
@@ -361,7 +353,7 @@ function AnalyzingPanel({ file, progress, stage }: AnalyzingPanelProps) {
           </div>
         )}
 
-        <div className="pointer-events-none absolute inset-x-6 top-1/2 h-[3px] origin-center animate-scanline rounded-full bg-[var(--color-warning)] shadow-[0_0_12px_rgba(242,165,38,0.7)]" />
+        <div className="animate-scanline pointer-events-none absolute inset-x-6 top-1/2 h-[3px] origin-center rounded-full bg-[var(--color-warning)] shadow-[0_0_12px_rgba(242,165,38,0.7)]" />
       </div>
 
       <div className="flex flex-col gap-2">

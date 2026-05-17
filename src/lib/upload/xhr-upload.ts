@@ -80,7 +80,12 @@ export function xhrUpload(opts: XhrUploadOptions): Promise<XhrUploadResult> {
       const parsed = parseResponse(xhr.responseText);
 
       if (xhr.status >= 200 && xhr.status < 300) {
-        if (parsed && typeof parsed === 'object' && 'id' in parsed && typeof parsed.id === 'string') {
+        if (
+          parsed &&
+          typeof parsed === 'object' &&
+          'id' in parsed &&
+          typeof parsed.id === 'string'
+        ) {
           resolve({ kind: 'success', id: parsed.id, requestId });
           return;
         }

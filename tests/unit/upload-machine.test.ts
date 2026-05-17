@@ -4,12 +4,7 @@
  * `docs/specs/E01-onboarding-y-upload.md §7` plus invalid (no-op) ones.
  */
 import { describe, expect, it } from 'vitest';
-import {
-  initialState,
-  transition,
-  type UploadEvent,
-  type UploadState,
-} from '@/lib/upload/machine';
+import { initialState, transition, type UploadEvent, type UploadState } from '@/lib/upload/machine';
 
 function mkFile(name = 'a.jpg', type = 'image/jpeg', size = 1024): File {
   return new File([new Uint8Array(size)], name, { type });
@@ -57,10 +52,7 @@ describe('upload state machine — valid transitions', () => {
 
   it('UPLOADING + UPLOAD_DONE → PROCESSING', () => {
     const file = mkFile();
-    const next = transition(
-      { kind: 'UPLOADING', file, progress: 1 },
-      { type: 'UPLOAD_DONE' },
-    );
+    const next = transition({ kind: 'UPLOADING', file, progress: 1 }, { type: 'UPLOAD_DONE' });
     expect(next).toEqual({ kind: 'PROCESSING', file });
   });
 

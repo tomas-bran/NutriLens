@@ -3,10 +3,7 @@
  * Source of truth: `docs/specs/E01-onboarding-y-upload.md §3`.
  */
 import { describe, expect, it } from 'vitest';
-import {
-  MAX_FILE_SIZE_BYTES,
-  validateClientFile,
-} from '@/lib/upload/validate-client';
+import { MAX_FILE_SIZE_BYTES, validateClientFile } from '@/lib/upload/validate-client';
 
 function mkFile(name: string, type: string, size: number): File {
   // happy-dom's File honors `size` from the byte content we pass in.

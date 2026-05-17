@@ -19,9 +19,7 @@ const MIME_TO_EXTENSIONS: Record<AllowedMime, readonly string[]> = {
   'application/pdf': ['pdf'],
 };
 
-export type ValidationResult =
-  | { ok: true }
-  | { ok: false; error: ErrorCode; reason: string };
+export type ValidationResult = { ok: true } | { ok: false; error: ErrorCode; reason: string };
 
 export function validateClientFile(file: File): ValidationResult {
   if (file.size <= 0) {
