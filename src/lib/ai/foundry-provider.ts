@@ -48,6 +48,30 @@ export class FoundryProvider implements IaProvider {
   }
 
   async analyzeLabel(file: Buffer, mime: string, opts: AnalyzeOpts): Promise<IaCallResult> {
+    return this.callMultimodal(
+      file,
+      mime,
+      opts,
+      'Extraé la información de esta etiqueta y devolvé SOLO el JSON pedido.',
+    );
+  }
+
+  async classifyLabelKind(file: Buffer, mime: string, opts: AnalyzeOpts): Promise<IaCallResult> {
+    return this.callMultimodal(
+      file,
+      mime,
+      opts,
+      'Clasificá la imagen y devolvé SOLO el JSON pedido.',
+    );
+  }
+
+  /** Common path for both multimodal calls — only the user instruction text differs. */
+  private callMultimodal(
+    file: Buffer,
+    mime: string,
+    opts: AnalyzeOpts,
+    userInstruction: string,
+  ): Promise<IaCallResult> {
     // eslint-disable-next-line testing-library/render-result-naming-convention -- false positive: renderPrompt is a prompt-template renderer, not @testing-library/react
     const systemPrompt = renderPrompt(opts.promptVersion as never, opts.extra ?? {});
     const dataUrl = `data:${mime};base64,${file.toString('base64')}`;
@@ -60,20 +84,13 @@ export class FoundryProvider implements IaProvider {
         {
           role: 'user',
           content: [
-            {
-              type: 'text',
-              text: 'Extraé la información de esta etiqueta y devolvé SOLO el JSON pedido.',
-            },
+            { type: 'text', text: userInstruction },
             { type: 'image_url', image_url: { url: dataUrl } },
           ],
         },
       ],
       timeoutMs,
     });
-  }
-
-  async classifyLabelKind(_file: Buffer, _mime: string, _opts: AnalyzeOpts): Promise<IaCallResult> {
-    throw new Error('classifyLabelKind not implemented in FoundryProvider yet (US-05)');
   }
 
   async generateExplanation(

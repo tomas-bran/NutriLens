@@ -94,6 +94,49 @@ describe('FoundryProvider.analyzeLabel — happy path', () => {
   });
 });
 
+describe('FoundryProvider.classifyLabelKind (US-05)', () => {
+  it('sends the detect_label_kind-v1 system prompt + image to the multimodal model', async () => {
+    const create = vi
+      .fn()
+      .mockResolvedValue(okCompletion('{"is_food_label":true,"confidence":0.95}'));
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+
+    const r = await provider.classifyLabelKind(FILE, 'image/png', {
+      promptVersion: 'detect_label_kind-v1',
+    });
+
+    expect(create).toHaveBeenCalledOnce();
+    const [body] = create.mock.calls[0] as [Record<string, unknown>];
+    expect(body).toMatchObject({
+      model: 'Phi-4-multimodal-instruct',
+      temperature: 0.1,
+      max_tokens: 1500,
+    });
+    const messages = body.messages as Array<{ role: string; content: unknown }>;
+    expect(messages[0]?.role).toBe('system');
+    expect(messages[0]?.content).toMatch(/is_food_label/);
+    expect(messages[0]?.content).toMatch(/Eres un clasificador/);
+    const userContent = messages[1]?.content as Array<{ type: string }>;
+    expect(userContent.some((p) => p.type === 'image_url')).toBe(true);
+    expect(r.raw).toBe('{"is_food_label":true,"confidence":0.95}');
+  });
+
+  it('surfaces 429 from the classifier path → model_rate_limited after one retry', async () => {
+    vi.useFakeTimers();
+    const create = vi
+      .fn()
+      .mockRejectedValue(new APIError(429, undefined as never, 'rl', undefined));
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+    const promise = provider
+      .classifyLabelKind(FILE, 'image/jpeg', { promptVersion: 'detect_label_kind-v1' })
+      .catch((e) => e);
+    await vi.advanceTimersByTimeAsync(2000);
+    const err = await promise;
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(err.code).toBe('model_rate_limited');
+  });
+});
+
 describe('FoundryProvider.analyzeLabel — retry on 429/5xx (one attempt only)', () => {
   it('retries once on 429 then succeeds', async () => {
     vi.useFakeTimers();

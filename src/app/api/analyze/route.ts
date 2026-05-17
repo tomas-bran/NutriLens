@@ -1,11 +1,12 @@
 /**
  * POST /api/analyze — main pipeline entry point.
  *
- * Pipeline order (US-03 / US-08 / US-09 / US-14):
- *   validate_file → extract_with_ia → validate_schema → respond 200
+
+ * Pipeline order (US-03 / US-05 / US-08 / US-09 / US-14):
+ *   validate_file → detect_label_kind → extract_with_ia → validate_schema → respond 200
  *
- * Still to land: detect_label_kind (US-05), apply_rules + compute_risk (US-13),
- * generate_explanation (US-17), persist (US-22).
+ * Still to land: apply_rules + compute_risk (E03), generate_explanation
+ * (US-17), persist (US-22).
  *
  * See `docs/specs/E01-onboarding-y-upload.md §4-§5` and
  * `docs/specs/E02-analisis-multimodal-ia.md §3-§5`.
@@ -17,6 +18,7 @@ import { getIaProvider } from '@/lib/ai';
 import { apiErrorResponse } from '@/lib/api/error-response';
 import { logger } from '@/lib/logger';
 import type { AnalysisContext } from '@/lib/pipeline/context';
+import { detect_label_kind } from '@/lib/pipeline/steps/detect-label-kind';
 import { extract_with_ia } from '@/lib/pipeline/steps/extract-with-ia';
 import { validate_file } from '@/lib/pipeline/steps/validate-file';
 import { validate_schema } from '@/lib/pipeline/steps/validate-schema';
@@ -82,6 +84,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const ia = getIaProvider();
     let ctx = await validate_file(initialCtx);
+    ctx = await detect_label_kind(ctx, ia);
     ctx = await extract_with_ia(ctx, ia);
     ctx = await validate_schema(ctx, ia);
 
@@ -89,6 +92,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       {
         id: randomUUID(),
         product: ctx.product,
+        labelKind: ctx.labelKind,
         savedAt: new Date().toISOString(),
         pipelineTrace: ctx.steps,
       },
