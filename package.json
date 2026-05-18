@@ -21,7 +21,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
-    "seed": "tsx prisma/seed.ts",
+    "seed": "if [ -f .env.local ]; then set -a; . ./.env.local; set +a; fi && tsx prisma/seed.ts",
+    "seed:reset": "if [ -f .env.local ]; then set -a; . ./.env.local; set +a; fi && prisma migrate reset --force --skip-seed && tsx prisma/seed.ts",
     "eval": "tsx evals/runner/run-eval.ts",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
@@ -68,5 +69,8 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }
