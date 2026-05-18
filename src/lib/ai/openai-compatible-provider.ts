@@ -195,13 +195,21 @@ export class OpenAICompatibleProvider implements IaProvider {
     maxTokens?: number;
   }): Promise<IaCallResult> {
     let lastErr: unknown;
+    const tokenLimit = params.maxTokens ?? DEFAULT_MAX_TOKENS;
+    // gpt-5.x y los reasoning models (o1/o3) renombran `max_tokens` a
+    // `max_completion_tokens` y rechazan el param viejo con 400. Para los
+    // modelos anteriores (gpt-4o, Phi, etc.) seguimos mandando `max_tokens`.
+    const useCompletionTokens = isNewerOpenAIModel(params.model);
+    const tokenParams = useCompletionTokens
+      ? { max_completion_tokens: tokenLimit }
+      : { max_tokens: tokenLimit };
     for (let attempt = 0; attempt < 2; attempt++) {
       const start = Date.now();
       try {
         const r = await this.client.chat.completions.create(
           {
             model: params.model,
-            max_tokens: params.maxTokens ?? DEFAULT_MAX_TOKENS,
+            ...tokenParams,
             temperature: params.temperature ?? DEFAULT_TEMPERATURE,
             messages: params.messages,
           },
@@ -232,6 +240,16 @@ export class OpenAICompatibleProvider implements IaProvider {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Devuelve true si el modelo es uno que requiere `max_completion_tokens`
+ * en vez de `max_tokens`: la familia gpt-5.x y los reasoning models o1/o3.
+ * Los modelos previos (gpt-4o, gpt-4-turbo, Phi, …) siguen aceptando
+ * `max_tokens`.
+ */
+function isNewerOpenAIModel(model: string): boolean {
+  return /^(gpt-5|o1|o3)/i.test(model);
 }
 
 function shouldRetry(err: unknown): boolean {
