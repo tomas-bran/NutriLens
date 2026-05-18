@@ -22,6 +22,11 @@ export default defineConfig({
     trace: 'on',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    // US-34: el <JsonViewer> usa `navigator.clipboard.writeText`. En CI
+    // Chromium headless no concede permisos de clipboard por default y la
+    // call rechaza silenciosamente, por eso el feedback "¡Copiado!" no
+    // se dispara. Habilitamos ambos permisos a nivel global.
+    permissions: ['clipboard-read', 'clipboard-write'],
   },
 
   projects: [

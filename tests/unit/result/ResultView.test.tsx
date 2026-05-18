@@ -212,6 +212,42 @@ describe('<ResultView> — product image + confidence pill', () => {
   });
 });
 
+describe('<ResultView> — JSON extraído + pipeline trace (E06 §3+§4)', () => {
+  it('renderiza el bloque <JsonViewer> con el jsonRaw del producto', () => {
+    render(
+      <ResultView
+        product={mkProduct({
+          jsonRaw: JSON.stringify({ producto: 'X', categoria: 'snacks' }),
+        })}
+      />,
+    );
+    expect(screen.getByTestId('json-viewer')).toBeInTheDocument();
+  });
+
+  it('NO renderiza <PipelineTrace> cuando pipelineTrace está vacío', () => {
+    render(<ResultView product={mkProduct({ pipelineTrace: [] })} />);
+    expect(screen.queryByTestId('pipeline-trace')).not.toBeInTheDocument();
+  });
+
+  it('renderiza <PipelineTrace> cuando hay al menos un step válido', () => {
+    render(
+      <ResultView
+        product={mkProduct({
+          pipelineTrace: [
+            {
+              name: 'validate_file',
+              status: 'ok',
+              startedAt: '2026-05-18T10:00:00.000Z',
+              durationMs: 10,
+            },
+          ],
+        })}
+      />,
+    );
+    expect(screen.getByTestId('pipeline-trace')).toBeInTheDocument();
+  });
+});
+
 describe('<ResultView> — historial detail variant (spec E04 §6.5)', () => {
   it('defaults back link to /analizar when no `back` is passed', () => {
     render(<ResultView product={mkProduct()} />);
