@@ -11,6 +11,12 @@
  *   - Pregunta > 500 chars → la cortamos y logueamos `chat.truncated` (§13).
  *   - `kind=unknown` o `retrieve` vacío → respondemos con el fallback canónico
  *     SIN llamar al LLM de generación (US-30, §7 y §8).
+ *   - `kind=compare` con sólo 1 producto especificado → normalizamos a `info`
+ *     con esos nombres como keywords (US-31 / §13).
+ *   - `kind=compare` con ≥2 productos pero uno o más faltan en la DB →
+ *     respondemos con `missingCompareFallback` SIN llamar al LLM (US-31 §2 /
+ *     §13). Esto cubre el AC §2: "indica qué producto falta y sugiere
+ *     analizarlo".
  *   - `tokensUsed` reporta SUMA de parser + answer (decisión Federico:
  *     queremos ver el gasto real desde el día 1, incluso cuando el answer no
  *     se ejecuta).
@@ -19,7 +25,9 @@ import type { Product as PrismaProduct } from '@prisma/client';
 import { ApiError } from '@schemas/errors';
 import type { IaProvider } from '@/lib/ai/types';
 import { logger } from '@/lib/logger';
+import { findMissingComparables } from '@/lib/chat/compare-helpers';
 import {
+  missingCompareFallback,
   noContextFallback,
   unknownIntentFallback,
   type ChatFallback,
@@ -61,7 +69,17 @@ export async function handleChat(
   logger.info('chat.received', { requestId, questionLen: question.length });
 
   const parse = await parseChatIntent(question, { ia, requestId });
-  const intent = parse.intent;
+  // Caso borde E05 §13: kind=compare con < 2 productos → normalizamos a info
+  // con esos nombres como keywords. El usuario probablemente quiso preguntar
+  // por uno solo.
+  const intent = normalizeCompareIntent(parse.intent);
+  if (intent !== parse.intent) {
+    logger.info('chat.compare_normalized_to_info', {
+      requestId,
+      originalKind: parse.intent.kind,
+      requested: parse.intent.comparar.length,
+    });
+  }
 
   // US-30 / §8: intent unknown — no retrieve, no answer.
   if (intent.kind === 'unknown') {
@@ -94,7 +112,27 @@ export async function handleChat(
     };
   }
 
-  const ans = await generateChatAnswer(question, products, { ia });
+  // US-31 §2 / E05 §13: compare con ≥1 producto faltante → fallback canónico
+  // sin llamar al LLM. La respuesta nombra qué falta y sugiere analizarlo.
+  if (intent.kind === 'compare') {
+    const missing = findMissingComparables(intent.comparar, products);
+    if (missing.length > 0) {
+      const fb = missingCompareFallback(missing);
+      logger.info('chat.missing_compare', { requestId, missingCount: missing.length });
+      return {
+        answer: fb.answer,
+        // Devolvemos los productos que SÍ están como chips (para que el usuario
+        // pueda navegar al detalle de los que ya tiene).
+        products,
+        intent,
+        tokensUsed: { in: parse.tokensIn, out: parse.tokensOut },
+        fallback: fb,
+        questionWasTruncated: truncated,
+      };
+    }
+  }
+
+  const ans = await generateChatAnswer(question, products, intent, { ia });
 
   logger.info('chat.answered', {
     requestId,
@@ -127,4 +165,22 @@ function validateQuestion(raw: unknown): string {
     throw new ApiError('invalid_question', 'Escribí una pregunta antes de enviarla.', 400);
   }
   return raw;
+}
+
+/**
+ * E05 §13: "Intent con kind=compare pero solo 1 producto especificado:
+ * tratamos como info con esa keyword". Si el parser etiquetó como compare
+ * pero sólo capturó un nombre (o ninguno), bajamos a `info` con esos nombres
+ * como keywords — el retrieve los buscará por nombre/ingredientes/alergenos
+ * como cualquier otra info, y la respuesta sigue el flow normal.
+ */
+function normalizeCompareIntent(intent: ChatIntent): ChatIntent {
+  if (intent.kind !== 'compare') return intent;
+  if (intent.comparar.length >= 2) return intent;
+  return {
+    ...intent,
+    kind: 'info',
+    keywords: [...intent.keywords, ...intent.comparar],
+    comparar: [],
+  };
 }

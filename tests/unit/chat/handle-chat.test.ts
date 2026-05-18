@@ -233,3 +233,99 @@ describe('handleChat — errores del provider', () => {
     await expect(handleChat('q', { ia, requestId: 'r1', retrieve })).rejects.toThrow(/boom/);
   });
 });
+
+describe('handleChat — compare con ambos productos en DB (US-31 §1)', () => {
+  it('llama al LLM con intent compare cuando ambos productos están en el historial', async () => {
+    const products = [
+      row({ id: 'p1', nombre: 'Galletitas X' }),
+      row({ id: 'p2', nombre: 'Galletitas Y' }),
+    ];
+    const { ia, answerWithContext } = makeIa({
+      intent: { kind: 'compare', comparar: ['Galletitas X', 'Galletitas Y'] },
+      answerText: '| col | col |',
+    });
+    const retrieve = vi.fn().mockResolvedValue(products);
+    const r = await handleChat('comparame Galletitas X con Galletitas Y', {
+      ia,
+      requestId: 'r1',
+      retrieve,
+    });
+    expect(answerWithContext).toHaveBeenCalledOnce();
+    expect(r.fallback).toBeNull();
+    expect(r.intent.kind).toBe('compare');
+    expect(r.products).toHaveLength(2);
+  });
+});
+
+describe('handleChat — compare con producto faltante (US-31 §2 / E05 §13)', () => {
+  it('uno de los dos no está → fallback missing_compare SIN llamar al LLM', async () => {
+    const products = [row({ id: 'p1', nombre: 'Galletitas X' })];
+    const { ia, answerWithContext } = makeIa({
+      intent: { kind: 'compare', comparar: ['Galletitas X', 'Cereales Fantasma'] },
+    });
+    const retrieve = vi.fn().mockResolvedValue(products);
+    const r = await handleChat('comparame Galletitas X con Cereales Fantasma', {
+      ia,
+      requestId: 'r1',
+      retrieve,
+    });
+    expect(answerWithContext).not.toHaveBeenCalled();
+    expect(r.fallback?.reason).toBe('missing_compare');
+    expect(r.fallback?.showAnalyzeCta).toBe(true);
+    expect(r.answer).toContain('"Cereales Fantasma"');
+  });
+
+  it('los productos encontrados igualmente vuelven como chips para que el usuario navegue', async () => {
+    const products = [row({ id: 'p1', nombre: 'Galletitas X' })];
+    const { ia } = makeIa({
+      intent: { kind: 'compare', comparar: ['Galletitas X', 'Cereales Fantasma'] },
+    });
+    const retrieve = vi.fn().mockResolvedValue(products);
+    const r = await handleChat('comparame Galletitas X con Cereales Fantasma', {
+      ia,
+      requestId: 'r1',
+      retrieve,
+    });
+    expect(r.products).toEqual(products);
+  });
+
+  it('reporta solo tokens del parser cuando hay faltante (no se gastó answer)', async () => {
+    const products = [row({ id: 'p1', nombre: 'Galletitas X' })];
+    const { ia } = makeIa({
+      intent: { kind: 'compare', comparar: ['Galletitas X', 'No Existe'] },
+      parseTokens: { in: 60, out: 18 },
+    });
+    const retrieve = vi.fn().mockResolvedValue(products);
+    const r = await handleChat('q', { ia, requestId: 'r1', retrieve });
+    expect(r.tokensUsed).toEqual({ in: 60, out: 18 });
+  });
+});
+
+describe('handleChat — compare degenerado (caso borde E05 §13)', () => {
+  it('kind=compare con 1 solo producto → normalizamos a info con keywords y seguimos el flow normal', async () => {
+    const products = [row({ id: 'p1', nombre: 'Galletitas X' })];
+    const { ia, answerWithContext } = makeIa({
+      intent: { kind: 'compare', comparar: ['Galletitas X'] },
+      answerText: 'Tenés una galletita con ese nombre.',
+    });
+    const retrieve = vi.fn().mockResolvedValue(products);
+    const r = await handleChat('comparame Galletitas X', { ia, requestId: 'r1', retrieve });
+    // Tras la normalización, intent.kind === 'info' y comparar=[].
+    expect(r.intent.kind).toBe('info');
+    expect(r.intent.comparar).toEqual([]);
+    expect(r.intent.keywords).toContain('Galletitas X');
+    // Y como retrieve devolvió 1 producto, se llamó al LLM como info normal.
+    expect(answerWithContext).toHaveBeenCalledOnce();
+  });
+
+  it('kind=compare con 0 productos → normalizamos a info SIN keywords (no hay nada que buscar)', async () => {
+    const { ia, answerWithContext } = makeIa({
+      intent: { kind: 'compare', comparar: [] },
+    });
+    const retrieve = vi.fn().mockResolvedValue([]);
+    const r = await handleChat('comparar nada', { ia, requestId: 'r1', retrieve });
+    expect(r.intent.kind).toBe('info');
+    expect(r.fallback?.reason).toBe('no_context');
+    expect(answerWithContext).not.toHaveBeenCalled();
+  });
+});

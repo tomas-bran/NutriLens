@@ -23,6 +23,7 @@ import DETECT_LABEL_KIND_V1 from './detect_label_kind-v1.md?raw';
 import EXPLAIN_PRODUCT_V1 from './explain_product-v1.md?raw';
 import CHAT_PARSE_INTENT_V1 from './chat_parse_intent-v1.md?raw';
 import CHAT_ANSWER_V1 from './chat_answer-v1.md?raw';
+import CHAT_ANSWER_V2 from './chat_answer-v2.md?raw';
 
 export type PromptVersion =
   | 'extract_product-v1'
@@ -30,7 +31,8 @@ export type PromptVersion =
   | 'detect_label_kind-v1'
   | 'explain_product-v1'
   | 'chat_parse_intent-v1'
-  | 'chat_answer-v1';
+  | 'chat_answer-v1'
+  | 'chat_answer-v2';
 
 const PROMPTS: Record<PromptVersion, string> = {
   'extract_product-v1': EXTRACT_PRODUCT_V1,
@@ -39,6 +41,7 @@ const PROMPTS: Record<PromptVersion, string> = {
   'explain_product-v1': EXPLAIN_PRODUCT_V1,
   'chat_parse_intent-v1': CHAT_PARSE_INTENT_V1,
   'chat_answer-v1': CHAT_ANSWER_V1,
+  'chat_answer-v2': CHAT_ANSWER_V2,
 };
 
 export function loadPrompt(version: PromptVersion): string {

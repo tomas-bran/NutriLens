@@ -141,4 +141,27 @@ export class ChatPage {
     const label = n === 1 ? `${n} producto en tu base` : `${n} productos en tu base`;
     await expect(this.page.getByText(label)).toBeVisible();
   }
+
+  /**
+   * US-31: confirma que el último mensaje del asistente trae una tabla
+   * markdown renderizada (contraste de ingredientes/alérgenos/sellos/riesgo).
+   */
+  async expectAssistantTableVisible() {
+    const lastBubble = this.assistantBubbles.last();
+    await expect(lastBubble.locator('table')).toBeVisible();
+  }
+
+  /** US-31: confirma que el último mensaje del asistente NO trae tabla. */
+  async expectAssistantNoTable() {
+    const lastBubble = this.assistantBubbles.last();
+    await expect(lastBubble.locator('table')).toHaveCount(0);
+  }
+
+  /**
+   * US-31 §2: confirma que el mensaje incluye el nombre faltante
+   * (en cualquier formato — el helper canónico lo envuelve en comillas).
+   */
+  async expectMissingProductMessage(name: string) {
+    await expect(this.assistantBubbles.last()).toContainText(name);
+  }
 }

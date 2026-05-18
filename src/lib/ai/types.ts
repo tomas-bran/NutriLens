@@ -36,6 +36,12 @@ export type ExplainOpts = {
 export type AnswerOpts = {
   promptVersion: string;
   timeoutMs?: number;
+  /**
+   * Free-form context interpolated into the answer prompt. US-31 lo usa para
+   * pasar `intent_kind` al prompt `chat_answer-v2` y disparar el formato de
+   * tabla markdown cuando es una comparación.
+   */
+  extra?: Record<string, string>;
 };
 
 export type ParseIntentOpts = {
