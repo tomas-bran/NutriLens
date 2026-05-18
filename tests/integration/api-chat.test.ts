@@ -220,3 +220,81 @@ describe('POST /api/chat — chips ocultos cuando no hay contexto (US-32 §3)', 
     expect(body.products).toEqual([]);
   });
 });
+
+describe('POST /api/chat — compare con ambos productos en DB (US-31 §1)', () => {
+  it('"comparame Galletitas X con Galletitas Y" trae ambos y devuelve respuesta con intent compare', async () => {
+    await prisma.product.create({
+      data: seedRow({ nombre: 'Galletitas X', riesgo: 'bajo' }),
+    });
+    await prisma.product.create({
+      data: seedRow({
+        nombre: 'Galletitas Y',
+        riesgo: 'medio',
+        alergenos: JSON.stringify(['gluten']),
+      }),
+    });
+
+    const res = await POST(
+      chatRequest({ question: 'comparame Galletitas X con Galletitas Y' }) as never,
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.intent.kind).toBe('compare');
+    expect(body.intent.comparar).toEqual(['Galletitas X', 'Galletitas Y']);
+    expect(body.products).toHaveLength(2);
+    expect(body.fallback).toBeNull();
+    // El MockIaProvider devuelve un string canned; confirmamos solo que el
+    // disclaimer del chat está presente (el formato real de tabla lo prueba
+    // el provider real + tests del prompt v2).
+    expect(body.answer).toContain('NutriLens es un asistente informativo');
+  });
+});
+
+describe('POST /api/chat — compare con producto faltante (US-31 §2 / E05 §13)', () => {
+  it('uno de los nombres no está en DB → mensaje específico "no tengo X guardado" + CTA', async () => {
+    await prisma.product.create({
+      data: seedRow({ nombre: 'Galletitas X', riesgo: 'bajo' }),
+    });
+
+    const res = await POST(
+      chatRequest({ question: 'comparame Galletitas X con Cereales Fantasma' }) as never,
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.intent.kind).toBe('compare');
+    expect(body.fallback?.reason).toBe('missing_compare');
+    expect(body.fallback?.showAnalyzeCta).toBe(true);
+    expect(body.answer).toContain('"Cereales Fantasma"');
+    expect(body.answer).toContain('analizar');
+    // El producto que SÍ está aparece como chip para navegación.
+    expect(body.products).toHaveLength(1);
+    expect(body.products[0].nombre).toBe('Galletitas X');
+  });
+
+  it('ninguno de los dos nombres está en DB → fallback no_context (el retrieve viene vacío)', async () => {
+    const res = await POST(
+      chatRequest({
+        question: 'comparame Producto Ghost con Otro Ghost',
+      }) as never,
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.intent.kind).toBe('compare');
+    expect(body.fallback?.reason).toBe('no_context');
+    expect(body.products).toEqual([]);
+  });
+});
+
+describe('POST /api/chat — compare degenerado normalizado a info (E05 §13)', () => {
+  it('"comparame Galletitas X" (un solo nombre) → kind se normaliza a info', async () => {
+    await prisma.product.create({
+      data: seedRow({ nombre: 'Galletitas X' }),
+    });
+    // El mock heurístico no matchea "comparame X" como compare (necesita "con Y"),
+    // así que esto entra como filter/info según la heurística. El test confirma
+    // que el handler NO devuelve kind=compare en este caso.
+    const res = await POST(chatRequest({ question: 'comparame Galletitas X' }) as never);
+    const body = await res.json();
+    expect(body.intent.kind).not.toBe('compare');
+  });
+});

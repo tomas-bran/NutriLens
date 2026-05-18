@@ -53,6 +53,30 @@ describe('heuristicIntent — detecta los disparadores del prompt v1', () => {
     expect(intent.comparar).toEqual(['Galletitas X', 'Galletitas Y']);
   });
 
+  it('"compará Galletitas X vs Galletitas Y" → compare', () => {
+    const intent = heuristicIntent('compará Galletitas X vs Galletitas Y');
+    expect(intent.kind).toBe('compare');
+    expect(intent.comparar).toEqual(['Galletitas X', 'Galletitas Y']);
+  });
+
+  it('"Galletitas X vs Galletitas Y" (sin verbo) → compare', () => {
+    const intent = heuristicIntent('Galletitas X vs Galletitas Y');
+    expect(intent.kind).toBe('compare');
+    expect(intent.comparar).toEqual(['Galletitas X', 'Galletitas Y']);
+  });
+
+  it('"qué es mejor, Galletitas X o Galletitas Y?" → compare (US-31 frasing alternativo)', () => {
+    const intent = heuristicIntent('qué es mejor, Galletitas X o Galletitas Y?');
+    expect(intent.kind).toBe('compare');
+    expect(intent.comparar).toEqual(['Galletitas X', 'Galletitas Y']);
+  });
+
+  it('"comparame Galletitas X y Galletitas Y" (con "y" en vez de "con") → compare', () => {
+    const intent = heuristicIntent('comparame Galletitas X y Galletitas Y');
+    expect(intent.kind).toBe('compare');
+    expect(intent.comparar).toEqual(['Galletitas X', 'Galletitas Y']);
+  });
+
   it('"contame un chiste" → unknown', () => {
     const intent = heuristicIntent('contame un chiste');
     expect(intent.kind).toBe('unknown');

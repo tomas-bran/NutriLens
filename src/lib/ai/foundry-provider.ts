@@ -165,6 +165,9 @@ export class FoundryProvider implements IaProvider {
       question,
       products_json: JSON.stringify(products),
       top_k: String(ANSWER_TOP_K),
+      // US-31 / `chat_answer-v2` lo lee para disparar el formato tabla cuando
+      // el intent es `compare`. Para v1 queda como `''` y se ignora.
+      ...(opts.extra ?? {}),
     });
     return this.callChat({
       model: this.miniModel,

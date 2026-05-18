@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest';
 import {
   EMPTY_CONTEXT_ANSWER,
   UNKNOWN_INTENT_ANSWER,
+  missingCompareFallback,
   noContextFallback,
   unknownIntentFallback,
 } from '@/lib/chat/empty-response';
@@ -34,5 +35,30 @@ describe('chat empty-response — intent unknown (E05 §8)', () => {
 
   it('unknownIntentFallback reporta reason="unknown_intent"', () => {
     expect(unknownIntentFallback().reason).toBe('unknown_intent');
+  });
+});
+
+describe('chat empty-response — compare con producto faltante (US-31 §2 + E05 §13)', () => {
+  it('missingCompareFallback con 1 nombre → answer singular + CTA', () => {
+    const fb = missingCompareFallback(['Galletitas Choco']);
+    expect(fb.reason).toBe('missing_compare');
+    expect(fb.showAnalyzeCta).toBe(true);
+    expect(fb.answer).toContain('"Galletitas Choco"');
+    expect(fb.answer).toContain('analizar');
+    expect(fb.missingProducts).toEqual(['Galletitas Choco']);
+  });
+
+  it('missingCompareFallback con 2 nombres → answer plural lista ambos', () => {
+    const fb = missingCompareFallback(['Galletitas X', 'Cereales Y']);
+    expect(fb.answer).toContain('"Galletitas X"');
+    expect(fb.answer).toContain('"Cereales Y"');
+    expect(fb.missingProducts).toEqual(['Galletitas X', 'Cereales Y']);
+  });
+
+  it('missingCompareFallback con 0 nombres NO debería invocarse en producción (defensa)', () => {
+    // Si el caller llamó con [], el answer queda vacío pero la shape es válida.
+    const fb = missingCompareFallback([]);
+    expect(fb.answer).toBe('');
+    expect(fb.missingProducts).toEqual([]);
   });
 });

@@ -62,6 +62,48 @@ export async function seedChatGalletitasAptas() {
   });
 }
 
+/**
+ * Seed para US-31: 2 productos con perfiles bien contrastados para que la
+ * comparación tenga material visible (uno bajo riesgo sin alérgenos, otro
+ * medio con gluten).
+ */
+export async function seedChatCompareFixtures() {
+  await prisma.product.createMany({
+    data: [
+      row({
+        nombre: 'Galletitas X',
+        categoria: 'galletitas',
+        riesgo: 'bajo',
+        aptoCeliaco: true,
+        aptoVegano: true,
+        aptoSinLactosa: true,
+      }),
+      row({
+        nombre: 'Galletitas Y',
+        categoria: 'galletitas',
+        riesgo: 'medio',
+        aptoCeliaco: false,
+        alergenos: ['gluten'],
+      }),
+    ],
+  });
+}
+
+/**
+ * Seed para US-31 §2: un solo producto guardado — el segundo de la
+ * comparación va a faltar.
+ */
+export async function seedChatOnlyOneForCompare() {
+  await prisma.product.create({
+    data: row({
+      nombre: 'Galletitas X',
+      categoria: 'galletitas',
+      riesgo: 'bajo',
+      aptoCeliaco: true,
+    }),
+  });
+}
+
 export async function disconnect() {
   await prisma.$disconnect();
 }

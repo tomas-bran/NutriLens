@@ -80,8 +80,21 @@ export class MockIaProvider implements IaProvider {
   async answerWithContext(
     _question: string,
     products: SavedProductLite[],
-    _opts: AnswerOpts,
+    opts: AnswerOpts,
   ): Promise<IaCallResult> {
+    // US-31: cuando el caller pide `chat_answer-v2` (o pasa intent_kind=compare
+    // en opts.extra), emulamos la tabla markdown que produciría el LLM real
+    // para que los E2E del compare puedan verificar el render de la tabla
+    // sin tocar Foundry. El formato es el documentado en el prompt v2.
+    const isCompareTemplate =
+      opts.promptVersion === 'chat_answer-v2' || opts.extra?.intent_kind === 'compare';
+    if (isCompareTemplate && products.length >= 2) {
+      return {
+        raw: buildMockCompareAnswer(products),
+        usage: { in: 0, out: 0 },
+        latencyMs: 4,
+      };
+    }
     const names = products.map((p) => p.nombre).join(', ') || 'ninguno';
     // User-facing string kept in Spanish on purpose: it's the product output.
     return {
@@ -90,6 +103,31 @@ export class MockIaProvider implements IaProvider {
       latencyMs: 3,
     };
   }
+}
+
+/**
+ * Construye una tabla markdown canned con las dimensiones que el spec v2 pide
+ * (Riesgo / Alérgenos / Sellos). Usado solo en MockIaProvider para que los
+ * E2E del compare tengan algo que renderizar sin gastar tokens.
+ */
+function buildMockCompareAnswer(products: SavedProductLite[]): string {
+  const cols = products.slice(0, 2);
+  const a = cols[0]!;
+  const b = cols[1]!;
+  const fmt = (xs: string[]) => (xs.length === 0 ? 'ninguno' : xs.join(', '));
+  return [
+    `Acá comparamos ${a.nombre} y ${b.nombre}:`,
+    '',
+    `| Dimensión | ${a.nombre} | ${b.nombre} |`,
+    `| --------- | --------- | --------- |`,
+    `| Riesgo    | ${a.riesgo} | ${b.riesgo} |`,
+    `| Alérgenos | ${fmt(a.alergenos)} | ${fmt(b.alergenos)} |`,
+    `| Sellos    | ${fmt(a.sellos)} | ${fmt(b.sellos)} |`,
+    '',
+    `Te recomiendo ${a.nombre} (mock).`,
+    '',
+    'Basado en productos analizados por vos. NutriLens es un asistente informativo.',
+  ].join('\n');
 }
 
 type MockIntentShape = {
@@ -118,20 +156,38 @@ type MockIntentShape = {
 export function heuristicIntent(question: string): MockIntentShape {
   const q = question.toLowerCase();
 
-  // Compare antes que nada — captura "comparame X con Y".
-  const compareMatch = /compar[áa]?me?\s+(.+?)\s+(?:con|y|vs\.?|versus)\s+(.+)$/i.exec(
-    question.trim(),
-  );
-  if (compareMatch) {
-    return {
-      kind: 'compare',
-      categoria: null,
-      riesgo_max: null,
-      apto: null,
-      alergeno_excluido: null,
-      keywords: [],
-      comparar: [compareMatch[1]!.trim(), compareMatch[2]!.trim()],
-    };
+  // Compare antes que nada. Soportamos varias formas en castellano:
+  //   "comparame X con Y" / "comparame X vs Y"
+  //   "compará X con Y"
+  //   "comparar X y Y"
+  //   "X vs Y"  (cuando es lo único que el usuario escribe)
+  //   "qué es mejor, X o Y"
+  const trimmed = question.trim();
+  const comparePatterns: RegExp[] = [
+    /^compar[áa]?(?:me)?\s+(.+?)\s+(?:con|vs\.?|versus|y)\s+(.+?)\s*\??$/i,
+    /^comparar\s+(.+?)\s+(?:con|vs\.?|versus|y)\s+(.+?)\s*\??$/i,
+    /^qu[ée]\s+es\s+mejor[,\s]+(.+?)\s+o\s+(.+?)\s*\??$/i,
+    /^(.+?)\s+vs\.?\s+(.+?)\s*\??$/i,
+  ];
+  for (const pat of comparePatterns) {
+    const m = pat.exec(trimmed);
+    if (m) {
+      const left = m[1]!.trim();
+      const right = m[2]!.trim();
+      // Guard: descartamos matches degenerados donde la primer mitad es muy
+      // corta (ej. "vs" agarrando "tengo vs nada"). El usuario que pide compare
+      // siempre escribe nombres de ≥3 chars.
+      if (left.length < 3 || right.length < 3) continue;
+      return {
+        kind: 'compare',
+        categoria: null,
+        riesgo_max: null,
+        apto: null,
+        alergeno_excluido: null,
+        keywords: [],
+        comparar: [left, right],
+      };
+    }
   }
 
   let categoria: MockIntentShape['categoria'] = null;

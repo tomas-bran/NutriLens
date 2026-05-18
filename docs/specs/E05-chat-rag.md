@@ -247,7 +247,18 @@ Limitamos a 5 productos en el contexto para que el prompt no crezca. Si hay más
 
 ## 6. Step `generate_answer`
 
-### 6.1 Prompt `chat_answer-v1`
+### 6.1 Versiones del prompt
+
+| Versión          | Usado cuando                | Formato de salida                                                    |
+| ---------------- | --------------------------- | -------------------------------------------------------------------- |
+| `chat_answer-v1` | `intent.kind !== 'compare'` | Texto plano (US-29). Sin markdown.                                   |
+| `chat_answer-v2` | `intent.kind === 'compare'` | Frase intro + tabla GFM (Riesgo / Alérgenos / Sellos) + frase final. |
+
+`chat_answer-v1` se conserva para todo lo que no sea comparación. Bumpeamos a `chat_answer-v2` para `kind=compare` (US-31) porque la salida cambia de prosa a tabla — separar la versión nos deja seguir la trazabilidad de cada call al modelo (`pipelineTrace.promptVersion`).
+
+El selector se centraliza en `pickAnswerPromptVersion(intent)` (ver `src/lib/chat/generate-answer.ts`).
+
+### 6.2 Prompt `chat_answer-v1`
 
 ```
 SISTEMA
@@ -259,7 +270,6 @@ médicos.
 REGLAS DE TONO
 - 2 a 4 oraciones.
 - Lenguaje claro y rioplatense.
-- Si comparás productos, mostrá diferencias concretas (alérgenos, sellos, riesgo).
 - Si el usuario pidió "el mejor" o similar, recomendá uno y explicá por qué.
 - Cerrá SIEMPRE con: "Basado en productos analizados por vos. NutriLens es un asistente informativo."
 
@@ -272,26 +282,51 @@ SALIDA
 Texto plano, sin markdown.
 ```
 
-### 6.2 Implementación
+### 6.3 Prompt `chat_answer-v2` (compare — US-31)
+
+Sólo agrega instrucciones de formato cuando `intent_kind = compare`:
+
+```
+FORMATO SEGÚN EL TIPO DE PREGUNTA
+- Por defecto: TEXTO PLANO. Nada de markdown, ni bullets, ni tablas.
+- Si intent.kind = compare:
+  1. Frase introductoria de UNA línea presentando los productos comparados.
+  2. Tabla Markdown GFM con UNA columna por producto y UNA fila por dimensión.
+     Dimensiones obligatorias: **Riesgo**, **Alérgenos**, **Sellos**.
+     Dimensión opcional: **Aptitudes** (vegano / celíaco / sin lactosa).
+  3. Frase final con la recomendación (o "ambos son similares").
+  4. Disclaimer.
+```
+
+La UI renderea la tabla con `<MarkdownMini>` (subset propio: tablas + bold; no usamos `react-markdown` para no inflar el bundle). Ver `src/components/chat/markdown-mini.tsx`.
+
+### 6.4 Implementación
 
 ```ts
-export async function generate_answer(question: string, products: SavedProduct[], ia: IaProvider) {
-  const { text, usage, latencyMs } = await ia.answerWithContext(question, products, {
-    promptVersion: 'chat_answer-v1',
+export async function generateChatAnswer(
+  question: string,
+  products: SavedProduct[],
+  intent: ChatIntent,
+  { ia }: { ia: IaProvider },
+) {
+  const promptVersion = pickAnswerPromptVersion(intent);
+  const { raw, usage, latencyMs } = await ia.answerWithContext(question, products, {
+    promptVersion,
+    extra: { intent_kind: intent.kind },
     timeoutMs: 10_000,
   });
-  return { answer: sanitize(text), tokensUsed: usage, latencyMs };
+  return { answer: sanitizeChatAnswer(raw).text, promptVersion, tokensUsed: usage, latencyMs };
 }
 ```
 
-Reusa el `sanitize` de E03 §5.5 (mismo blocklist) y agrega validación de que el disclaimer esté presente, o lo agrega al final.
+Reusa el `sanitize` de E03 §5.5 (mismo blocklist) parametrizado con el tail del chat (`CHAT_DISCLAIMER_TAIL`). Si el modelo omite el disclaimer, lo agrega.
 
-### 6.3 Modelo y config
+### 6.5 Modelo y config
 
-- **Modelo:** `Phi-4-mini-instruct`.
+- **Modelo:** `Phi-4-mini-instruct` (ambas versiones).
 - **`temperature: 0.2`**.
 - **Timeout:** 10s.
-- **Max tokens:** 350.
+- **Max tokens:** 350 (alcanza para tabla 3×4 + frase intro/final + disclaimer).
 
 ---
 
@@ -433,10 +468,11 @@ Cuando el chat está vacío, mostramos 3 chips de ejemplo (envían directamente 
 
 - **Pregunta vacía**: 400 `invalid_question`.
 - **Pregunta de >500 chars**: la cortamos a 500 antes de mandarla al parser. Logueamos `chat.truncated`.
-- **Intent con `kind=compare` pero solo 1 producto especificado**: tratamos como `info` con esa keyword.
-- **Producto que no existe en historial mencionado por nombre**: el parser igual lo devuelve, el retrieve no encuentra match → respuesta "No tengo X guardado, ¿lo querés analizar?".
+- **Intent con `kind=compare` pero solo 1 producto especificado**: `handleChat` normaliza el intent a `kind=info` con esos nombres como `keywords` y sigue el flujo estándar (`normalizeCompareIntent` en `src/lib/chat/handle-chat.ts`).
+- **Intent con `kind=compare` y ≥1 producto pedido NO está en historial**: el handler ataja **sin invocar al LLM** y devuelve `fallback.reason = 'missing_compare'` con un mensaje canónico que nombra cada faltante (`"No tengo X guardado, ¿lo querés analizar?"`) + CTA "Analizar nuevo producto". Los productos que SÍ están vuelven igual como chips para navegación. Implementado en `src/lib/chat/compare-helpers.ts` (matching nombre↔producto laxo: case+diacritic insensitive, substring match en ambas direcciones).
 - **DB devuelve 0 productos con filtros**: empty response. Si filtros son restrictivos, sugerimos relajarlos en el mensaje fallback (post-MVP).
 - **Modelo devuelve respuesta sin disclaimer**: el `sanitize` lo agrega al final.
+- **Modelo emite tabla mal-formada en compare (v2)**: el `MarkdownMini` cae a párrafo plano sin romper (no fallamos a 500 por un markdown roto del LLM).
 
 ---
 
