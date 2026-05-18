@@ -36,6 +36,8 @@ function row(overrides: Partial<PrismaProduct> = {}): PrismaProduct {
     jsonRaw: '{}',
     pipelineTrace: '[]',
     imagenPath: '/x.jpg',
+    imagenMime: 'image/jpeg',
+    imagenBytes: 1024,
     promptVersion: 'extract_product-v1',
     createdAt: new Date(),
   };
