@@ -94,9 +94,7 @@ describe('POST /api/chat — validación de input (caso borde §13)', () => {
 
   it('echa el X-Request-Id provisto en headers', async () => {
     const rid = '11111111-2222-3333-4444-555555555555';
-    const res = await POST(
-      chatRequest({ question: 'hola' }, { 'x-request-id': rid }) as never,
-    );
+    const res = await POST(chatRequest({ question: 'hola' }, { 'x-request-id': rid }) as never);
     expect(res.headers.get('x-request-id')).toBe(rid);
   });
 });

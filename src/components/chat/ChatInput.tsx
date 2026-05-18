@@ -8,7 +8,14 @@
  */
 'use client';
 
-import { useCallback, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
+import {
+  useCallback,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type KeyboardEvent,
+} from 'react';
 import { Icon } from '@/components/ui/Icon';
 
 interface ChatInputProps {
@@ -56,7 +63,11 @@ export function ChatInput({ onSubmit, disabled = false, initialValue = '' }: Cha
   const canSend = value.trim().length > 0 && !disabled;
 
   return (
-    <form onSubmit={onFormSubmit} className="flex w-full items-end gap-2" data-testid="chat-input-form">
+    <form
+      onSubmit={onFormSubmit}
+      className="flex w-full items-end gap-2"
+      data-testid="chat-input-form"
+    >
       <div className="flex flex-1 items-center gap-2 rounded-3xl border border-[var(--color-border)] bg-white px-4 py-2 shadow-sm transition-colors focus-within:border-[var(--color-primary)]">
         <textarea
           ref={textareaRef}

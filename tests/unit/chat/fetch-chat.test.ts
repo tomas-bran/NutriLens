@@ -87,14 +87,12 @@ describe('fetchChat', () => {
   });
 
   it('429 model_rate_limited → propaga code + reason', async () => {
-    const fetchImpl = vi
-      .fn()
-      .mockResolvedValue(
-        jsonResponse(429, {
-          error: 'model_rate_limited',
-          reason: 'El servicio está saturado.',
-        }),
-      );
+    const fetchImpl = vi.fn().mockResolvedValue(
+      jsonResponse(429, {
+        error: 'model_rate_limited',
+        reason: 'El servicio está saturado.',
+      }),
+    );
     await expect(fetchChat('x', { fetchImpl })).rejects.toMatchObject({
       code: 'model_rate_limited',
       reason: 'El servicio está saturado.',

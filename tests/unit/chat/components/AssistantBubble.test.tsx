@@ -30,13 +30,7 @@ const UNKNOWN: ChatFallback = {
 
 describe('<AssistantBubble>', () => {
   it('muestra el texto del modelo', () => {
-    render(
-      <AssistantBubble
-        text="Tenés 2 galletitas guardadas."
-        products={[]}
-        fallback={null}
-      />,
-    );
+    render(<AssistantBubble text="Tenés 2 galletitas guardadas." products={[]} fallback={null} />);
     expect(screen.getByTestId('chat-assistant-bubble')).toHaveTextContent(
       'Tenés 2 galletitas guardadas.',
     );
@@ -46,10 +40,7 @@ describe('<AssistantBubble>', () => {
     render(
       <AssistantBubble
         text="..."
-        products={[
-          SAMPLE_PRODUCT,
-          { ...SAMPLE_PRODUCT, id: 'p2', nombre: 'Galletitas Y' },
-        ]}
+        products={[SAMPLE_PRODUCT, { ...SAMPLE_PRODUCT, id: 'p2', nombre: 'Galletitas Y' }]}
         fallback={null}
       />,
     );
@@ -79,9 +70,7 @@ describe('<AssistantBubble>', () => {
   });
 
   it('NO muestra CTA en respuesta normal con contexto', () => {
-    render(
-      <AssistantBubble text="..." products={[SAMPLE_PRODUCT]} fallback={null} />,
-    );
+    render(<AssistantBubble text="..." products={[SAMPLE_PRODUCT]} fallback={null} />);
     expect(screen.queryByTestId('chat-analyze-cta')).not.toBeInTheDocument();
   });
 });

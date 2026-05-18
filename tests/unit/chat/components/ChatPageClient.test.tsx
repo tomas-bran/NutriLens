@@ -106,9 +106,7 @@ describe('<ChatPageClient> — flujo happy (US-27 §1 + US-29 §1)', () => {
 
     await user.type(screen.getByTestId('chat-input'), 'segunda{Enter}');
     await waitFor(() =>
-      expect(
-        screen.getByText((c) => c.includes('Segunda respuesta')),
-      ).toBeInTheDocument(),
+      expect(screen.getByText((c) => c.includes('Segunda respuesta'))).toBeInTheDocument(),
     );
 
     // Las 2 user bubbles y las 2 respuestas siguen visibles.
@@ -189,9 +187,7 @@ describe('<ChatPageClient> — estado ERROR (spec §9.4)', () => {
 
     await user.click(screen.getByTestId('chat-retry'));
 
-    await waitFor(() =>
-      expect(screen.getByTestId('chat-assistant-bubble')).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByTestId('chat-assistant-bubble')).toBeInTheDocument());
     expect(fetchImpl).toHaveBeenCalledTimes(2);
     // Segunda call con la misma pregunta.
     expect(fetchImpl).toHaveBeenNthCalledWith(2, 'mostrame galletitas');

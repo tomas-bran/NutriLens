@@ -110,9 +110,7 @@ export function ChatPageClient({
         });
       } catch (err) {
         const reason =
-          err instanceof ApiError
-            ? err.reason
-            : 'Algo salió mal. Probá de nuevo en unos segundos.';
+          err instanceof ApiError ? err.reason : 'Algo salió mal. Probá de nuevo en unos segundos.';
         dispatch({ type: 'error', message: reason });
       }
     },
