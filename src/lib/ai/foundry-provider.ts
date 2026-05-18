@@ -25,6 +25,7 @@ import type {
   ExplainOpts,
   IaCallResult,
   IaProvider,
+  ParseIntentOpts,
   SavedProductLite,
 } from './types';
 
@@ -32,6 +33,20 @@ const DEFAULT_TIMEOUT_MS = 25_000;
 const BACKOFF_MS = 2_000;
 
 const EXPLAIN_DEFAULT_TIMEOUT_MS = 10_000;
+
+// E05 §4.3 / §6.3
+const PARSE_INTENT_TIMEOUT_MS = 8_000;
+const PARSE_INTENT_MAX_TOKENS = 200;
+const PARSE_INTENT_TEMPERATURE = 0;
+const ANSWER_TIMEOUT_MS = 10_000;
+const ANSWER_MAX_TOKENS = 350;
+const ANSWER_TEMPERATURE = 0.2;
+const ANSWER_TOP_K = 5;
+
+// Defaults heredados (extract / classify / explain): mantienen el comportamiento
+// previo al refactor de US-29 (temperature 0.1, max_tokens 1500).
+const DEFAULT_TEMPERATURE = 0.1;
+const DEFAULT_MAX_TOKENS = 1500;
 
 export class FoundryProvider implements IaProvider {
   private readonly client: OpenAI;
@@ -125,12 +140,45 @@ export class FoundryProvider implements IaProvider {
     });
   }
 
+  async parseIntent(question: string, opts: ParseIntentOpts): Promise<IaCallResult> {
+    // eslint-disable-next-line testing-library/render-result-naming-convention -- false positive: renderPrompt is a prompt-template renderer, not @testing-library/react
+    const systemPrompt = renderPrompt(opts.promptVersion as never, { question });
+    return this.callChat({
+      model: this.miniModel,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: question },
+      ],
+      timeoutMs: opts.timeoutMs ?? PARSE_INTENT_TIMEOUT_MS,
+      temperature: PARSE_INTENT_TEMPERATURE,
+      maxTokens: PARSE_INTENT_MAX_TOKENS,
+    });
+  }
+
   async answerWithContext(
-    _question: string,
-    _products: SavedProductLite[],
-    _opts: AnswerOpts,
+    question: string,
+    products: SavedProductLite[],
+    opts: AnswerOpts,
   ): Promise<IaCallResult> {
-    throw new Error('answerWithContext not implemented in FoundryProvider yet (US-29)');
+    // eslint-disable-next-line testing-library/render-result-naming-convention -- false positive: renderPrompt is a prompt-template renderer, not @testing-library/react
+    const systemPrompt = renderPrompt(opts.promptVersion as never, {
+      question,
+      products_json: JSON.stringify(products),
+      top_k: String(ANSWER_TOP_K),
+    });
+    return this.callChat({
+      model: this.miniModel,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        {
+          role: 'user',
+          content: 'Respondé la pregunta usando solo los productos del contexto.',
+        },
+      ],
+      timeoutMs: opts.timeoutMs ?? ANSWER_TIMEOUT_MS,
+      temperature: ANSWER_TEMPERATURE,
+      maxTokens: ANSWER_MAX_TOKENS,
+    });
   }
 
   /**
@@ -141,6 +189,10 @@ export class FoundryProvider implements IaProvider {
     model: string;
     messages: OpenAI.Chat.ChatCompletionMessageParam[];
     timeoutMs: number;
+    /** Opcional: defaults a 0.1 (extract/classify/explain). El chat lo sobreescribe. */
+    temperature?: number;
+    /** Opcional: defaults a 1500 (extract/classify/explain). El chat lo recorta. */
+    maxTokens?: number;
   }): Promise<IaCallResult> {
     let lastErr: unknown;
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -149,8 +201,8 @@ export class FoundryProvider implements IaProvider {
         const r = await this.client.chat.completions.create(
           {
             model: params.model,
-            max_tokens: 1500,
-            temperature: 0.1,
+            max_tokens: params.maxTokens ?? DEFAULT_MAX_TOKENS,
+            temperature: params.temperature ?? DEFAULT_TEMPERATURE,
             messages: params.messages,
           },
           { timeout: params.timeoutMs },

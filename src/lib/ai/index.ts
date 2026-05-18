@@ -58,5 +58,6 @@ export type {
   AnalyzeOpts,
   ExplainOpts,
   AnswerOpts,
+  ParseIntentOpts,
   SavedProductLite,
 } from './types';

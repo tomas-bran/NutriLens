@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   BLOCKED_PHRASES,
+  CHAT_DISCLAIMER_TAIL,
   DISCLAIMER_NEEDLE,
   DISCLAIMER_TAIL,
   REMOVED_MARKER,
@@ -97,5 +98,41 @@ describe('sanitizeExplanation — defensive', () => {
   it('returns the result text without trailing whitespace', () => {
     const out = sanitizeExplanation('Producto OK.\n');
     expect(out.text).toBe(out.text.trim());
+  });
+});
+
+describe('sanitizeExplanation — disclaimerTail override (E05 §6.1)', () => {
+  it('usa el tail provisto cuando el modelo no incluye el disclaimer', () => {
+    const out = sanitizeExplanation('Tenés 2 galletitas guardadas.', {
+      disclaimerTail: CHAT_DISCLAIMER_TAIL,
+    });
+    expect(out.text.endsWith(CHAT_DISCLAIMER_TAIL)).toBe(true);
+    expect(out.disclaimerAppended).toBe(true);
+  });
+
+  it('no agrega el tail override si el needle ya está presente en otro tail', () => {
+    // El modelo emite el tail "clásico" de explicación — el needle alcanza,
+    // no agregamos el tail del chat encima.
+    const out = sanitizeExplanation(
+      'Tenés 2 galletitas. Recordá que NutriLens es un asistente informativo.',
+      { disclaimerTail: CHAT_DISCLAIMER_TAIL },
+    );
+    expect(out.text).toContain('Recordá que NutriLens es un asistente informativo.');
+    expect(out.text).not.toContain('Basado en productos analizados');
+    expect(out.disclaimerAppended).toBe(false);
+  });
+
+  it('el tail del chat es idempotente (sanitize(sanitize(x)) === sanitize(x))', () => {
+    const once = sanitizeExplanation('No tengo información de eso.', {
+      disclaimerTail: CHAT_DISCLAIMER_TAIL,
+    }).text;
+    const twice = sanitizeExplanation(once, { disclaimerTail: CHAT_DISCLAIMER_TAIL }).text;
+    expect(twice).toBe(once);
+  });
+
+  it('cuando el raw está vacío, usa el tail del chat como respuesta completa', () => {
+    const out = sanitizeExplanation('', { disclaimerTail: CHAT_DISCLAIMER_TAIL });
+    expect(out.text).toBe(CHAT_DISCLAIMER_TAIL);
+    expect(out.disclaimerAppended).toBe(true);
   });
 });

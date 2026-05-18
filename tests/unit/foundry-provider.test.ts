@@ -247,6 +247,133 @@ describe('FoundryProvider.analyzeLabel — retry on 429/5xx (one attempt only)',
   });
 });
 
+describe('FoundryProvider.parseIntent (US-28 / E05 §4.3)', () => {
+  it('usa Phi-4-mini con temperature=0, max_tokens=200 y timeout=8s por default', async () => {
+    const create = vi.fn().mockResolvedValue(
+      okCompletion(
+        JSON.stringify({
+          kind: 'filter',
+          categoria: 'galletitas',
+          riesgo_max: null,
+          apto: 'celiaco',
+          alergeno_excluido: null,
+          keywords: [],
+          comparar: [],
+        }),
+      ),
+    );
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+
+    const r = await provider.parseIntent('mostrame galletitas aptas para celíacos', {
+      promptVersion: 'chat_parse_intent-v1',
+    });
+
+    expect(create).toHaveBeenCalledOnce();
+    const [body, reqOpts] = create.mock.calls[0] as [Record<string, unknown>, { timeout: number }];
+    expect(body).toMatchObject({
+      model: 'Phi-4-mini-instruct',
+      temperature: 0,
+      max_tokens: 200,
+    });
+    expect(reqOpts.timeout).toBe(8_000);
+    expect(JSON.parse(r.raw).kind).toBe('filter');
+  });
+
+  it('embebe la pregunta en el system prompt vía {{question}}', async () => {
+    const create = vi.fn().mockResolvedValue(okCompletion('{"kind":"unknown"}'));
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+    await provider.parseIntent('contame un chiste', { promptVersion: 'chat_parse_intent-v1' });
+    const [body] = create.mock.calls[0] as [Record<string, unknown>];
+    const messages = body.messages as Array<{ role: string; content: unknown }>;
+    expect(String(messages[0]?.content)).toContain('contame un chiste');
+  });
+
+  it('strips json fences del raw output del modelo', async () => {
+    const create = vi.fn().mockResolvedValue(okCompletion('```json\n{"kind":"unknown"}\n```'));
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+    const r = await provider.parseIntent('x', { promptVersion: 'chat_parse_intent-v1' });
+    expect(r.raw).toBe('{"kind":"unknown"}');
+  });
+
+  it('respeta timeoutMs custom de los opts', async () => {
+    const create = vi.fn().mockResolvedValue(okCompletion('{"kind":"unknown"}'));
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+    await provider.parseIntent('x', { promptVersion: 'chat_parse_intent-v1', timeoutMs: 3_000 });
+    const reqOpts = (create.mock.calls[0] as unknown[])[1] as { timeout: number };
+    expect(reqOpts.timeout).toBe(3_000);
+  });
+});
+
+describe('FoundryProvider.answerWithContext (US-29 / E05 §6.3)', () => {
+  const SAMPLE_PRODUCTS = [
+    {
+      id: 'p1',
+      nombre: 'Galletitas A',
+      categoria: 'galletitas',
+      riesgo: 'bajo',
+      alergenos: [],
+      sellos: [],
+    },
+    {
+      id: 'p2',
+      nombre: 'Galletitas B',
+      categoria: 'galletitas',
+      riesgo: 'medio',
+      alergenos: ['leche'],
+      sellos: ['exceso en azúcares'],
+    },
+  ];
+
+  it('usa Phi-4-mini con temperature=0.2, max_tokens=350 y timeout=10s por default', async () => {
+    const create = vi.fn().mockResolvedValue(okCompletion('Tenés 2 galletitas.'));
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+
+    await provider.answerWithContext('mostrame galletitas', SAMPLE_PRODUCTS, {
+      promptVersion: 'chat_answer-v1',
+    });
+
+    const [body, reqOpts] = create.mock.calls[0] as [Record<string, unknown>, { timeout: number }];
+    expect(body).toMatchObject({
+      model: 'Phi-4-mini-instruct',
+      temperature: 0.2,
+      max_tokens: 350,
+    });
+    expect(reqOpts.timeout).toBe(10_000);
+  });
+
+  it('interpola question, products_json y top_k en el system prompt', async () => {
+    const create = vi.fn().mockResolvedValue(okCompletion('ok'));
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+    await provider.answerWithContext('mostrame galletitas', SAMPLE_PRODUCTS, {
+      promptVersion: 'chat_answer-v1',
+    });
+    const [body] = create.mock.calls[0] as [Record<string, unknown>];
+    const systemContent = String((body.messages as Array<{ content: unknown }>)[0]?.content);
+    expect(systemContent).toContain('mostrame galletitas');
+    expect(systemContent).toContain('Galletitas A');
+    expect(systemContent).toContain('Galletitas B');
+    expect(systemContent).toContain('top 5');
+  });
+
+  it('respeta timeoutMs custom de los opts', async () => {
+    const create = vi.fn().mockResolvedValue(okCompletion('ok'));
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+    await provider.answerWithContext('q', [], {
+      promptVersion: 'chat_answer-v1',
+      timeoutMs: 4_500,
+    });
+    const reqOpts = (create.mock.calls[0] as unknown[])[1] as { timeout: number };
+    expect(reqOpts.timeout).toBe(4_500);
+  });
+
+  it('reporta tokens del modelo en usage', async () => {
+    const create = vi.fn().mockResolvedValue(okCompletion('Tenés 2 galletitas.'));
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+    const r = await provider.answerWithContext('q', [], { promptVersion: 'chat_answer-v1' });
+    expect(r.usage).toEqual({ in: 12, out: 7 });
+  });
+});
+
 describe('mapProviderError — error code mapping (spec E02 §7)', () => {
   it('maps APIConnectionTimeoutError → model_timeout 504', () => {
     const e = mapProviderError(new APIConnectionTimeoutError({ message: 'timeout' }));
