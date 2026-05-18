@@ -12,7 +12,9 @@ import { AllergenList } from './AllergenList';
 import { AptitudesChips } from './AptitudesChips';
 import { ExplanationCard } from './ExplanationCard';
 import { IngredientList } from './IngredientList';
+import { JsonViewer } from './JsonViewer';
 import { LowConfidenceBanner } from './LowConfidenceBanner';
+import { PipelineTrace } from './PipelineTrace';
 import { ProductImageCard } from './ProductImageCard';
 import { ResultHeader, type ResultHeaderBackAction } from './ResultHeader';
 import { RiskBanner } from './RiskBanner';
@@ -57,6 +59,14 @@ export function ResultView({ product, back, contextLabel }: ResultViewProps) {
           <IngredientList ingredients={product.ingredientes} />
         </div>
       </div>
+
+      {/*
+       * E06 §4 (US-34) + §3 (US-33): JSON crudo + pipeline trace, ambos
+       * colapsables. El JSON arriba porque el orden del spec §4 lo pone
+       * primero ("debajo de JSON extraído" para PipelineTrace, §3.1).
+       */}
+      <JsonViewer raw={product.jsonRaw} />
+      <PipelineTrace trace={product.pipelineTrace} />
 
       <footer className="mt-2 flex flex-col gap-4">
         <Disclaimer />
