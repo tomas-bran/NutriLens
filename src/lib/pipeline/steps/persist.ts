@@ -105,6 +105,21 @@ export async function persist(ctx: AnalysisContext): Promise<AnalysisContext> {
     throw err;
   }
 
+  // E06 §3 (US-33): el trace persistido en el row recién creado SÍ debe
+  // incluir el step `persist` (último paso del pipeline visible en la UI).
+  // Como en la inserción original `ctx.steps` todavía no tiene el entry de
+  // `persist` (es este step el que lo crea), hacemos un UPDATE chico que
+  // reemplaza `pipelineTrace` con el array completo. Una sola query extra a
+  // cambio de cumplir el AC §3 escenario 1.
+  const fullSteps = [
+    ...ctx.steps,
+    makeTrace('persist', 'ok', startedAt, { id: saved.id, imagenPath }),
+  ];
+  saved = await prisma.product.update({
+    where: { id: saved.id },
+    data: { pipelineTrace: JSON.stringify(fullSteps) },
+  });
+
   logger.info('persist.created', {
     requestId: ctx.requestId,
     productId: saved.id,
@@ -115,6 +130,6 @@ export async function persist(ctx: AnalysisContext): Promise<AnalysisContext> {
     ...ctx,
     saved,
     cachedFromDedup: false,
-    steps: [...ctx.steps, makeTrace('persist', 'ok', startedAt, { id: saved.id, imagenPath })],
+    steps: fullSteps,
   };
 }
