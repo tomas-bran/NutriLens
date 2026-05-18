@@ -16,6 +16,7 @@
 import type OpenAI from 'openai';
 import { APIError, APIConnectionTimeoutError } from 'openai';
 import { ApiError } from '@schemas/errors';
+import { logger } from '@/lib/logger';
 import type { ProductExtraction } from '@schemas/product';
 import { stripJsonFences } from './strip-json-fences';
 import { renderPrompt } from './prompts';
@@ -247,6 +248,16 @@ export function mapProviderError(err: unknown): ApiError {
   }
   if (err instanceof APIError) {
     const status = err.status ?? 500;
+    // Loguear el cuerpo del error (no PII — viene del proveedor) facilita
+    // diagnosticar 400 por param incompatible, deployment-name inválido,
+    // api-version, etc. El handler upstream ya redacta el message para el
+    // usuario.
+    logger.warn('ia.provider_error', {
+      status,
+      type: err.type,
+      code: err.code,
+      message: err.message,
+    });
     if (status === 429) {
       return new ApiError(
         'model_rate_limited',
