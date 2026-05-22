@@ -7,81 +7,78 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css"
-    />
-    <link
-      rel="preconnect"
-      href="https://fonts.googleapis.com"
-    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
       rel="stylesheet"
     />
 
     <style>
       :root {
         --bg: #ffffff;
-        --surface: #f7f8fa;
+        --bg-soft: #f7f8fa;
+        --bg-ink: #0a1a14;
+        --bg-ink-2: #0f2419;
+        --ink: #0c1814;
         --text: #1a1f2e;
         --text-muted: #6b7280;
         --border: #e4e7ec;
         --primary: #2eb67d;
         --primary-strong: #1f8e60;
         --primary-soft: #e6f5ee;
+        --lime: #c7f04a;
         --warning: #f2a526;
         --danger: #e5484d;
         --info: #3b82f6;
-        --muted: #9ca3af;
-        --risk-low: #2eb67d;
-        --risk-medium: #f2a526;
-        --risk-high: #e5484d;
 
-        --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+        --font-display: 'Space Grotesk', system-ui, sans-serif;
+        --font-sans: 'Inter', system-ui, sans-serif;
         --font-mono: 'JetBrains Mono', ui-monospace, monospace;
       }
 
       .reveal {
         font-family: var(--font-sans);
         color: var(--text);
-        font-size: 28px;
+        font-size: 26px;
         font-weight: 400;
+        font-feature-settings: 'cv11', 'ss01';
       }
       .reveal .slides {
         text-align: left;
       }
       .reveal section {
-        padding: 0 32px;
+        padding: 0 56px;
       }
       .reveal h1,
       .reveal h2,
       .reveal h3,
-      .reveal h4 {
-        font-family: var(--font-sans);
-        color: var(--text);
-        font-weight: 700;
-        letter-spacing: -0.02em;
+      .reveal h4,
+      .reveal h5 {
+        font-family: var(--font-display);
+        color: var(--ink);
+        font-weight: 600;
+        letter-spacing: -0.035em;
         text-transform: none;
-        margin: 0 0 24px 0;
-      }
-      .reveal h1 {
-        font-size: 3.2em;
+        margin: 0 0 18px 0;
         line-height: 1.05;
       }
+      .reveal h1 {
+        font-size: 5em;
+        font-weight: 700;
+        letter-spacing: -0.045em;
+      }
       .reveal h2 {
-        font-size: 2em;
-        line-height: 1.1;
+        font-size: 2.6em;
+        font-weight: 600;
       }
       .reveal h3 {
         font-size: 1.4em;
-        line-height: 1.15;
-        color: var(--text);
       }
       .reveal p,
       .reveal li {
-        line-height: 1.5;
+        line-height: 1.45;
       }
       .reveal a {
         color: var(--primary-strong);
@@ -94,18 +91,11 @@
         padding: 2px 8px;
         border-radius: 6px;
         font-size: 0.85em;
-      }
-      .reveal pre code {
-        background: #1a1f2e;
-        color: #e4e7ec;
-        padding: 16px 20px;
-        border-radius: 12px;
-        font-size: 0.6em;
-        line-height: 1.5;
+        font-weight: 500;
       }
       .reveal .progress {
         color: var(--primary);
-        height: 4px;
+        height: 3px;
       }
       .reveal .controls {
         color: var(--primary);
@@ -113,42 +103,120 @@
       .reveal .slide-number {
         background: transparent;
         color: var(--text-muted);
-        font-size: 14px;
+        font-size: 13px;
+        font-family: var(--font-mono);
       }
 
-      /* ---------- Shared chrome ---------- */
+      /* ============ INK SECTIONS (dark slides) ============ */
+      section.ink {
+        background: radial-gradient(
+            ellipse at top right,
+            rgba(46, 182, 125, 0.18) 0%,
+            transparent 55%
+          ),
+          radial-gradient(ellipse at bottom left, rgba(199, 240, 74, 0.1) 0%, transparent 50%),
+          var(--bg-ink);
+        color: #e6f5ee;
+      }
+      section.ink h1,
+      section.ink h2,
+      section.ink h3 {
+        color: #ffffff;
+      }
+      section.ink p,
+      section.ink li {
+        color: #cfe9d8;
+      }
+      section.ink .muted {
+        color: #7a9588 !important;
+      }
+      section.ink .stage-tag {
+        background: rgba(199, 240, 74, 0.18);
+        color: var(--lime);
+      }
+      section.ink .card {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+      }
+      section.ink .card h4 {
+        color: #fff;
+      }
+      section.ink .card p {
+        color: #a3c0b0;
+      }
+      section.ink code {
+        background: rgba(199, 240, 74, 0.15);
+        color: var(--lime);
+      }
+      section.ink .brand-bar {
+        color: #7a9588;
+      }
+      section.ink .brand-bar .dot {
+        background: var(--lime);
+        box-shadow: 0 0 0 4px rgba(199, 240, 74, 0.15);
+      }
+
+      /* ============ Shared chrome ============ */
       .brand-bar {
         position: absolute;
-        top: 24px;
-        left: 32px;
+        top: 30px;
+        left: 56px;
         display: flex;
         align-items: center;
         gap: 10px;
-        font-size: 16px;
+        font-family: var(--font-display);
+        font-size: 14px;
         font-weight: 600;
+        letter-spacing: 0.04em;
         color: var(--text-muted);
+        text-transform: uppercase;
       }
       .brand-bar .dot {
-        width: 10px;
-        height: 10px;
+        width: 8px;
+        height: 8px;
         border-radius: 50%;
         background: var(--primary);
         box-shadow: 0 0 0 4px var(--primary-soft);
       }
+      .stage-tag {
+        font-family: var(--font-display);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--primary-strong);
+        background: var(--primary-soft);
+        padding: 7px 14px;
+        border-radius: 9999px;
+        display: inline-block;
+        margin-bottom: 22px;
+      }
       .footnote {
         font-size: 14px;
         color: var(--text-muted);
-        font-style: italic;
+        font-style: normal;
       }
+      .muted {
+        color: var(--text-muted);
+      }
+
+      /* ============ Pills ============ */
       .pill {
-        display: inline-block;
-        padding: 4px 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
         background: var(--primary-soft);
         color: var(--primary-strong);
         border-radius: 9999px;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 600;
-        letter-spacing: 0.02em;
+        font-family: var(--font-display);
+      }
+      .pill.lime {
+        background: rgba(199, 240, 74, 0.22);
+        color: #5a7d0a;
       }
       .pill.warning {
         background: #fff3dd;
@@ -158,18 +226,16 @@
         background: #ffd9da;
         color: #b32d2f;
       }
-      .pill.info {
-        background: #dfe9ff;
-        color: #1d4ed8;
-      }
-      .pill.muted {
-        background: #eef0f3;
+      .pill.outline {
+        background: transparent;
+        border: 1px solid var(--border);
         color: var(--text-muted);
       }
 
+      /* ============ Grids & cards ============ */
       .grid {
         display: grid;
-        gap: 24px;
+        gap: 18px;
       }
       .grid-2 {
         grid-template-columns: 1fr 1fr;
@@ -182,840 +248,915 @@
       }
 
       .card {
-        background: var(--surface);
+        background: var(--bg-soft);
         border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 20px 22px;
-        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        border-radius: 18px;
+        padding: 22px 24px;
+        transition: all 0.25s ease;
       }
       .card:hover {
         border-color: var(--primary);
-        transform: translateY(-3px);
-        box-shadow: 0 10px 24px -16px rgba(46, 182, 125, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 12px 32px -20px rgba(46, 182, 125, 0.5);
       }
       .card h4 {
-        margin: 8px 0 6px 0;
-        font-size: 0.95em;
-        color: var(--text);
+        margin: 6px 0 6px 0;
+        font-size: 1em;
       }
       .card p {
         margin: 0;
-        font-size: 0.8em;
+        font-size: 0.78em;
         color: var(--text-muted);
-        line-height: 1.45;
-      }
-      .card .icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
-        background: var(--primary-soft);
-        color: var(--primary-strong);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        font-weight: 700;
+        line-height: 1.5;
       }
 
-      /* ---------- 1. Cover ---------- */
+      /* ============ 1. COVER ============ */
       .cover {
-        text-align: center;
+        text-align: left;
         position: relative;
+        overflow: hidden;
       }
       .cover-bg {
         position: absolute;
         inset: 0;
         background:
-          radial-gradient(
-            ellipse at top left,
-            var(--primary-soft) 0%,
-            transparent 50%
-          ),
-          radial-gradient(
-            ellipse at bottom right,
-            #fff4d8 0%,
-            transparent 55%
-          );
-        z-index: -1;
+          radial-gradient(ellipse 800px 600px at 80% 20%, rgba(46, 182, 125, 0.25), transparent 60%),
+          radial-gradient(ellipse 600px 500px at 20% 80%, rgba(199, 240, 74, 0.2), transparent 60%);
+        z-index: 0;
       }
-      .logo-mark {
+      .cover-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(46, 182, 125, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(46, 182, 125, 0.05) 1px, transparent 1px);
+        background-size: 40px 40px;
+        z-index: 0;
+        mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+      }
+      .cover-content {
+        position: relative;
+        z-index: 2;
+      }
+      .cover .badge {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        width: 96px;
-        height: 96px;
-        background: var(--primary);
-        border-radius: 28px;
-        box-shadow: 0 24px 48px -16px rgba(46, 182, 125, 0.5);
-        margin: 0 auto 32px;
-        animation: bob 4s ease-in-out infinite;
+        gap: 10px;
+        padding: 8px 16px 8px 8px;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 9999px;
+        font-family: var(--font-display);
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-muted);
+        margin-bottom: 30px;
+        box-shadow: 0 6px 20px -10px rgba(0, 0, 0, 0.1);
       }
-      .logo-mark svg {
-        width: 56px;
-        height: 56px;
+      .cover .badge .badge-icon {
+        width: 28px;
+        height: 28px;
+        background: var(--primary);
+        border-radius: 9999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         color: white;
       }
-      @keyframes bob {
-        0%,
-        100% {
-          transform: translateY(0);
-        }
-        50% {
-          transform: translateY(-8px);
-        }
-      }
       .cover h1 {
-        font-size: 4em;
-        text-align: center;
-        background: linear-gradient(120deg, var(--primary-strong), var(--primary));
+        font-size: 7em;
+        line-height: 0.95;
+        margin: 0 0 24px;
+        letter-spacing: -0.055em;
+      }
+      .cover h1 .accent {
+        background: linear-gradient(120deg, var(--primary-strong) 0%, var(--primary) 60%, #5fd99c 100%);
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
-        margin-bottom: 12px;
       }
       .cover .tagline {
-        text-align: center;
-        font-size: 1.1em;
-        color: var(--text-muted);
-        max-width: 760px;
-        margin: 0 auto 36px;
+        font-size: 1.15em;
+        max-width: 700px;
         line-height: 1.45;
+        color: var(--text);
+        margin-bottom: 36px;
       }
       .cover .meta {
         display: flex;
-        justify-content: center;
         gap: 16px;
         flex-wrap: wrap;
+        align-items: center;
+        font-family: var(--font-display);
+        font-size: 0.7em;
+      }
+      .cover .meta-divider {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--text-muted);
       }
 
-      /* ---------- Agenda ---------- */
+      /* ============ 2. AGENDA ============ */
       .agenda {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-        margin-top: 32px;
+        gap: 16px;
+        margin-top: 18px;
       }
       .agenda-item {
-        background: var(--surface);
-        border-radius: 18px;
-        padding: 24px 20px;
-        text-align: left;
+        background: white;
         border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 22px 22px 20px;
         position: relative;
         transition: all 0.25s ease;
       }
+      section.ink .agenda-item {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
       .agenda-item:hover {
         border-color: var(--primary);
-        background: var(--primary-soft);
+        transform: translateY(-4px);
       }
       .agenda-num {
-        position: absolute;
-        top: -14px;
-        left: 20px;
-        background: var(--primary);
-        color: white;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        font-family: var(--font-display);
+        font-size: 36px;
         font-weight: 700;
-        font-size: 14px;
+        color: var(--primary);
+        line-height: 1;
+        margin-bottom: 10px;
       }
       .agenda-item h4 {
-        margin-top: 8px;
-        font-size: 1em;
-        color: var(--text);
+        font-size: 0.95em;
+        margin-bottom: 4px;
       }
       .agenda-item p {
-        font-size: 0.7em;
+        font-size: 0.72em;
         color: var(--text-muted);
-        margin: 4px 0 0;
+        margin: 0;
         line-height: 1.4;
       }
 
-      /* ---------- Stage tags ---------- */
-      .stage-tag {
-        font-size: 13px;
-        font-weight: 700;
-        color: var(--primary-strong);
-        background: var(--primary-soft);
-        padding: 6px 14px;
-        border-radius: 9999px;
-        display: inline-block;
-        margin-bottom: 16px;
-        letter-spacing: 0.04em;
-      }
-
-      /* ---------- Problem callouts ---------- */
-      .problem-grid {
+      /* ============ 3. PROBLEM ============ */
+      .problem-hero {
         display: grid;
-        grid-template-columns: 1fr 1.1fr;
-        gap: 40px;
+        grid-template-columns: 1fr 1fr;
+        gap: 56px;
         align-items: center;
-        margin-top: 16px;
+        margin-top: 4px;
       }
-      .label-mock {
-        background: linear-gradient(180deg, #fff 0%, #f7f8fa 100%);
-        border-radius: 20px;
-        padding: 28px 24px;
-        border: 2px solid var(--border);
-        font-size: 0.7em;
-        line-height: 1.4;
+      .quote-block {
+        font-family: var(--font-display);
+        font-size: 1.5em;
+        font-weight: 500;
+        line-height: 1.25;
+        color: var(--ink);
+        letter-spacing: -0.02em;
+      }
+      .quote-block .accent {
+        color: var(--primary-strong);
         position: relative;
       }
-      .label-mock .seals {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 16px;
-      }
-      .label-mock .seal {
-        background: #000;
-        color: white;
-        font-size: 9px;
-        font-weight: 800;
-        padding: 4px 8px;
-        border-radius: 4px;
-        line-height: 1.1;
-        text-align: center;
-      }
-      .callout {
-        position: relative;
-        padding-left: 64px;
-        margin-bottom: 22px;
-      }
-      .callout::before {
-        content: attr(data-num);
+      .quote-block .accent::after {
+        content: '';
         position: absolute;
         left: 0;
-        top: 2px;
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        background: var(--primary);
-        color: white;
+        right: 0;
+        bottom: -2px;
+        height: 8px;
+        background: rgba(199, 240, 74, 0.6);
+        z-index: -1;
+        border-radius: 4px;
+      }
+      .pain-points {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .pain {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px 18px;
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+      }
+      .pain .ico {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: var(--primary-soft);
+        color: var(--primary-strong);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 700;
         font-size: 18px;
+        flex-shrink: 0;
       }
-      .callout h4 {
-        margin: 4px 0 6px;
-        font-size: 1em;
+      .pain h5 {
+        font-size: 0.9em;
+        margin: 0 0 2px;
       }
-      .callout p {
+      .pain p {
         margin: 0;
-        font-size: 0.78em;
+        font-size: 0.7em;
         color: var(--text-muted);
       }
 
-      /* ---------- Personas ---------- */
+      /* ============ 4. PERSONAS ============ */
       .personas {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 24px;
-        margin-top: 20px;
+        margin-top: 18px;
       }
       .persona {
-        background: var(--surface);
-        border-radius: 18px;
-        padding: 28px 22px;
-        text-align: center;
+        background: white;
         border: 1px solid var(--border);
+        border-radius: 22px;
+        padding: 30px 24px;
         transition: all 0.25s ease;
+        position: relative;
+        overflow: hidden;
+      }
+      .persona::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 140px;
+        height: 140px;
+        background: radial-gradient(circle, var(--primary-soft) 0%, transparent 70%);
+        z-index: 0;
       }
       .persona:hover {
-        transform: translateY(-4px);
         border-color: var(--primary);
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px -20px rgba(46, 182, 125, 0.3);
       }
-      .persona .avatar {
-        width: 88px;
-        height: 88px;
-        margin: 0 auto 14px;
-        border-radius: 50%;
-        background: var(--primary-soft);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 40px;
+      .persona > * {
+        position: relative;
+        z-index: 1;
+      }
+      .persona .emoji {
+        font-size: 56px;
+        line-height: 1;
+        margin-bottom: 16px;
+        display: block;
       }
       .persona h4 {
-        margin: 0 0 8px;
-        color: var(--primary-strong);
         font-size: 1em;
+        margin-bottom: 8px;
+        color: var(--ink);
       }
       .persona p {
-        font-size: 0.75em;
+        font-size: 0.78em;
         color: var(--text-muted);
-        margin: 0;
-        line-height: 1.45;
-      }
-
-      /* ---------- Storyboard ---------- */
-      .storyboard {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-        align-items: stretch;
-        margin-top: 24px;
-        position: relative;
-      }
-      .story-step {
-        background: var(--surface);
-        border-radius: 16px;
-        padding: 22px 18px;
-        border: 1px solid var(--border);
-        text-align: center;
-        position: relative;
-      }
-      .story-step .num {
-        position: absolute;
-        top: -16px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--primary);
-        color: white;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-      }
-      .story-step h4 {
-        margin: 8px 0 6px;
-        font-size: 0.9em;
-      }
-      .story-step p {
-        font-size: 0.7em;
-        color: var(--text-muted);
+        line-height: 1.5;
         margin: 0;
       }
-      .story-step .visual {
-        height: 110px;
-        background: white;
-        border-radius: 12px;
-        margin-bottom: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px dashed var(--border);
-        font-size: 32px;
-      }
 
-      /* ---------- MVP scope ---------- */
-      .scope {
+      /* ============ 5. SOLUTION (ink) ============ */
+      .solution-stage {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 24px;
-      }
-      .scope-col {
-        background: var(--surface);
-        border-radius: 16px;
-        padding: 22px;
-        border: 1px solid var(--border);
-      }
-      .scope-col.in {
-        border-color: var(--primary);
-        background: var(--primary-soft);
-      }
-      .scope-col h3 {
-        font-size: 1em;
-        margin-bottom: 12px;
-      }
-      .scope-col ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      .scope-col li {
-        font-size: 0.8em;
-        padding: 4px 0 4px 28px;
-        position: relative;
-        color: var(--text);
-        line-height: 1.35;
-      }
-      .scope-col.in li::before {
-        content: '✓';
-        position: absolute;
-        left: 0;
-        color: var(--primary-strong);
-        font-weight: 700;
-      }
-      .scope-col.out li::before {
-        content: '✗';
-        position: absolute;
-        left: 0;
-        color: var(--text-muted);
-      }
-
-      /* ---------- Wireframes interactive ---------- */
-      .wireframe-stage {
-        display: grid;
-        grid-template-columns: 1.2fr 1fr;
-        gap: 40px;
+        gap: 48px;
         align-items: center;
       }
-      .phone-frame {
-        width: 280px;
-        height: 560px;
-        background: #1a1f2e;
-        border-radius: 36px;
-        padding: 14px;
-        margin: 0 auto;
-        box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.3);
+      .solution-headline {
+        font-size: 2em;
+        font-family: var(--font-display);
+        font-weight: 500;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+        color: white;
+      }
+      .solution-headline .accent {
+        color: var(--lime);
+      }
+      .keywords {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .kw {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 20px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+      }
+      .kw .ico {
+        font-size: 28px;
+      }
+      .kw h5 {
+        margin: 0;
+        font-size: 0.9em;
+        color: white;
+      }
+      .kw p {
+        margin: 2px 0 0;
+        font-size: 0.7em;
+        color: #a3c0b0;
+      }
+
+      /* ============ Mockups ============ */
+      .laptop-mockup {
+        position: relative;
+        padding: 16px 16px 8px;
+        background: linear-gradient(180deg, #2a3942, #1a2530);
+        border-radius: 18px 18px 4px 4px;
+        box-shadow: 0 50px 80px -30px rgba(0, 0, 0, 0.5);
+      }
+      .laptop-mockup::before {
+        content: '';
+        position: absolute;
+        top: 6px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 5px;
+        background: #1a2530;
+        border-radius: 4px;
+      }
+      .laptop-mockup .screen {
+        background: white;
+        border-radius: 6px;
+        overflow: hidden;
+        line-height: 0;
+      }
+      .laptop-mockup .screen img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+      .laptop-base {
+        background: linear-gradient(180deg, #2a3942, #1a2530);
+        height: 14px;
+        border-radius: 0 0 12px 12px;
         position: relative;
       }
-      .phone-frame::before {
+      .laptop-base::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 30%;
+        height: 14px;
+        background: #1a2530;
+        border-radius: 0 0 14px 14px;
+      }
+
+      .phone-mockup {
+        width: 260px;
+        margin: 0 auto;
+        padding: 14px;
+        background: linear-gradient(180deg, #0c1814, #1a2530);
+        border-radius: 32px;
+        position: relative;
+        box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.4);
+      }
+      .phone-mockup::before {
         content: '';
         position: absolute;
         top: 22px;
         left: 50%;
         transform: translateX(-50%);
-        width: 80px;
-        height: 22px;
-        background: #1a1f2e;
-        border-radius: 12px;
+        width: 78px;
+        height: 20px;
+        background: #0c1814;
+        border-radius: 10px;
         z-index: 2;
       }
-      .phone-screen {
-        width: 100%;
-        height: 100%;
+      .phone-mockup .screen {
         background: white;
-        border-radius: 24px;
+        border-radius: 22px;
         overflow: hidden;
+        line-height: 0;
+      }
+      .phone-mockup .screen img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      /* ============ STORYBOARD ============ */
+      .storyboard {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+        margin-top: 16px;
         position: relative;
       }
-      .screen {
-        position: absolute;
-        inset: 0;
-        padding: 36px 18px 14px;
-        font-size: 11px;
-        line-height: 1.3;
-        color: var(--text);
-        opacity: 0;
-        transition: opacity 0.4s ease;
-      }
-      .screen.active {
-        opacity: 1;
-      }
-      .screen header {
-        font-size: 14px;
-        font-weight: 700;
-        margin-bottom: 12px;
-        color: var(--text);
-      }
-      .screen .sub {
-        font-size: 9px;
-        color: var(--text-muted);
-        margin-bottom: 14px;
-      }
-      .screen .dropzone {
-        border: 2px dashed var(--border);
-        border-radius: 12px;
-        padding: 26px 12px;
-        text-align: center;
-        background: var(--surface);
-        margin-bottom: 14px;
-      }
-      .screen .dropzone .ico {
-        font-size: 26px;
-      }
-      .screen .dropzone .label {
-        font-size: 10px;
-        color: var(--text-muted);
-        margin-top: 8px;
-      }
-      .screen .cta {
-        background: var(--primary);
-        color: white;
-        text-align: center;
-        padding: 10px;
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: 11px;
-      }
-      .screen .row {
-        display: flex;
-        gap: 6px;
-        margin-bottom: 8px;
-        align-items: center;
-      }
-      .screen .badge {
-        padding: 3px 8px;
-        border-radius: 9999px;
-        font-size: 8px;
-        font-weight: 700;
-      }
-      .screen .badge.high {
-        background: #ffd9da;
-        color: #b32d2f;
-      }
-      .screen .badge.med {
-        background: #fff3dd;
-        color: #b06f00;
-      }
-      .screen .badge.low {
-        background: var(--primary-soft);
-        color: var(--primary-strong);
-      }
-      .screen .badge.chip {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        color: var(--text);
-      }
-      .screen .product-card {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: var(--surface);
-        border-radius: 10px;
-        padding: 10px;
-        margin-bottom: 8px;
-      }
-      .screen .product-thumb {
-        width: 36px;
-        height: 36px;
-        background: linear-gradient(135deg, #fff4d8, #e6f5ee);
-        border-radius: 8px;
-      }
-      .screen .product-info {
-        flex: 1;
-      }
-      .screen .product-name {
-        font-weight: 600;
-        font-size: 10px;
-      }
-      .screen .product-meta {
-        font-size: 8px;
-        color: var(--text-muted);
-      }
-      .screen .chat-bubble {
-        padding: 8px 10px;
-        border-radius: 12px;
-        margin-bottom: 6px;
-        font-size: 10px;
-        max-width: 75%;
-      }
-      .screen .chat-bubble.user {
-        background: var(--primary);
-        color: white;
-        margin-left: auto;
-        border-bottom-right-radius: 4px;
-      }
-      .screen .chat-bubble.bot {
-        background: var(--surface);
-        border-bottom-left-radius: 4px;
-      }
-      .screen .disclaimer {
-        font-size: 8px;
-        color: var(--text-muted);
-        margin-top: 8px;
-        font-style: italic;
-      }
-      .screen-tabs {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-      .screen-tab {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 14px 18px;
-        cursor: pointer;
-        text-align: left;
-        font-size: 0.85em;
-        transition: all 0.2s ease;
-        color: inherit;
-        font-family: inherit;
-      }
-      .screen-tab:hover {
-        border-color: var(--primary);
-      }
-      .screen-tab.active {
-        background: var(--primary-soft);
-        border-color: var(--primary);
-      }
-      .screen-tab .tab-num {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
+      .story-step {
         background: white;
-        color: var(--primary-strong);
+        border-radius: 18px;
+        padding: 20px;
+        border: 1px solid var(--border);
+        position: relative;
+      }
+      .story-step .num {
+        position: absolute;
+        top: -14px;
+        left: 20px;
+        font-family: var(--font-display);
         font-weight: 700;
+        font-size: 14px;
+        background: var(--primary);
+        color: white;
+        padding: 5px 14px;
+        border-radius: 9999px;
+        letter-spacing: 0.04em;
+      }
+      .story-step h4 {
+        font-size: 0.95em;
+        margin: 10px 0 8px;
+      }
+      .story-step p {
+        font-size: 0.72em;
+        color: var(--text-muted);
+        margin: 0;
+        line-height: 1.5;
+      }
+      .story-step .visual {
+        height: 130px;
+        background: linear-gradient(135deg, var(--primary-soft) 0%, #fff4d8 100%);
+        border-radius: 12px;
+        margin-bottom: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 12px;
-        border: 1px solid var(--border);
-        flex-shrink: 0;
+        font-size: 56px;
+        line-height: 1;
+        position: relative;
+        overflow: hidden;
       }
-      .screen-tab.active .tab-num {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
+      .story-step .visual::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: linear-gradient(rgba(46, 182, 125, 0.08) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(46, 182, 125, 0.08) 1px, transparent 1px);
+        background-size: 20px 20px;
       }
-      .screen-tab .tab-text {
-        flex: 1;
-      }
-      .screen-tab .tab-text h5 {
-        margin: 0 0 2px;
-        font-size: 1em;
-        color: var(--text);
-      }
-      .screen-tab .tab-text p {
-        margin: 0;
-        font-size: 0.78em;
-        color: var(--text-muted);
+      .story-step .visual > * {
+        position: relative;
+        z-index: 1;
       }
 
-      /* ---------- Design system tokens ---------- */
-      .ds-grid {
+      /* ============ Scope ============ */
+      .scope {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 24px;
-        margin-top: 20px;
+        gap: 22px;
+        margin-top: 18px;
       }
-      .swatches {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-      }
-      .swatch {
-        border-radius: 12px;
-        padding: 16px 12px 10px;
-        color: white;
-        font-size: 0.7em;
-      }
-      .swatch .name {
-        font-weight: 700;
-        margin-bottom: 4px;
-      }
-      .swatch .hex {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        opacity: 0.9;
-      }
-      .components-demo {
-        background: var(--surface);
-        border-radius: 16px;
-        padding: 20px;
+      .scope-col {
+        background: white;
+        border-radius: 18px;
+        padding: 24px 26px;
         border: 1px solid var(--border);
       }
-      .components-demo .row {
-        display: flex;
-        gap: 8px;
+      .scope-col.in {
+        background: linear-gradient(180deg, var(--primary-soft) 0%, white 60%);
+        border-color: var(--primary);
+      }
+      .scope-col h3 {
+        font-size: 1.1em;
         margin-bottom: 14px;
-        flex-wrap: wrap;
+        display: flex;
         align-items: center;
+        gap: 10px;
       }
-      .components-demo .btn {
-        padding: 8px 14px;
-        border-radius: 10px;
-        font-size: 0.7em;
-        font-weight: 600;
+      .scope-col .icon-tag {
+        font-family: var(--font-display);
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 6px;
       }
-      .btn.primary {
+      .scope-col.in .icon-tag {
         background: var(--primary);
         color: white;
       }
-      .btn.ghost {
-        background: white;
-        border: 1px solid var(--border);
+      .scope-col.out .icon-tag {
+        background: var(--bg-soft);
+        color: var(--text-muted);
       }
-      .btn.danger {
-        background: var(--danger);
+      .scope-col ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px 18px;
+      }
+      .scope-col li {
+        font-size: 0.75em;
+        padding: 4px 0 4px 22px;
+        position: relative;
+        line-height: 1.4;
+      }
+      .scope-col.in li::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 9px;
+        width: 12px;
+        height: 12px;
+        background: var(--primary);
+        border-radius: 50%;
+      }
+      .scope-col.out li::before {
+        content: '';
+        position: absolute;
+        left: 2px;
+        top: 11px;
+        width: 8px;
+        height: 8px;
+        background: transparent;
+        border: 1.5px solid var(--text-muted);
+        border-radius: 50%;
+      }
+
+      /* ============ App showcase ============ */
+      .showcase {
+        display: grid;
+        grid-template-columns: 1.6fr 1fr;
+        gap: 32px;
+        align-items: center;
+        margin-top: 12px;
+      }
+      .showcase-laptop {
+        max-width: 720px;
+      }
+      .showcase-phone {
+        margin-left: auto;
+      }
+      .showcase-text h2 {
+        font-size: 2.2em;
+      }
+      .showcase-text p {
+        font-size: 0.95em;
+        color: var(--text-muted);
+        line-height: 1.6;
+        max-width: 480px;
+      }
+      .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 18px 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .feature-list li {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        font-size: 0.85em;
+      }
+      .feature-list li::before {
+        content: '';
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        background: var(--primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+      .feature-list li {
+        position: relative;
+      }
+      .feature-list li::after {
+        content: '✓';
+        position: absolute;
+        left: 4px;
+        top: 50%;
+        transform: translateY(-50%);
         color: white;
+        font-size: 11px;
+        font-weight: 700;
       }
 
-      /* ---------- Architecture diagram ---------- */
-      .arch-svg {
-        width: 100%;
-        max-height: 480px;
+      /* ============ Architecture SVG ============ */
+      .arch-wrap {
+        background: white;
+        border-radius: 18px;
+        padding: 24px;
+        border: 1px solid var(--border);
+        margin-top: 10px;
+      }
+      section.ink .arch-wrap {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.1);
       }
 
-      /* ---------- Pipeline ---------- */
+      /* ============ Pipeline ============ */
       .pipeline {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 14px;
-        margin-top: 16px;
+        margin-top: 14px;
       }
       .pipe-step {
-        background: var(--surface);
+        background: white;
         border: 1px solid var(--border);
         border-radius: 14px;
-        padding: 16px 14px;
+        padding: 18px 16px;
         position: relative;
+        transition: all 0.25s ease;
+      }
+      .pipe-step:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+      }
+      section.ink .pipe-step {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.12);
       }
       .pipe-step .pnum {
         position: absolute;
-        top: -12px;
+        top: -10px;
         left: 14px;
-        background: var(--primary);
-        color: white;
-        font-size: 11px;
+        font-family: var(--font-display);
         font-weight: 700;
+        font-size: 11px;
+        background: var(--ink);
+        color: var(--lime);
         padding: 3px 9px;
         border-radius: 9999px;
+        letter-spacing: 0.06em;
       }
       .pipe-step h5 {
-        margin: 8px 0 4px;
         font-size: 0.85em;
-        color: var(--text);
+        margin: 8px 0 4px;
       }
       .pipe-step .meta {
-        font-size: 0.65em;
+        font-size: 0.62em;
         color: var(--text-muted);
         font-family: var(--font-mono);
+        letter-spacing: 0.04em;
+      }
+      section.ink .pipe-step .meta {
+        color: #a3c0b0;
       }
       .pipe-step p {
         font-size: 0.7em;
         color: var(--text-muted);
-        margin: 6px 0 0;
-        line-height: 1.4;
+        margin: 8px 0 0;
+        line-height: 1.45;
+      }
+      section.ink .pipe-step p {
+        color: #a3c0b0;
       }
 
-      /* ---------- Stack ---------- */
+      /* ============ Stack tiles ============ */
       .stack-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 18px;
-        margin-top: 18px;
+        gap: 14px;
+        margin-top: 14px;
       }
       .stack-tile {
-        background: var(--surface);
+        background: var(--bg-soft);
         border: 1px solid var(--border);
         border-radius: 14px;
         padding: 18px;
         text-align: left;
-        transition: all 0.2s ease;
+        transition: all 0.25s ease;
+      }
+      section.ink .stack-tile {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.1);
       }
       .stack-tile:hover {
         border-color: var(--primary);
-        background: white;
-        box-shadow: 0 12px 24px -16px rgba(46, 182, 125, 0.4);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 24px -16px rgba(46, 182, 125, 0.4);
       }
       .stack-tile .ico {
-        font-size: 28px;
+        font-size: 26px;
+        line-height: 1;
       }
       .stack-tile h5 {
-        margin: 10px 0 4px;
+        margin: 12px 0 4px;
         font-size: 0.9em;
       }
       .stack-tile p {
         margin: 0;
         font-size: 0.7em;
         color: var(--text-muted);
+        line-height: 1.45;
+      }
+      section.ink .stack-tile h5 {
+        color: white;
+      }
+      section.ink .stack-tile p {
+        color: #a3c0b0;
       }
 
-      /* ---------- Timeline ---------- */
-      .timeline {
-        position: relative;
+      /* ============ Sprints DONE ============ */
+      .sprints {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
-        gap: 18px;
-        margin-top: 32px;
+        gap: 16px;
+        margin-top: 14px;
+        position: relative;
       }
-      .timeline::before {
+      .sprints::before {
         content: '';
         position: absolute;
-        top: 18px;
-        left: 6%;
-        right: 6%;
-        height: 3px;
-        background: var(--border);
+        top: 28px;
+        left: 8%;
+        right: 8%;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary) 0%, var(--primary) 100%);
+        border-radius: 4px;
         z-index: 0;
       }
-      .tl-step {
+      .sprint-box {
         position: relative;
         text-align: center;
         z-index: 1;
+        background: transparent;
       }
-      .tl-step .marker {
-        width: 38px;
-        height: 38px;
+      .sprint-box .marker {
+        width: 56px;
+        height: 56px;
         border-radius: 50%;
-        background: white;
-        border: 3px solid var(--primary);
-        color: var(--primary-strong);
+        background: var(--primary);
+        color: white;
+        font-family: var(--font-display);
         font-weight: 700;
-        font-size: 13px;
+        font-size: 18px;
         margin: 0 auto 14px;
         display: flex;
         align-items: center;
         justify-content: center;
+        position: relative;
+        box-shadow: 0 8px 20px -8px rgba(46, 182, 125, 0.6);
       }
-      .tl-step.done .marker {
-        background: var(--primary);
-        color: white;
+      .sprint-box .marker::after {
+        content: '✓';
+        position: absolute;
+        right: -4px;
+        bottom: -4px;
+        width: 22px;
+        height: 22px;
+        background: var(--lime);
+        color: var(--ink);
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
       }
-      .tl-step h5 {
-        margin: 0 0 6px;
+      .sprint-box h5 {
         font-size: 0.9em;
+        margin: 0 0 4px;
       }
-      .tl-step p {
+      .sprint-box p {
         font-size: 0.7em;
         color: var(--text-muted);
         margin: 0;
-        line-height: 1.4;
+        line-height: 1.35;
       }
 
-      /* ---------- Counters ---------- */
+      /* ============ SDLC table ============ */
+      .sdlc-table {
+        display: grid;
+        grid-template-columns: 0.8fr 1fr 1.2fr;
+        gap: 0;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+        margin-top: 10px;
+        font-size: 0.78em;
+      }
+      .sdlc-table > div {
+        padding: 12px 18px;
+        background: white;
+        border-bottom: 1px solid var(--border);
+      }
+      .sdlc-table > div:nth-last-child(-n + 3) {
+        border-bottom: 0;
+      }
+      .sdlc-table .head {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 0.85em;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        background: var(--ink);
+        color: white;
+        border-bottom: 0;
+      }
+      .sdlc-table .stage {
+        font-family: var(--font-display);
+        font-weight: 600;
+        background: var(--primary-soft);
+        color: var(--primary-strong);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .sdlc-table .tool {
+        font-family: var(--font-mono);
+        font-size: 0.95em;
+      }
+      .sdlc-table .desc {
+        color: var(--text-muted);
+        line-height: 1.45;
+      }
+      .sdlc-table .highlight {
+        background: linear-gradient(180deg, #fff4d8 0%, white 100%);
+        font-weight: 600;
+        color: var(--ink) !important;
+      }
+
+      /* ============ Counters ============ */
       .counters {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 18px;
-        margin-top: 24px;
+        margin-top: 18px;
       }
       .counter {
-        text-align: center;
-        background: var(--surface);
+        text-align: left;
+        background: white;
         border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 22px 14px;
+        border-radius: 18px;
+        padding: 26px 22px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.25s ease;
+      }
+      .counter:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+      }
+      .counter::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 80%;
+        height: 200%;
+        background: radial-gradient(circle, var(--primary-soft) 0%, transparent 70%);
+      }
+      .counter > * {
+        position: relative;
       }
       .counter .num {
-        font-size: 2.6em;
-        font-weight: 800;
+        font-family: var(--font-display);
+        font-size: 3.6em;
+        font-weight: 700;
         color: var(--primary-strong);
         line-height: 1;
+        letter-spacing: -0.04em;
       }
       .counter .label {
-        font-size: 0.75em;
+        font-family: var(--font-display);
+        font-size: 0.72em;
         color: var(--text-muted);
-        margin-top: 8px;
+        margin-top: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 600;
       }
 
-      /* ---------- Test pyramid ---------- */
+      /* ============ Pyramid ============ */
       .pyramid {
-        position: relative;
         max-width: 380px;
-        margin: 20px auto 0;
       }
       .pyramid-row {
-        margin: 0 auto 8px;
-        padding: 18px 16px;
+        margin: 0 auto 6px;
+        padding: 16px 18px;
         text-align: center;
         color: white;
+        font-family: var(--font-display);
         font-weight: 600;
         font-size: 0.85em;
         border-radius: 10px;
       }
       .pyramid-row.top {
-        width: 40%;
+        width: 50%;
         background: var(--danger);
       }
       .pyramid-row.mid {
-        width: 65%;
+        width: 72%;
         background: var(--warning);
       }
       .pyramid-row.base {
@@ -1023,25 +1164,84 @@
         background: var(--primary);
       }
       .pyramid-row .qty {
-        font-size: 0.7em;
+        font-size: 0.65em;
         opacity: 0.85;
         display: block;
         font-weight: 400;
         margin-top: 2px;
+        font-family: var(--font-sans);
       }
 
-      /* ---------- Retro ---------- */
+      /* ============ Problems & solutions ============ */
+      .ps-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        margin-top: 14px;
+      }
+      .ps-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 22px 24px;
+        position: relative;
+      }
+      .ps-card .head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      .ps-card .head .badge {
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        padding: 4px 10px;
+        border-radius: 6px;
+        text-transform: uppercase;
+        background: #ffd9da;
+        color: #b32d2f;
+      }
+      .ps-card h4 {
+        font-size: 1em;
+        margin: 0;
+      }
+      .ps-card .problem {
+        font-size: 0.8em;
+        color: var(--text);
+        margin-bottom: 12px;
+        line-height: 1.5;
+      }
+      .ps-card .solution {
+        background: var(--primary-soft);
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: 0.78em;
+        color: var(--ink);
+        line-height: 1.5;
+        border-left: 3px solid var(--primary);
+      }
+      .ps-card .solution::before {
+        content: '→ ';
+        color: var(--primary-strong);
+        font-weight: 700;
+        font-family: var(--font-display);
+      }
+
+      /* ============ Retro ============ */
       .retro {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 18px;
-        margin-top: 18px;
+        margin-top: 14px;
       }
       .retro-col {
-        background: var(--surface);
-        border-radius: 16px;
-        padding: 22px 20px;
-        border-top: 6px solid var(--primary);
+        background: white;
+        border-radius: 18px;
+        padding: 24px 24px;
+        border: 1px solid var(--border);
+        border-top: 5px solid var(--primary);
       }
       .retro-col.bad {
         border-top-color: var(--warning);
@@ -1050,8 +1250,14 @@
         border-top-color: var(--info);
       }
       .retro-col h4 {
-        font-size: 1em;
-        margin-bottom: 12px;
+        font-size: 0.95em;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .retro-col h4 .emoji {
+        font-size: 1.2em;
       }
       .retro-col ul {
         list-style: none;
@@ -1060,84 +1266,102 @@
       }
       .retro-col li {
         font-size: 0.75em;
-        padding: 6px 0 6px 22px;
+        padding: 6px 0 6px 18px;
         position: relative;
-        color: var(--text);
-        line-height: 1.4;
+        line-height: 1.45;
       }
       .retro-col li::before {
-        content: '◆';
+        content: '';
         position: absolute;
         left: 0;
-        color: var(--primary);
-        font-size: 0.8em;
+        top: 13px;
+        width: 8px;
+        height: 8px;
+        background: var(--primary);
+        border-radius: 50%;
       }
       .retro-col.bad li::before {
-        color: var(--warning);
+        background: var(--warning);
       }
       .retro-col.next li::before {
-        color: var(--info);
+        background: var(--info);
       }
 
-      /* ---------- Closing ---------- */
+      /* ============ Closing (ink) ============ */
       .closing {
         text-align: center;
+        position: relative;
+      }
+      .closing-bg {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 700px 500px at 50% 30%, rgba(46, 182, 125, 0.35), transparent 60%),
+          radial-gradient(ellipse 500px 400px at 50% 90%, rgba(199, 240, 74, 0.2), transparent 60%);
+        z-index: 0;
+      }
+      .closing-content {
+        position: relative;
+        z-index: 1;
       }
       .closing h1 {
-        font-size: 4.5em;
-        margin: 0 0 16px;
-        background: linear-gradient(120deg, var(--primary-strong), var(--primary));
+        font-size: 8em;
+        color: white;
+        line-height: 0.95;
+        margin: 0 0 18px;
+        letter-spacing: -0.05em;
+      }
+      .closing h1 .accent {
+        background: linear-gradient(120deg, var(--lime), var(--primary), #5fd99c);
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
       }
-      .closing .qr {
-        margin: 32px auto 0;
-        width: 200px;
-        height: 200px;
-        background: white;
-        border: 8px solid var(--text);
-        border-radius: 16px;
+      .closing .sub {
+        font-size: 1.2em;
+        color: #a3c0b0;
+        max-width: 720px;
+        margin: 0 auto 36px;
+        line-height: 1.4;
+      }
+      .closing .signature {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 22px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 9999px;
+        backdrop-filter: blur(10px);
+        font-family: var(--font-display);
+      }
+      .closing .signature .logo-mini {
+        width: 28px;
+        height: 28px;
+        background: var(--primary);
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: var(--font-mono);
-        color: var(--text-muted);
-        font-size: 12px;
-        position: relative;
+        color: white;
+        font-weight: 700;
+        font-size: 14px;
       }
-      .closing .qr-grid {
-        display: grid;
-        grid-template-columns: repeat(8, 1fr);
-        gap: 2px;
-        width: 160px;
-        height: 160px;
-      }
-      .closing .qr-cell {
-        background: var(--text);
-        border-radius: 2px;
+      .closing .signature span {
+        color: white;
+        font-size: 0.65em;
+        letter-spacing: 0.05em;
       }
 
-      /* ---------- Page index ---------- */
-      section[data-state='cover'] .page-num {
-        display: none;
-      }
-
-      /* ---------- Animations ---------- */
+      /* ============ Fragments ============ */
       .reveal .fragment.fade-up {
         opacity: 0;
         transform: translateY(20px);
-        transition: all 0.4s ease;
+        transition: all 0.5s ease;
       }
       .reveal .fragment.fade-up.visible {
         opacity: 1;
         transform: translateY(0);
-      }
-
-      .arrow {
-        color: var(--primary);
-        font-weight: 700;
-        font-size: 24px;
       }
     </style>
   </head>
@@ -1146,1109 +1370,896 @@
     <div class="reveal">
       <div class="slides">
         <!-- ============================================================
-             1. PORTADA
+             1. COVER
         ============================================================ -->
-        <section data-state="cover" class="cover">
+        <section class="cover" data-transition="fade">
           <div class="cover-bg"></div>
-          <div class="logo-mark">
-            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M16 4 C 9 4, 4 9, 4 16 C 4 23, 9 28, 16 28 C 23 28, 28 23, 28 16 C 28 12, 26 9, 23 7 L 21 9 C 23 11, 24 13, 24 16 C 24 20, 20 24, 16 24 C 12 24, 8 20, 8 16 C 8 12, 12 8, 16 8 L 16 4 Z"
-                fill="currentColor"
-              />
-              <circle cx="22" cy="10" r="3" fill="currentColor" />
-            </svg>
+          <div class="cover-grid"></div>
+          <div class="cover-content">
+            <div class="badge">
+              <span class="badge-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    stroke="white"
+                    stroke-width="2.5"
+                  />
+                  <circle cx="12" cy="12" r="3" fill="white" />
+                </svg>
+              </span>
+              TP Integrador · IA Aplicada · UNLaM
+            </div>
+            <h1>
+              Entendé qué<br />comés, en <span class="accent">segundos</span>.
+            </h1>
+            <p class="tagline">
+              Sacale una foto a la etiqueta y NutriLens te muestra alérgenos, sellos y
+              riesgo en lenguaje claro. Asistente informativo con IA multimodal.
+            </p>
+            <div class="meta">
+              <span class="muted">Equipo NutriLens</span>
+              <span class="meta-divider"></span>
+              <span class="muted">2026</span>
+              <span class="meta-divider"></span>
+              <span class="muted">Prof. Damián Montefiori</span>
+            </div>
           </div>
-          <h1>NutriLens</h1>
-          <p class="tagline">
-            Asistente informativo que analiza etiquetas alimentarias con IA multimodal,
-            clasifica riesgos con reglas propias y permite consultar productos guardados
-            con RAG.
-          </p>
-          <div class="meta">
-            <span class="pill">Trabajo Práctico Integrador</span>
-            <span class="pill muted">IA Aplicada · UNLaM</span>
-            <span class="pill warning">Prof. Damián Montefiori</span>
-          </div>
-          <p style="margin-top: 40px; color: var(--text-muted); font-size: 0.8em">
-            Equipo NutriLens · 2026
-          </p>
         </section>
 
         <!-- ============================================================
              2. AGENDA
         ============================================================ -->
-        <section>
+        <section class="ink">
           <div class="brand-bar"><span class="dot"></span>NutriLens</div>
-          <span class="stage-tag">QUÉ VAMOS A VER</span>
-          <h2>Recorrido de hoy</h2>
-          <p style="color: var(--text-muted); margin-bottom: 12px">
-            Cómo pensamos, diseñamos y construimos NutriLens aplicando todo el ciclo de vida del software.
-          </p>
+          <span class="stage-tag">Recorrido</span>
+          <h2>Lo que vamos a recorrer hoy</h2>
           <div class="agenda">
             <div class="agenda-item">
-              <div class="agenda-num">1</div>
-              <h4>El problema y los usuarios</h4>
-              <p>Etiquetas confusas, restricciones alimentarias, intolerancias.</p>
+              <div class="agenda-num">01</div>
+              <h4>Problema y usuarios</h4>
+              <p>Etiquetas confusas, tres perfiles que las viven distinto.</p>
             </div>
             <div class="agenda-item">
-              <div class="agenda-num">2</div>
-              <h4>La solución y el MVP</h4>
-              <p>Qué demuestra NutriLens y qué deliberadamente queda fuera.</p>
+              <div class="agenda-num">02</div>
+              <h4>Solución y MVP</h4>
+              <p>Qué resuelve, qué entró y qué quedó deliberadamente afuera.</p>
             </div>
             <div class="agenda-item">
-              <div class="agenda-num">3</div>
-              <h4>Diseño UX y wireframes</h4>
-              <p>Pencil + design system con paleta propia.</p>
+              <div class="agenda-num">03</div>
+              <h4>Diseño y app real</h4>
+              <p>De wireframe en Pencil a app corriendo con paleta propia.</p>
             </div>
             <div class="agenda-item">
-              <div class="agenda-num">4</div>
+              <div class="agenda-num">04</div>
               <h4>Arquitectura e IA</h4>
-              <p>Next.js + Azure AI Foundry + pipeline observable.</p>
+              <p>Next.js + Phi-4 vía Azure AI Foundry + pipeline observable.</p>
             </div>
             <div class="agenda-item">
-              <div class="agenda-num">5</div>
-              <h4>SDLC, calidad y eval</h4>
-              <p>Sprints, tests, coverage threshold y eval del modelo.</p>
+              <div class="agenda-num">05</div>
+              <h4>SDLC con IA</h4>
+              <p>Cómo la IA estuvo en cada etapa, no solo en el producto.</p>
             </div>
             <div class="agenda-item">
-              <div class="agenda-num">6</div>
-              <h4>Resultados y retro</h4>
-              <p>Qué aprendimos y qué viene después del MVP.</p>
+              <div class="agenda-num">06</div>
+              <h4>Calidad y retro</h4>
+              <p>Tests, eval del modelo y qué nos llevamos del proceso.</p>
             </div>
           </div>
         </section>
 
         <!-- ============================================================
-             3. EL PROBLEMA
+             3. PROBLEM
         ============================================================ -->
         <section>
           <div class="brand-bar"><span class="dot"></span>NutriLens</div>
-          <span class="stage-tag">ANÁLISIS · EL PROBLEMA</span>
-          <h2>Las etiquetas alimentarias son difíciles de interpretar</h2>
-          <div class="problem-grid">
-            <div class="label-mock">
-              <div style="font-weight: 700; font-size: 1.1em; margin-bottom: 10px">
-                Galletitas Choco Crunch
-              </div>
-              <div class="seals">
-                <div class="seal">EXCESO<br />EN<br />AZÚCARES</div>
-                <div class="seal">EXCESO<br />EN GRASAS<br />SATURADAS</div>
-              </div>
-              <div style="margin-bottom: 8px"><b>Ingredientes:</b></div>
-              <div style="color: var(--text-muted); margin-bottom: 12px">
-                Harina de trigo, azúcar, aceite vegetal, cacao, leche en polvo,
-                lecitina de soja, aromatizantes, saborizantes idénticos al natural,
-                emulsionantes (E471, E322), antioxidantes (E306).
-              </div>
-              <div style="font-size: 0.85em; color: var(--text-muted)">
-                Contiene: gluten, leche, soja. Puede contener trazas de frutos secos.
-              </div>
-            </div>
+          <span class="stage-tag">El problema</span>
+          <div class="problem-hero">
             <div>
-              <div class="callout" data-num="1">
-                <h4>Información técnica densa</h4>
-                <p>Listas largas, códigos E, jerga química. Hay que leer todo para entender una cosa.</p>
+              <div class="quote-block">
+                Las etiquetas alimentarias están escritas para auditores,<br />
+                <span class="accent">no para personas</span>.
               </div>
-              <div class="callout" data-num="2">
-                <h4>Restricciones invisibles</h4>
-                <p>¿Es apto celíaco? ¿Tiene lácteos ocultos? Requiere mirar tres lugares distintos.</p>
+              <p class="footnote" style="margin-top: 24px">
+                Información densa, ingredientes con códigos, sellos sin contexto.
+                Decidir si un producto es apto requiere mirar tres lugares distintos
+                del paquete.
+              </p>
+            </div>
+            <div class="pain-points">
+              <div class="pain">
+                <div class="ico">📋</div>
+                <div>
+                  <h5>Información densa</h5>
+                  <p>Listas largas, códigos E, jerga química.</p>
+                </div>
               </div>
-              <div class="callout" data-num="3">
-                <h4>Sellos sin contexto</h4>
-                <p>Los sellos de advertencia son binarios. No siempre se entiende qué significan.</p>
+              <div class="pain">
+                <div class="ico">🌾</div>
+                <div>
+                  <h5>Restricciones invisibles</h5>
+                  <p>Gluten, lactosa, origen animal escondidos en ingredientes.</p>
+                </div>
+              </div>
+              <div class="pain">
+                <div class="ico">⚠️</div>
+                <div>
+                  <h5>Sellos sin contexto</h5>
+                  <p>Advertencias binarias que no explican el por qué.</p>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         <!-- ============================================================
-             4. USUARIOS OBJETIVO
+             4. USUARIOS
         ============================================================ -->
         <section>
           <div class="brand-bar"><span class="dot"></span>NutriLens</div>
-          <span class="stage-tag">ANÁLISIS · A QUIÉN AYUDAMOS</span>
-          <h2>Tres perfiles de usuario</h2>
+          <span class="stage-tag">A quién ayudamos</span>
+          <h2>Tres personas, un mismo flujo</h2>
           <div class="personas">
             <div class="persona">
-              <div class="avatar">🛒</div>
+              <span class="emoji">🛒</span>
               <h4>Usuario general</h4>
-              <p>
-                Quiere entender rápido qué hay dentro de un producto sin tener que leer
-                todo el dorso del paquete.
-              </p>
+              <p>Quiere entender rápido qué hay en un producto sin leer todo el dorso.</p>
             </div>
             <div class="persona">
-              <div class="avatar">🌾</div>
+              <span class="emoji">🌾</span>
               <h4>Con restricciones</h4>
-              <p>
-                Celíaco, intolerante a la lactosa, vegano. Necesita detectar
-                incompatibilidades sin equivocarse.
-              </p>
+              <p>Celíaco, intolerante a la lactosa o vegano. Necesita detectar incompatibilidades sin equivocarse.</p>
             </div>
             <div class="persona">
-              <div class="avatar">⚖️</div>
+              <span class="emoji">⚖️</span>
               <h4>Comparador</h4>
-              <p>
-                Tiene varios productos en el historial y quiere elegir cuál conviene
-                más. Pregunta por chat.
-              </p>
+              <p>Tiene varios productos guardados y quiere elegir. Le pregunta al chat.</p>
             </div>
           </div>
-          <p
-            class="footnote"
-            style="text-align: center; margin-top: 32px"
-          >
-            Tres perfiles → un mismo flujo: subir foto, leer el análisis, opcional
-            consultar el historial.
-          </p>
         </section>
 
         <!-- ============================================================
-             5. LA SOLUCIÓN
+             5. SOLUCIÓN (ink)
         ============================================================ -->
-        <section>
+        <section class="ink">
           <div class="brand-bar"><span class="dot"></span>NutriLens</div>
-          <span class="stage-tag">LA SOLUCIÓN</span>
-          <h2 style="margin-bottom: 36px">
-            NutriLens es un<br /><span style="color: var(--primary-strong)">asistente informativo</span> sobre alimentos
-          </h2>
-          <div
-            style="
-              background: var(--primary-soft);
-              border-radius: 20px;
-              padding: 32px 36px;
-              border-left: 6px solid var(--primary);
-              font-size: 1.1em;
-              line-height: 1.55;
-            "
-          >
-            Una app web que analiza la <b>etiqueta de un producto</b> desde una
-            <b>foto o PDF</b>, extrae sus datos con
-            <b>IA multimodal</b>, clasifica el riesgo y aptitud aplicando
-            <b>reglas propias</b>, y permite <b>consultar el historial</b> en
-            lenguaje natural con un chat de tipo RAG.
+          <span class="stage-tag">La solución</span>
+          <div class="solution-stage">
+            <div>
+              <h2 class="solution-headline">
+                Una foto.<br />Análisis con IA.<br />
+                <span class="accent">Lenguaje claro.</span>
+              </h2>
+              <p class="muted" style="margin-top: 24px; font-size: 0.95em">
+                NutriLens es un <b style="color: white">asistente informativo</b>: no
+                reemplaza a un nutricionista, pero te dice de un vistazo si un
+                producto es compatible con vos.
+              </p>
+            </div>
+            <div class="keywords">
+              <div class="kw">
+                <span class="ico">📸</span>
+                <div>
+                  <h5>Subís foto o PDF</h5>
+                  <p>Cliente y servidor validan antes de gastar tokens.</p>
+                </div>
+              </div>
+              <div class="kw">
+                <span class="ico">🧠</span>
+                <div>
+                  <h5>IA multimodal + reglas propias</h5>
+                  <p>Phi-4 extrae, nuestras reglas clasifican aptitud y riesgo.</p>
+                </div>
+              </div>
+              <div class="kw">
+                <span class="ico">💬</span>
+                <div>
+                  <h5>Chat RAG sobre tu historial</h5>
+                  <p>"Mostrame galletitas aptas para celíacos" → respuesta real.</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <p
-            class="footnote"
-            style="margin-top: 24px; font-style: normal; font-size: 0.85em"
-          >
-            <b style="color: var(--text)">No reemplaza a un profesional de nutrición.</b>
-            Es un asistente que ayuda a entender la información visible en la etiqueta.
-          </p>
         </section>
 
         <!-- ============================================================
-             6. CASO DE USO CENTRAL — Storyboard
+             6. STORYBOARD
         ============================================================ -->
         <section>
           <div class="brand-bar"><span class="dot"></span>NutriLens</div>
-          <span class="stage-tag">CASO DE USO CENTRAL</span>
-          <h2>El flujo end-to-end en 3 pasos</h2>
+          <span class="stage-tag">El flujo, en 3 pasos</span>
+          <h2>Cómo se siente usar NutriLens</h2>
           <div class="storyboard">
             <div class="story-step">
-              <div class="num">1</div>
+              <span class="num">01</span>
               <div class="visual">📷</div>
-              <h4>Sacás foto a la etiqueta</h4>
-              <p>JPG, PNG o PDF. Validamos en cliente y servidor antes de gastar tokens.</p>
+              <h4>Sacás foto</h4>
+              <p>JPG, PNG o PDF. La app valida tipo, tamaño y hash antes de mandar nada al modelo.</p>
             </div>
             <div class="story-step">
-              <div class="num">2</div>
-              <div class="visual">🧠</div>
-              <h4>IA + reglas propias</h4>
-              <p>
-                Phi-4-multimodal extrae JSON, validamos schema, aplicamos
-                reglas de aptitud y calculamos riesgo.
-              </p>
-            </div>
-            <div class="story-step">
-              <div class="num">3</div>
+              <span class="num">02</span>
               <div class="visual">✨</div>
+              <h4>Analiza con IA</h4>
+              <p>Phi-4-multimodal extrae datos. Nuestras reglas calculan aptitud y riesgo.</p>
+            </div>
+            <div class="story-step">
+              <span class="num">03</span>
+              <div class="visual">🎯</div>
               <h4>Ves el análisis</h4>
-              <p>
-                Riesgo, aptitudes, alérgenos, explicación simple. Se guarda en
-                tu historial.
-              </p>
+              <p>Riesgo, alérgenos, sellos y explicación en lenguaje claro. Se guarda en tu historial.</p>
             </div>
           </div>
-          <div
-            style="
-              margin-top: 32px;
-              background: var(--surface);
-              border-radius: 14px;
-              padding: 16px 20px;
-              display: flex;
-              align-items: center;
-              gap: 14px;
-            "
-          >
-            <span style="font-size: 28px">💬</span>
+        </section>
+
+        <!-- ============================================================
+             7. APP REAL — HOME
+        ============================================================ -->
+        <section>
+          <div class="brand-bar"><span class="dot"></span>NutriLens</div>
+          <span class="stage-tag">La app · Home</span>
+          <div class="showcase">
+            <div class="laptop-mockup showcase-laptop">
+              <div class="screen">
+                <img src="assets/app-home-desktop.png" alt="Home de NutriLens" />
+              </div>
+            </div>
+            <div class="laptop-base"></div>
+            <div class="showcase-text">
+              <h2>Una bienvenida<br />que invita a tirar la foto.</h2>
+              <p>
+                Hero grande, los 3 pasos explicados sin friction, ejemplos de qué
+                fotos sirven y acceso directo al historial.
+              </p>
+              <ul class="feature-list">
+                <li>Sidebar con navegación principal</li>
+                <li>Hero verde con CTA destacado</li>
+                <li>Cards "Cómo funciona" + "Ejemplos válidos"</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             8. APP REAL — RESULTADO
+        ============================================================ -->
+        <section>
+          <div class="brand-bar"><span class="dot"></span>NutriLens</div>
+          <span class="stage-tag">La app · Análisis procesado</span>
+          <div class="showcase" style="grid-template-columns: 1fr 1.6fr">
+            <div class="showcase-text">
+              <h2>Toda la info<br />en una pantalla.</h2>
+              <p>
+                Riesgo arriba con color, aptitudes vegano/celíaco/sin lactosa con
+                chips, explicación humana, alérgenos, sellos detectados e
+                ingredientes.
+              </p>
+              <ul class="feature-list">
+                <li>Badge de riesgo con motivo expandido</li>
+                <li>Sellos negros estilo etiquetado argentino</li>
+                <li>Confianza visible del modelo</li>
+              </ul>
+            </div>
             <div>
-              <h4 style="margin: 0; font-size: 0.95em">Bonus: chat con RAG</h4>
-              <p style="margin: 4px 0 0; font-size: 0.75em; color: var(--text-muted)">
-                "Mostrame galletitas aptas para celíacos" → respuesta fundamentada
-                solo en tu historial.
+              <div class="laptop-mockup">
+                <div class="screen">
+                  <img src="assets/app-result-desktop.png" alt="Resultado del análisis" />
+                </div>
+              </div>
+              <div class="laptop-base"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             9. APP REAL — HISTORIAL + CHAT
+        ============================================================ -->
+        <section>
+          <div class="brand-bar"><span class="dot"></span>NutriLens</div>
+          <span class="stage-tag">La app · Historial + Chat</span>
+          <h2>Y todo lo que ya analizaste, al alcance.</h2>
+          <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 32px; margin-top: 14px; align-items: center">
+            <div>
+              <div class="laptop-mockup">
+                <div class="screen">
+                  <img src="assets/app-history-desktop.png" alt="Historial filtrable" />
+                </div>
+              </div>
+              <div class="laptop-base"></div>
+              <p
+                class="footnote"
+                style="margin-top: 14px; text-align: center; font-size: 0.85em"
+              >
+                Historial con filtros por categoría, riesgo, aptitudes y alérgenos
+              </p>
+            </div>
+            <div>
+              <div class="phone-mockup">
+                <div class="screen">
+                  <img src="assets/app-chat-mobile.png" alt="Chat RAG en mobile" />
+                </div>
+              </div>
+              <p
+                class="footnote"
+                style="margin-top: 14px; text-align: center; font-size: 0.85em"
+              >
+                Chat con RAG · responde solo con productos tuyos
               </p>
             </div>
           </div>
         </section>
 
         <!-- ============================================================
-             7. ALCANCE DEL MVP
+             10. MVP SCOPE
         ============================================================ -->
         <section>
           <div class="brand-bar"><span class="dot"></span>NutriLens</div>
-          <span class="stage-tag">ANÁLISIS · ALCANCE</span>
-          <h2>Lo que entra al MVP y lo que queda afuera</h2>
+          <span class="stage-tag">Alcance del MVP</span>
+          <h2>Lo que entró · lo que quedó afuera</h2>
           <div class="scope">
             <div class="scope-col in">
-              <h3>✓ Dentro del MVP</h3>
+              <h3><span class="icon-tag">DENTRO</span></h3>
               <ul>
-                <li>Upload de imagen o PDF con validación</li>
-                <li>Filtro previo "¿es etiqueta?" con IA</li>
-                <li>Extracción multimodal → JSON estructurado</li>
-                <li>Reglas propias: aptitud + riesgo</li>
-                <li>Explicación en lenguaje claro</li>
+                <li>Upload imagen / PDF</li>
+                <li>Filtro "¿es etiqueta?"</li>
+                <li>Extracción multimodal</li>
+                <li>Reglas de aptitud</li>
+                <li>Cálculo de riesgo</li>
+                <li>Explicación clara</li>
                 <li>Disclaimer obligatorio</li>
-                <li>Persistencia en Postgres + historial filtrable</li>
-                <li>Chat RAG sobre productos guardados</li>
-                <li>Pipeline del análisis visible</li>
-                <li>Design system + responsive</li>
+                <li>Historial filtrable</li>
+                <li>Chat RAG</li>
+                <li>Pipeline visible</li>
+                <li>Design system</li>
+                <li>Responsive</li>
               </ul>
             </div>
             <div class="scope-col out">
-              <h3>✗ Fuera del MVP (bonus)</h3>
+              <h3><span class="icon-tag">AFUERA</span></h3>
               <ul>
-                <li>Diagnóstico médico o consejos clínicos</li>
+                <li>Diagnóstico médico</li>
+                <li>Recomendaciones clínicas</li>
                 <li>Escaneo de código de barras</li>
                 <li>App móvil nativa</li>
-                <li>Auth y registro de usuarios</li>
-                <li>Planes nutricionales personalizados</li>
-                <li>Búsqueda vectorial (embeddings)</li>
-                <li>Integración live con Open Food Facts</li>
-                <li>Modo oscuro / internacionalización</li>
-                <li>Audio resumen / generación de etiquetas</li>
-                <li>Deploy productivo a Azure</li>
+                <li>Login / registro</li>
+                <li>Planes nutricionales</li>
+                <li>Búsqueda vectorial</li>
+                <li>Open Food Facts live</li>
+                <li>Modo oscuro</li>
+                <li>i18n</li>
+                <li>Audio resumen</li>
+                <li>Deploy a Azure</li>
               </ul>
             </div>
           </div>
         </section>
 
         <!-- ============================================================
-             8. WIREFRAMES INTERACTIVOS
+             11. ARQUITECTURA
         ============================================================ -->
-        <section>
+        <section class="ink">
           <div class="brand-bar"><span class="dot"></span>NutriLens</div>
-          <span class="stage-tag">DISEÑO · WIREFRAMES INTERACTIVOS</span>
-          <h2>Cuatro pantallas, un mismo flujo</h2>
-          <div class="wireframe-stage">
-            <div>
-              <div class="phone-frame">
-                <div class="phone-screen">
-                  <!-- Upload screen -->
-                  <div class="screen active" data-screen="upload">
-                    <header>Analizar producto</header>
-                    <div class="sub">Subí una foto o PDF de la etiqueta</div>
-                    <div class="dropzone">
-                      <div class="ico">📷</div>
-                      <div class="label">Tocá para tomar foto<br />o seleccionar archivo</div>
-                    </div>
-                    <div class="cta">Analizar</div>
-                    <div class="disclaimer">
-                      NutriLens es un asistente informativo.
-                    </div>
-                  </div>
+          <span class="stage-tag">Arquitectura</span>
+          <h2>Cómo está armado por dentro</h2>
+          <div class="arch-wrap">
+            <svg viewBox="0 0 1180 360" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto">
+              <defs>
+                <marker id="arrow-w" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+                  <path d="M0,0 L10,5 L0,10 z" fill="#c7f04a" />
+                </marker>
+              </defs>
 
-                  <!-- Result screen -->
-                  <div class="screen" data-screen="result">
-                    <header>Galletitas Choco Crunch</header>
-                    <div class="sub">Categoría: galletitas · hace 2 min</div>
-                    <div class="row">
-                      <span class="badge high">RIESGO ALTO</span>
-                      <span class="badge chip">confidence 0.94</span>
-                    </div>
-                    <div style="margin: 10px 0">
-                      <div class="row">
-                        <span class="badge chip">✗ Vegano</span>
-                        <span class="badge chip">✗ Celíaco</span>
-                        <span class="badge chip">✗ Sin lactosa</span>
-                      </div>
-                    </div>
-                    <div style="font-size: 9px; color: var(--text-muted); margin-bottom: 8px">
-                      <b>Alérgenos:</b> gluten, leche
-                    </div>
-                    <div style="font-size: 9px; color: var(--text-muted); margin-bottom: 8px">
-                      <b>Sellos:</b> exceso en azúcares, en grasas saturadas
-                    </div>
-                    <div
-                      style="
-                        background: var(--surface);
-                        padding: 8px;
-                        border-radius: 8px;
-                        font-size: 9px;
-                        line-height: 1.4;
-                      "
-                    >
-                      Contiene gluten y leche. Tiene sellos de exceso, conviene moderar.
-                    </div>
-                  </div>
+              <rect x="20" y="30" width="200" height="90" rx="14" fill="rgba(255,255,255,0.06)" stroke="#c7f04a" stroke-width="1.5" />
+              <text x="120" y="62" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="18" fill="#fff">Browser</text>
+              <text x="120" y="84" text-anchor="middle" font-family="Inter" font-size="12" fill="#a3c0b0">Next.js · React 19</text>
+              <text x="120" y="102" text-anchor="middle" font-family="Inter" font-size="11" fill="#a3c0b0">Mobile + Desktop</text>
 
-                  <!-- History screen -->
-                  <div class="screen" data-screen="history">
-                    <header>Historial</header>
-                    <div class="sub">12 productos analizados</div>
-                    <div class="row" style="margin-bottom: 10px">
-                      <span class="badge chip">Categoría ▾</span>
-                      <span class="badge chip">Riesgo ▾</span>
-                    </div>
-                    <div class="product-card">
-                      <div class="product-thumb"></div>
-                      <div class="product-info">
-                        <div class="product-name">Galletitas Choco</div>
-                        <div class="product-meta">galletitas · hace 2 min</div>
-                      </div>
-                      <span class="badge high">ALTO</span>
-                    </div>
-                    <div class="product-card">
-                      <div class="product-thumb"></div>
-                      <div class="product-info">
-                        <div class="product-name">Leche La Serenísima</div>
-                        <div class="product-meta">lácteos · ayer</div>
-                      </div>
-                      <span class="badge med">MEDIO</span>
-                    </div>
-                    <div class="product-card">
-                      <div class="product-thumb"></div>
-                      <div class="product-info">
-                        <div class="product-name">Galletitas Sin TACC</div>
-                        <div class="product-meta">galletitas · 2 días</div>
-                      </div>
-                      <span class="badge low">BAJO</span>
-                    </div>
-                  </div>
+              <rect x="290" y="30" width="240" height="160" rx="14" fill="rgba(46,182,125,0.12)" stroke="#2eb67d" stroke-width="1.5" />
+              <text x="410" y="62" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="18" fill="#fff">Next.js API Routes</text>
+              <text x="410" y="86" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#c7f04a">POST /api/analyze</text>
+              <text x="410" y="106" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#c7f04a">GET /api/products</text>
+              <text x="410" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#c7f04a">POST /api/chat</text>
+              <text x="410" y="156" text-anchor="middle" font-family="Inter" font-size="11" fill="#a3c0b0">Zod · pipeline · logging</text>
+              <text x="410" y="174" text-anchor="middle" font-family="Inter" font-size="11" fill="#a3c0b0">Node 20 runtime</text>
 
-                  <!-- Chat screen -->
-                  <div class="screen" data-screen="chat">
-                    <header>Chat sobre tus productos</header>
-                    <div class="sub">Pregunta sobre tu historial</div>
-                    <div class="chat-bubble user">¿Qué galletitas tengo aptas para celíacos?</div>
-                    <div class="chat-bubble bot">
-                      Tenés 2 galletitas que parecen aptas: Sin TACC Marca X (bajo
-                      riesgo) y Arroz Marca Y (medio).
-                    </div>
-                    <div class="row" style="margin-top: 8px">
-                      <span class="badge chip">Sin TACC Marca X</span>
-                      <span class="badge chip">Arroz Marca Y</span>
-                    </div>
-                    <div class="disclaimer">
-                      Basado en productos analizados por vos.
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+              <rect x="600" y="30" width="240" height="160" rx="14" fill="rgba(199,240,74,0.1)" stroke="#c7f04a" stroke-width="1.5" />
+              <text x="720" y="62" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="18" fill="#c7f04a">IaProvider</text>
+              <text x="720" y="92" text-anchor="middle" font-family="Inter" font-size="12" fill="#fff">FoundryProvider · Phi-4</text>
+              <text x="720" y="112" text-anchor="middle" font-family="Inter" font-size="12" fill="#fff">MockIaProvider · dev/CI</text>
+              <text x="720" y="132" text-anchor="middle" font-family="Inter" font-size="12" fill="#fff">AzureOpenAIProvider · futuro</text>
+              <text x="720" y="170" text-anchor="middle" font-family="Inter" font-size="11" fill="#a3c0b0">Switch por IA_PROVIDER env</text>
 
-            <div>
-              <div class="screen-tabs">
-                <button class="screen-tab active" data-target="upload">
-                  <div class="tab-num">1</div>
-                  <div class="tab-text">
-                    <h5>Upload</h5>
-                    <p>Foto o PDF + validación + estado claro.</p>
-                  </div>
-                </button>
-                <button class="screen-tab" data-target="result">
-                  <div class="tab-num">2</div>
-                  <div class="tab-text">
-                    <h5>Resultado del análisis</h5>
-                    <p>Riesgo, aptitudes, alérgenos, sellos, explicación.</p>
-                  </div>
-                </button>
-                <button class="screen-tab" data-target="history">
-                  <div class="tab-num">3</div>
-                  <div class="tab-text">
-                    <h5>Historial filtrable</h5>
-                    <p>Cards con filtros por categoría, riesgo y alérgeno.</p>
-                  </div>
-                </button>
-                <button class="screen-tab" data-target="chat">
-                  <div class="tab-num">4</div>
-                  <div class="tab-text">
-                    <h5>Chat RAG</h5>
-                    <p>Preguntás en lenguaje natural sobre tu historial.</p>
-                  </div>
-                </button>
-              </div>
-              <p class="footnote" style="margin-top: 20px; text-align: right">
-                Wireframes diseñados en Pencil · click para cambiar pantalla
-              </p>
-            </div>
+              <rect x="910" y="30" width="240" height="160" rx="14" fill="rgba(255,255,255,0.06)" stroke="#c7f04a" stroke-width="1.5" stroke-dasharray="6 4" />
+              <text x="1030" y="62" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="18" fill="#fff">Azure AI Foundry</text>
+              <text x="1030" y="92" text-anchor="middle" font-family="Inter" font-size="13" fill="#c7f04a">Phi-4-multimodal</text>
+              <text x="1030" y="112" text-anchor="middle" font-family="Inter" font-size="13" fill="#c7f04a">Phi-4-mini</text>
+              <text x="1030" y="170" text-anchor="middle" font-family="Inter" font-size="11" fill="#a3c0b0">OpenAI-compatible API</text>
+
+              <rect x="20" y="260" width="200" height="80" rx="14" fill="rgba(255,255,255,0.06)" stroke="#5fd99c" stroke-width="1.5" />
+              <text x="120" y="294" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="16" fill="#fff">PostgreSQL 16</text>
+              <text x="120" y="316" text-anchor="middle" font-family="Inter" font-size="11" fill="#a3c0b0">Prisma · Docker</text>
+
+              <rect x="290" y="260" width="240" height="80" rx="14" fill="rgba(255,255,255,0.06)" stroke="#5fd99c" stroke-width="1.5" />
+              <text x="410" y="294" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="16" fill="#fff">Storage de imágenes</text>
+              <text x="410" y="316" text-anchor="middle" font-family="Inter" font-size="11" fill="#a3c0b0">Filesystem dev · Blob demo</text>
+
+              <rect x="600" y="260" width="240" height="80" rx="14" fill="rgba(255,255,255,0.06)" stroke="#5fd99c" stroke-width="1.5" />
+              <text x="720" y="294" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="16" fill="#fff">Eval Harness</text>
+              <text x="720" y="316" text-anchor="middle" font-family="Inter" font-size="11" fill="#a3c0b0">Dataset · métricas · reports</text>
+
+              <line x1="220" y1="75" x2="290" y2="75" stroke="#c7f04a" stroke-width="1.5" marker-end="url(#arrow-w)" />
+              <line x1="530" y1="110" x2="600" y2="110" stroke="#c7f04a" stroke-width="1.5" marker-end="url(#arrow-w)" />
+              <line x1="840" y1="110" x2="910" y2="110" stroke="#c7f04a" stroke-width="1.5" marker-end="url(#arrow-w)" />
+              <line x1="410" y1="190" x2="120" y2="260" stroke="#5fd99c" stroke-width="1.5" marker-end="url(#arrow-w)" />
+              <line x1="410" y1="190" x2="410" y2="260" stroke="#5fd99c" stroke-width="1.5" marker-end="url(#arrow-w)" />
+              <line x1="410" y1="190" x2="720" y2="260" stroke="#5fd99c" stroke-width="1.5" marker-end="url(#arrow-w)" />
+            </svg>
           </div>
         </section>
 
         <!-- ============================================================
-             9. DESIGN SYSTEM
+             12. PIPELINE
         ============================================================ -->
         <section>
           <div class="brand-bar"><span class="dot"></span>NutriLens</div>
-          <span class="stage-tag">DISEÑO · DESIGN SYSTEM</span>
-          <h2>Tokens y componentes propios</h2>
-          <div class="ds-grid">
-            <div>
-              <h3 style="font-size: 1em; margin-bottom: 12px">Paleta de marca</h3>
-              <div class="swatches">
-                <div class="swatch" style="background: #2eb67d">
-                  <div class="name">primary</div>
-                  <div class="hex">#2EB67D</div>
-                </div>
-                <div class="swatch" style="background: #1f8e60">
-                  <div class="name">primary-strong</div>
-                  <div class="hex">#1F8E60</div>
-                </div>
-                <div class="swatch" style="background: #e6f5ee; color: #1f8e60">
-                  <div class="name">primary-soft</div>
-                  <div class="hex">#E6F5EE</div>
-                </div>
-                <div class="swatch" style="background: #2eb67d">
-                  <div class="name">risk · bajo</div>
-                  <div class="hex">#2EB67D</div>
-                </div>
-                <div class="swatch" style="background: #f2a526">
-                  <div class="name">risk · medio</div>
-                  <div class="hex">#F2A526</div>
-                </div>
-                <div class="swatch" style="background: #e5484d">
-                  <div class="name">risk · alto</div>
-                  <div class="hex">#E5484D</div>
-                </div>
-              </div>
-              <p class="footnote" style="margin-top: 18px">
-                Tokens definidos como CSS vars en <code>src/tokens/</code> y
-                referenciados desde Tailwind.
-              </p>
-            </div>
-            <div>
-              <h3 style="font-size: 1em; margin-bottom: 12px">Componentes base</h3>
-              <div class="components-demo">
-                <div class="row">
-                  <span class="btn primary">Analizar producto</span>
-                  <span class="btn ghost">Volver</span>
-                  <span class="btn danger">Eliminar</span>
-                </div>
-                <div class="row">
-                  <span class="badge high">ALTO</span>
-                  <span class="badge med">MEDIO</span>
-                  <span class="badge low">BAJO</span>
-                  <span class="badge chip">categoría</span>
-                </div>
-                <div class="row">
-                  <span class="badge chip">✓ Vegano</span>
-                  <span class="badge chip">✗ Celíaco</span>
-                  <span class="badge chip">gluten</span>
-                  <span class="badge chip">leche</span>
-                </div>
-                <div
-                  style="
-                    background: white;
-                    border: 1px solid var(--border);
-                    border-radius: 12px;
-                    padding: 12px;
-                    margin-top: 8px;
-                    font-size: 0.75em;
-                  "
-                >
-                  <div style="font-weight: 600">Card · Producto</div>
-                  <div style="color: var(--text-muted); margin-top: 2px">
-                    galletitas · hace 2 min
-                  </div>
-                </div>
-              </div>
-              <p class="footnote" style="margin-top: 14px">
-                <code>Button</code>, <code>Card</code>, <code>Badge</code>,
-                <code>Chip</code>, <code>Disclaimer</code>, <code>ErrorState</code>,
-                <code>EmptyState</code>.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <!-- ============================================================
-             10. ARQUITECTURA
-        ============================================================ -->
-        <section>
-          <div class="brand-bar"><span class="dot"></span>NutriLens</div>
-          <span class="stage-tag">DISEÑO TÉCNICO · ARQUITECTURA</span>
-          <h2>Arquitectura del sistema</h2>
-          <svg class="arch-svg" viewBox="0 0 1200 480" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-                <path d="M0,0 L10,5 L0,10 z" fill="#2eb67d" />
-              </marker>
-            </defs>
-
-            <!-- Browser -->
-            <rect x="40" y="40" width="220" height="100" rx="14" fill="#f7f8fa" stroke="#2eb67d" stroke-width="2" />
-            <text x="150" y="76" text-anchor="middle" font-family="Inter" font-weight="700" font-size="20" fill="#1a1f2e">Browser</text>
-            <text x="150" y="102" text-anchor="middle" font-family="Inter" font-size="14" fill="#6b7280">Next.js · React 19 · Tailwind</text>
-            <text x="150" y="122" text-anchor="middle" font-family="Inter" font-size="13" fill="#9ca3af">Mobile + Desktop responsive</text>
-
-            <!-- Next.js backend -->
-            <rect x="320" y="40" width="260" height="160" rx="14" fill="#e6f5ee" stroke="#2eb67d" stroke-width="2" />
-            <text x="450" y="74" text-anchor="middle" font-family="Inter" font-weight="700" font-size="20" fill="#1f8e60">Next.js · API Routes</text>
-            <text x="450" y="100" text-anchor="middle" font-family="Inter" font-size="13" fill="#1a1f2e">POST /api/analyze</text>
-            <text x="450" y="120" text-anchor="middle" font-family="Inter" font-size="13" fill="#1a1f2e">GET /api/products</text>
-            <text x="450" y="140" text-anchor="middle" font-family="Inter" font-size="13" fill="#1a1f2e">GET /api/products/[id]</text>
-            <text x="450" y="160" text-anchor="middle" font-family="Inter" font-size="13" fill="#1a1f2e">POST /api/chat</text>
-            <text x="450" y="184" text-anchor="middle" font-family="Inter" font-size="12" fill="#6b7280">Zod validation · Pipeline orchestration</text>
-
-            <!-- IaProvider -->
-            <rect x="640" y="40" width="260" height="160" rx="14" fill="#fff4d8" stroke="#f2a526" stroke-width="2" />
-            <text x="770" y="74" text-anchor="middle" font-family="Inter" font-weight="700" font-size="20" fill="#b06f00">IaProvider</text>
-            <text x="770" y="100" text-anchor="middle" font-family="Inter" font-size="13" fill="#1a1f2e">FoundryProvider (Phi-4)</text>
-            <text x="770" y="120" text-anchor="middle" font-family="Inter" font-size="13" fill="#1a1f2e">MockIaProvider (dev/CI)</text>
-            <text x="770" y="140" text-anchor="middle" font-family="Inter" font-size="13" fill="#1a1f2e">AzureOpenAIProvider (futuro)</text>
-            <text x="770" y="180" text-anchor="middle" font-family="Inter" font-size="12" fill="#6b7280">Switch via IA_PROVIDER env var</text>
-
-            <!-- Azure AI -->
-            <rect x="960" y="40" width="200" height="160" rx="14" fill="#fff" stroke="#1f8e60" stroke-width="2" stroke-dasharray="6 4" />
-            <text x="1060" y="78" text-anchor="middle" font-family="Inter" font-weight="700" font-size="18" fill="#1f8e60">Azure AI Foundry</text>
-            <text x="1060" y="106" text-anchor="middle" font-family="Inter" font-size="13" fill="#1a1f2e">Phi-4-multimodal</text>
-            <text x="1060" y="126" text-anchor="middle" font-family="Inter" font-size="13" fill="#1a1f2e">Phi-4-mini</text>
-            <text x="1060" y="168" text-anchor="middle" font-family="Inter" font-size="12" fill="#6b7280">OpenAI-compatible API</text>
-
-            <!-- Pipeline -->
-            <rect x="320" y="240" width="540" height="100" rx="14" fill="#f7f8fa" stroke="#e4e7ec" stroke-width="2" />
-            <text x="590" y="276" text-anchor="middle" font-family="Inter" font-weight="700" font-size="18" fill="#1a1f2e">Pipeline del análisis</text>
-            <text x="590" y="304" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#6b7280">validate_file → detect_label_kind → extract_with_ia → validate_schema</text>
-            <text x="590" y="322" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#6b7280">→ apply_rules → compute_risk → generate_explanation → persist</text>
-
-            <!-- DB -->
-            <rect x="40" y="380" width="240" height="80" rx="14" fill="#fff" stroke="#3b82f6" stroke-width="2" />
-            <text x="160" y="416" text-anchor="middle" font-family="Inter" font-weight="700" font-size="18" fill="#1d4ed8">PostgreSQL 16</text>
-            <text x="160" y="438" text-anchor="middle" font-family="Inter" font-size="12" fill="#6b7280">Prisma ORM · Docker</text>
-
-            <!-- Storage -->
-            <rect x="320" y="380" width="240" height="80" rx="14" fill="#fff" stroke="#3b82f6" stroke-width="2" />
-            <text x="440" y="416" text-anchor="middle" font-family="Inter" font-weight="700" font-size="18" fill="#1d4ed8">Storage</text>
-            <text x="440" y="438" text-anchor="middle" font-family="Inter" font-size="12" fill="#6b7280">Filesystem dev · Blob demo</text>
-
-            <!-- Eval -->
-            <rect x="600" y="380" width="260" height="80" rx="14" fill="#fff" stroke="#e5484d" stroke-width="2" />
-            <text x="730" y="416" text-anchor="middle" font-family="Inter" font-weight="700" font-size="18" fill="#b32d2f">Evals harness</text>
-            <text x="730" y="438" text-anchor="middle" font-family="Inter" font-size="12" fill="#6b7280">Dataset + métricas + reportes</text>
-
-            <!-- Arrows -->
-            <line x1="260" y1="90" x2="320" y2="90" stroke="#2eb67d" stroke-width="2" marker-end="url(#arrow)" />
-            <line x1="580" y1="120" x2="640" y2="120" stroke="#2eb67d" stroke-width="2" marker-end="url(#arrow)" />
-            <line x1="900" y1="120" x2="960" y2="120" stroke="#2eb67d" stroke-width="2" marker-end="url(#arrow)" />
-            <line x1="450" y1="200" x2="450" y2="240" stroke="#2eb67d" stroke-width="2" marker-end="url(#arrow)" />
-            <line x1="450" y1="340" x2="200" y2="380" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)" />
-            <line x1="500" y1="340" x2="440" y2="380" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)" />
-          </svg>
-        </section>
-
-        <!-- ============================================================
-             11. PIPELINE
-        ============================================================ -->
-        <section>
-          <div class="brand-bar"><span class="dot"></span>NutriLens</div>
-          <span class="stage-tag">DISEÑO TÉCNICO · PIPELINE</span>
-          <h2>El pipeline del análisis · 8 steps observables</h2>
+          <span class="stage-tag">Pipeline observable</span>
+          <h2>El análisis pasa por 8 steps · todos visibles</h2>
           <div class="pipeline">
             <div class="pipe-step">
               <span class="pnum">01</span>
               <h5>validate_file</h5>
-              <span class="meta">~10 ms · no IA</span>
+              <span class="meta">~10 ms · sin IA</span>
               <p>MIME, tamaño, hash SHA-256, PDF readable.</p>
             </div>
             <div class="pipe-step">
               <span class="pnum">02</span>
               <h5>detect_label_kind</h5>
               <span class="meta">~800 ms · Phi-4-mm</span>
-              <p>"¿es etiqueta?" como filtro previo barato.</p>
+              <p>Filtro "¿es etiqueta?" antes de extraer.</p>
             </div>
             <div class="pipe-step">
               <span class="pnum">03</span>
               <h5>extract_with_ia</h5>
               <span class="meta">~4 s · Phi-4-mm</span>
-              <p>Extracción multimodal → JSON estructurado.</p>
+              <p>Imagen → JSON estructurado.</p>
             </div>
             <div class="pipe-step">
               <span class="pnum">04</span>
               <h5>validate_schema</h5>
               <span class="meta">~3 ms · Zod</span>
-              <p>1 reintento correctivo si no cumple schema.</p>
+              <p>1 reintento correctivo si falla.</p>
             </div>
             <div class="pipe-step">
               <span class="pnum">05</span>
               <h5>apply_rules</h5>
               <span class="meta">~1 ms · puro</span>
-              <p>Aptitud vegano/celíaco/sin lactosa con blacklists.</p>
+              <p>Vegano · celíaco · sin lactosa.</p>
             </div>
             <div class="pipe-step">
               <span class="pnum">06</span>
               <h5>compute_risk</h5>
               <span class="meta">~1 ms · puro</span>
-              <p>Tabla de verdad sellos × alérgenos.</p>
+              <p>Tabla sellos × alérgenos.</p>
             </div>
             <div class="pipe-step">
               <span class="pnum">07</span>
               <h5>generate_explanation</h5>
               <span class="meta">~1 s · Phi-4-mini</span>
-              <p>Texto humano + sanitizer + disclaimer.</p>
+              <p>Texto humano + disclaimer.</p>
             </div>
             <div class="pipe-step">
               <span class="pnum">08</span>
               <h5>persist</h5>
               <span class="meta">~120 ms · Postgres</span>
-              <p>Insert + storage + dedupe por fileHash.</p>
+              <p>Insert + dedupe por hash.</p>
             </div>
           </div>
-          <div
+          <p
             style="
-              margin-top: 22px;
-              padding: 14px 20px;
+              margin-top: 24px;
+              padding: 14px 22px;
               background: var(--primary-soft);
-              border-radius: 12px;
+              border-left: 4px solid var(--primary);
+              border-radius: 10px;
               font-size: 0.85em;
               color: var(--primary-strong);
             "
           >
-            🪟 <b>Cada step deja trace</b>: estado, duración y detalles se renderizan en
-            la UI bajo "Pipeline del análisis" (RF-15).
-          </div>
+            Cada step deja trace · estado, duración y detalles se ven en la UI bajo "Pipeline del análisis".
+          </p>
         </section>
 
         <!-- ============================================================
-             12. STACK TECNOLÓGICO
+             13. STACK
         ============================================================ -->
-        <section>
+        <section class="ink">
           <div class="brand-bar"><span class="dot"></span>NutriLens</div>
-          <span class="stage-tag">DISEÑO TÉCNICO · STACK</span>
-          <h2>Stack confirmado</h2>
+          <span class="stage-tag">Stack</span>
+          <h2>La caja de herramientas</h2>
           <div
             style="
-              margin: -8px 0 18px;
+              margin: -4px 0 14px;
               padding: 14px 18px;
-              background: #fff4d8;
-              border-left: 5px solid #f2a526;
+              background: rgba(199, 240, 74, 0.1);
+              border-left: 3px solid var(--lime);
               border-radius: 10px;
-              font-size: 0.85em;
+              font-size: 0.88em;
+              color: white;
               line-height: 1.5;
             "
           >
-            🧠 <b style="color: #b06f00">La parte "inteligente":</b> dos modelos de Microsoft vía
-            <b>Azure AI Foundry</b> con API OpenAI-compatible:
-            <b>Phi-4-multimodal-instruct</b> (extracción imagen→JSON + filtro
-            "¿es etiqueta?") y <b>Phi-4-mini-instruct</b> (chat RAG +
-            generación de explicación). Acceso a <code>gpt-4o</code> queda como
-            upgrade futuro con el mismo código.
+            La parte "inteligente": dos modelos Microsoft vía <b>Azure AI Foundry</b>
+            con API OpenAI-compatible —
+            <span style="color: var(--lime)"><b>Phi-4-multimodal-instruct</b></span>
+            (imagen → JSON) y
+            <span style="color: var(--lime)"><b>Phi-4-mini-instruct</b></span>
+            (chat + explicación).
           </div>
           <div class="stack-grid">
             <div class="stack-tile">
               <div class="ico">⚛️</div>
               <h5>Next.js 15</h5>
-              <p>App Router + Server Components + API Routes en un solo proyecto.</p>
+              <p>App Router + RSC + API Routes.</p>
             </div>
             <div class="stack-tile">
               <div class="ico">📘</div>
               <h5>TypeScript 5.7</h5>
-              <p>Modo estricto, paths <code>@/</code>, noUncheckedIndexedAccess.</p>
+              <p>Strict + paths @/ + noUncheckedIndexed.</p>
             </div>
             <div class="stack-tile">
               <div class="ico">🎨</div>
               <h5>Tailwind 3.4</h5>
-              <p>Utility-first + CSS vars como design tokens.</p>
+              <p>Utility-first sobre tokens CSS.</p>
             </div>
             <div class="stack-tile">
               <div class="ico">🛡️</div>
               <h5>Zod 3</h5>
-              <p>Validación de I/O en los bordes de la API.</p>
+              <p>Validación en los bordes de la API.</p>
             </div>
             <div class="stack-tile">
               <div class="ico">🗃️</div>
               <h5>Prisma 6 · Postgres 16</h5>
-              <p>ORM type-safe, migrations, enums nativos.</p>
+              <p>ORM type-safe, enums nativos.</p>
             </div>
             <div class="stack-tile">
               <div class="ico">🤖</div>
               <h5>Azure AI Foundry</h5>
-              <p>Phi-4-multimodal + Phi-4-mini vía SDK <code>openai</code>.</p>
+              <p>Phi-4-multimodal + Phi-4-mini.</p>
             </div>
             <div class="stack-tile">
               <div class="ico">🐳</div>
               <h5>Docker Compose</h5>
-              <p>App + DB en un solo <code>docker compose up</code>.</p>
+              <p>App + DB en un solo comando.</p>
             </div>
             <div class="stack-tile">
               <div class="ico">🧪</div>
               <h5>Vitest 3 + Playwright</h5>
-              <p>Unit + integration + E2E con coverage threshold.</p>
+              <p>Unit + integration + E2E con coverage.</p>
             </div>
           </div>
         </section>
 
         <!-- ============================================================
-             13. SDLC
+             14. SPRINTS
         ============================================================ -->
         <section>
           <div class="brand-bar"><span class="dot"></span>NutriLens</div>
-          <span class="stage-tag">CICLO DE VIDA</span>
-          <h2>Spec-Driven Development en 5 sprints</h2>
-          <div class="timeline">
-            <div class="tl-step done">
-              <div class="marker">0</div>
+          <span class="stage-tag">Cómo se construyó</span>
+          <h2>5 sprints, todos cerrados.</h2>
+          <div class="sprints">
+            <div class="sprint-box">
+              <div class="marker">00</div>
               <h5>Sprint 0</h5>
-              <p>Bootstrap Next 15 · Docker · CI · Skill · ADO sync</p>
+              <p>Bootstrap Next 15 · Docker · CI · skill propia · ADO sync.</p>
             </div>
-            <div class="tl-step done">
-              <div class="marker">1</div>
+            <div class="sprint-box">
+              <div class="marker">01</div>
               <h5>Sprint 1</h5>
-              <p>Core IA end-to-end · 7 PRs · provider + reglas + persistencia</p>
+              <p>Core IA end-to-end · provider · reglas · persistencia.</p>
             </div>
-            <div class="tl-step">
-              <div class="marker">2</div>
+            <div class="sprint-box">
+              <div class="marker">02</div>
               <h5>Sprint 2</h5>
-              <p>UI · 5 PRs · home, upload, resultado, historial, detalle</p>
+              <p>UI · home, upload, resultado, historial, detalle.</p>
             </div>
-            <div class="tl-step">
-              <div class="marker">3</div>
+            <div class="sprint-box">
+              <div class="marker">03</div>
               <h5>Sprint 3</h5>
-              <p>P1 features · 4 PRs · filtros, chat RAG, pipeline visible</p>
+              <p>P1 features · filtros, chat RAG, pipeline visible.</p>
             </div>
-            <div class="tl-step">
-              <div class="marker">4</div>
+            <div class="sprint-box">
+              <div class="marker">04</div>
               <h5>Sprint 4</h5>
-              <p>Polish + deploy demo · 4 PRs · responsive, seed, perf, Azure</p>
+              <p>Polish · responsive, seed, performance, demo lista.</p>
             </div>
           </div>
           <div
             style="
-              margin-top: 32px;
-              background: var(--surface);
-              border-radius: 14px;
-              padding: 18px 22px;
+              margin-top: 36px;
               display: grid;
               grid-template-columns: 1fr 1fr 1fr;
               gap: 16px;
               font-size: 0.78em;
             "
           >
-            <div>
-              <b style="color: var(--primary-strong)">Specs antes que código</b>
-              <p style="margin: 4px 0 0; color: var(--text-muted)">
-                7 specs SDD en <code>/docs/specs</code> definen contratos, schemas y decisiones.
-              </p>
+            <div class="card">
+              <h4>Specs antes que código</h4>
+              <p>7 specs SDD definieron contratos, schemas y decisiones técnicas.</p>
             </div>
-            <div>
-              <b style="color: var(--primary-strong)">Skill que carga el playbook</b>
-              <p style="margin: 4px 0 0; color: var(--text-muted)">
-                "Implementemos US-XX" → Claude Code lee spec + AC + crea PR con tests.
-              </p>
+            <div class="card">
+              <h4>Skill que carga el playbook</h4>
+              <p>"Implementemos US-XX" → Claude Code abre branch, escribe tests y PR.</p>
             </div>
-            <div>
-              <b style="color: var(--primary-strong)">Cierre automático en ADO</b>
-              <p style="margin: 4px 0 0; color: var(--text-muted)">
-                <code>Closes AB#NNN</code> en el PR → workflow cierra el work item al mergear.
-              </p>
+            <div class="card">
+              <h4>Cierre automático en ADO</h4>
+              <p><code>Closes AB#NNN</code> en el PR → workflow cierra el ticket.</p>
             </div>
           </div>
         </section>
 
         <!-- ============================================================
-             14. IA EN CADA ETAPA DEL SDLC (pregunta explícita del profe)
+             15. IA EN CADA ETAPA DEL SDLC (clave para el profe)
         ============================================================ -->
         <section>
           <div class="brand-bar"><span class="dot"></span>NutriLens</div>
-          <span class="stage-tag">CICLO DE VIDA · IA EN EL PROCESO</span>
-          <h2>Cómo intervino la IA en cada etapa del SDLC</h2>
-          <p style="color: var(--text-muted); margin-bottom: 18px">
-            La IA no es solo el producto: nos acompañó durante <b>todo</b> el ciclo de
-            vida del software. Estas son las intervenciones concretas.
+          <span class="stage-tag">IA en el proceso</span>
+          <h2>Dónde estuvo la IA en cada etapa</h2>
+          <p style="color: var(--text-muted); margin-bottom: 8px; font-size: 0.88em">
+            La IA no es solo el producto: nos acompañó durante todo el ciclo de vida.
           </p>
-          <div style="display: grid; grid-template-columns: 200px 1fr 1fr; gap: 10px; font-size: 0.78em">
-            <div style="font-weight: 700; padding: 8px 12px; background: var(--primary); color: white; border-radius: 8px">Etapa</div>
-            <div style="font-weight: 700; padding: 8px 12px; background: var(--primary); color: white; border-radius: 8px">Herramienta / modelo</div>
-            <div style="font-weight: 700; padding: 8px 12px; background: var(--primary); color: white; border-radius: 8px">Qué hizo</div>
+          <div class="sdlc-table">
+            <div class="head">Etapa</div>
+            <div class="head">Herramienta / modelo</div>
+            <div class="head">Qué hizo</div>
 
-            <div style="padding: 8px 12px; background: var(--primary-soft); color: var(--primary-strong); font-weight: 600; border-radius: 8px">📋 Análisis</div>
-            <div style="padding: 8px 12px; background: var(--surface); border-radius: 8px">Claude Sonnet (Cowork)</div>
-            <div style="padding: 8px 12px; background: var(--surface); border-radius: 8px">Brainstorm del problema, definición de usuarios, redacción del Product Brief + 7 épicas + 42 user stories en Gherkin.</div>
+            <div class="stage">📋 Análisis</div>
+            <div class="tool">Claude (Cowork)</div>
+            <div class="desc">Product Brief, 7 épicas, 42 user stories en Gherkin.</div>
 
-            <div style="padding: 8px 12px; background: var(--primary-soft); color: var(--primary-strong); font-weight: 600; border-radius: 8px">🎨 Diseño UX</div>
-            <div style="padding: 8px 12px; background: var(--surface); border-radius: 8px">Claude + Pencil</div>
-            <div style="padding: 8px 12px; background: var(--surface); border-radius: 8px">Wireframes desktop + mobile (12 pantallas), design system tokens, redacción de los 7 specs SDD por épica.</div>
+            <div class="stage">🎨 Diseño</div>
+            <div class="tool">Claude + Pencil</div>
+            <div class="desc">12 wireframes (desktop + mobile), design tokens, 7 specs SDD.</div>
 
-            <div style="padding: 8px 12px; background: var(--primary-soft); color: var(--primary-strong); font-weight: 600; border-radius: 8px">⚙️ Implementación</div>
-            <div style="padding: 8px 12px; background: var(--surface); border-radius: 8px">Claude Code (VSCode) + skill propia</div>
-            <div style="padding: 8px 12px; background: var(--surface); border-radius: 8px">"Implementemos US-XX" → carga la skill, lee spec, crea branch, escribe código + tests, abre PR.</div>
+            <div class="stage">⚙️ Implementación</div>
+            <div class="tool">Claude Code (VSCode) + skill propia</div>
+            <div class="desc">"Implementemos US-XX" → branch, código, tests, PR.</div>
 
-            <div style="padding: 8px 12px; background: var(--primary-soft); color: var(--primary-strong); font-weight: 600; border-radius: 8px">🧪 Testing</div>
-            <div style="padding: 8px 12px; background: var(--surface); border-radius: 8px">Claude Code + Vitest + Playwright</div>
-            <div style="padding: 8px 12px; background: var(--surface); border-radius: 8px">Generación de tests cubriendo cada escenario Gherkin y caso borde. Coverage threshold ≥80% enforced.</div>
+            <div class="stage">🧪 Testing</div>
+            <div class="tool">Claude Code + Vitest + Playwright</div>
+            <div class="desc">Tests cubren cada AC Gherkin. Coverage ≥80% enforced.</div>
 
-            <div style="padding: 8px 12px; background: var(--primary-soft); color: var(--primary-strong); font-weight: 600; border-radius: 8px">🚀 Producto</div>
-            <div style="padding: 8px 12px; background: #fff4d8; color: #b06f00; font-weight: 600; border-radius: 8px">Phi-4-multimodal + Phi-4-mini</div>
-            <div style="padding: 8px 12px; background: var(--surface); border-radius: 8px">Extracción de etiqueta (vision), explicación en lenguaje claro, chat RAG sobre historial. <b>El "intelligence" del producto.</b></div>
+            <div class="stage highlight">🚀 Producto</div>
+            <div class="tool highlight">Phi-4-multimodal + Phi-4-mini</div>
+            <div class="desc highlight">Extracción visual, explicación, chat RAG — <b>la "intelligence"</b>.</div>
 
-            <div style="padding: 8px 12px; background: var(--primary-soft); color: var(--primary-strong); font-weight: 600; border-radius: 8px">📊 QA del modelo</div>
-            <div style="padding: 8px 12px; background: var(--surface); border-radius: 8px">Eval harness + dataset propio</div>
-            <div style="padding: 8px 12px; background: var(--surface); border-radius: 8px">Dataset (15 fotos + 10 OFF), métricas P/R/F1 por campo, thresholds duros, refinamiento iterativo de prompts.</div>
+            <div class="stage">📊 QA del modelo</div>
+            <div class="tool">Eval harness propio</div>
+            <div class="desc">Dataset propio, métricas P/R/F1, thresholds duros.</div>
 
-            <div style="padding: 8px 12px; background: var(--primary-soft); color: var(--primary-strong); font-weight: 600; border-radius: 8px">📝 Documentación</div>
-            <div style="padding: 8px 12px; background: var(--surface); border-radius: 8px">Claude</div>
-            <div style="padding: 8px 12px; background: var(--surface); border-radius: 8px">README, playbooks, getting-started, ADRs, esta misma presentación HTML interactiva.</div>
+            <div class="stage">📝 Docs</div>
+            <div class="tool">Claude</div>
+            <div class="desc">READMEs, playbooks, ADRs, esta presentación.</div>
           </div>
-          <p
-            class="footnote"
-            style="margin-top: 18px; padding: 12px 16px; background: var(--primary-soft); border-radius: 10px; color: var(--primary-strong); font-style: normal"
-          >
-            💡 <b>Dos roles distintos para la IA:</b> dentro del producto (Phi-4
-            haciendo el análisis) y al lado del equipo (Claude acompañando todo el
-            proceso de desarrollo).
-          </p>
         </section>
 
         <!-- ============================================================
-             15. BACKLOG & ADO
+             16. METRICAS DEL BACKLOG
         ============================================================ -->
         <section>
           <div class="brand-bar"><span class="dot"></span>NutriLens</div>
-          <span class="stage-tag">GESTIÓN · BACKLOG</span>
-          <h2>Backlog en Azure DevOps</h2>
+          <span class="stage-tag">Backlog en Azure DevOps</span>
+          <h2>Los números del proyecto</h2>
           <div class="counters">
             <div class="counter">
               <div class="num">7</div>
-              <div class="label">épicas</div>
+              <div class="label">Épicas</div>
             </div>
             <div class="counter">
               <div class="num">42</div>
-              <div class="label">user stories</div>
+              <div class="label">User stories</div>
             </div>
             <div class="counter">
               <div class="num">142</div>
-              <div class="label">story points</div>
+              <div class="label">Story points</div>
             </div>
             <div class="counter">
-              <div class="num">73</div>
-              <div class="label">SP en MVP (P0)</div>
+              <div class="num">100<span style="font-size: 0.5em">%</span></div>
+              <div class="label">MVP completado</div>
             </div>
           </div>
-          <div
+          <p
             style="
               margin-top: 28px;
-              background: var(--surface);
-              border-radius: 14px;
-              padding: 18px 22px;
+              font-size: 0.85em;
+              color: var(--text-muted);
+              text-align: center;
             "
           >
-            <h4 style="margin-bottom: 12px">Épicas del producto</h4>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 0.8em">
-              <div>
-                <b>E01</b> Onboarding & Upload <span class="pill" style="font-size: 11px">P0 · 7 US · 19 SP</span>
-              </div>
-              <div>
-                <b>E02</b> Análisis multimodal IA <span class="pill" style="font-size: 11px">P0 · 8 US · 29 SP</span>
-              </div>
-              <div>
-                <b>E03</b> Reglas y explicación <span class="pill" style="font-size: 11px">P0 · 5 US · 16 SP</span>
-              </div>
-              <div>
-                <b>E04</b> Persistencia e historial <span class="pill" style="font-size: 11px">P0 · 6 US · 18 SP</span>
-              </div>
-              <div>
-                <b>E05</b> Chat con RAG <span class="pill warning" style="font-size: 11px">P1 · 6 US · 23 SP</span>
-              </div>
-              <div>
-                <b>E06</b> Pipeline observable y UX <span class="pill warning" style="font-size: 11px">P1 · 7 US · 21 SP</span>
-              </div>
-              <div>
-                <b>E07</b> Quality assurance y eval <span class="pill warning" style="font-size: 11px">P1 · 3 US · 16 SP</span>
-              </div>
-            </div>
-          </div>
-          <p class="footnote" style="margin-top: 18px">
-            Script Python sube las US a ADO con tags, parent links y story points en
-            una corrida.
+            Las stories se cargaron a Azure DevOps con un script propio · cada PR
+            cerró su work item automáticamente al mergear.
           </p>
         </section>
 
         <!-- ============================================================
-             15. CALIDAD: tests + eval
+             17. CALIDAD
         ============================================================ -->
-        <section>
+        <section class="ink">
           <div class="brand-bar"><span class="dot"></span>NutriLens</div>
-          <span class="stage-tag">CALIDAD</span>
-          <h2>Estrategia de testing + evaluación del modelo</h2>
-          <div class="grid grid-2">
+          <span class="stage-tag">Calidad</span>
+          <h2>Tests del código + eval del modelo</h2>
+          <div style="display: grid; grid-template-columns: 1fr 1.4fr; gap: 36px; align-items: center; margin-top: 8px">
             <div>
-              <h3 style="font-size: 1em; margin-bottom: 8px">Pirámide de testing</h3>
               <div class="pyramid">
                 <div class="pyramid-row top">
-                  E2E con Playwright<br />
+                  E2E Playwright
                   <span class="qty">9 flujos críticos</span>
                 </div>
                 <div class="pyramid-row mid">
-                  Integration con DB en memoria<br />
-                  <span class="qty">Endpoints + pipeline steps</span>
+                  Integration con DB
+                  <span class="qty">Endpoints + pipeline</span>
                 </div>
                 <div class="pyramid-row base">
-                  Unit + coverage threshold ≥80%<br />
-                  <span class="qty">Schemas, reglas, providers</span>
+                  Unit + coverage ≥80%
+                  <span class="qty">Schemas · reglas · providers</span>
                 </div>
               </div>
             </div>
             <div>
-              <h3 style="font-size: 1em; margin-bottom: 8px">Eval del modelo</h3>
-              <div
+              <h3 style="color: white; font-size: 1.3em; margin-bottom: 16px">
+                Eval del modelo
+              </h3>
+              <p style="color: #cfe9d8; line-height: 1.55; font-size: 0.9em">
+                Dataset propio · 15 fotos del super + 10 de Open Food Facts. Métricas
+                Precision / Recall / F1 por campo (alérgenos, sellos, riesgo).
+                <b style="color: white">Thresholds duros</b>: los safety-críticos requieren
+                threshold demo incluso para MVP.
+              </p>
+              <p
                 style="
-                  background: var(--surface);
-                  border-radius: 14px;
-                  padding: 18px 20px;
+                  margin-top: 16px;
+                  padding: 12px 16px;
+                  background: rgba(199, 240, 74, 0.12);
+                  border-left: 3px solid var(--lime);
+                  border-radius: 8px;
                   font-size: 0.82em;
-                  line-height: 1.55;
+                  color: var(--lime);
                 "
               >
-                <p style="margin: 0 0 10px"><b>Dataset propio:</b> 15 fotos del super + 10 de Open Food Facts + 10 non-food + 15 intents.</p>
-                <p style="margin: 0 0 10px"><b>Métricas:</b> Precision/Recall/F1 por campo (alérgenos, sellos, riesgo), exact match en categoría y aptitudes, calibración de confidence.</p>
-                <p style="margin: 0 0 10px"><b>Thresholds duros:</b> safety-críticos requieren threshold demo incluso para MVP.</p>
-                <p style="margin: 0"><b>Loop:</b> correr eval → analizar errores → bump prompt v1→v2 → re-eval → comparar reportes.</p>
+                Loop · correr eval → analizar errores → bump prompt v1→v2 → re-eval → comparar.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             18. PROBLEMAS
+        ============================================================ -->
+        <section>
+          <div class="brand-bar"><span class="dot"></span>NutriLens</div>
+          <span class="stage-tag">Obstáculos</span>
+          <h2>Con qué problemas nos encontramos</h2>
+          <div class="ps-grid">
+            <div class="ps-card">
+              <div class="head">
+                <span class="badge">Bloqueante</span>
+                <h4>Ningún modelo multimodal nos funcionaba</h4>
               </div>
-              <p class="footnote" style="margin-top: 12px">
-                Reportes versionados en <code>evals/results/</code> · audit trail
-                completo.
+              <p class="problem">
+                Probamos GPT-4o (sin aprobación de Azure OpenAI), distintos modelos
+                multimodales sueltos, después Foundry con Phi-4 multimodal — ninguno
+                rendía con etiquetas argentinas reales.
               </p>
+              <div class="solution">
+                Abstracción <code>IaProvider</code> + iteración a fondo de prompts
+                versionados + sanitize JSON + retry correctivo. El eval dataset propio
+                nos dejó medir cada cambio en vez de ir a ciegas.
+              </div>
+            </div>
+            <div class="ps-card">
+              <div class="head">
+                <span class="badge">Infra</span>
+                <h4>Azure Policy bloqueando regiones</h4>
+              </div>
+              <p class="problem">
+                La subscription solo permitía algunas regiones para crear recursos.
+              </p>
+              <div class="solution">
+                Elegimos una región permitida (East US) y desplegamos los modelos
+                serverless ahí. Documentado en un ADR.
+              </div>
+            </div>
+            <div class="ps-card">
+              <div class="head">
+                <span class="badge">DB</span>
+                <h4>SQLite no soporta enums de Prisma</h4>
+              </div>
+              <p class="problem">
+                Error <code>P1012</code> al definir <code>enum Categoria</code> en
+                SQLite. Bloqueaba arrancar el ORM.
+              </p>
+              <div class="solution">
+                Postgres 16 en Docker desde el día 1. Mismo stack en dev y demo,
+                <code>docker compose up</code> y listo.
+              </div>
+            </div>
+            <div class="ps-card">
+              <div class="head">
+                <span class="badge">IA</span>
+                <h4>Phi-4 no devuelve JSON nativo</h4>
+              </div>
+              <p class="problem">
+                El SDK no acepta <code>response_format: json_object</code> con Phi, así
+                que la salida venía con fences <code>```json</code> y texto extra.
+              </p>
+              <div class="solution">
+                JSON forzado vía prompt + helper <code>stripJsonFences()</code> + retry
+                correctivo si Zod no valida la primera respuesta.
+              </div>
             </div>
           </div>
         </section>
 
         <!-- ============================================================
-             16. DESAFÍOS Y SOLUCIONES
+             19. RETROSPECTIVA
         ============================================================ -->
         <section>
           <div class="brand-bar"><span class="dot"></span>NutriLens</div>
-          <span class="stage-tag">PROCESO · OBSTÁCULOS</span>
-          <h2>Problemas que encontramos y cómo los resolvimos</h2>
-          <div class="grid grid-2" style="gap: 18px">
-            <div class="card">
-              <div class="icon" style="background: #ffd9da; color: #b32d2f">!</div>
-              <h4>Azure OpenAI no aprobado a tiempo</h4>
-              <p>
-                <b>Problema:</b> el formulario de acceso a GPT-4o no se resolvió antes del Sprint 1.<br />
-                <b>Solución:</b> abstracción <code>IaProvider</code> y switch a Phi-4 en Azure AI
-                Foundry (mismo SDK, otro endpoint). Sin cambios de código.
-              </p>
-            </div>
-            <div class="card">
-              <div class="icon" style="background: #fff3dd; color: #b06f00">⚠</div>
-              <h4>Azure Policy bloqueando regiones</h4>
-              <p>
-                <b>Problema:</b> la subscription tenía allowed locations limitadas.<br />
-                <b>Solución:</b> elegimos East US (permitida) y desplegamos los
-                modelos serverless ahí.
-              </p>
-            </div>
-            <div class="card">
-              <div class="icon" style="background: #dfe9ff; color: #1d4ed8">i</div>
-              <h4>SQLite no soporta enums de Prisma</h4>
-              <p>
-                <b>Problema:</b> error P1012 con <code>enum Categoria</code>.<br />
-                <b>Solución:</b> Postgres 16 en Docker desde el día 1. Mismo stack en
-                dev y demo.
-              </p>
-            </div>
-            <div class="card">
-              <div class="icon">🧪</div>
-              <h4>Phi-4 no devuelve <code>json_object</code> nativo</h4>
-              <p>
-                <b>Problema:</b> el SDK no acepta <code>response_format</code> con Phi.<br />
-                <b>Solución:</b> JSON forzado vía prompt + helper
-                <code>stripJsonFences()</code> y retry correctivo si Zod falla.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <!-- ============================================================
-             17. RETROSPECTIVA
-        ============================================================ -->
-        <section>
-          <div class="brand-bar"><span class="dot"></span>NutriLens</div>
-          <span class="stage-tag">RETROSPECTIVA</span>
-          <h2>Qué aprendimos y qué viene</h2>
+          <span class="stage-tag">Retro</span>
+          <h2>Qué nos llevamos</h2>
           <div class="retro">
             <div class="retro-col">
-              <h4>✓ Qué funcionó bien</h4>
+              <h4><span class="emoji">✓</span>Qué funcionó</h4>
               <ul>
-                <li>Specs SDD antes que código — cero ambigüedad en PRs.</li>
-                <li>Skill <code>nutrilens-implement-story</code> consistente entre devs.</li>
-                <li>Cierre automático de work items en ADO al mergear PR.</li>
-                <li><code>MockIaProvider</code> = cero tokens gastados en CI.</li>
-                <li>Coverage threshold duro detectó dos regresiones a tiempo.</li>
+                <li>Specs SDD antes que código · cero ambigüedad en PRs.</li>
+                <li>Skill propia · consistencia entre devs e IA.</li>
+                <li>Cierre automático de ADO al mergear PR.</li>
+                <li>MockIaProvider · CI gratis, sin tokens.</li>
+                <li>Coverage threshold duro · detectó regresiones.</li>
               </ul>
             </div>
             <div class="retro-col bad">
-              <h4>↻ Qué cambiaríamos</h4>
+              <h4><span class="emoji">↻</span>Qué cambiaríamos</h4>
               <ul>
-                <li>Pedir el acceso a Azure OpenAI más temprano.</li>
-                <li>Comenzar a armar el dataset de eval desde el Sprint 0.</li>
-                <li>Adoptar Conventional Commits desde el primer PR (lo hicimos a los pocos commits).</li>
-                <li>Definir la paleta de marca antes que los wireframes.</li>
+                <li>Validar viabilidad de los modelos multimodales antes que el resto.</li>
+                <li>Pedir acceso a Azure OpenAI más temprano.</li>
+                <li>Armar el dataset de eval desde el Sprint 0.</li>
+                <li>Definir paleta antes que los wireframes.</li>
               </ul>
             </div>
             <div class="retro-col next">
-              <h4>→ Próximos pasos</h4>
+              <h4><span class="emoji">→</span>Próximos pasos</h4>
               <ul>
-                <li>Migrar a GPT-4o cuando llegue la aprobación de Azure OpenAI.</li>
-                <li>Deploy productivo a Azure App Service + Database for Postgres.</li>
-                <li>Búsqueda vectorial real para el RAG cuando el historial crezca.</li>
-                <li>Comparador de productos en chat (US-31 · P2).</li>
-                <li>Document Intelligence para PDFs problemáticos.</li>
+                <li>Migrar a GPT-4o cuando aprueben Azure OpenAI.</li>
+                <li>Deploy productivo a Azure App Service + Postgres.</li>
+                <li>Búsqueda vectorial para el RAG.</li>
+                <li>Comparador de productos en chat (US-31).</li>
+                <li>Document Intelligence para PDFs.</li>
               </ul>
             </div>
           </div>
         </section>
 
         <!-- ============================================================
-             18. CIERRE
+             20. CIERRE
         ============================================================ -->
-        <section data-state="cover" class="closing">
-          <div class="cover-bg"></div>
-          <p style="color: var(--text-muted); margin-bottom: 4px; font-size: 1em">
-            Gracias por escucharnos
-          </p>
-          <h1>¿Preguntas?</h1>
-          <p
-            style="
-              color: var(--text-muted);
-              font-size: 1.1em;
-              max-width: 720px;
-              margin: 0 auto 0;
-              line-height: 1.5;
-            "
-          >
-            Equipo NutriLens · TP Integrador de IA Aplicada · UNLaM
-          </p>
-          <div style="margin-top: 36px; display: flex; justify-content: center; gap: 18px; flex-wrap: wrap">
-            <span class="pill" style="font-size: 14px">github.com/FedericoMartucci/NutriLens</span>
-            <span class="pill muted" style="font-size: 14px">docs/specs · docs/backlog · evals</span>
+        <section class="ink closing" data-transition="fade">
+          <div class="closing-bg"></div>
+          <div class="closing-content">
+            <h1>
+              <span class="accent">Gracias.</span><br />
+              <span style="font-size: 0.45em; font-weight: 500">¿Preguntas?</span>
+            </h1>
+            <p class="sub">
+              NutriLens · TP Integrador de IA Aplicada · UNLaM
+            </p>
+            <div class="signature">
+              <span class="logo-mini">N</span>
+              <span>Equipo NutriLens · 2026</span>
+            </div>
           </div>
-          <div class="qr" id="qr-placeholder">
-            <div class="qr-grid" id="qr-grid"></div>
-          </div>
-          <p
-            class="footnote"
-            style="margin-top: 20px; font-style: italic"
-          >
-            NutriLens es un asistente informativo, no reemplaza el consejo de un
-            profesional de nutrición.
-          </p>
         </section>
       </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
 
     <script>
@@ -2263,31 +2274,18 @@
         transition: 'slide',
         transitionSpeed: 'default',
         backgroundTransition: 'fade',
-        plugins: [RevealHighlight, RevealNotes],
+        plugins: [RevealNotes],
       });
 
-      // ---- Interactive wireframes (slide 8) ----
-      document.addEventListener('click', (e) => {
-        const tab = e.target.closest('.screen-tab');
-        if (!tab) return;
-        const target = tab.dataset.target;
-        const phone = tab.closest('section').querySelector('.phone-frame');
-        if (!phone) return;
-        phone.querySelectorAll('.screen').forEach((s) => {
-          s.classList.toggle('active', s.dataset.screen === target);
-        });
-        tab.closest('.screen-tabs').querySelectorAll('.screen-tab').forEach((t) => {
-          t.classList.toggle('active', t === tab);
-        });
-      });
-
-      // ---- Animated counters ----
+      // Animated counters
       function animateCounter(el, target, duration = 1200) {
         const start = performance.now();
+        const original = el.textContent;
+        const hasPercent = original.includes('%');
         function tick(now) {
           const t = Math.min(1, (now - start) / duration);
           const eased = 1 - Math.pow(1 - t, 3);
-          el.textContent = Math.round(eased * target);
+          el.textContent = Math.round(eased * target) + (hasPercent ? '%' : '');
           if (t < 1) requestAnimationFrame(tick);
         }
         requestAnimationFrame(tick);
@@ -2295,24 +2293,13 @@
       Reveal.on('slidechanged', (ev) => {
         const counters = ev.currentSlide.querySelectorAll('.counter .num');
         counters.forEach((el) => {
-          const target = parseInt(el.dataset.target || el.textContent, 10);
-          if (!el.dataset.target) el.dataset.target = target;
-          animateCounter(el, target);
+          if (!el.dataset.done) {
+            const target = parseInt(el.textContent, 10);
+            el.dataset.done = '1';
+            animateCounter(el, target);
+          }
         });
       });
-
-      // ---- Decorative QR-like grid on closing slide ----
-      const qr = document.getElementById('qr-grid');
-      if (qr) {
-        for (let i = 0; i < 64; i++) {
-          const cell = document.createElement('div');
-          cell.className = 'qr-cell';
-          // pseudo-random but deterministic pattern
-          const on = ((i * 13 + 7) % 5 === 0) || i < 8 || i % 8 === 0 || i % 8 === 7 || i >= 56;
-          cell.style.opacity = on ? 1 : 0.05;
-          qr.appendChild(cell);
-        }
-      }
     </script>
   </body>
 </html>
