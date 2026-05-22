@@ -25,4 +25,4 @@ Reglas aplicadas: {{reglas_aplicadas}}
 Confidence: {{confidence}}
 
 SALIDA
-Una única explicación en texto plano. Sin markdown.
+Una única explicación en texto plano. n markdown.

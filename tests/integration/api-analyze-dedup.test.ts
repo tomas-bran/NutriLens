@@ -35,6 +35,12 @@ beforeEach(() => {
   cache.clear();
   _resetIaProvider();
   process.env.IA_PROVIDER = 'mock';
+  // El step `enrich_with_off` hace fetch a la API pública de Open Food Facts
+  // (timeout 3s). En tests integration que corren el pipeline completo dos
+  // veces (dedup) el total se va arriba de los 5s default y se rompe. Como
+  // el feature de OFF se cubre en sus propios unit tests (enrich-with-off-step
+  // + enrichment-merge-off), acá lo desactivamos via env opt-out.
+  process.env.OFF_ENABLED = 'false';
 });
 
 afterEach(async () => {

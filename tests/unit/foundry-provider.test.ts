@@ -412,4 +412,76 @@ describe('mapProviderError — error code mapping (spec E02 §7)', () => {
     expect(e).toMatchObject({ code: 'model_error', httpStatus: 502 });
     expect(e.details).toMatchObject({ message: 'unknown' });
   });
+
+  it('loguea status/type/code/message del provider error (debug helper)', () => {
+    // El log writer real va por `pino`/`console`; spyamos stderr.write para
+    // confirmar que `logger.warn('ia.provider_error', ...)` realmente emite.
+    const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    try {
+      mapProviderError(new APIError(503, undefined as never, 'service unavailable', undefined));
+      const calls = stderrSpy.mock.calls.map((c) => String(c[0])).join('\n');
+      expect(calls).toContain('ia.provider_error');
+      expect(calls).toContain('503');
+    } finally {
+      stderrSpy.mockRestore();
+    }
+  });
+});
+
+describe('FoundryProvider.callChat — token param fix (gpt-5/o1/o3)', () => {
+  /**
+   * El commit `009f24e fix(ai): usar max_completion_tokens para gpt-5/o1/o3`
+   * agregó la lógica que renombra el param según el modelo. Verificamos que
+   * los modelos antiguos siguen recibiendo `max_tokens` y los nuevos reciben
+   * `max_completion_tokens`. Lo testeamos a través de `parseIntent` porque
+   * pasa un `max_tokens` no-default (200) que es fácil de assert.
+   */
+  it('Phi-4-mini-instruct usa `max_tokens` (modelo viejo)', async () => {
+    const create = vi.fn().mockResolvedValue(okCompletion('{}'));
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+    await provider.parseIntent('x', { promptVersion: 'chat_parse_intent-v1' });
+    const [body] = create.mock.calls[0] as [Record<string, unknown>];
+    expect(body).toHaveProperty('max_tokens', 200);
+    expect(body).not.toHaveProperty('max_completion_tokens');
+  });
+
+  it('gpt-5.1 usa `max_completion_tokens` (familia gpt-5.x)', async () => {
+    process.env.AZURE_AI_FOUNDRY_MODEL_MINI = 'gpt-5.1';
+    const create = vi.fn().mockResolvedValue(okCompletion('{}'));
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+    await provider.parseIntent('x', { promptVersion: 'chat_parse_intent-v1' });
+    const [body] = create.mock.calls[0] as [Record<string, unknown>];
+    expect(body).toHaveProperty('max_completion_tokens', 200);
+    expect(body).not.toHaveProperty('max_tokens');
+  });
+
+  it('o1-preview usa `max_completion_tokens` (reasoning model)', async () => {
+    process.env.AZURE_AI_FOUNDRY_MODEL_MINI = 'o1-preview';
+    const create = vi.fn().mockResolvedValue(okCompletion('{}'));
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+    await provider.parseIntent('x', { promptVersion: 'chat_parse_intent-v1' });
+    const [body] = create.mock.calls[0] as [Record<string, unknown>];
+    expect(body).toHaveProperty('max_completion_tokens');
+    expect(body).not.toHaveProperty('max_tokens');
+  });
+
+  it('o3-mini usa `max_completion_tokens` (reasoning model)', async () => {
+    process.env.AZURE_AI_FOUNDRY_MODEL_MINI = 'o3-mini';
+    const create = vi.fn().mockResolvedValue(okCompletion('{}'));
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+    await provider.parseIntent('x', { promptVersion: 'chat_parse_intent-v1' });
+    const [body] = create.mock.calls[0] as [Record<string, unknown>];
+    expect(body).toHaveProperty('max_completion_tokens');
+    expect(body).not.toHaveProperty('max_tokens');
+  });
+
+  it('gpt-4o (intermedio) sigue con `max_tokens`', async () => {
+    process.env.AZURE_AI_FOUNDRY_MODEL_MINI = 'gpt-4o';
+    const create = vi.fn().mockResolvedValue(okCompletion('{}'));
+    const provider = new FoundryProvider({ client: makeFakeClient(create) });
+    await provider.parseIntent('x', { promptVersion: 'chat_parse_intent-v1' });
+    const [body] = create.mock.calls[0] as [Record<string, unknown>];
+    expect(body).toHaveProperty('max_tokens');
+    expect(body).not.toHaveProperty('max_completion_tokens');
+  });
 });
