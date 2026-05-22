@@ -11,10 +11,6 @@ export class HistoryPage {
   private readonly empty: Locator;
   private readonly noResults: Locator;
   private readonly noResultsClear: Locator;
-  private readonly categoriaSelect: Locator;
-  private readonly riesgoSelect: Locator;
-  private readonly alergenoSelect: Locator;
-  private readonly aptoSelect: Locator;
   private readonly activeChips: Locator;
 
   constructor(private readonly page: Page) {
@@ -23,10 +19,6 @@ export class HistoryPage {
     this.empty = page.getByTestId('history-empty');
     this.noResults = page.getByTestId('history-no-results');
     this.noResultsClear = page.getByTestId('history-no-results-clear');
-    this.categoriaSelect = page.getByTestId('history-filter-categoria');
-    this.riesgoSelect = page.getByTestId('history-filter-riesgo');
-    this.alergenoSelect = page.getByTestId('history-filter-alergeno');
-    this.aptoSelect = page.getByTestId('history-filter-apto');
     this.activeChips = page.getByTestId('active-filter-chips');
   }
 
@@ -61,24 +53,33 @@ export class HistoryPage {
     await this.noResultsClear.click();
   }
 
+  /**
+   * Selecciona un valor en un combobox de Radix Select. El trigger es un
+   * `<button>`; el listbox aparece en un Portal con `data-testid` derivado
+   * (`${triggerId}-content`) y cada opción tiene
+   * `data-testid="${triggerId}-option-${value}"`. Se clickea el trigger
+   * para abrir y luego la opción.
+   */
+  private async selectRadixOption(triggerTestId: string, value: string, expectedUrl: RegExp) {
+    await this.page.getByTestId(triggerTestId).click();
+    await this.page.getByTestId(`${triggerTestId}-option-${value}`).click();
+    await this.page.waitForURL(expectedUrl);
+  }
+
   async selectCategoria(value: string) {
-    await this.categoriaSelect.selectOption(value);
-    await this.page.waitForURL(/categoria=/);
+    await this.selectRadixOption('history-filter-categoria', value, /categoria=/);
   }
 
   async selectRiesgo(value: string) {
-    await this.riesgoSelect.selectOption(value);
-    await this.page.waitForURL(/riesgo=/);
+    await this.selectRadixOption('history-filter-riesgo', value, /riesgo=/);
   }
 
   async selectAlergeno(value: string) {
-    await this.alergenoSelect.selectOption(value);
-    await this.page.waitForURL(/alergeno=/);
+    await this.selectRadixOption('history-filter-alergeno', value, /alergeno=/);
   }
 
   async selectApto(value: string) {
-    await this.aptoSelect.selectOption(value);
-    await this.page.waitForURL(/apto=/);
+    await this.selectRadixOption('history-filter-apto', value, /apto=/);
   }
 
   async expectActiveChip(key: string) {

@@ -11,6 +11,7 @@
  * switch only knows the mock; when implementing FoundryProvider, wire
  * its branch here.
  */
+import { AzureOpenAIProvider } from './azure-openai-provider';
 import { FoundryProvider } from './foundry-provider';
 import { MockIaProvider } from './mock-provider';
 import { logger } from '@/lib/logger';
@@ -29,12 +30,7 @@ export function getIaProvider(): IaProvider {
       cached = new FoundryProvider();
       break;
     case 'azure-openai':
-      // TODO(post-approval): instantiate real AzureOpenAIProvider.
-      logger.warn('ia.fallback_to_mock', {
-        requested: 'azure-openai',
-        reason: 'AzureOpenAIProvider not implemented yet',
-      });
-      cached = new MockIaProvider();
+      cached = new AzureOpenAIProvider();
       break;
     default:
       logger.warn('ia.fallback_to_mock', { requested: kind, reason: 'unknown provider' });
@@ -48,8 +44,10 @@ export function _resetIaProvider(): void {
   cached = null;
 }
 
+export { AzureOpenAIProvider } from './azure-openai-provider';
 export { FoundryProvider } from './foundry-provider';
 export { MockIaProvider } from './mock-provider';
+export { OpenAICompatibleProvider, mapProviderError } from './openai-compatible-provider';
 export { stripJsonFences } from './strip-json-fences';
 export type {
   IaProvider,
