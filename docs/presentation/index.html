@@ -17,21 +17,30 @@
 
     <style>
       :root {
-        --bg: #ffffff;
-        --bg-soft: #f7f8fa;
+        /* Official palette — mirror of src/tokens/colors.css */
+        --bg: #fafbf7;
+        --bg-soft: #f1f5f0;
         --bg-ink: #0a1a14;
         --bg-ink-2: #0f2419;
-        --ink: #0c1814;
-        --text: #1a1f2e;
-        --text-muted: #6b7280;
-        --border: #e4e7ec;
-        --primary: #2eb67d;
-        --primary-strong: #1f8e60;
-        --primary-soft: #e6f5ee;
-        --lime: #c7f04a;
-        --warning: #f2a526;
-        --danger: #e5484d;
+        --ink: #0f172a;
+        --text: #0f172a;
+        --text-muted: #64748b;
+        --border: #e2e8f0;
+        --primary: #16a34a;
+        --primary-strong: #15803d;
+        --primary-soft: #f0fdf4;
+        --primary-border: #86efac;
+        --lime: #a3e635;
+        --warning: #f59e0b;
+        --danger: #ef4444;
         --info: #3b82f6;
+
+        --risk-low-fg: #15803d;
+        --risk-low-bg: #dcfce7;
+        --risk-med-fg: #b45309;
+        --risk-med-bg: #fef3c7;
+        --risk-high-fg: #b91c1c;
+        --risk-high-bg: #fee2e2;
 
         --font-display: 'Space Grotesk', system-ui, sans-serif;
         --font-sans: 'Inter', system-ui, sans-serif;
@@ -116,7 +125,7 @@
           ),
           radial-gradient(ellipse at bottom left, rgba(199, 240, 74, 0.1) 0%, transparent 50%),
           var(--bg-ink);
-        color: #e6f5ee;
+        color: #f0fdf4;
       }
       section.ink h1,
       section.ink h2,
@@ -219,12 +228,12 @@
         color: #5a7d0a;
       }
       .pill.warning {
-        background: #fff3dd;
-        color: #b06f00;
+        background: #fef3c7;
+        color: #b45309;
       }
       .pill.danger {
-        background: #ffd9da;
-        color: #b32d2f;
+        background: #fee2e2;
+        color: #b91c1c;
       }
       .pill.outline {
         background: transparent;
@@ -330,7 +339,7 @@
         letter-spacing: -0.055em;
       }
       .cover h1 .accent {
-        background: linear-gradient(120deg, var(--primary-strong) 0%, var(--primary) 60%, #5fd99c 100%);
+        background: linear-gradient(120deg, var(--primary-strong) 0%, var(--primary) 60%, #86efac 100%);
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
@@ -686,7 +695,7 @@
       }
       .story-step .visual {
         height: 130px;
-        background: linear-gradient(135deg, var(--primary-soft) 0%, #fff4d8 100%);
+        background: linear-gradient(135deg, var(--primary-soft) 0%, #fef3c7 100%);
         border-radius: 12px;
         margin-bottom: 16px;
         display: flex;
@@ -1081,7 +1090,7 @@
         line-height: 1.45;
       }
       .sdlc-table .highlight {
-        background: linear-gradient(180deg, #fff4d8 0%, white 100%);
+        background: linear-gradient(180deg, #fef3c7 0%, white 100%);
         font-weight: 600;
         color: var(--ink) !important;
       }
@@ -1200,8 +1209,8 @@
         padding: 4px 10px;
         border-radius: 6px;
         text-transform: uppercase;
-        background: #ffd9da;
-        color: #b32d2f;
+        background: #fee2e2;
+        color: #b91c1c;
       }
       .ps-card h4 {
         font-size: 1em;
@@ -1312,7 +1321,7 @@
         letter-spacing: -0.05em;
       }
       .closing h1 .accent {
-        background: linear-gradient(120deg, var(--lime), var(--primary), #5fd99c);
+        background: linear-gradient(120deg, var(--lime), var(--primary), #86efac);
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
@@ -1432,7 +1441,7 @@
             <div class="agenda-item">
               <div class="agenda-num">04</div>
               <h4>Arquitectura e IA</h4>
-              <p>Next.js + Phi-4 vía Azure AI Foundry + pipeline observable.</p>
+              <p>Next.js + gpt-5.1 vía Azure OpenAI + pipeline observable.</p>
             </div>
             <div class="agenda-item">
               <div class="agenda-num">05</div>
@@ -1547,7 +1556,7 @@
                 <span class="ico">🧠</span>
                 <div>
                   <h5>IA multimodal + reglas propias</h5>
-                  <p>Phi-4 extrae, nuestras reglas clasifican aptitud y riesgo.</p>
+                  <p>gpt-5.1 extrae, nuestras reglas clasifican aptitud y riesgo.</p>
                 </div>
               </div>
               <div class="kw">
@@ -1579,7 +1588,7 @@
               <span class="num">02</span>
               <div class="visual">✨</div>
               <h4>Analiza con IA</h4>
-              <p>Phi-4-multimodal extrae datos. Nuestras reglas calculan aptitud y riesgo.</p>
+              <p>gpt-5.1 multimodal extrae datos. Nuestras reglas calculan aptitud y riesgo.</p>
             </div>
             <div class="story-step">
               <span class="num">03</span>
@@ -1743,54 +1752,54 @@
             <svg viewBox="0 0 1180 360" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto">
               <defs>
                 <marker id="arrow-w" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-                  <path d="M0,0 L10,5 L0,10 z" fill="#c7f04a" />
+                  <path d="M0,0 L10,5 L0,10 z" fill="#a3e635" />
                 </marker>
               </defs>
 
-              <rect x="20" y="30" width="200" height="90" rx="14" fill="rgba(255,255,255,0.06)" stroke="#c7f04a" stroke-width="1.5" />
+              <rect x="20" y="30" width="200" height="90" rx="14" fill="rgba(255,255,255,0.06)" stroke="#a3e635" stroke-width="1.5" />
               <text x="120" y="62" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="18" fill="#fff">Browser</text>
               <text x="120" y="84" text-anchor="middle" font-family="Inter" font-size="12" fill="#a3c0b0">Next.js · React 19</text>
               <text x="120" y="102" text-anchor="middle" font-family="Inter" font-size="11" fill="#a3c0b0">Mobile + Desktop</text>
 
-              <rect x="290" y="30" width="240" height="160" rx="14" fill="rgba(46,182,125,0.12)" stroke="#2eb67d" stroke-width="1.5" />
+              <rect x="290" y="30" width="240" height="160" rx="14" fill="rgba(46,182,125,0.12)" stroke="#16a34a" stroke-width="1.5" />
               <text x="410" y="62" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="18" fill="#fff">Next.js API Routes</text>
-              <text x="410" y="86" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#c7f04a">POST /api/analyze</text>
-              <text x="410" y="106" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#c7f04a">GET /api/products</text>
-              <text x="410" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#c7f04a">POST /api/chat</text>
+              <text x="410" y="86" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#a3e635">POST /api/analyze</text>
+              <text x="410" y="106" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#a3e635">GET /api/products</text>
+              <text x="410" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#a3e635">POST /api/chat</text>
               <text x="410" y="156" text-anchor="middle" font-family="Inter" font-size="11" fill="#a3c0b0">Zod · pipeline · logging</text>
               <text x="410" y="174" text-anchor="middle" font-family="Inter" font-size="11" fill="#a3c0b0">Node 20 runtime</text>
 
-              <rect x="600" y="30" width="240" height="160" rx="14" fill="rgba(199,240,74,0.1)" stroke="#c7f04a" stroke-width="1.5" />
-              <text x="720" y="62" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="18" fill="#c7f04a">IaProvider</text>
-              <text x="720" y="92" text-anchor="middle" font-family="Inter" font-size="12" fill="#fff">FoundryProvider · Phi-4</text>
+              <rect x="600" y="30" width="240" height="160" rx="14" fill="rgba(199,240,74,0.1)" stroke="#a3e635" stroke-width="1.5" />
+              <text x="720" y="62" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="18" fill="#a3e635">IaProvider</text>
+              <text x="720" y="92" text-anchor="middle" font-family="Inter" font-size="12" fill="#fff">AzureOpenAIProvider · gpt-5.1</text>
               <text x="720" y="112" text-anchor="middle" font-family="Inter" font-size="12" fill="#fff">MockIaProvider · dev/CI</text>
               <text x="720" y="132" text-anchor="middle" font-family="Inter" font-size="12" fill="#fff">AzureOpenAIProvider · futuro</text>
               <text x="720" y="170" text-anchor="middle" font-family="Inter" font-size="11" fill="#a3c0b0">Switch por IA_PROVIDER env</text>
 
-              <rect x="910" y="30" width="240" height="160" rx="14" fill="rgba(255,255,255,0.06)" stroke="#c7f04a" stroke-width="1.5" stroke-dasharray="6 4" />
+              <rect x="910" y="30" width="240" height="160" rx="14" fill="rgba(255,255,255,0.06)" stroke="#a3e635" stroke-width="1.5" stroke-dasharray="6 4" />
               <text x="1030" y="62" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="18" fill="#fff">Azure AI Foundry</text>
-              <text x="1030" y="92" text-anchor="middle" font-family="Inter" font-size="13" fill="#c7f04a">Phi-4-multimodal</text>
-              <text x="1030" y="112" text-anchor="middle" font-family="Inter" font-size="13" fill="#c7f04a">Phi-4-mini</text>
+              <text x="1030" y="92" text-anchor="middle" font-family="Inter" font-size="13" fill="#a3e635">gpt-5.1 (multimodal)</text>
+              <text x="1030" y="112" text-anchor="middle" font-family="Inter" font-size="13" fill="#a3e635">gpt-5.1 (text)</text>
               <text x="1030" y="170" text-anchor="middle" font-family="Inter" font-size="11" fill="#a3c0b0">OpenAI-compatible API</text>
 
-              <rect x="20" y="260" width="200" height="80" rx="14" fill="rgba(255,255,255,0.06)" stroke="#5fd99c" stroke-width="1.5" />
+              <rect x="20" y="260" width="200" height="80" rx="14" fill="rgba(255,255,255,0.06)" stroke="#86efac" stroke-width="1.5" />
               <text x="120" y="294" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="16" fill="#fff">PostgreSQL 16</text>
               <text x="120" y="316" text-anchor="middle" font-family="Inter" font-size="11" fill="#a3c0b0">Prisma · Docker</text>
 
-              <rect x="290" y="260" width="240" height="80" rx="14" fill="rgba(255,255,255,0.06)" stroke="#5fd99c" stroke-width="1.5" />
+              <rect x="290" y="260" width="240" height="80" rx="14" fill="rgba(255,255,255,0.06)" stroke="#86efac" stroke-width="1.5" />
               <text x="410" y="294" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="16" fill="#fff">Storage de imágenes</text>
               <text x="410" y="316" text-anchor="middle" font-family="Inter" font-size="11" fill="#a3c0b0">Filesystem dev · Blob demo</text>
 
-              <rect x="600" y="260" width="240" height="80" rx="14" fill="rgba(255,255,255,0.06)" stroke="#5fd99c" stroke-width="1.5" />
+              <rect x="600" y="260" width="240" height="80" rx="14" fill="rgba(255,255,255,0.06)" stroke="#86efac" stroke-width="1.5" />
               <text x="720" y="294" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="16" fill="#fff">Eval Harness</text>
               <text x="720" y="316" text-anchor="middle" font-family="Inter" font-size="11" fill="#a3c0b0">Dataset · métricas · reports</text>
 
-              <line x1="220" y1="75" x2="290" y2="75" stroke="#c7f04a" stroke-width="1.5" marker-end="url(#arrow-w)" />
-              <line x1="530" y1="110" x2="600" y2="110" stroke="#c7f04a" stroke-width="1.5" marker-end="url(#arrow-w)" />
-              <line x1="840" y1="110" x2="910" y2="110" stroke="#c7f04a" stroke-width="1.5" marker-end="url(#arrow-w)" />
-              <line x1="410" y1="190" x2="120" y2="260" stroke="#5fd99c" stroke-width="1.5" marker-end="url(#arrow-w)" />
-              <line x1="410" y1="190" x2="410" y2="260" stroke="#5fd99c" stroke-width="1.5" marker-end="url(#arrow-w)" />
-              <line x1="410" y1="190" x2="720" y2="260" stroke="#5fd99c" stroke-width="1.5" marker-end="url(#arrow-w)" />
+              <line x1="220" y1="75" x2="290" y2="75" stroke="#a3e635" stroke-width="1.5" marker-end="url(#arrow-w)" />
+              <line x1="530" y1="110" x2="600" y2="110" stroke="#a3e635" stroke-width="1.5" marker-end="url(#arrow-w)" />
+              <line x1="840" y1="110" x2="910" y2="110" stroke="#a3e635" stroke-width="1.5" marker-end="url(#arrow-w)" />
+              <line x1="410" y1="190" x2="120" y2="260" stroke="#86efac" stroke-width="1.5" marker-end="url(#arrow-w)" />
+              <line x1="410" y1="190" x2="410" y2="260" stroke="#86efac" stroke-width="1.5" marker-end="url(#arrow-w)" />
+              <line x1="410" y1="190" x2="720" y2="260" stroke="#86efac" stroke-width="1.5" marker-end="url(#arrow-w)" />
             </svg>
           </div>
         </section>
@@ -1801,8 +1810,8 @@
         <section>
           <div class="brand-bar"><span class="dot"></span>NutriLens</div>
           <span class="stage-tag">Pipeline observable</span>
-          <h2>El análisis pasa por 8 steps · todos visibles</h2>
-          <div class="pipeline">
+          <h2>9 steps trazables · todos visibles en la UI</h2>
+          <div class="pipeline" style="grid-template-columns: repeat(3, 1fr)">
             <div class="pipe-step">
               <span class="pnum">01</span>
               <h5>validate_file</h5>
@@ -1812,44 +1821,50 @@
             <div class="pipe-step">
               <span class="pnum">02</span>
               <h5>detect_label_kind</h5>
-              <span class="meta">~800 ms · Phi-4-mm</span>
-              <p>Filtro "¿es etiqueta?" antes de extraer.</p>
+              <span class="meta">~600 ms · gpt-5.1</span>
+              <p>Filtro "¿es etiqueta?" antes de gastar tokens.</p>
             </div>
             <div class="pipe-step">
               <span class="pnum">03</span>
               <h5>extract_with_ia</h5>
-              <span class="meta">~4 s · Phi-4-mm</span>
-              <p>Imagen → JSON estructurado.</p>
+              <span class="meta">~3 s · gpt-5.1</span>
+              <p>Imagen → JSON estructurado, con caché por hash + promptVersion.</p>
             </div>
             <div class="pipe-step">
               <span class="pnum">04</span>
               <h5>validate_schema</h5>
               <span class="meta">~3 ms · Zod</span>
-              <p>1 reintento correctivo si falla.</p>
+              <p>Reintento correctivo si el JSON no cumple.</p>
             </div>
             <div class="pipe-step">
               <span class="pnum">05</span>
               <h5>apply_rules</h5>
               <span class="meta">~1 ms · puro</span>
-              <p>Vegano · celíaco · sin lactosa.</p>
+              <p>Aptitud vegano · celíaco · sin lactosa.</p>
             </div>
             <div class="pipe-step">
               <span class="pnum">06</span>
               <h5>compute_risk</h5>
               <span class="meta">~1 ms · puro</span>
-              <p>Tabla sellos × alérgenos.</p>
+              <p>Fórmula determinística sellos × alérgenos.</p>
             </div>
             <div class="pipe-step">
               <span class="pnum">07</span>
-              <h5>generate_explanation</h5>
-              <span class="meta">~1 s · Phi-4-mini</span>
-              <p>Texto humano + disclaimer.</p>
+              <h5>enrich_with_off</h5>
+              <span class="meta">~400 ms · opcional</span>
+              <p>Open Food Facts completa datos faltantes.</p>
             </div>
             <div class="pipe-step">
               <span class="pnum">08</span>
+              <h5>generate_explanation</h5>
+              <span class="meta">~800 ms · gpt-5.1</span>
+              <p>2-3 oraciones en español + disclaimer.</p>
+            </div>
+            <div class="pipe-step">
+              <span class="pnum">09</span>
               <h5>persist</h5>
               <span class="meta">~120 ms · Postgres</span>
-              <p>Insert + dedupe por hash.</p>
+              <p>Upsert por <code>fileHash</code> + guarda trace.</p>
             </div>
           </div>
           <p
@@ -1886,12 +1901,11 @@
               line-height: 1.5;
             "
           >
-            La parte "inteligente": dos modelos Microsoft vía <b>Azure AI Foundry</b>
-            con API OpenAI-compatible —
-            <span style="color: var(--lime)"><b>Phi-4-multimodal-instruct</b></span>
-            (imagen → JSON) y
-            <span style="color: var(--lime)"><b>Phi-4-mini-instruct</b></span>
-            (chat + explicación).
+            La parte "inteligente": <b><span style="color: var(--lime)">gpt-5.1</span></b>
+            vía <b>Azure OpenAI</b> cubre los 7 casos del producto (extracción
+            multimodal, validar etiqueta, explicación, parse intent, chat RAG, comparar
+            productos, smalltalk). Plug-n-play detrás de <code>IaProvider</code>: mock /
+            azure-openai / foundry / openai detrás de la misma interface.
           </div>
           <div class="stack-grid">
             <div class="stack-tile">
@@ -1921,8 +1935,8 @@
             </div>
             <div class="stack-tile">
               <div class="ico">🤖</div>
-              <h5>Azure AI Foundry</h5>
-              <p>Phi-4-multimodal + Phi-4-mini.</p>
+              <h5>Azure OpenAI</h5>
+              <p>gpt-5.1 multimodal · plug-n-play vía IaProvider.</p>
             </div>
             <div class="stack-tile">
               <div class="ico">🐳</div>
@@ -2027,8 +2041,8 @@
             <div class="desc">Tests cubren cada AC Gherkin. Coverage ≥80% enforced.</div>
 
             <div class="stage highlight">🚀 Producto</div>
-            <div class="tool highlight">Phi-4-multimodal + Phi-4-mini</div>
-            <div class="desc highlight">Extracción visual, explicación, chat RAG — <b>la "intelligence"</b>.</div>
+            <div class="tool highlight">gpt-5.1 vía Azure OpenAI</div>
+            <div class="desc highlight">Extracción multimodal, explicación, chat RAG, parse intent, smalltalk — <b>la "intelligence"</b>. Un solo modelo cubre 7 prompts versionados.</div>
 
             <div class="stage">📊 QA del modelo</div>
             <div class="tool">Eval harness propio</div>
@@ -2049,33 +2063,44 @@
           <h2>Los números del proyecto</h2>
           <div class="counters">
             <div class="counter">
-              <div class="num">7</div>
-              <div class="label">Épicas</div>
-            </div>
-            <div class="counter">
               <div class="num">42</div>
               <div class="label">User stories</div>
             </div>
             <div class="counter">
-              <div class="num">142</div>
-              <div class="label">Story points</div>
+              <div class="num">133</div>
+              <div class="label">Commits</div>
+            </div>
+            <div class="counter">
+              <div class="num">28</div>
+              <div class="label">PRs mergeados</div>
             </div>
             <div class="counter">
               <div class="num">100<span style="font-size: 0.5em">%</span></div>
               <div class="label">MVP completado</div>
             </div>
           </div>
-          <p
+          <div
             style="
-              margin-top: 28px;
-              font-size: 0.85em;
-              color: var(--text-muted);
-              text-align: center;
+              margin-top: 24px;
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 14px;
+              font-size: 0.78em;
             "
           >
-            Las stories se cargaron a Azure DevOps con un script propio · cada PR
-            cerró su work item automáticamente al mergear.
-          </p>
+            <div class="card">
+              <h4>7 épicas · 142 SP</h4>
+              <p>P0 (MVP mínimo) = 73 SP. Las 4 épicas P0 completas + 3 P1 cerradas.</p>
+            </div>
+            <div class="card">
+              <h4>64 tests</h4>
+              <p>45 unit + 6 integration + 13 E2E Playwright (desktop + mobile).</p>
+            </div>
+            <div class="card">
+              <h4>50 productos de seed</h4>
+              <p>Demo determinista que corre sin tocar Azure ni gastar tokens.</p>
+            </div>
+          </div>
         </section>
 
         <!-- ============================================================
@@ -2143,14 +2168,15 @@
                 <h4>Ningún modelo multimodal nos funcionaba</h4>
               </div>
               <p class="problem">
-                Probamos GPT-4o (sin aprobación de Azure OpenAI), distintos modelos
-                multimodales sueltos, después Foundry con Phi-4 multimodal — ninguno
-                rendía con etiquetas argentinas reales.
+                Probamos GPT-4o (sin aprobación inicial), Phi-3.5 deprecado, después
+                Foundry con Phi-4-multimodal — las llamadas timeouteaban en cuenta
+                Students (KI-02).
               </p>
               <div class="solution">
-                Abstracción <code>IaProvider</code> + iteración a fondo de prompts
-                versionados + sanitize JSON + retry correctivo. El eval dataset propio
-                nos dejó medir cada cambio en vez de ir a ciegas.
+                La abstracción <code>IaProvider</code> nos rescató: implementamos
+                <code>AzureOpenAIProvider</code>, conseguimos acceso a <b>gpt-5.1</b>
+                vía Azure OpenAI, cambiamos <code>IA_PROVIDER</code> y listo. Mismos
+                prompts, cero código de negocio tocado.
               </div>
             </div>
             <div class="ps-card">
