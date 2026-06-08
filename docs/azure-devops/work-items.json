@@ -1,0 +1,613 @@
+{
+  "project": "NutriLens",
+  "source": "NutriLens-Plan-Entrega-Final.md",
+  "iterations": ["Sprint 1", "Sprint 2"],
+  "sprintDates": {
+    "Sprint 1": { "start": "2026-06-08", "end": "2026-06-14" },
+    "Sprint 2": { "start": "2026-06-15", "end": "2026-06-21" }
+  },
+  "priorityLegend": { "1": "P0 imprescindible", "2": "P1 alto valor", "3": "Recortable (línea de corte §6 del plan)" },
+  "workItems": [
+    {
+      "id": "E1",
+      "type": "Epic",
+      "title": "E1 — Infraestructura AWS base",
+      "description": "Tener S3, RDS+pgvector y Cognito operativos a costo $0. Habilita E2, E4 y E8.",
+      "tags": ["infra", "aws"],
+      "priority": 1
+    },
+    {
+      "id": "NL-101",
+      "type": "Task",
+      "parent": "E1",
+      "title": "Aprovisionar RDS PostgreSQL con pgvector y migrar la base",
+      "description": "Crear instancia RDS PostgreSQL (db.t4g.micro), habilitar la extensión pgvector, ejecutar migraciones del esquema actual y migrar los datos de ejemplo del entorno local.",
+      "acceptanceCriteria": [
+        "CREATE EXTENSION vector ejecutado y verificado",
+        "Esquema y seed data migrados; la app local funciona apuntando a RDS",
+        "Conexión con SSL obligatorio",
+        "Backup automático habilitado"
+      ],
+      "technicalNotes": "RDS soporta pgvector nativamente. Security group restrictivo + SSL; el acceso desde Amplify SSR se resuelve en NL-802.",
+      "storyPoints": 3,
+      "priority": 1,
+      "iteration": "Sprint 1",
+      "tags": ["infra", "aws"],
+      "dependsOn": []
+    },
+    {
+      "id": "NL-102",
+      "type": "Task",
+      "parent": "E1",
+      "title": "Bucket S3 para imágenes de etiquetas",
+      "description": "Crear bucket S3 y migrar el almacenamiento de imágenes: al analizar un producto, la imagen se sube a S3 y la base guarda la key. Las imágenes son parte de la base de conocimiento compartida (visibles por todos los usuarios).",
+      "acceptanceCriteria": [
+        "Upload de imagen vía API route crea el objeto en S3",
+        "Visualización en historial/detalle vía presigned URL (sin bucket público)",
+        "Imágenes existentes migradas",
+        "Límite de tamaño y tipos MIME validados server-side"
+      ],
+      "technicalNotes": "SDK v3 (@aws-sdk/client-s3). Presigned GET con expiración corta.",
+      "storyPoints": 3,
+      "priority": 1,
+      "iteration": "Sprint 1",
+      "tags": ["infra", "aws"],
+      "dependsOn": []
+    },
+    {
+      "id": "NL-103",
+      "type": "Task",
+      "parent": "E1",
+      "title": "Configurar Cognito User Pool",
+      "description": "Crear User Pool (tier Essentials) con login por email + contraseña, verificación de email y políticas de password. App client para Next.js.",
+      "acceptanceCriteria": [
+        "User Pool creado con dominio propio de Cognito",
+        "Flujo signup → verificación email → login probado desde consola",
+        "Credenciales/IDs en variables de entorno, nunca en el repo"
+      ],
+      "technicalNotes": "10k MAU gratis permanente (tier Essentials). Sin federación social (fuera de alcance).",
+      "storyPoints": 2,
+      "priority": 1,
+      "iteration": "Sprint 1",
+      "tags": ["infra", "aws", "auth"],
+      "dependsOn": []
+    },
+    {
+      "id": "NL-104",
+      "type": "Task",
+      "parent": "E1",
+      "title": "Cuenta AWS, presupuesto y guardas de costo",
+      "description": "Configurar la cuenta en Free Plan, completar las 5 tareas de onboarding para los USD 100 extra de crédito, crear AWS Budget con alertas al email del equipo.",
+      "acceptanceCriteria": [
+        "Presupuesto con alerta al 50% y 80% del crédito",
+        "Verificado que la cuenta está en Free Plan (no puede generar cargos)",
+        "Documento corto en el repo con qué servicio consume crédito y cuánto"
+      ],
+      "technicalNotes": "Si la cuenta es pre-jul-2025 aplica el free tier legacy (750 h/mes RDS t3.micro por 12 meses): documentarlo.",
+      "storyPoints": 1,
+      "priority": 1,
+      "iteration": "Sprint 1",
+      "tags": ["infra", "aws"],
+      "dependsOn": []
+    },
+    {
+      "id": "E2",
+      "type": "Epic",
+      "title": "E2 — Multi-usuario con Cognito",
+      "description": "Cada persona se autentica y tiene sus propios chats; los productos analizados y sus imágenes son compartidos por todos (base de conocimiento común).",
+      "tags": ["auth", "feature"],
+      "priority": 1
+    },
+    {
+      "id": "NL-201",
+      "type": "User Story",
+      "parent": "E2",
+      "title": "Registro e inicio de sesión",
+      "description": "Como visitante quiero crear una cuenta e iniciar sesión para tener mi propio espacio de chats sobre la base compartida de productos.",
+      "acceptanceCriteria": [
+        "Signup con email+password y verificación por código",
+        "Login/logout con sesión persistente (refresh token)",
+        "Errores claros: email en uso, password débil, código inválido",
+        "Usuario no autenticado no accede a la app (redirige a login)"
+      ],
+      "technicalNotes": "Auth.js (NextAuth v5) con provider Cognito o amazon-cognito-identity-js; decidir al implementar y documentar como mini-ADR.",
+      "storyPoints": 5,
+      "priority": 1,
+      "iteration": "Sprint 1",
+      "tags": ["auth", "feature"],
+      "dependsOn": ["NL-103"]
+    },
+    {
+      "id": "NL-202",
+      "type": "User Story",
+      "parent": "E2",
+      "title": "Protección de rutas y API",
+      "description": "Como sistema quiero validar el JWT de Cognito en cada API route para que ningún endpoint quede expuesto sin autenticación.",
+      "acceptanceCriteria": [
+        "Middleware valida firma y expiración del JWT contra el JWKS de Cognito",
+        "Endpoints de análisis, historial y chat devuelven 401 sin token válido",
+        "Tests de integración de acceso autorizado y no autorizado"
+      ],
+      "technicalNotes": "Librería aws-jwt-verify. Cachear JWKS.",
+      "storyPoints": 3,
+      "priority": 1,
+      "iteration": "Sprint 1",
+      "tags": ["auth", "seguridad"],
+      "dependsOn": ["NL-103"]
+    },
+    {
+      "id": "NL-203",
+      "type": "User Story",
+      "parent": "E2",
+      "title": "Modelo de datos multiusuario",
+      "description": "Como usuario quiero ver todos los productos analizados por la comunidad pero solo mis conversaciones, para aprovechar la base compartida con privacidad en mis consultas.",
+      "acceptanceCriteria": [
+        "Tabla users con el sub de Cognito como ID",
+        "products sin dueño (globales), campo opcional analyzed_by informativo",
+        "chats y messages con FK a users",
+        "Las queries de chat filtran por usuario autenticado",
+        "Datos existentes migrados a la base compartida"
+      ],
+      "technicalNotes": "Migración SQL versionada. El RAG (E4) consulta productos globales.",
+      "storyPoints": 3,
+      "priority": 1,
+      "iteration": "Sprint 1",
+      "tags": ["auth", "db"],
+      "dependsOn": ["NL-101"]
+    },
+    {
+      "id": "E3",
+      "type": "Epic",
+      "title": "E3 — Historial de chats",
+      "description": "Conversaciones persistentes con nombre editable, fechas y render markdown correcto.",
+      "tags": ["feature", "chat"],
+      "priority": 1
+    },
+    {
+      "id": "NL-301",
+      "type": "User Story",
+      "parent": "E3",
+      "title": "Conversaciones persistentes con fechas",
+      "description": "Como usuario quiero que mis chats se guarden y se listen con su fecha para retomar conversaciones anteriores.",
+      "acceptanceCriteria": [
+        "Crear chat nuevo desde el sidebar",
+        "Lista ordenada por última actividad con fecha legible (hoy/ayer/dd-mmm)",
+        "Al abrir un chat se cargan todos sus mensajes",
+        "Título autogenerado a partir del primer mensaje"
+      ],
+      "technicalNotes": "Título: heurística simple o llamada barata al LLM (modelo económico).",
+      "storyPoints": 5,
+      "priority": 1,
+      "iteration": "Sprint 1",
+      "tags": ["feature", "chat"],
+      "dependsOn": ["NL-203"]
+    },
+    {
+      "id": "NL-302",
+      "type": "User Story",
+      "parent": "E3",
+      "title": "Renombrar y eliminar chats",
+      "description": "Como usuario quiero renombrar o borrar un chat para mantener ordenado mi historial.",
+      "acceptanceCriteria": [
+        "Rename inline o por menú contextual, persiste al recargar",
+        "Eliminación con confirmación, borra los mensajes asociados",
+        "Solo el dueño puede renombrar/eliminar (verificado server-side)"
+      ],
+      "technicalNotes": "",
+      "storyPoints": 2,
+      "priority": 2,
+      "iteration": "Sprint 1",
+      "tags": ["feature", "chat"],
+      "dependsOn": ["NL-301"]
+    },
+    {
+      "id": "NL-303",
+      "type": "User Story",
+      "parent": "E3",
+      "title": "Render Markdown en el chat",
+      "description": "Como usuario quiero ver las respuestas del asistente formateadas (negritas, listas, tablas) para leerlas cómodamente en lugar de markdown crudo. [Corrección de bug del MVP]",
+      "acceptanceCriteria": [
+        "Negritas, listas, tablas y código renderizan correctamente",
+        "Contenido sanitizado (sin HTML arbitrario / XSS)",
+        "Los mensajes del usuario se muestran como texto plano",
+        "Tests de render con snapshots"
+      ],
+      "technicalNotes": "react-markdown + remark-gfm + sanitización.",
+      "storyPoints": 2,
+      "priority": 2,
+      "iteration": "Sprint 1",
+      "tags": ["correccion", "chat", "frontend"],
+      "dependsOn": []
+    },
+    {
+      "id": "E4",
+      "type": "Epic",
+      "title": "E4 — RAG vectorial con pgvector",
+      "description": "Reemplazar la búsqueda por keywords por retrieval semántico real; responder 'dame opciones más saludables de X' con top-K fundamentado.",
+      "tags": ["ia", "rag"],
+      "priority": 1
+    },
+    {
+      "id": "NL-401",
+      "type": "User Story",
+      "parent": "E4",
+      "title": "Embeddings de productos al guardar",
+      "description": "Como sistema quiero generar y persistir un embedding por producto analizado para habilitar búsqueda semántica.",
+      "acceptanceCriteria": [
+        "Columna embedding vector(n) con índice HNSW o IVFFlat",
+        "Al guardar un análisis se genera el embedding de un texto canónico del producto (nombre + categoría + ingredientes + sellos + aptitudes)",
+        "Backfill de todos los productos existentes",
+        "Si la API de embeddings falla, el guardado del producto no se pierde (cola/reintento)"
+      ],
+      "technicalNotes": "Modelo sugerido: text-embedding-3-small (1536 dims), mismo proveedor que ya usan.",
+      "storyPoints": 5,
+      "priority": 1,
+      "iteration": "Sprint 1",
+      "tags": ["ia", "rag", "db"],
+      "dependsOn": ["NL-101"]
+    },
+    {
+      "id": "NL-402",
+      "type": "User Story",
+      "parent": "E4",
+      "title": "Retrieval top-K semántico en el chat",
+      "description": "Como usuario quiero preguntar en lenguaje natural por productos (ej. '¿qué galletitas tengo con menos azúcar?') para recibir respuestas basadas en los productos guardados más relevantes.",
+      "acceptanceCriteria": [
+        "La pregunta se embeddea y se recuperan top-K por similitud coseno (K configurable, default 5)",
+        "Los productos recuperados se pasan como contexto al LLM con instrucción de no inventar",
+        "La respuesta cita qué productos usó",
+        "Si no hay resultados sobre el umbral de similitud, el asistente lo dice en lugar de alucinar"
+      ],
+      "technicalNotes": "Operador <=> de pgvector. Mantener el filtrado por categoría/alérgeno como pre-filtro SQL combinable.",
+      "storyPoints": 5,
+      "priority": 1,
+      "iteration": "Sprint 1",
+      "tags": ["ia", "rag", "chat"],
+      "dependsOn": ["NL-401"]
+    },
+    {
+      "id": "NL-403",
+      "type": "User Story",
+      "parent": "E4",
+      "title": "Ranking 'más saludable' (top-K saludables)",
+      "description": "Como usuario quiero pedir las opciones más saludables de una categoría para decidir qué comprar.",
+      "acceptanceCriteria": [
+        "Score combinado documentado: similitud semántica + riesgo (bajo>medio>alto) + cantidad de sellos + aptitudes",
+        "El chat responde con ranking ordenado y justificación por producto",
+        "Empates resueltos de forma determinista",
+        "Tests unitarios del scoring con casos conocidos"
+      ],
+      "technicalNotes": "Evolución del orden actual 'menor riesgo, menos sellos' sobre retrieval vectorial.",
+      "storyPoints": 3,
+      "priority": 2,
+      "iteration": "Sprint 2",
+      "tags": ["ia", "rag"],
+      "dependsOn": ["NL-402"]
+    },
+    {
+      "id": "NL-404",
+      "type": "Task",
+      "parent": "E4",
+      "title": "Evaluación del RAG (golden set)",
+      "description": "Armar un set de ~15 preguntas con respuesta esperada sobre los datos seed y testear que el retrieval recupere los productos correctos. [Recortable según línea de corte: queda como test manual documentado]",
+      "acceptanceCriteria": [
+        "Test automatizado de retrieval (precision@K sobre el golden set)",
+        "Resultados documentados en el informe como métrica de éxito",
+        "Corre en CI con la base de test"
+      ],
+      "technicalNotes": "",
+      "storyPoints": 2,
+      "priority": 3,
+      "iteration": "Sprint 2",
+      "tags": ["ia", "rag", "calidad"],
+      "dependsOn": ["NL-402"]
+    },
+    {
+      "id": "E5",
+      "type": "Epic",
+      "title": "E5 — Mejoras UX/UI",
+      "description": "Pulir la experiencia diaria: pegar imágenes desde el portapapeles, layout estable del sidebar y sugerencias accionables en el chat.",
+      "tags": ["ux", "frontend"],
+      "priority": 2
+    },
+    {
+      "id": "NL-501",
+      "type": "User Story",
+      "parent": "E5",
+      "title": "Pegar imagen con Ctrl/Cmd+V en el escáner",
+      "description": "Como usuario quiero copiar una imagen y pegarla directamente en la pantalla de análisis para no tener que guardarla y subirla a mano.",
+      "acceptanceCriteria": [
+        "Evento paste capturado en la vista de upload: imagen del portapapeles → preview inmediato, mismo flujo que un archivo subido",
+        "Valida MIME y tamaño con mensajes claros",
+        "Si el portapapeles no tiene imagen no rompe nada (toast informativo)",
+        "Funciona en Chrome/Edge/Safari desktop",
+        "Convive con drag&drop y el file picker"
+      ],
+      "technicalNotes": "ClipboardEvent.clipboardData.items → getAsFile().",
+      "storyPoints": 3,
+      "priority": 2,
+      "iteration": "Sprint 1",
+      "tags": ["ux", "frontend"],
+      "dependsOn": []
+    },
+    {
+      "id": "NL-502",
+      "type": "User Story",
+      "parent": "E5",
+      "title": "Sidebar fijo a la izquierda",
+      "description": "Como usuario quiero que el sidebar quede anclado a la izquierda sin moverse ni deformarse en ningún tamaño de pantalla para navegar de forma consistente. [Corrección de bug del MVP]",
+      "acceptanceCriteria": [
+        "Sidebar con ancho fijo, anclado a la izquierda; el contenido scrollea de forma independiente",
+        "Sin solapamientos ni saltos de layout en 1440/1280/1024/768 px",
+        "En <768 px colapsa a un rail de íconos (sigue anclado, nunca desaparece ni flota)",
+        "Tests visuales o de layout en los breakpoints"
+      ],
+      "technicalNotes": "Grid raíz (grid-template-columns: auto 1fr) + position sticky/fixed; eliminar la lógica actual que lo reposiciona.",
+      "storyPoints": 2,
+      "priority": 2,
+      "iteration": "Sprint 1",
+      "tags": ["correccion", "ux", "frontend"],
+      "dependsOn": []
+    },
+    {
+      "id": "NL-503",
+      "type": "User Story",
+      "parent": "E5",
+      "title": "Pills de preguntas sugeridas en el chat",
+      "description": "Como usuario quiero que cuando el asistente sugiera preguntas ('preguntame cosas como X o Y') aparezcan como chips clickeables para dispararlas con un click. [Si el tiempo aprieta: solo pills estáticas en estado vacío]",
+      "acceptanceCriteria": [
+        "La respuesta del backend incluye un campo estructurado suggested_questions[] (el LLM lo emite en el JSON de salida, no se parsea texto libre)",
+        "El frontend las renderiza como pills debajo del mensaje",
+        "Click envía esa pregunta como mensaje del usuario y dispara la respuesta",
+        "Estado vacío del chat muestra 3-4 pills iniciales (ej. '¿Qué productos sin TACC tengo?')",
+        "Accesible por teclado"
+      ],
+      "technicalNotes": "Ajustar prompt del chat para emitir sugerencias contextuales (ej. tras un análisis: '¿alternativas más saludables?').",
+      "storyPoints": 3,
+      "priority": 2,
+      "iteration": "Sprint 2",
+      "tags": ["ux", "chat", "frontend"],
+      "dependsOn": ["NL-402"]
+    },
+    {
+      "id": "E6",
+      "type": "Epic",
+      "title": "E6 — Integración Open Food Facts",
+      "description": "Contrastar la extracción de la IA con una fuente externa para subir la confianza del escaneo.",
+      "tags": ["ia", "integracion"],
+      "priority": 2
+    },
+    {
+      "id": "NL-601",
+      "type": "User Story",
+      "parent": "E6",
+      "title": "Enriquecimiento del análisis con Open Food Facts",
+      "description": "Como usuario quiero que el análisis se contraste con Open Food Facts para confiar más en el resultado del escaneo.",
+      "acceptanceCriteria": [
+        "Tras la extracción, el backend busca el producto en OFF: por código de barras si es visible en la etiqueta; si no, por nombre+marca",
+        "Con match: se comparan ingredientes/alérgenos/nutrientes, se ajusta confidence y se completan campos faltantes marcando su origen",
+        "La UI muestra badge 'Verificado con Open Food Facts' con lo que se confirmó",
+        "Las discrepancias se muestran como advertencia; nunca se pisa silenciosamente lo extraído",
+        "Atribución a OFF visible (licencia ODbL)"
+      ],
+      "technicalNotes": "API v2 (/api/v2/product/{barcode}) y búsqueda (/cgi/search.pl). El prompt de extracción debe intentar leer el código de barras numérico si está visible.",
+      "storyPoints": 5,
+      "priority": 2,
+      "iteration": "Sprint 2",
+      "tags": ["ia", "integracion"],
+      "dependsOn": []
+    },
+    {
+      "id": "NL-602",
+      "type": "Task",
+      "parent": "E6",
+      "title": "Cliente OFF: resiliencia, cache y rate limits",
+      "description": "Cliente HTTP con timeout, cache de respuestas (por barcode/nombre) y respeto de rate limits (~100 req/min producto, 10 req/min búsqueda). [Si el tiempo aprieta: mantener solo el fallback, sin cache]",
+      "acceptanceCriteria": [
+        "Si OFF no responde o no hay match, el análisis continúa normalmente (fallback graceful, timeout ≤3 s)",
+        "Cache hit no re-consulta",
+        "User-Agent identificando la app (requerido por OFF)",
+        "Tests con mocks de OFF: match, no-match, timeout, 429"
+      ],
+      "technicalNotes": "",
+      "storyPoints": 3,
+      "priority": 2,
+      "iteration": "Sprint 2",
+      "tags": ["integracion", "backend"],
+      "dependsOn": ["NL-601"]
+    },
+    {
+      "id": "E7",
+      "type": "Epic",
+      "title": "E7 — Comparador de productos",
+      "description": "Pasar del comparador simple a una comparación completa lado a lado con veredicto inteligente.",
+      "tags": ["feature"],
+      "priority": 2
+    },
+    {
+      "id": "NL-701",
+      "type": "User Story",
+      "parent": "E7",
+      "title": "Comparación lado a lado",
+      "description": "Como usuario quiero seleccionar 2 o 3 productos del historial y verlos comparados para elegir el mejor para mí.",
+      "acceptanceCriteria": [
+        "Selección de 2-3 productos desde el historial (checkbox + botón Comparar)",
+        "Tabla comparativa: riesgo, sellos, alérgenos, aptitudes (vegano/celíaco/sin lactosa), ingredientes destacados y nutrientes disponibles",
+        "Mejor valor por fila resaltado",
+        "Responsive (en mobile, columnas scrolleables)",
+        "Con menos de 2 seleccionados el botón queda deshabilitado"
+      ],
+      "technicalNotes": "",
+      "storyPoints": 5,
+      "priority": 2,
+      "iteration": "Sprint 2",
+      "tags": ["feature", "frontend"],
+      "dependsOn": []
+    },
+    {
+      "id": "NL-702",
+      "type": "User Story",
+      "parent": "E7",
+      "title": "Veredicto inteligente de la comparación",
+      "description": "Como usuario quiero un veredicto en lenguaje simple sobre cuál producto conviene para decidir rápido, considerando mis restricciones. [Primer recorte según línea de corte: la tabla comparativa ya cumple]",
+      "acceptanceCriteria": [
+        "El LLM recibe solo los productos comparados y devuelve veredicto con justificación (ej. 'A es mejor opción salvo que evites gluten')",
+        "Incluye advertencias por alérgenos",
+        "Mantiene lenguaje informativo, no médico",
+        "Botón 'Preguntar sobre esta comparación' abre el chat con el contexto cargado"
+      ],
+      "technicalNotes": "",
+      "storyPoints": 3,
+      "priority": 3,
+      "iteration": "Sprint 2",
+      "tags": ["feature", "ia"],
+      "dependsOn": ["NL-701"]
+    },
+    {
+      "id": "E8",
+      "type": "Epic",
+      "title": "E8 — Deployment AWS + CI/CD",
+      "description": "App pública, deploy automatizado desde main, demo estable para la presentación final.",
+      "tags": ["infra", "deploy"],
+      "priority": 1
+    },
+    {
+      "id": "NL-801",
+      "type": "Task",
+      "parent": "E8",
+      "title": "Deploy en Amplify Hosting conectado a GitHub",
+      "description": "Conectar el repo a Amplify Hosting con soporte SSR de Next.js; build y deploy automático de main. Hacerlo apenas arranque el Sprint 2 (walking skeleton) para no descubrir problemas de SSR/red el último día.",
+      "acceptanceCriteria": [
+        "URL pública HTTPS funcionando con la app completa: análisis, chat, historial, auth",
+        "Push a main dispara deploy automático",
+        "Variables de entorno/secrets configuradas en Amplify (API keys, DB, Cognito, S3); nada sensible en el repo",
+        "Si el build falla, no se publica"
+      ],
+      "technicalNotes": "",
+      "storyPoints": 5,
+      "priority": 1,
+      "iteration": "Sprint 2",
+      "tags": ["infra", "deploy"],
+      "dependsOn": ["NL-101", "NL-102", "NL-201"]
+    },
+    {
+      "id": "NL-802",
+      "type": "Task",
+      "parent": "E8",
+      "title": "Conectividad y seguridad app↔RDS/S3 en producción",
+      "description": "Resolver el acceso del runtime SSR de Amplify a RDS y S3 con el menor riesgo posible.",
+      "acceptanceCriteria": [
+        "Conexión a RDS con SSL y usuario de app con permisos mínimos",
+        "Decisión documentada (mini-ADR) sobre exposición de RDS: SG restrictivo vs acceso público con SSL (limitación conocida de Amplify SSR sin IP fija)",
+        "Credenciales S3 vía rol/variables; bucket sin acceso público",
+        "Smoke test de extremo a extremo en producción"
+      ],
+      "technicalNotes": "",
+      "storyPoints": 3,
+      "priority": 1,
+      "iteration": "Sprint 2",
+      "tags": ["infra", "seguridad"],
+      "dependsOn": ["NL-801"]
+    },
+    {
+      "id": "NL-803",
+      "type": "Task",
+      "parent": "E8",
+      "title": "Pipeline CI/CD completo",
+      "description": "Extender GitHub Actions: PR → tests + coverage ≥80% (gate existente) → merge a main → deploy → smoke test post-deploy.",
+      "acceptanceCriteria": [
+        "El gate de 80% sigue bloqueando PRs",
+        "Deploy solo si el pipeline pasa",
+        "Smoke test post-deploy (health endpoint + análisis con imagen seed) con notificación si falla",
+        "README actualizado con el flujo"
+      ],
+      "technicalNotes": "",
+      "storyPoints": 3,
+      "priority": 1,
+      "iteration": "Sprint 2",
+      "tags": ["infra", "ci-cd"],
+      "dependsOn": ["NL-801"]
+    },
+    {
+      "id": "E9",
+      "type": "Epic",
+      "title": "E9 — Calidad y cierre académico",
+      "description": "Sostener el estándar de testing del MVP y preparar informe técnico final y presentación oral.",
+      "tags": ["calidad", "docs"],
+      "priority": 1
+    },
+    {
+      "id": "NL-901",
+      "type": "Task",
+      "parent": "E9",
+      "title": "Tests de las nuevas features (gate 80%)",
+      "description": "Cada feature de E2-E7 entra con sus tests (unit + integración + componentes). Este ticket cubre el refuerzo transversal: auth flows, RAG retrieval, OFF mocks, comparador, paste, pills. Es continuo durante ambos sprints.",
+      "acceptanceCriteria": [
+        "Coverage global ≥80% se mantiene",
+        "Las suites nuevas corren en CI",
+        "Casos borde cubiertos: token expirado, embedding fallido, OFF caído, portapapeles sin imagen"
+      ],
+      "technicalNotes": "",
+      "storyPoints": 5,
+      "priority": 1,
+      "iteration": "Sprint 1",
+      "tags": ["calidad", "testing"],
+      "dependsOn": []
+    },
+    {
+      "id": "NL-902",
+      "type": "Task",
+      "parent": "E9",
+      "title": "Actualizar informe técnico final",
+      "description": "Evolucionar el informe MVP a informe final: nueva arquitectura (AWS, pgvector, Cognito, OFF), aporte de IA en cada etapa del SDLC durante esta fase, problemas nuevos y mitigaciones, métricas (incluida la evaluación del RAG de NL-404).",
+      "acceptanceCriteria": [
+        "Secciones nuevas/actualizadas completas",
+        "Diagrama de arquitectura final",
+        "Decisiones documentadas: pgvector, Amplify, modelo de embeddings",
+        "PDF listo para el ZIP de MIeL"
+      ],
+      "technicalNotes": "",
+      "storyPoints": 3,
+      "priority": 1,
+      "iteration": "Sprint 2",
+      "tags": ["docs"],
+      "dependsOn": []
+    },
+    {
+      "id": "NL-903",
+      "type": "Task",
+      "parent": "E9",
+      "title": "Presentación oral + guion de demo",
+      "description": "Deck (problema, parte inteligente, IA en el SDLC, problemas encontrados, demo) y guion de demo sobre la URL pública con datos seed; participación de los 4 integrantes.",
+      "acceptanceCriteria": [
+        "Deck completo cubriendo los 4 puntos de la consigna",
+        "Demo ensayada sobre producción con fallback local por si falla la red",
+        "Reparto de secciones entre los integrantes"
+      ],
+      "technicalNotes": "",
+      "storyPoints": 3,
+      "priority": 1,
+      "iteration": "Sprint 2",
+      "tags": ["docs", "demo"],
+      "dependsOn": ["NL-801"]
+    },
+    {
+      "id": "NL-904",
+      "type": "Task",
+      "parent": "E9",
+      "title": "Seed de datos para la demo pública",
+      "description": "Cargar en producción un set curado de productos (galletitas, cereales, snacks, lácteos, bebidas, sin TACC, veganos) con embeddings generados, para que el RAG y el comparador luzcan en la demo.",
+      "acceptanceCriteria": [
+        "Al menos 15 productos en al menos 6 categorías",
+        "Las preguntas de la demo devuelven resultados consistentes",
+        "Script de seed reproducible"
+      ],
+      "technicalNotes": "",
+      "storyPoints": 2,
+      "priority": 2,
+      "iteration": "Sprint 2",
+      "tags": ["demo", "db"],
+      "dependsOn": ["NL-801", "NL-401"]
+    }
+  ]
+}
