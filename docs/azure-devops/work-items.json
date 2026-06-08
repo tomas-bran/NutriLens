@@ -6,7 +6,11 @@
     "Sprint 1": { "start": "2026-06-08", "end": "2026-06-14" },
     "Sprint 2": { "start": "2026-06-15", "end": "2026-06-21" }
   },
-  "priorityLegend": { "1": "P0 imprescindible", "2": "P1 alto valor", "3": "Recortable (línea de corte §6 del plan)" },
+  "priorityLegend": {
+    "1": "P0 imprescindible",
+    "2": "P1 alto valor",
+    "3": "Recortable (línea de corte §6 del plan)"
+  },
   "workItems": [
     {
       "id": "E1",

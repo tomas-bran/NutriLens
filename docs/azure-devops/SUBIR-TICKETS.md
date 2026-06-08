@@ -14,18 +14,18 @@ Archivo fuente: `work-items.json` (37 items: 9 Epics + 28 User Stories/Tasks). G
 
 ## Mapeo de campos (JSON → Azure DevOps)
 
-| JSON | Campo ADO | Notas |
-|---|---|---|
-| `type` | Work item type | Epic / User Story / Task |
-| `title` | `System.Title` | Para hijos, prefijar con el id local: `NL-101 · <title>` (facilita trazabilidad y búsqueda) |
-| `description` + `technicalNotes` | `System.Description` | HTML: descripción en `<p>`; si hay notas, agregar `<p><b>Notas técnicas:</b> …</p>` |
-| `acceptanceCriteria[]` | `Microsoft.VSTS.Common.AcceptanceCriteria` | Como `<ul><li>…</li></ul>`. **Solo existe en User Story**: para Tasks, anexar la lista al final de Description bajo `<b>Criterios de aceptación:</b>` |
-| `storyPoints` | `Microsoft.VSTS.Scheduling.StoryPoints` | Solo User Story. Para Tasks no setear (o usar `OriginalEstimate` en horas si el equipo lo usa) |
-| `priority` | `Microsoft.VSTS.Common.Priority` | 1=P0, 2=P1, 3=recortable (ver `priorityLegend`) |
-| `iteration` | `System.IterationPath` | `NutriLens\Sprint 1` o `NutriLens\Sprint 2` (los Epics no llevan iteración) |
-| `tags[]` | `System.Tags` | Unir con `"; "` |
-| `parent` | Link `System.LinkTypes.Hierarchy-Reverse` | Hacia el ID real del Epic creado |
-| `dependsOn[]` | Link `System.LinkTypes.Dependency-Reverse` | El item depende de (predecessor) cada ID listado |
+| JSON                             | Campo ADO                                  | Notas                                                                                                                                                 |
+| -------------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`                           | Work item type                             | Epic / User Story / Task                                                                                                                              |
+| `title`                          | `System.Title`                             | Para hijos, prefijar con el id local: `NL-101 · <title>` (facilita trazabilidad y búsqueda)                                                           |
+| `description` + `technicalNotes` | `System.Description`                       | HTML: descripción en `<p>`; si hay notas, agregar `<p><b>Notas técnicas:</b> …</p>`                                                                   |
+| `acceptanceCriteria[]`           | `Microsoft.VSTS.Common.AcceptanceCriteria` | Como `<ul><li>…</li></ul>`. **Solo existe en User Story**: para Tasks, anexar la lista al final de Description bajo `<b>Criterios de aceptación:</b>` |
+| `storyPoints`                    | `Microsoft.VSTS.Scheduling.StoryPoints`    | Solo User Story. Para Tasks no setear (o usar `OriginalEstimate` en horas si el equipo lo usa)                                                        |
+| `priority`                       | `Microsoft.VSTS.Common.Priority`           | 1=P0, 2=P1, 3=recortable (ver `priorityLegend`)                                                                                                       |
+| `iteration`                      | `System.IterationPath`                     | `NutriLens\Sprint 1` o `NutriLens\Sprint 2` (los Epics no llevan iteración)                                                                           |
+| `tags[]`                         | `System.Tags`                              | Unir con `"; "`                                                                                                                                       |
+| `parent`                         | Link `System.LinkTypes.Hierarchy-Reverse`  | Hacia el ID real del Epic creado                                                                                                                      |
+| `dependsOn[]`                    | Link `System.LinkTypes.Dependency-Reverse` | El item depende de (predecessor) cada ID listado                                                                                                      |
 
 ## Orden de ejecución
 
