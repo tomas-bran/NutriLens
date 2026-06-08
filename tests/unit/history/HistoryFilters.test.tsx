@@ -86,3 +86,42 @@ describe('<HistoryFilters>', () => {
     expect(push).toHaveBeenCalledWith('/historial', { scroll: false });
   });
 });
+
+describe('<HistoryFilters> — bottomsheet en mobile', () => {
+  it('muestra el contador de filtros activos en el botón "Filtros"', () => {
+    render(<HistoryFilters value={{ categoria: 'galletitas', riesgo: 'alto', page: 1 }} />);
+    expect(screen.getByTestId('history-filter-count')).toHaveTextContent('2');
+  });
+
+  it('no renderiza el contador cuando no hay filtros activos (solo la búsqueda no cuenta)', () => {
+    render(<HistoryFilters value={{ q: 'choco', page: 1 }} />);
+    expect(screen.queryByTestId('history-filter-count')).not.toBeInTheDocument();
+  });
+
+  it('el botón "Filtros" abre el bottomsheet (el toolbar pasa a panel fixed + backdrop)', () => {
+    render(<HistoryFilters value={{ page: 1 }} />);
+    // Cerrado: el toolbar está oculto y no hay backdrop ni botón cerrar.
+    expect(screen.getByTestId('history-filter-toolbar').className).toContain('hidden');
+    expect(screen.queryByTestId('history-filter-backdrop')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('history-filter-open'));
+
+    // Abierto: el toolbar es un panel fixed al fondo + aparece backdrop y cerrar.
+    const toolbar = screen.getByTestId('history-filter-toolbar');
+    expect(toolbar.className).toContain('fixed');
+    expect(toolbar.className).toContain('bottom-0');
+    expect(screen.getByTestId('history-filter-backdrop')).toBeInTheDocument();
+    expect(screen.getByTestId('history-filter-close')).toBeInTheDocument();
+  });
+
+  it('el botón cerrar y el backdrop cierran el bottomsheet', () => {
+    render(<HistoryFilters value={{ page: 1 }} />);
+    fireEvent.click(screen.getByTestId('history-filter-open'));
+    fireEvent.click(screen.getByTestId('history-filter-close'));
+    expect(screen.getByTestId('history-filter-toolbar').className).toContain('hidden');
+
+    fireEvent.click(screen.getByTestId('history-filter-open'));
+    fireEvent.click(screen.getByTestId('history-filter-backdrop'));
+    expect(screen.getByTestId('history-filter-toolbar').className).toContain('hidden');
+  });
+});

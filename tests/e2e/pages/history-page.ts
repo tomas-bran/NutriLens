@@ -16,6 +16,9 @@ export class HistoryPage {
   private readonly alergenoSelect: Locator;
   private readonly aptoSelect: Locator;
   private readonly activeChips: Locator;
+  // NL-502: en mobile los filtros viven en un bottomsheet detrás de "Filtros".
+  private readonly filterOpenBtn: Locator;
+  private readonly filterCloseBtn: Locator;
 
   constructor(private readonly page: Page) {
     this.view = page.getByTestId('history-view');
@@ -28,6 +31,30 @@ export class HistoryPage {
     this.alergenoSelect = page.getByTestId('history-filter-alergeno');
     this.aptoSelect = page.getByTestId('history-filter-apto');
     this.activeChips = page.getByTestId('active-filter-chips');
+    this.filterOpenBtn = page.getByTestId('history-filter-open');
+    this.filterCloseBtn = page.getByTestId('history-filter-close');
+  }
+
+  /**
+   * En desktop los selects están inline (siempre visibles). En mobile están
+   * dentro del bottomsheet: si no se ven, lo abrimos tocando "Filtros".
+   */
+  private async openFiltersIfMobile() {
+    if (await this.categoriaSelect.isVisible()) return;
+    await this.filterOpenBtn.click();
+    await expect(this.categoriaSelect).toBeVisible();
+  }
+
+  /**
+   * Cierra el bottomsheet si quedó abierto (mobile), así no tapa el contenido
+   * del listado al hacer las aserciones siguientes. En desktop es un no-op
+   * (el botón de cerrar es `md:hidden`).
+   */
+  private async closeFiltersIfOpen() {
+    if (await this.filterCloseBtn.isVisible()) {
+      await this.filterCloseBtn.click();
+      await expect(this.filterCloseBtn).toBeHidden();
+    }
   }
 
   async goto() {
@@ -62,23 +89,31 @@ export class HistoryPage {
   }
 
   async selectCategoria(value: string) {
+    await this.openFiltersIfMobile();
     await this.categoriaSelect.selectOption(value);
     await this.page.waitForURL(/categoria=/);
+    await this.closeFiltersIfOpen();
   }
 
   async selectRiesgo(value: string) {
+    await this.openFiltersIfMobile();
     await this.riesgoSelect.selectOption(value);
     await this.page.waitForURL(/riesgo=/);
+    await this.closeFiltersIfOpen();
   }
 
   async selectAlergeno(value: string) {
+    await this.openFiltersIfMobile();
     await this.alergenoSelect.selectOption(value);
     await this.page.waitForURL(/alergeno=/);
+    await this.closeFiltersIfOpen();
   }
 
   async selectApto(value: string) {
+    await this.openFiltersIfMobile();
     await this.aptoSelect.selectOption(value);
     await this.page.waitForURL(/apto=/);
+    await this.closeFiltersIfOpen();
   }
 
   async expectActiveChip(key: string) {
