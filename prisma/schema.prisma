@@ -33,6 +33,10 @@ model Product {
   jsonRaw         String   @db.Text
   pipelineTrace   String   @db.Text  // JSON.stringify(StepTrace[])
   imagenPath      String
+  // Metadata del archivo persistido — sirve para auditar tamaño, filtrar por
+  // tipo y migrar a cloud sin re-leer el disco (US-36 audit §3).
+  imagenMime      String?
+  imagenBytes     Int?
   promptVersion   String
   createdAt       DateTime @default(now())
 
