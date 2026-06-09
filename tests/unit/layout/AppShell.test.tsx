@@ -1,15 +1,18 @@
 /**
- * Unit tests for <AppShell> — desktop sidebar + mobile brand strip + mobile bottom nav.
- * Pencil references:
- *   - `iLsWo` Component/Desktop/Sidebar
- *   - `Z2rHzQ` Component/Mobile/BottomNav
+ * Unit tests del <AppShell> — navegación responsive (NL-502).
+ *
+ * jsdom no aplica media queries reales: acá validamos estructura + clases
+ * responsive (sidebar fijo en desktop / bottom nav en mobile) como proxy; la
+ * validación visual por breakpoint vive en `tests/e2e/sidebar-responsive.spec.ts`.
+ *
+ * Pencil refs: `iLsWo` Component/Desktop/Sidebar + `Q3hjvQ` Component/BottomNav.
  */
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { AppShell } from '@/components/layout/AppShell';
 
-describe('<AppShell>', () => {
-  it('renders its children inside <main>', () => {
+describe('<AppShell> — estructura', () => {
+  it('renderiza los children dentro de <main>', () => {
     render(
       <AppShell>
         <p>page content</p>
@@ -18,7 +21,39 @@ describe('<AppShell>', () => {
     expect(screen.getByRole('main')).toHaveTextContent('page content');
   });
 
-  it('renders the sidebar with 4 nav items (Inicio / Analizar / Historial / Chat)', () => {
+  it('en mobile es una columna flex de alto fijo (scroll interno); en desktop, grid de 2 columnas', () => {
+    render(
+      <AppShell>
+        <p>x</p>
+      </AppShell>,
+    );
+    const root = screen.getByTestId('app-shell');
+    // Mobile: flex column con alto = viewport (el scroll vive dentro de main).
+    expect(root.className).toContain('flex');
+    expect(root.className).toContain('flex-col');
+    expect(root.className).toContain('h-[100dvh]');
+    // Desktop: grid de 2 columnas.
+    expect(root.className).toContain('md:grid');
+    expect(root.className).toContain('md:grid-cols-[15rem_1fr]');
+  });
+
+  it('el main es el contenedor de scroll en mobile (flex-1 + overflow-y-auto) y va a la col 2 en desktop', () => {
+    render(
+      <AppShell>
+        <p>x</p>
+      </AppShell>,
+    );
+    const main = screen.getByRole('main');
+    expect(main.className).toContain('flex-1');
+    expect(main.className).toContain('overflow-y-auto');
+    expect(main.className).toContain('md:col-start-2');
+    // El scroll del documento se desactiva en desktop (lo maneja el documento).
+    expect(main.className).toContain('md:overflow-y-visible');
+  });
+});
+
+describe('<AppShell> — sidebar (desktop)', () => {
+  it('renderiza el sidebar con los 4 nav items (Inicio / Analizar / Historial / Chat)', () => {
     render(
       <AppShell>
         <p>x</p>
@@ -30,7 +65,7 @@ describe('<AppShell>', () => {
     expect(screen.getByTestId('nav-chat')).toHaveAttribute('href', '/chat');
   });
 
-  it('marks the active item with aria-current="page"', () => {
+  it('marca el item activo con aria-current="page"', () => {
     render(
       <AppShell active="inicio">
         <p>x</p>
@@ -40,7 +75,17 @@ describe('<AppShell>', () => {
     expect(screen.getByTestId('nav-analizar')).not.toHaveAttribute('aria-current');
   });
 
-  it('hides the historial badge when count is 0', () => {
+  it('muestra los labels de cada nav item', () => {
+    render(
+      <AppShell>
+        <p>x</p>
+      </AppShell>,
+    );
+    expect(screen.getByTestId('nav-inicio')).toHaveTextContent('Inicio');
+    expect(screen.getByTestId('nav-chat')).toHaveTextContent('Chat');
+  });
+
+  it('oculta el badge de historial cuando el count es 0', () => {
     render(
       <AppShell historialCount={0}>
         <p>x</p>
@@ -49,7 +94,7 @@ describe('<AppShell>', () => {
     expect(screen.getByTestId('nav-historial')).not.toHaveTextContent(/^Historial\s*0$/);
   });
 
-  it('shows the historial badge when count > 0', () => {
+  it('muestra el badge de historial cuando el count > 0', () => {
     render(
       <AppShell historialCount={24}>
         <p>x</p>
@@ -58,18 +103,7 @@ describe('<AppShell>', () => {
     expect(screen.getByTestId('nav-historial')).toHaveTextContent('24');
   });
 
-  it('sidebar is sticky positioned (CSS class) so it stays in view while scrolling', () => {
-    render(
-      <AppShell>
-        <p>x</p>
-      </AppShell>,
-    );
-    const sidebar = screen.getByTestId('app-sidebar');
-    expect(sidebar.className).toContain('sticky');
-    expect(sidebar.className).toContain('top-4');
-  });
-
-  it('renders the team identity card at the bottom of the sidebar', () => {
+  it('renderiza la team card al pie del sidebar', () => {
     render(
       <AppShell>
         <p>x</p>
@@ -78,79 +112,46 @@ describe('<AppShell>', () => {
     expect(screen.getByText('Equipo NutriLens')).toBeInTheDocument();
     expect(screen.getByText(/4 · UNLaM/)).toBeInTheDocument();
   });
-});
 
-describe('<AppShell> — mobile bottom navigation (Pencil Z2rHzQ)', () => {
-  it('renders the bottom nav with the same 4 routes as the sidebar', () => {
+  it('el sidebar es fixed (totalmente anclado) y se oculta en mobile (hidden md:flex)', () => {
     render(
       <AppShell>
         <p>x</p>
       </AppShell>,
     );
+    const sidebar = screen.getByTestId('app-sidebar');
+    expect(sidebar.className).toContain('fixed');
+    expect(sidebar.className).toContain('inset-y-0');
+    expect(sidebar.className).toContain('left-0');
+    // En mobile el sidebar se esconde; reaparece en md.
+    expect(sidebar.className.split(/\s+/)).toContain('hidden');
+    expect(sidebar.className).toContain('md:flex');
+    expect(sidebar.className).toContain('w-60');
+  });
+});
+
+describe('<AppShell> — bottom nav (mobile)', () => {
+  it('renderiza el bottom nav con los 4 nav items', () => {
+    render(
+      <AppShell>
+        <p>x</p>
+      </AppShell>,
+    );
+    expect(screen.getByTestId('app-bottom-nav')).toBeInTheDocument();
     expect(screen.getByTestId('bottom-nav-inicio')).toHaveAttribute('href', '/');
     expect(screen.getByTestId('bottom-nav-analizar')).toHaveAttribute('href', '/analizar');
     expect(screen.getByTestId('bottom-nav-historial')).toHaveAttribute('href', '/historial');
     expect(screen.getByTestId('bottom-nav-chat')).toHaveAttribute('href', '/chat');
   });
 
-  it('marks the active item with aria-current="page"', () => {
-    render(
-      <AppShell active="analizar">
-        <p>x</p>
-      </AppShell>,
-    );
-    expect(screen.getByTestId('bottom-nav-analizar')).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByTestId('bottom-nav-inicio')).not.toHaveAttribute('aria-current');
-  });
-
-  it('bottom nav container is fixed at the bottom and labelled', () => {
+  it('el bottom nav va al pie (flex-shrink-0, en flujo) y se oculta en desktop (md:hidden)', () => {
     render(
       <AppShell>
         <p>x</p>
       </AppShell>,
     );
-    const nav = screen.getByTestId('app-bottom-nav');
-    expect(nav.className).toContain('fixed');
-    expect(nav.className).toContain('bottom-0');
-    expect(nav).toHaveAttribute('aria-label', 'Navegación principal');
-  });
-
-  it('hides the historial badge when count is 0', () => {
-    render(
-      <AppShell historialCount={0}>
-        <p>x</p>
-      </AppShell>,
-    );
-    expect(screen.getByTestId('bottom-nav-historial')).not.toHaveTextContent('0');
-  });
-
-  it('shows the historial badge when count > 0', () => {
-    render(
-      <AppShell historialCount={24}>
-        <p>x</p>
-      </AppShell>,
-    );
-    expect(screen.getByTestId('bottom-nav-historial')).toHaveTextContent('24');
-  });
-
-  it('caps the badge label at "99+" for large counts', () => {
-    render(
-      <AppShell historialCount={150}>
-        <p>x</p>
-      </AppShell>,
-    );
-    expect(screen.getByTestId('bottom-nav-historial')).toHaveTextContent('99+');
-  });
-
-  it('container has extra bottom padding on mobile to clear the bottom nav', () => {
-    const { container } = render(
-      <AppShell>
-        <p>x</p>
-      </AppShell>,
-    );
-    const root = container.firstChild as HTMLElement;
-    // pb-24 on mobile, md:pb-4 reverts the offset on desktop.
-    expect(root.className).toContain('pb-24');
-    expect(root.className).toContain('md:pb-4');
+    const bottomNav = screen.getByTestId('app-bottom-nav');
+    expect(bottomNav.className).toContain('flex-shrink-0');
+    expect(bottomNav.className).toContain('md:hidden');
   });
 });

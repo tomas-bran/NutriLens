@@ -182,8 +182,8 @@ describe('POST /api/chat — alérgeno en el query (US-28 §2)', () => {
   });
 });
 
-describe('POST /api/chat — caso unknown (E05 §8)', () => {
-  it('pregunta absurda → mensaje fallback "No te entendí bien" sin tocar productos', async () => {
+describe('POST /api/chat — caso unknown (smalltalk LLM)', () => {
+  it('pregunta absurda → LLM smalltalk responde conversacional sin tocar productos', async () => {
     // Seedeamos algo para verificar que NO viene en el response.
     await prisma.product.create({ data: seedRow() });
 
@@ -192,9 +192,11 @@ describe('POST /api/chat — caso unknown (E05 §8)', () => {
     const body = await res.json();
     expect(body.intent.kind).toBe('unknown');
     expect(body.products).toEqual([]);
-    expect(body.answer).toContain('No te entendí bien');
-    expect(body.fallback?.reason).toBe('unknown_intent');
-    expect(body.fallback?.showAnalyzeCta).toBe(false);
+    // El MockIaProvider devuelve un texto fijo para answerWithContext;
+    // sólo verificamos que es un string no-vacío y no el fallback canned.
+    expect(typeof body.answer).toBe('string');
+    expect(body.answer.length).toBeGreaterThan(0);
+    expect(body.fallback).toBeNull();
   });
 });
 

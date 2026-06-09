@@ -29,6 +29,7 @@ export type IconName =
   | 'sparkles'
   | 'line-chart'
   | 'arrow-right'
+  | 'filter'
   // Allergens — hand-rolled glyphs (no lucide equivalents).
   | 'wheat'
   | 'milk'
@@ -144,6 +145,10 @@ const ICON_PATHS: Record<IconName, IconPathDef> = {
   },
   'arrow-right': {
     paths: ['M5 12h14', 'M13 5l7 7-7 7'],
+  },
+  // Funnel — filtros.
+  filter: {
+    paths: ['M22 3H2l8 9.46V19l4 2v-8.54L22 3z'],
   },
   // Wheat ear — gluten allergen.
   wheat: {
