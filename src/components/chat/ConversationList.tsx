@@ -61,7 +61,7 @@ export function ConversationList({ conversations, onOpen, onDelete }: Conversati
             {confirmDelete === conv.id ? (
               <div className="flex flex-1 items-center gap-2">
                 <span className="flex-1 text-sm text-[var(--color-text)]">
-                  ¿Eliminar "{conv.title.slice(0, 40)}"?
+                  ¿Eliminar &quot;{conv.title.slice(0, 40)}&quot;?
                 </span>
                 <Button
                   variant="ghost"
