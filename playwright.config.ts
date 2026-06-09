@@ -49,6 +49,13 @@ export default defineConfig({
       IA_PROVIDER: 'mock',
       DATABASE_URL:
         process.env.DATABASE_URL ?? 'postgresql://nutrilens:nutrilens@localhost:5432/nutrilens',
+      // El step `enrich_with_off` hace fetch real a Open Food Facts. En E2E
+      // con MockIaProvider el resultado es no-determinístico (depende de qué
+      // matches devuelva OFF para "Mock Product") y puede mutar riesgo y
+      // alérgenos del producto fixture, rompiendo aserciones tipo
+      // `expectRiskLevel('bajo')`. Lo desactivamos — su feature tiene
+      // cobertura propia en unit + integration tests.
+      OFF_ENABLED: 'false',
     },
   },
 });
