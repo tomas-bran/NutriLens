@@ -24,6 +24,7 @@ import { generate_explanation } from '@/lib/pipeline/steps/generate-explanation'
 import { persist } from '@/lib/pipeline/steps/persist';
 import { validate_file } from '@/lib/pipeline/steps/validate-file';
 import { validate_schema } from '@/lib/pipeline/steps/validate-schema';
+import { enrich_with_off } from '@/lib/pipeline/steps/enrich-with-off';
 
 // Force the Node.js runtime — pdf-parse uses Node APIs and the multipart
 // body parsing also benefits from the larger Node defaults.
@@ -89,6 +90,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     ctx = await detect_label_kind(ctx, ia);
     ctx = await extract_with_ia(ctx, ia);
     ctx = await validate_schema(ctx, ia);
+    ctx = await enrich_with_off(ctx);
     ctx = await apply_rules(ctx);
     ctx = await compute_risk(ctx);
     ctx = await generate_explanation(ctx, ia);
@@ -116,6 +118,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         savedAt: ctx.saved.createdAt.toISOString(),
         cachedFromDedup: ctx.cachedFromDedup === true,
         pipelineTrace: ctx.steps,
+        offEnrichment: ctx.offEnrichment ?? null,
       },
       { status: 200, headers: { 'X-Request-Id': requestId } },
     );

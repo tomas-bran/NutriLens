@@ -3,6 +3,7 @@ import type { ApiError } from '@schemas/errors';
 import type { LabelKind, ProductExtraction } from '@schemas/product';
 import type { StepTrace } from '@schemas/pipeline';
 import type { RulesResult } from '@/lib/rules/apply';
+import type { OFFEnrichmentResult } from '@/lib/off/enrich';
 
 export interface AnalysisFile {
   name: string;
@@ -36,6 +37,8 @@ export interface AnalysisContext {
   rules?: RulesResult;
   /** Final explanation text (sanitized). Optional — failure tolerated per spec E03 §5.4. */
   explanation?: string;
+  /** Enrichment from Open Food Facts (NL-601). null = skipped or no match. */
+  offEnrichment?: OFFEnrichmentResult | null;
   /** Persisted product row (filled by the persist step; spec E04 §3). */
   saved?: PrismaProduct;
   /** True when persist reused an existing row by fileHash (dedup; spec E04 §3.1). */

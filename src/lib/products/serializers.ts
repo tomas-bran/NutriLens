@@ -7,6 +7,7 @@
  */
 import type { Categoria as PrismaCategoria, Product as PrismaProduct } from '@prisma/client';
 import type { Categoria, Riesgo, Sello } from '@schemas/product';
+import type { OFFEnrichmentResult } from '@/lib/off/enrich';
 
 const CAT_ZOD_TO_PRISMA: Record<Categoria, PrismaCategoria> = {
   galletitas: 'galletitas',
@@ -85,6 +86,7 @@ export interface ProductDetail extends ProductListItem {
   jsonRaw: string;
   pipelineTrace: unknown;
   promptVersion: string;
+  offEnrichment: OFFEnrichmentResult | null;
 }
 
 export function toDetail(p: PrismaProduct): ProductDetail {
@@ -97,6 +99,7 @@ export function toDetail(p: PrismaProduct): ProductDetail {
     jsonRaw: p.jsonRaw,
     pipelineTrace: safeJsonValue(p.pipelineTrace, []),
     promptVersion: p.promptVersion,
+    offEnrichment: p.offEnrichment ? safeJsonValue<OFFEnrichmentResult>(p.offEnrichment, null as unknown as OFFEnrichmentResult) : null,
   };
 }
 

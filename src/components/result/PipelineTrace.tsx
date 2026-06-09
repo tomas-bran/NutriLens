@@ -33,6 +33,7 @@ export const STEP_LABELS: Record<StepName, string> = {
   detect_label_kind: 'Detectar etiqueta',
   extract_with_ia: 'Extracción con IA',
   validate_schema: 'Validar JSON',
+  enrich_with_off: 'Verificar con OFF',
   apply_rules: 'Aplicar reglas',
   compute_risk: 'Calcular riesgo',
   generate_explanation: 'Generar explicación',

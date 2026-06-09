@@ -72,6 +72,7 @@ export async function persist(ctx: AnalysisContext): Promise<AnalysisContext> {
         explanation: ctx.explanation ?? null,
         jsonRaw: ctx.extractionRaw,
         pipelineTrace: JSON.stringify(ctx.steps),
+        offEnrichment: ctx.offEnrichment ? JSON.stringify(ctx.offEnrichment) : null,
         imagenPath,
         promptVersion: PROMPT_VERSION,
       },

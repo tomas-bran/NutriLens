@@ -451,6 +451,7 @@ describe('POST /api/analyze — detect_label_kind gate (US-05)', () => {
       'detect_label_kind',
       'extract_with_ia',
       'validate_schema',
+      'enrich_with_off',
       'apply_rules',
       'compute_risk',
       'generate_explanation',

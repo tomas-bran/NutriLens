@@ -81,6 +81,9 @@ function makeRow(overrides: Partial<PrismaProduct> = {}): PrismaProduct {
     pipelineTrace: JSON.stringify([{ name: 'validate_file', status: 'ok' }]),
     imagenPath: '/uploads/abc.jpg',
     promptVersion: 'extract_product-v1',
+    offEnrichment: null,
+    imagenBytes: null,
+    imagenMime: null,
     createdAt: new Date('2026-05-16T14:32:11.000Z'),
     ...overrides,
   };
@@ -137,6 +140,7 @@ describe('toDetail (spec §5.2 full shape)', () => {
       jsonRaw: '{"raw":"json"}',
       pipelineTrace: [{ name: 'validate_file', status: 'ok' }],
       promptVersion: 'extract_product-v1',
+      offEnrichment: null,
     });
   });
 

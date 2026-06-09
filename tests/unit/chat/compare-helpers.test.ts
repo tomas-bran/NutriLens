@@ -29,6 +29,9 @@ function row(nombre: string): PrismaProduct {
     pipelineTrace: '[]',
     imagenPath: '/x.jpg',
     promptVersion: 'extract_product-v1',
+    offEnrichment: null,
+    imagenBytes: null,
+    imagenMime: null,
     createdAt: new Date(),
   };
 }
