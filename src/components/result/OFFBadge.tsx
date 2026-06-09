@@ -64,8 +64,8 @@ export function OFFBadge({ enrichment }: OFFBadgeProps) {
               </p>
               {enrichment.discrepancies.map((d) => (
                 <p key={d.field} className="text-xs text-amber-700">
-                  <span className="font-medium">{d.field}</span>: extraído "{d.extracted}" — OFF
-                  dice "{d.offValue}"
+                  <span className="font-medium">{d.field}</span>: extraído &quot;{d.extracted}&quot;
+                  — OFF dice &quot;{d.offValue}&quot;
                 </p>
               ))}
               {hasMissingAllergens && (
