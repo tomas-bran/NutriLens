@@ -55,6 +55,10 @@ beforeEach(() => {
   cache.clear();
   _resetIaProvider();
   process.env.IA_PROVIDER = 'mock';
+  // El step `enrich_with_off` hace fetch a Open Food Facts (3s timeout).
+  // Los snapshots fixtures testean el flujo extract→sanitize→validate y se
+  // desbordan los 5s al pasar por OFF. Su feature tiene cobertura propia.
+  process.env.OFF_ENABLED = 'false';
 });
 
 afterEach(() => {

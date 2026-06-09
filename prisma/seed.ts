@@ -1002,6 +1002,9 @@ export async function seedDatabase(client: PrismaClient = prisma): Promise<numbe
       jsonRaw: buildJsonRaw(p),
       pipelineTrace: buildPipelineTrace(p),
       imagenPath: IMAGE_BY_CATEGORIA[p.categoria],
+      // Metadata commiteada con los placeholders JFIF 1x1 (334 bytes c/u).
+      imagenMime: 'image/jpeg',
+      imagenBytes: 334,
       promptVersion: PROMPT_VERSION,
       createdAt: new Date(now - p.createdAtOffsetMin * 60_000),
     })),

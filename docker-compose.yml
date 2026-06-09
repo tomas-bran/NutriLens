@@ -28,15 +28,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # `.env.local` se carga al levantar el contenedor — ahí viven
+    # IA_PROVIDER + AZURE_OPENAI_* + AZURE_AI_FOUNDRY_* + LOG_LEVEL. Los
+    # values del bloque `environment:` de abajo tienen precedencia
+    # (DATABASE_URL apunta a "db", el hostname de la red de compose).
+    env_file:
+      - path: .env.local
+        required: false
     environment:
       # Inside the compose network, Postgres is reachable as "db".
       DATABASE_URL: postgresql://${POSTGRES_USER:-nutrilens}:${POSTGRES_PASSWORD:-nutrilens}@db:5432/${POSTGRES_DB:-nutrilens}
-      IA_PROVIDER: ${IA_PROVIDER:-mock}
-      AZURE_AI_FOUNDRY_ENDPOINT: ${AZURE_AI_FOUNDRY_ENDPOINT:-}
-      AZURE_AI_FOUNDRY_KEY: ${AZURE_AI_FOUNDRY_KEY:-}
-      AZURE_AI_FOUNDRY_MODEL_MULTIMODAL: ${AZURE_AI_FOUNDRY_MODEL_MULTIMODAL:-Phi-4-multimodal-instruct}
-      AZURE_AI_FOUNDRY_MODEL_MINI: ${AZURE_AI_FOUNDRY_MODEL_MINI:-Phi-4-mini-instruct}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
       NEXT_PUBLIC_APP_URL: http://localhost:3000
     ports:
       - '3000:3000'
