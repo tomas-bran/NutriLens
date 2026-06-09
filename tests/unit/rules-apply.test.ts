@@ -130,6 +130,63 @@ describe('apply_rules — NO_VEGAN blacklist (US-16 Escenario 3)', () => {
   });
 });
 
+describe('apply_rules — LLM downgrade (regresion bug Don Yeyo)', () => {
+  // El LLM puede detectar non-apto desde el nombre del producto o la foto
+  // sin que el ingrediente aparezca en la lista (ej. "Ravioles de carne y
+  // espinaca" → apto_vegano=false con ingredientes_detectados=[]). Antes
+  // las reglas pisaban ese `false` con un `true` defensivo, dejando un
+  // falso positivo de seguridad. Ahora ambas señales tienen que coincidir.
+  it('respeta apto_vegano=false del LLM cuando los ingredientes vienen vacíos', () => {
+    const r = apply_rules(
+      makeProduct({
+        producto: 'Ravioles de carne y espinaca',
+        ingredientes_detectados: [],
+        alergenos: [],
+        apto_vegano: false,
+      }),
+    );
+    expect(r.apto_vegano).toBe(false);
+    expect(r.reglas_aplicadas).toContain('llm_marca_no_vegano');
+  });
+
+  it('respeta apto_celiaco=false del LLM cuando los ingredientes vienen vacíos', () => {
+    const r = apply_rules(
+      makeProduct({
+        ingredientes_detectados: [],
+        alergenos: [],
+        apto_celiaco: false,
+      }),
+    );
+    expect(r.apto_celiaco).toBe(false);
+    expect(r.reglas_aplicadas).toContain('llm_marca_no_celiaco');
+  });
+
+  it('respeta apto_sin_lactosa=false del LLM cuando los ingredientes vienen vacíos', () => {
+    const r = apply_rules(
+      makeProduct({
+        ingredientes_detectados: [],
+        alergenos: [],
+        apto_sin_lactosa: false,
+      }),
+    );
+    expect(r.apto_sin_lactosa).toBe(false);
+    expect(r.reglas_aplicadas).toContain('llm_marca_con_lactosa');
+  });
+
+  it('regla local downgrade gana incluso si el LLM dijo apto=true', () => {
+    // Caso opuesto: LLM optimista, regla local detecta gluten → no apto.
+    const r = apply_rules(
+      makeProduct({
+        ingredientes_detectados: ['harina de trigo'],
+        apto_celiaco: true,
+      }),
+    );
+    expect(r.apto_celiaco).toBe(false);
+    expect(r.reglas_aplicadas).toContain('contiene_gluten');
+    expect(r.reglas_aplicadas).not.toContain('llm_marca_no_celiaco');
+  });
+});
+
 describe('apply_rules — happy path (apto en todo)', () => {
   it('passes a vegan + celiac + lactose-free product', () => {
     const r = apply_rules(

@@ -93,7 +93,9 @@ describe('persist step (US-22)', () => {
     expect(out.saved?.nombre).toBe('Persist Test');
     expect(out.saved?.aptoCeliaco).toBe(false);
     expect(out.saved?.riesgo).toBe('alto');
-    expect(out.saved?.imagenPath).toMatch(/^\/uploads\/[a-z0-9-]+\.jpg$/);
+    // El storage actual coloca las imágenes en `/uploads/analyzed/` (cambio de
+    // `f3492d8 feat(ai,storage): plug-n-play provider + persistencia de imágenes`).
+    expect(out.saved?.imagenPath).toMatch(/^\/uploads\/analyzed\/[a-z0-9-]+\.jpg$/);
     expect(out.steps[0]).toMatchObject({ name: 'persist', status: 'ok' });
   });
 

@@ -3,7 +3,8 @@
  *
  * Pipeline order (US-03 / US-05 / US-08 / US-09 / US-14 / US-16 / US-17 / US-18 / US-22):
  *   validate_file → detect_label_kind → extract_with_ia → validate_schema →
- *   apply_rules → compute_risk → generate_explanation → persist → respond 200
+ *   enrich_with_off → apply_rules → compute_risk → generate_explanation →
+ *   persist → respond 200
  *
  * See `docs/specs/E01-onboarding-y-upload.md §4-§5`,
  * `docs/specs/E02-analisis-multimodal-ia.md §3-§5`,
@@ -19,6 +20,7 @@ import type { AnalysisContext } from '@/lib/pipeline/context';
 import { apply_rules } from '@/lib/pipeline/steps/apply-rules';
 import { compute_risk } from '@/lib/pipeline/steps/compute-risk';
 import { detect_label_kind } from '@/lib/pipeline/steps/detect-label-kind';
+import { enrich_with_off } from '@/lib/pipeline/steps/enrich-with-off';
 import { extract_with_ia } from '@/lib/pipeline/steps/extract-with-ia';
 import { generate_explanation } from '@/lib/pipeline/steps/generate-explanation';
 import { persist } from '@/lib/pipeline/steps/persist';
@@ -89,6 +91,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     ctx = await detect_label_kind(ctx, ia);
     ctx = await extract_with_ia(ctx, ia);
     ctx = await validate_schema(ctx, ia);
+    ctx = await enrich_with_off(ctx);
     ctx = await apply_rules(ctx);
     ctx = await compute_risk(ctx);
     ctx = await generate_explanation(ctx, ia);
