@@ -19,9 +19,11 @@ function makeOff(overrides: Partial<OFFProduct> = {}): OFFProduct {
   };
 }
 
+import type { Alergeno } from '@schemas/product';
+
 const baseExtracted = {
   producto: 'Galletitas Chocolinas',
-  alergenos: ['gluten', 'leche'] as const,
+  alergenos: ['gluten', 'leche'] as Alergeno[],
   apto_vegano: false,
   apto_celiaco: false,
 };
@@ -50,7 +52,7 @@ describe('buildEnrichment — with OFF match', () => {
   it('detects missing allergens when extraction is incomplete', () => {
     const extractedMissingMilk = {
       ...baseExtracted,
-      alergenos: ['gluten'] as typeof baseExtracted.alergenos,
+      alergenos: ['gluten'] as Alergeno[],
     };
     const result = buildEnrichment(extractedMissingMilk, makeOff());
     expect(result.missingAllergens).toContain('leche');
