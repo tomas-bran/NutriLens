@@ -17,7 +17,11 @@ export async function GET(
 ): Promise<NextResponse> {
   const { id } = await params;
   const row = await prisma.conversation.findUnique({ where: { id } });
-  if (!row) return NextResponse.json({ error: 'not_found', reason: 'Conversación no encontrada.' }, { status: 404 });
+  if (!row)
+    return NextResponse.json(
+      { error: 'not_found', reason: 'Conversación no encontrada.' },
+      { status: 404 },
+    );
 
   let messages: StoredMessage[] = [];
   try {
@@ -48,7 +52,11 @@ export async function PATCH(
   }
 
   const existing = await prisma.conversation.findUnique({ where: { id } });
-  if (!existing) return NextResponse.json({ error: 'not_found', reason: 'Conversación no encontrada.' }, { status: 404 });
+  if (!existing)
+    return NextResponse.json(
+      { error: 'not_found', reason: 'Conversación no encontrada.' },
+      { status: 404 },
+    );
 
   const updateData: { title?: string; messages?: string } = {};
   if (typeof body.title === 'string' && body.title.trim()) {
@@ -59,7 +67,10 @@ export async function PATCH(
   }
 
   if (Object.keys(updateData).length === 0) {
-    return NextResponse.json({ error: 'invalid_query', reason: 'Nada que actualizar.' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'invalid_query', reason: 'Nada que actualizar.' },
+      { status: 400 },
+    );
   }
 
   const updated = await prisma.conversation.update({ where: { id }, data: updateData });
@@ -72,7 +83,11 @@ export async function DELETE(
 ): Promise<NextResponse> {
   const { id } = await params;
   const existing = await prisma.conversation.findUnique({ where: { id } });
-  if (!existing) return NextResponse.json({ error: 'not_found', reason: 'Conversación no encontrada.' }, { status: 404 });
+  if (!existing)
+    return NextResponse.json(
+      { error: 'not_found', reason: 'Conversación no encontrada.' },
+      { status: 404 },
+    );
 
   await prisma.conversation.delete({ where: { id } });
   return new NextResponse(null, { status: 204 });

@@ -25,10 +25,13 @@ export function ConversationList({ conversations, onOpen, onDelete }: Conversati
 
   async function handleRename(id: string) {
     const newTitle = renameInputRef.current?.value.trim();
-    if (!newTitle) { setRenaming(null); return; }
+    if (!newTitle) {
+      setRenaming(null);
+      return;
+    }
     const updated = await updateConversation(id, { title: newTitle });
     if (updated) {
-      setItems((prev) => prev.map((c) => c.id === id ? { ...c, title: updated.title } : c));
+      setItems((prev) => prev.map((c) => (c.id === id ? { ...c, title: updated.title } : c)));
     }
     setRenaming(null);
   }
@@ -63,13 +66,13 @@ export function ConversationList({ conversations, onOpen, onDelete }: Conversati
                 <Button
                   variant="ghost"
                   onClick={() => setConfirmDelete(null)}
-                  className="text-xs px-2 py-1"
+                  className="px-2 py-1 text-xs"
                 >
                   Cancelar
                 </Button>
                 <Button
                   onClick={() => void handleDelete(conv.id)}
-                  className="text-xs px-2 py-1 bg-red-500 hover:bg-red-600 text-white border-red-500"
+                  className="border-red-500 bg-red-500 px-2 py-1 text-xs text-white hover:bg-red-600"
                 >
                   Eliminar
                 </Button>
@@ -89,10 +92,17 @@ export function ConversationList({ conversations, onOpen, onDelete }: Conversati
                       className="flex-1 rounded-lg border border-[var(--color-primary)] px-2 py-1 text-sm outline-none"
                       autoFocus
                     />
-                    <Button onClick={() => void handleRename(conv.id)} className="text-xs px-2 py-1">
+                    <Button
+                      onClick={() => void handleRename(conv.id)}
+                      className="px-2 py-1 text-xs"
+                    >
                       Guardar
                     </Button>
-                    <Button variant="ghost" onClick={() => setRenaming(null)} className="text-xs px-2 py-1">
+                    <Button
+                      variant="ghost"
+                      onClick={() => setRenaming(null)}
+                      className="px-2 py-1 text-xs"
+                    >
                       Cancelar
                     </Button>
                   </div>
@@ -104,7 +114,10 @@ export function ConversationList({ conversations, onOpen, onDelete }: Conversati
                       className="flex min-w-0 flex-1 items-start gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
                       data-testid={`conv-open-${conv.id}`}
                     >
-                      <Icon name="chat" className="mt-0.5 h-4 w-4 flex-shrink-0 text-[var(--color-text-muted)]" />
+                      <Icon
+                        name="chat"
+                        className="mt-0.5 h-4 w-4 flex-shrink-0 text-[var(--color-text-muted)]"
+                      />
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-[var(--color-text)]">
                           {conv.title}

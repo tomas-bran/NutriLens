@@ -9,7 +9,9 @@ export async function listConversations(): Promise<ConversationSummary[]> {
   return res.json() as Promise<ConversationSummary[]>;
 }
 
-export async function createConversation(messages: StoredMessage[]): Promise<{ id: string; title: string } | null> {
+export async function createConversation(
+  messages: StoredMessage[],
+): Promise<{ id: string; title: string } | null> {
   const res = await fetch('/api/conversations', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

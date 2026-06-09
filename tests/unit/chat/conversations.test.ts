@@ -7,11 +7,14 @@ import { generateTitle } from '@/lib/conversations/types';
 
 describe('generateTitle (NL-301)', () => {
   it('returns full string when ≤60 chars', () => {
-    expect(generateTitle('¿Qué productos contienen leche?')).toBe('¿Qué productos contienen leche?');
+    expect(generateTitle('¿Qué productos contienen leche?')).toBe(
+      '¿Qué productos contienen leche?',
+    );
   });
 
   it('truncates at word boundary when >60 chars', () => {
-    const long = 'Mostrame todos los productos que tienen exceso en sodio y que sean aptos para celíacos';
+    const long =
+      'Mostrame todos los productos que tienen exceso en sodio y que sean aptos para celíacos';
     const result = generateTitle(long);
     expect(result.length).toBeLessThanOrEqual(63); // 60 + '…'
     expect(result.endsWith('…')).toBe(true);

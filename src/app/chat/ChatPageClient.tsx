@@ -95,7 +95,12 @@ export function ChatPageClient({
       const stored = messages.map((m) =>
         m.role === 'user'
           ? { role: 'user' as const, text: m.text }
-          : { role: 'assistant' as const, text: m.text, products: m.products, fallback: m.fallback },
+          : {
+              role: 'assistant' as const,
+              text: m.text,
+              products: m.products,
+              fallback: m.fallback,
+            },
       );
 
       if (!conversationIdRef.current) {
@@ -130,11 +135,7 @@ export function ChatPageClient({
         dispatch({ type: 'success', assistant: assistantMessage });
 
         // NL-301: persist after each full exchange
-        const allMessages = [
-          ...state.messages,
-          userMessage,
-          assistantMessage,
-        ];
+        const allMessages = [...state.messages, userMessage, assistantMessage];
         void persistMessages(allMessages);
       } catch (err) {
         const reason =
@@ -163,7 +164,9 @@ export function ChatPageClient({
       role: m.role,
       id: makeId(),
       text: m.text,
-      ...(m.role === 'assistant' ? { products: m.products ?? [], fallback: m.fallback ?? null } : {}),
+      ...(m.role === 'assistant'
+        ? { products: m.products ?? [], fallback: m.fallback ?? null }
+        : {}),
     })) as ChatMessage[];
     dispatch({ type: 'load', messages });
   }, []);

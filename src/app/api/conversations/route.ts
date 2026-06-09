@@ -41,7 +41,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const { messages } = body;
   if (!Array.isArray(messages) || messages.length === 0) {
-    return NextResponse.json({ error: 'invalid_query', reason: 'messages requerido.' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'invalid_query', reason: 'messages requerido.' },
+      { status: 400 },
+    );
   }
 
   const firstUser = messages.find((m) => m.role === 'user');
