@@ -24,6 +24,7 @@ import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatHero } from '@/components/chat/ChatHero';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatThread } from '@/components/chat/ChatThread';
+import { SuggestionPills } from '@/components/chat/SuggestionPills';
 import type { ChatMessage, ChatStatus } from '@/components/chat/types';
 import { fetchChat } from '@/lib/chat/fetch-chat';
 import type { ChatApiResponse } from '@/lib/chat/response';
@@ -155,6 +156,13 @@ export function ChatPageClient({
           )}
 
           <div className="sticky bottom-0 bg-[var(--color-bg)] pt-2">
+            {hasMessages && state.status === 'IDLE' && (
+              <SuggestionPills
+                onPick={handleSubmit}
+                lastQuestion={state.lastUserQuestion}
+                className="mb-2"
+              />
+            )}
             <ChatInput onSubmit={handleSubmit} disabled={inputDisabled} />
           </div>
         </div>
