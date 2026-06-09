@@ -52,17 +52,27 @@ export class HistoryPage {
     await this.noResultsClear.click();
   }
 
-  /**
-   * Selecciona un valor en un combobox de Radix Select. El trigger es un
-   * `<button>`; el listbox aparece en un Portal con `data-testid` derivado
-   * (`${triggerId}-content`) y cada opción tiene
-   * `data-testid="${triggerId}-option-${value}"`. Se clickea el trigger
-   * para abrir y luego la opción.
-   */
+  private async openFiltersIfNeeded() {
+    const openBtn = this.page.getByTestId('history-filter-open');
+    if (await openBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+      await openBtn.click();
+      await this.page.getByTestId('history-filter-categoria').waitFor({ state: 'visible' });
+    }
+  }
+
+  private async closeFiltersIfNeeded() {
+    const closeBtn = this.page.getByTestId('history-filter-close');
+    if (await closeBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+      await closeBtn.click();
+    }
+  }
+
   private async selectRadixOption(triggerTestId: string, value: string, expectedUrl: RegExp) {
+    await this.openFiltersIfNeeded();
     await this.page.getByTestId(triggerTestId).click();
     await this.page.getByTestId(`${triggerTestId}-option-${value}`).click();
     await this.page.waitForURL(expectedUrl);
+    await this.closeFiltersIfNeeded();
   }
 
   async selectCategoria(value: string) {
