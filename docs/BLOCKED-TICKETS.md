@@ -1,7 +1,6 @@
 # NutriLens — Tickets bloqueados: qué necesitás hacer para desbloquearme
 
-> **Generado por Claude el 2026-06-09** tras implementar todos los tickets desbloqueables.
-> Cada sección describe qué necesito de vos, los pasos exactos, y la branch/ticket que continúo en cuanto me confirmes que está listo.
+> **Actualizado 2026-06-09** — Stack migrada de AWS a **Azure** usando el crédito de $100 de Azure for Students (la misma suscripción que ya usás para Azure DevOps). Sin costos fuera del crédito para el TP.
 
 ---
 
@@ -9,7 +8,9 @@
 
 | PR | Branch | Tickets |
 |----|--------|---------|
-| #4 | `feat/NL-502-sidebar-fijo` | NL-502 (ya cerrado en ADO) |
+| #1 | `feat/NL-303-markdown-chat` | NL-303 — **CI verde ✅** |
+| #3 | `chore/audit-2026-05` | audit — **CI verde ✅** |
+| #4 | `feat/NL-502-sidebar-fijo` | NL-502 |
 | #5 | `feat/NL-501-paste-image` | NL-501 |
 | #6 | `feat/NL-503-suggestion-pills` | NL-503 |
 | #7 | `feat/US-39-timeout-fallback` | US-39 (AB#45) |
@@ -17,111 +18,225 @@
 | #9 | `feat/NL-301-302-chat-history` | NL-301, NL-302 |
 | #10 | `feat/NL-403-health-ranking` | NL-403 |
 | #11 | `feat/NL-702-compare-verdict` | NL-702 |
-
-Los PRs #1 (NL-303) y #3 (chore/audit) ya estaban abiertos y tienen todos los checks en verde.
-
----
-
-## GRUPO 1 — Infraestructura AWS base (NL-101, NL-102, NL-103, NL-104)
-
-**Por qué me bloquea:** Todos los tickets del E2 (multi-usuario con Cognito), E4 (RAG vectorial con pgvector) y E8 (deploy en producción) dependen de que exista una cuenta AWS con los recursos básicos levantados.
-
-### Pasos exactos
-
-1. **NL-104 — Cuenta AWS, presupuesto y guardas de costo (AB#64)**
-   - Creá una cuenta AWS (si no tenés una) o usá la que ya tenés.
-   - Habilitá un billing alert en CloudWatch: `$50 USD` como primera guardia, `$100 USD` como límite duro.
-   - Anotame: `Account ID`, `Region` (recomiendo `us-east-1` por compatibilidad con Amplify).
-
-2. **NL-101 — RDS PostgreSQL con pgvector (AB#61)**
-   - Creá una instancia RDS PostgreSQL 16 (`db.t3.micro` para dev, es gratis en el free tier).
-   - Habilitá la extensión `vector`: conectate con psql y ejecutá `CREATE EXTENSION vector;`.
-   - Anotame: `host`, `port`, `database`, `username` + password (para `.env`).
-
-3. **NL-102 — Bucket S3 para imágenes (AB#62)**
-   - Creá un bucket S3 (`nutrilens-uploads` o similar).
-   - Configurá CORS para permitir PUT desde el dominio de Amplify.
-   - Creá un IAM user con permisos `s3:PutObject` y `s3:GetObject` sobre el bucket.
-   - Anotame: `bucket name`, `region`, `access key ID`, `secret access key`.
-
-4. **NL-103 — Cognito User Pool (AB#63)**
-   - Creá un User Pool en Cognito con email como identificador.
-   - Habilitá sign-up (o solo admin-create si querés controlarlo).
-   - Creá un App Client (sin secret para frontend SPA).
-   - Anotame: `User Pool ID`, `Client ID`, `Region`.
-
-**Una vez que me des estos datos:**
-- Actualizo `.env.example` con las variables nuevas.
-- Implemento NL-201 (login), NL-202 (route protection), NL-203 (multi-user data model).
-- Branch: `feat/NL-201-203-auth` (lo creo desde `main` en ese momento).
+| #13 | `feat/NL-901-coverage-gate` | NL-901 |
 
 ---
 
-## GRUPO 2 — Multi-usuario con Cognito (NL-201, NL-202, NL-203)
+## Stack Azure (reemplaza AWS, usa el crédito student)
 
-**Depende de:** GRUPO 1 completo.
+| Servicio | Azure equivalente | Costo estimado |
+|----------|-------------------|----------------|
+| Base de datos + pgvector | Azure Database for PostgreSQL Flexible Server (B1ms) | **Gratis 12 meses** → ~$12/mes |
+| Almacenamiento de imágenes | Azure Blob Storage | **~$0.02/GB/mes** |
+| Hosting Next.js | Azure App Service F1 | **Gratis para siempre** |
+| Autenticación | NextAuth.js con email/password (sin servicio externo) | **$0** |
 
-**Por qué me bloquea:** Sin un User Pool de Cognito operativo no puedo implementar el flujo de login ni proteger las rutas.
+Con el crédito de $100 tenés ~8 meses post-free-tier. Para el TP el gasto total es $0.
 
-**NL-302 nota:** La verificación de ownership en rename/delete de conversaciones está marcada con `// TODO NL-201` en el route handler. En cuanto implementemos auth, lo conecto solo.
+---
 
-### Pasos que necesito de vos antes de empezar
+## GRUPO 1 — Infraestructura Azure base (NL-101, NL-102, NL-103, NL-104)
 
-1. Completar GRUPO 1.
-2. Decidir el scope del registro:
-   - **Opción A**: Solo el equipo del TP (admin crea los usuarios manualmente en Cognito console).
-   - **Opción B**: Registro público con email de confirmación.
-   - Me avisás cuál preferís.
+**Por qué me bloquea:** Los grupos 3 y 4 (pgvector RAG + deploy) dependen de esto.
+
+### 1a. Activar la suscripción Azure for Students
+
+1. Ir a [azure.microsoft.com/free/students](https://azure.microsoft.com/free/students)
+2. Loguearte con tu email universitario (el mismo que usás en Azure DevOps, `fmartucci@alumno.unlam.edu.ar`)
+3. Verificar que aparece el crédito de $100. Si ya lo usaste, la cuenta gratuita de Azure igualmente tiene F1 + storage free forever.
+4. Anotame tu **Subscription ID** (lo ves en "Subscriptions" en el portal de Azure).
+
+### 1b. NL-101 — Base de datos PostgreSQL con pgvector (AB#61)
+
+```bash
+# Instalá Azure CLI si no lo tenés
+brew install azure-cli
+
+# Login
+az login
+
+# Creá un resource group
+az group create --name nutrilens-rg --location eastus
+
+# Creá el servidor PostgreSQL (B1ms = free tier 12 meses)
+az postgres flexible-server create \
+  --name nutrilens-db \
+  --resource-group nutrilens-rg \
+  --location eastus \
+  --admin-user nutrilens \
+  --admin-password <TU_PASSWORD> \
+  --sku-name Standard_B1ms \
+  --tier Burstable \
+  --storage-size 32 \
+  --version 16
+
+# Habilitá acceso desde tu IP (o desde Azure services)
+az postgres flexible-server firewall-rule create \
+  --name allow-azure-services \
+  --resource-group nutrilens-rg \
+  --server-name nutrilens-db \
+  --start-ip-address 0.0.0.0 \
+  --end-ip-address 0.0.0.0
+```
+
+Conectate y habilitá pgvector:
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+**Me anotás:**
+- `host`: `nutrilens-db.postgres.database.azure.com`
+- `database`: `postgres` (o el nombre que elijas)
+- `user`: `nutrilens`
+- `password`: el que pusiste arriba
+
+### 1c. NL-102 — Blob Storage para imágenes (AB#62)
+
+```bash
+# Creá una storage account
+az storage account create \
+  --name nutrilensstorage \
+  --resource-group nutrilens-rg \
+  --location eastus \
+  --sku Standard_LRS
+
+# Creá el container
+az storage container create \
+  --name uploads \
+  --account-name nutrilensstorage \
+  --public-access blob
+
+# Obtenés la connection string
+az storage account show-connection-string \
+  --name nutrilensstorage \
+  --resource-group nutrilens-rg
+```
+
+**Me anotás:** la `connection string` completa (empieza con `DefaultEndpointsProtocol=https;AccountName=...`).
+
+### 1d. NL-103 — Auth (AB#63)
+
+**No necesitás Cognito ni Azure AD B2C.** Usamos NextAuth.js con email/password, que corre dentro de la misma app Next.js. No requiere ningún servicio externo y es $0.
+
+Solo necesitás elegir:
+- **Opción A**: Solo el equipo del TP puede registrarse (yo agrego los emails hardcodeados al seed).
+- **Opción B**: Registro abierto con email de confirmación (necesitaría un servicio SMTP, ej. Resend.com que tiene 3,000 emails/mes gratis).
+
+**Me avisás cuál preferís.** En cuanto confirmes, implemento login en una sola branch sin dependencia de Azure.
+
+### 1e. NL-104 — Guardia de costo (AB#64)
+
+En el portal de Azure → **Cost Management + Billing** → **Budget alerts**:
+- Creá un budget de **$20/mes** con alerta al 80% ($16) y al 100% ($20).
+- Email: el tuyo.
+
+Esto garantiza que nunca gastás más de $20/mes (y con el free tier lo más probable es $0).
+
+**Una vez que me des los datos de 1b y 1c:**
+- Actualizo `.env.example` y la lógica de storage para Azure Blob.
+- Implemento NL-201/202/203 (auth + rutas protegidas + modelo multi-usuario).
+- Branch: `feat/NL-201-203-auth`
+
+---
+
+## GRUPO 2 — Multi-usuario (NL-201, NL-202, NL-203)
+
+**Depende de:** Decisión de auth (1d) — no requiere Azure, solo tu elección de Opción A/B.
+
+**Lo que implemento:**
+- `NL-201`: Pantalla de registro/login con NextAuth.js
+- `NL-202`: Middleware que protege `/analizar`, `/historial`, `/chat`
+- `NL-203`: Columna `userId` en `Product` y `Conversation` → cada usuario ve solo sus datos
+
+**NL-302 nota:** El `// TODO NL-201` en el route handler de conversaciones se conecta solo en esta branch.
+
+**Acción tuya:** Solo decirme Opción A o B de auth (ver 1d arriba).
 
 ---
 
 ## GRUPO 3 — RAG vectorial con pgvector (NL-401, NL-402, NL-404)
 
-**Depende de:** NL-101 (RDS con pgvector).
+**Depende de:** GRUPO 1 (base de datos Azure con pgvector).
 
-**NL-401 — Embeddings al guardar (AB#71):** Cuando un producto se persiste, genero su embedding con un modelo de texto (Azure OpenAI `text-embedding-ada-002` o similar) y lo guardo en la columna `embedding vector(1536)`.
+**NL-401 — Embeddings al guardar (AB#71):**
+Cuando se persiste un producto, genero su embedding y lo guardo en `embedding vector(1536)`. Para los embeddings uso el mismo Azure AI Foundry que ya tenés configurado — el modelo `text-embedding-ada-002` o el que tengas disponible en tu endpoint.
 
-**NL-402 — Retrieval semántico (AB#72):** Reemplaza o complementa el retrieval actual del chat con una búsqueda por similitud coseno sobre los embeddings.
+**NL-402 — Retrieval semántico (AB#72):**
+En el chat, la búsqueda por similaridad coseno reemplaza/complementa el filtro por texto actual.
 
-**NL-404 — Golden set de evaluación (AB#74):** Requiere que alguien (vos o el equipo) arme un conjunto de 10-15 pares (pregunta, productos_esperados) para evaluar el retrieval.
+**NL-404 — Golden set para evaluar el RAG (AB#74):**
+Necesito que armes 10-15 pares en un JSON con este formato:
+```json
+[
+  {
+    "pregunta": "¿Qué galletitas son aptas para celíacos?",
+    "productos_esperados": ["Galletitas Sin TACC Maíz", "Oblea Arroz"]
+  }
+]
+```
 
-### Pasos que necesito de vos antes de empezar
-
-1. Completar NL-101 (RDS con pgvector).
-2. Confirmar qué modelo de embeddings tenés disponible:
-   - Azure OpenAI con `text-embedding-ada-002` → darme `endpoint` y `api-key`.
-   - Otro modelo → decirme cuál.
-3. Para NL-404: armar al menos 10 pares (pregunta, nombres de productos esperados en la respuesta) en un JSON o spreadsheet.
+**Pasos que necesito de vos:**
+1. Completar GRUPO 1 (DB con pgvector).
+2. Confirmar qué modelo de embeddings tenés en Azure AI Foundry (o si podés habilitarlo).
+3. Para NL-404: mandame los pares en cualquier formato.
 
 ---
 
-## GRUPO 4 — Deploy en AWS (NL-801, NL-802, NL-803)
+## GRUPO 4 — Deploy en Azure (NL-801, NL-802, NL-803)
 
 **Depende de:** GRUPO 1 completo.
 
-**NL-801 — Amplify Hosting (AB#82):**
-1. Ir a AWS Amplify Console.
-2. Conectar el repo GitHub `fede-martucci/NutriLens`.
-3. Amplify detecta Next.js automáticamente. Seleccioná `main` como rama de producción.
-4. Anotame la URL que genera Amplify (ej. `https://main.d1234xyz.amplifyapp.com`).
+### NL-801 — Deploy en Azure App Service (AB#82)
 
-**NL-802 — Conectividad app ↔ RDS/S3 (AB#83):**
-- Necesito las variables de entorno reales para setearlas en Amplify Console.
-- Configurar VPC o SG para que Amplify pueda llegar a RDS.
+```bash
+# Creá el App Service plan (F1 = gratis para siempre)
+az appservice plan create \
+  --name nutrilens-plan \
+  --resource-group nutrilens-rg \
+  --sku F1 \
+  --is-linux
 
-**NL-803 — CI/CD completo (AB#84):**
-- El `.github/workflows/ci.yml` ya existe. Solo necesito que GitHub Actions tenga los secrets:
-  - `DATABASE_URL` (apuntando a RDS)
-  - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
-  - `AZURE_AI_FOUNDRY_KEY`, `AZURE_AI_FOUNDRY_ENDPOINT`
-- Ir a `Settings → Secrets → Actions` en el repo y agregarlos.
+# Creá la web app con Node.js
+az webapp create \
+  --name nutrilens-app \
+  --resource-group nutrilens-rg \
+  --plan nutrilens-plan \
+  --runtime "NODE:20-lts"
+```
 
-### Pasos concretos para desbloquearme
+La URL queda como `https://nutrilens-app.azurewebsites.net`.
 
+**Me anotás:** la URL final.
+
+### NL-802 — Variables de entorno en producción (AB#83)
+
+En el portal Azure → App Service → **Configuration** → **Application settings**, agregás:
+```
+DATABASE_URL=postgresql://nutrilens:<password>@nutrilens-db.postgres.database.azure.com:5432/postgres?sslmode=require
+AZURE_STORAGE_CONNECTION_STRING=<la de 1c>
+AZURE_AI_FOUNDRY_ENDPOINT=<la que ya tenés>
+AZURE_AI_FOUNDRY_KEY=<la que ya tenés>
+IA_PROVIDER=foundry
+NEXTAUTH_SECRET=<string random de 32 chars>
+NEXTAUTH_URL=https://nutrilens-app.azurewebsites.net
+```
+
+### NL-803 — CI/CD automático desde GitHub (AB#84)
+
+En el portal Azure → App Service → **Deployment Center** → seleccionás GitHub → repo `fede-martucci/NutriLens` → branch `main`. Azure genera automáticamente el workflow `.github/workflows/azure-deploy.yml`.
+
+Después agregás los secrets en GitHub Actions (`Settings → Secrets → Actions`):
+```
+AZURE_WEBAPP_PUBLISH_PROFILE   ← lo descargás desde Azure App Service → Overview → Get publish profile
+DATABASE_URL                   ← la de producción
+```
+
+**Pasos concretos para desbloquearme:**
 1. Completar GRUPO 1.
-2. Seguir los pasos de NL-801 (Amplify connect).
-3. Setear los secrets en GitHub Actions (NL-803).
-4. Confirmarme la URL de Amplify.
+2. Correr los comandos de NL-801.
+3. Setear las variables de NL-802.
+4. Conectar el deploy en NL-803.
+5. Confirmarme la URL.
 
 ---
 
@@ -129,55 +244,58 @@ Los PRs #1 (NL-303) y #3 (chore/audit) ya estaban abiertos y tienen todos los ch
 
 ### NL-901 — Tests al 80% (AB#85)
 
-**Estado:** Implementable por mí, pero conviene esperarlo para después de que los PRs abiertos (#4-#11) estén mergeados. En cuanto los mergees, corro `npm run test:coverage` sobre el código combinado y ajusto lo que falte para llegar al 80%.
+**Estado:** PR #13 ya abierto, coverage actual en main = **91.66% lines / 94.54% branches** — gate pasa. Cuando mergees los PRs abiertos, corro coverage combinado y ajusto si algo baja.
 
-**Acción tuya:** Mergear los PRs abiertos → decirme "ya mergeé los PRs" → yo corro coverage y subo lo que falte.
+**Acción tuya:** Mergear los PRs → decirme "ya mergeé" → yo verifico.
 
-### NL-902 — Actualizar informe técnico final (AB#86)
+### NL-902 — Informe técnico final (AB#86)
 
-**Esta es tuya.** El informe técnico documenta decisiones de diseño, tradeoffs y lecciones aprendidas. Yo puedo ayudarte a redactarlo si me das los puntos que querés incluir, pero el contenido académico (qué aprendiste, qué mejorarías, etc.) necesita tu voz.
+**Necesita tu voz.** Puedo estructurarlo y redactarlo si me das los puntos:
+1. ¿Qué fue lo más difícil del proyecto?
+2. ¿Qué cambiarías si lo empezaras de nuevo?
+3. ¿Qué aprendiste de IA generativa aplicada?
+4. ¿Qué features quedaron fuera y por qué?
 
-**Acción tuya:** Completar el template en `docs/presentation/informe-presentacion.md` (ya existe en la branch `chore/audit-2026-05`) o escribirlo en cualquier formato y yo lo estructuro.
+Con eso te armo el informe completo en `docs/presentation/`.
 
 ### NL-903 — Presentación oral + guion de demo (AB#87)
 
-**Esta es tuya también.** Puedo generar un borrador de slides o guion si me describís:
-1. Duración de la presentación.
-2. Audiencia (docentes, pares, cliente real).
-3. Puntos que querés destacar.
+**Necesita tu input.** Decime:
+1. Duración (¿15 minutos? ¿30?).
+2. Audiencia (¿docentes de UNLaM, evaluadores externos, empresa?).
+3. ¿Querés slides en PDF/PowerPoint, o solo el guion de demo en vivo?
 
-### NL-904 — Seed de datos para la demo pública (AB#88)
+### NL-904 — Seed de datos para demo pública (AB#88)
 
-**Implementable por mí.** El script de seed ya existe (`npm run seed`). Solo necesito saber:
-1. ¿Cuántos productos querés en el seed de demo pública? (El actual tiene 50, ¿va bien?)
-2. ¿Hay alguna categoría o tipo de producto específico que querés mostrar en la demo?
+**Implementable por mí.** El seed actual tiene 50 productos. Solo decime:
+1. ¿Está bien 50 o querés más/menos?
+2. ¿Hay algún producto real de supermercado argentino que quieras mostrar específicamente?
 
 ---
 
 ## NL-701 — Comparación lado a lado (AB#80)
 
-**Estado actual:** La comparación VÍA CHAT ya funciona (US-31 + NL-702). NL-701 pide una **pantalla dedicada** de comparación lado a lado (fuera del chat).
+**Estado actual:** La comparación VÍA CHAT ya funciona (US-31 + NL-702 con veredicto). NL-701 es una **pantalla dedicada** `/comparar` con selector visual de dos productos.
 
-**Análisis:** Si la tabla del chat cubre el caso de uso para la demo, NL-701 puede considerarse parcialmente cubierto. Si querés una página `/comparar` dedicada con selector de dos productos y tabla visual, puedo implementarla sin dependencias de AWS.
+**No tiene dependencias de Azure — puedo implementarla ya.**
 
 **Acción tuya:** Confirmame si querés:
-- **Opción A**: La comparación del chat (tabla + veredicto) es suficiente para la demo → cerramos NL-701 como cubierto.
-- **Opción B**: Querés una página `/comparar` dedicada → la implemento (3-4 horas de trabajo).
+- **Opción A**: La comparación del chat (tabla + veredicto) es suficiente → cerramos NL-701.
+- **Opción B**: Querés la página `/comparar` dedicada → la implemento esta semana.
 
 ---
 
-## Resumen de acciones ordenadas por prioridad
+## Resumen de acciones en orden
 
 | Prioridad | Acción | Desbloquea |
 |-----------|--------|-----------|
-| 1 | Mergear PRs #1, #3, #4, #5, #6, #7, #8, #9, #10, #11 | Todo lo que sigue |
-| 2 | Confirmar opción A/B de NL-701 | NL-701 |
-| 3 | Crear cuenta AWS + RDS + S3 + Cognito (GRUPO 1) | GRUPOS 2, 3, 4 |
-| 4 | Definir scope de registro (Opción A/B) | NL-201, NL-202, NL-203 |
-| 5 | Proveer modelo de embeddings | NL-401, NL-402 |
-| 6 | Armar golden set para NL-404 | NL-404 |
-| 7 | Conectar Amplify + setear secrets | NL-801, NL-802, NL-803 |
-| 8 | Decirme "PRs mergeados" | NL-901 (tests al 80%) |
-| 9 | Completar puntos del informe | NL-902 |
-| 10 | Darme datos de la presentación | NL-903 |
-| 11 | Confirmar cantidad/tipo de seed | NL-904 |
+| 1 | Mergear PRs #1, #3, #4–#11, #13 | Todo lo que sigue |
+| 2 | Confirmar opción A/B de NL-701 | NL-701 (puedo empezar ahora) |
+| 3 | Confirmar opción A/B de auth (1d) | NL-201, NL-202, NL-203 (sin Azure) |
+| 4 | Activar Azure for Students + crear DB + Storage (GRUPOS 1a-1c) | GRUPOS 3 y 4 |
+| 5 | Confirmar modelo de embeddings disponible | NL-401, NL-402 |
+| 6 | Armar golden set (10-15 pares) | NL-404 |
+| 7 | Deploy en App Service + conectar CI/CD | NL-801, NL-802, NL-803 |
+| 8 | Darme los puntos del informe | NL-902 |
+| 9 | Darme datos de la presentación | NL-903 |
+| 10 | Confirmar cantidad/tipo de seed demo | NL-904 |
