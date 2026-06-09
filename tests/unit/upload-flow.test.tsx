@@ -180,9 +180,7 @@ describe('<UploadFlow> — SELECTED preview (wireframe D01)', () => {
 describe('<UploadFlow> — paste image (NL-501)', () => {
   function makePasteEvent(file: File | null) {
     const dataTransfer = {
-      items: file
-        ? [{ type: file.type, getAsFile: () => file } as DataTransferItem]
-        : [],
+      items: file ? [{ type: file.type, getAsFile: () => file } as DataTransferItem] : [],
     } as unknown as DataTransfer;
     return new ClipboardEvent('paste', { clipboardData: dataTransfer, bubbles: true });
   }

@@ -125,7 +125,8 @@ export function UploadFlow() {
 
   // NL-501: global paste listener — active when user hasn't already submitted.
   useEffect(() => {
-    const canAcceptPaste = state.kind === 'IDLE' || state.kind === 'SELECTED' || state.kind === 'ERROR';
+    const canAcceptPaste =
+      state.kind === 'IDLE' || state.kind === 'SELECTED' || state.kind === 'ERROR';
     if (!canAcceptPaste) return;
 
     function handlePaste(e: ClipboardEvent) {
