@@ -6,30 +6,30 @@
 
 ## Resumen de PRs ya abiertos (mergear cuando CI esté verde)
 
-| PR | Branch | Tickets |
-|----|--------|---------|
-| #1 | `feat/NL-303-markdown-chat` | NL-303 — **CI verde ✅** |
-| #3 | `chore/audit-2026-05` | audit — **CI verde ✅** |
-| #4 | `feat/NL-502-sidebar-fijo` | NL-502 |
-| #5 | `feat/NL-501-paste-image` | NL-501 |
-| #6 | `feat/NL-503-suggestion-pills` | NL-503 |
-| #7 | `feat/US-39-timeout-fallback` | US-39 (AB#45) |
-| #8 | `feat/NL-601-602-open-food-facts` | NL-601, NL-602 |
-| #9 | `feat/NL-301-302-chat-history` | NL-301, NL-302 |
-| #10 | `feat/NL-403-health-ranking` | NL-403 |
-| #11 | `feat/NL-702-compare-verdict` | NL-702 |
-| #13 | `feat/NL-901-coverage-gate` | NL-901 |
+| PR  | Branch                            | Tickets                  |
+| --- | --------------------------------- | ------------------------ |
+| #1  | `feat/NL-303-markdown-chat`       | NL-303 — **CI verde ✅** |
+| #3  | `chore/audit-2026-05`             | audit — **CI verde ✅**  |
+| #4  | `feat/NL-502-sidebar-fijo`        | NL-502                   |
+| #5  | `feat/NL-501-paste-image`         | NL-501                   |
+| #6  | `feat/NL-503-suggestion-pills`    | NL-503                   |
+| #7  | `feat/US-39-timeout-fallback`     | US-39 (AB#45)            |
+| #8  | `feat/NL-601-602-open-food-facts` | NL-601, NL-602           |
+| #9  | `feat/NL-301-302-chat-history`    | NL-301, NL-302           |
+| #10 | `feat/NL-403-health-ranking`      | NL-403                   |
+| #11 | `feat/NL-702-compare-verdict`     | NL-702                   |
+| #13 | `feat/NL-901-coverage-gate`       | NL-901                   |
 
 ---
 
 ## Stack Azure (reemplaza AWS, usa el crédito student)
 
-| Servicio | Azure equivalente | Costo estimado |
-|----------|-------------------|----------------|
-| Base de datos + pgvector | Azure Database for PostgreSQL Flexible Server (B1ms) | **Gratis 12 meses** → ~$12/mes |
-| Almacenamiento de imágenes | Azure Blob Storage | **~$0.02/GB/mes** |
-| Hosting Next.js | Azure App Service F1 | **Gratis para siempre** |
-| Autenticación | NextAuth.js con email/password (sin servicio externo) | **$0** |
+| Servicio                   | Azure equivalente                                     | Costo estimado                 |
+| -------------------------- | ----------------------------------------------------- | ------------------------------ |
+| Base de datos + pgvector   | Azure Database for PostgreSQL Flexible Server (B1ms)  | **Gratis 12 meses** → ~$12/mes |
+| Almacenamiento de imágenes | Azure Blob Storage                                    | **~$0.02/GB/mes**              |
+| Hosting Next.js            | Azure App Service F1                                  | **Gratis para siempre**        |
+| Autenticación              | NextAuth.js con email/password (sin servicio externo) | **$0**                         |
 
 Con el crédito de $100 tenés ~8 meses post-free-tier. Para el TP el gasto total es $0.
 
@@ -80,11 +80,13 @@ az postgres flexible-server firewall-rule create \
 ```
 
 Conectate y habilitá pgvector:
+
 ```sql
 CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
 **Me anotás:**
+
 - `host`: `nutrilens-db.postgres.database.azure.com`
 - `database`: `postgres` (o el nombre que elijas)
 - `user`: `nutrilens`
@@ -119,6 +121,7 @@ az storage account show-connection-string \
 **No necesitás Cognito ni Azure AD B2C.** Usamos NextAuth.js con email/password, que corre dentro de la misma app Next.js. No requiere ningún servicio externo y es $0.
 
 Solo necesitás elegir:
+
 - **Opción A**: Solo el equipo del TP puede registrarse (yo agrego los emails hardcodeados al seed).
 - **Opción B**: Registro abierto con email de confirmación (necesitaría un servicio SMTP, ej. Resend.com que tiene 3,000 emails/mes gratis).
 
@@ -127,12 +130,14 @@ Solo necesitás elegir:
 ### 1e. NL-104 — Guardia de costo (AB#64)
 
 En el portal de Azure → **Cost Management + Billing** → **Budget alerts**:
+
 - Creá un budget de **$20/mes** con alerta al 80% ($16) y al 100% ($20).
 - Email: el tuyo.
 
 Esto garantiza que nunca gastás más de $20/mes (y con el free tier lo más probable es $0).
 
 **Una vez que me des los datos de 1b y 1c:**
+
 - Actualizo `.env.example` y la lógica de storage para Azure Blob.
 - Implemento NL-201/202/203 (auth + rutas protegidas + modelo multi-usuario).
 - Branch: `feat/NL-201-203-auth`
@@ -144,6 +149,7 @@ Esto garantiza que nunca gastás más de $20/mes (y con el free tier lo más pro
 **Depende de:** Decisión de auth (1d) — no requiere Azure, solo tu elección de Opción A/B.
 
 **Lo que implemento:**
+
 - `NL-201`: Pantalla de registro/login con NextAuth.js
 - `NL-202`: Middleware que protege `/analizar`, `/historial`, `/chat`
 - `NL-203`: Columna `userId` en `Product` y `Conversation` → cada usuario ve solo sus datos
@@ -166,6 +172,7 @@ En el chat, la búsqueda por similaridad coseno reemplaza/complementa el filtro 
 
 **NL-404 — Golden set para evaluar el RAG (AB#74):**
 Necesito que armes 10-15 pares en un JSON con este formato:
+
 ```json
 [
   {
@@ -176,6 +183,7 @@ Necesito que armes 10-15 pares en un JSON con este formato:
 ```
 
 **Pasos que necesito de vos:**
+
 1. Completar GRUPO 1 (DB con pgvector).
 2. Confirmar qué modelo de embeddings tenés en Azure AI Foundry (o si podés habilitarlo).
 3. Para NL-404: mandame los pares en cualquier formato.
@@ -211,6 +219,7 @@ La URL queda como `https://nutrilens-app.azurewebsites.net`.
 ### NL-802 — Variables de entorno en producción (AB#83)
 
 En el portal Azure → App Service → **Configuration** → **Application settings**, agregás:
+
 ```
 DATABASE_URL=postgresql://nutrilens:<password>@nutrilens-db.postgres.database.azure.com:5432/postgres?sslmode=require
 AZURE_STORAGE_CONNECTION_STRING=<la de 1c>
@@ -226,12 +235,14 @@ NEXTAUTH_URL=https://nutrilens-app.azurewebsites.net
 En el portal Azure → App Service → **Deployment Center** → seleccionás GitHub → repo `fede-martucci/NutriLens` → branch `main`. Azure genera automáticamente el workflow `.github/workflows/azure-deploy.yml`.
 
 Después agregás los secrets en GitHub Actions (`Settings → Secrets → Actions`):
+
 ```
 AZURE_WEBAPP_PUBLISH_PROFILE   ← lo descargás desde Azure App Service → Overview → Get publish profile
 DATABASE_URL                   ← la de producción
 ```
 
 **Pasos concretos para desbloquearme:**
+
 1. Completar GRUPO 1.
 2. Correr los comandos de NL-801.
 3. Setear las variables de NL-802.
@@ -251,6 +262,7 @@ DATABASE_URL                   ← la de producción
 ### NL-902 — Informe técnico final (AB#86)
 
 **Necesita tu voz.** Puedo estructurarlo y redactarlo si me das los puntos:
+
 1. ¿Qué fue lo más difícil del proyecto?
 2. ¿Qué cambiarías si lo empezaras de nuevo?
 3. ¿Qué aprendiste de IA generativa aplicada?
@@ -261,6 +273,7 @@ Con eso te armo el informe completo en `docs/presentation/`.
 ### NL-903 — Presentación oral + guion de demo (AB#87)
 
 **Necesita tu input.** Decime:
+
 1. Duración (¿15 minutos? ¿30?).
 2. Audiencia (¿docentes de UNLaM, evaluadores externos, empresa?).
 3. ¿Querés slides en PDF/PowerPoint, o solo el guion de demo en vivo?
@@ -268,6 +281,7 @@ Con eso te armo el informe completo en `docs/presentation/`.
 ### NL-904 — Seed de datos para demo pública (AB#88)
 
 **Implementable por mí.** El seed actual tiene 50 productos. Solo decime:
+
 1. ¿Está bien 50 o querés más/menos?
 2. ¿Hay algún producto real de supermercado argentino que quieras mostrar específicamente?
 
@@ -280,6 +294,7 @@ Con eso te armo el informe completo en `docs/presentation/`.
 **No tiene dependencias de Azure — puedo implementarla ya.**
 
 **Acción tuya:** Confirmame si querés:
+
 - **Opción A**: La comparación del chat (tabla + veredicto) es suficiente → cerramos NL-701.
 - **Opción B**: Querés la página `/comparar` dedicada → la implemento esta semana.
 
@@ -287,15 +302,15 @@ Con eso te armo el informe completo en `docs/presentation/`.
 
 ## Resumen de acciones en orden
 
-| Prioridad | Acción | Desbloquea |
-|-----------|--------|-----------|
-| 1 | Mergear PRs #1, #3, #4–#11, #13 | Todo lo que sigue |
-| 2 | Confirmar opción A/B de NL-701 | NL-701 (puedo empezar ahora) |
-| 3 | Confirmar opción A/B de auth (1d) | NL-201, NL-202, NL-203 (sin Azure) |
-| 4 | Activar Azure for Students + crear DB + Storage (GRUPOS 1a-1c) | GRUPOS 3 y 4 |
-| 5 | Confirmar modelo de embeddings disponible | NL-401, NL-402 |
-| 6 | Armar golden set (10-15 pares) | NL-404 |
-| 7 | Deploy en App Service + conectar CI/CD | NL-801, NL-802, NL-803 |
-| 8 | Darme los puntos del informe | NL-902 |
-| 9 | Darme datos de la presentación | NL-903 |
-| 10 | Confirmar cantidad/tipo de seed demo | NL-904 |
+| Prioridad | Acción                                                         | Desbloquea                         |
+| --------- | -------------------------------------------------------------- | ---------------------------------- |
+| 1         | Mergear PRs #1, #3, #4–#11, #13                                | Todo lo que sigue                  |
+| 2         | Confirmar opción A/B de NL-701                                 | NL-701 (puedo empezar ahora)       |
+| 3         | Confirmar opción A/B de auth (1d)                              | NL-201, NL-202, NL-203 (sin Azure) |
+| 4         | Activar Azure for Students + crear DB + Storage (GRUPOS 1a-1c) | GRUPOS 3 y 4                       |
+| 5         | Confirmar modelo de embeddings disponible                      | NL-401, NL-402                     |
+| 6         | Armar golden set (10-15 pares)                                 | NL-404                             |
+| 7         | Deploy en App Service + conectar CI/CD                         | NL-801, NL-802, NL-803             |
+| 8         | Darme los puntos del informe                                   | NL-902                             |
+| 9         | Darme datos de la presentación                                 | NL-903                             |
+| 10        | Confirmar cantidad/tipo de seed demo                           | NL-904                             |
