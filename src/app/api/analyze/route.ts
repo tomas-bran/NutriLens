@@ -43,7 +43,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // US-39: race the entire pipeline against a hard wall-clock timeout.
   const controller = new AbortController();
   const pipelineTimer = setTimeout(
-    () => controller.abort(new ApiError('model_timeout', 'El análisis superó el tiempo máximo.', 504)),
+    () =>
+      controller.abort(new ApiError('model_timeout', 'El análisis superó el tiempo máximo.', 504)),
     PIPELINE_TIMEOUT_MS,
   );
 
@@ -141,7 +142,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   } catch (err) {
     clearTimeout(pipelineTimer);
     // AbortController fires with the ApiError as its reason — unwrap it.
-    const actual = err instanceof Error && err.name === 'AbortError' ? controller.signal.reason : err;
+    const actual =
+      err instanceof Error && err.name === 'AbortError' ? controller.signal.reason : err;
     return apiErrorResponse(actual, requestId);
   }
 }
