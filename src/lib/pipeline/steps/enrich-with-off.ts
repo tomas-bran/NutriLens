@@ -16,7 +16,10 @@ export async function enrich_with_off(ctx: AnalysisContext): Promise<AnalysisCon
   if (!ctx.product) {
     return {
       ...ctx,
-      steps: [...ctx.steps, makeTrace('enrich_with_off', 'skipped', startedAt, { reason: 'no_product' })],
+      steps: [
+        ...ctx.steps,
+        makeTrace('enrich_with_off', 'skipped', startedAt, { reason: 'no_product' }),
+      ],
     };
   }
 
@@ -72,7 +75,10 @@ export async function enrich_with_off(ctx: AnalysisContext): Promise<AnalysisCon
     return {
       ...ctx,
       offEnrichment: null,
-      steps: [...ctx.steps, makeTrace('enrich_with_off', 'skipped', startedAt, { reason: 'off_unavailable' })],
+      steps: [
+        ...ctx.steps,
+        makeTrace('enrich_with_off', 'skipped', startedAt, { reason: 'off_unavailable' }),
+      ],
     };
   }
 }

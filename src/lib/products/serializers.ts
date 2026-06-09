@@ -99,7 +99,9 @@ export function toDetail(p: PrismaProduct): ProductDetail {
     jsonRaw: p.jsonRaw,
     pipelineTrace: safeJsonValue(p.pipelineTrace, []),
     promptVersion: p.promptVersion,
-    offEnrichment: p.offEnrichment ? safeJsonValue<OFFEnrichmentResult>(p.offEnrichment, null as unknown as OFFEnrichmentResult) : null,
+    offEnrichment: p.offEnrichment
+      ? safeJsonValue<OFFEnrichmentResult>(p.offEnrichment, null as unknown as OFFEnrichmentResult)
+      : null,
   };
 }
 

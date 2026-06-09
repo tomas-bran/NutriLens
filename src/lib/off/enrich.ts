@@ -69,7 +69,12 @@ function isGlutenFreeFromLabels(labels: string[]): boolean {
 }
 
 export function buildEnrichment(
-  extracted: { producto: string; alergenos: Alergeno[]; apto_vegano: boolean; apto_celiaco: boolean },
+  extracted: {
+    producto: string;
+    alergenos: Alergeno[];
+    apto_vegano: boolean;
+    apto_celiaco: boolean;
+  },
   offProduct: OFFProduct | null,
 ): OFFEnrichmentResult {
   if (!offProduct) {

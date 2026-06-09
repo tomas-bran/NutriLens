@@ -80,9 +80,7 @@ function parseProduct(data: Record<string, unknown>, barcode: string): OFFProduc
     allergens_tags: Array.isArray(p['allergens_tags'])
       ? (p['allergens_tags'] as string[]).map(String)
       : [],
-    labels_tags: Array.isArray(p['labels_tags'])
-      ? (p['labels_tags'] as string[]).map(String)
-      : [],
+    labels_tags: Array.isArray(p['labels_tags']) ? (p['labels_tags'] as string[]).map(String) : [],
     nutriments: (p['nutriments'] as OFFNutrients) ?? {},
     url: `https://world.openfoodfacts.org/product/${barcode}`,
   };
@@ -94,7 +92,9 @@ export async function fetchByBarcode(barcode: string): Promise<OFFProduct | null
   if (cached !== undefined) return cached;
 
   try {
-    const res = await fetchWithTimeout(`${OFF_BASE}/api/v2/product/${encodeURIComponent(barcode)}.json`);
+    const res = await fetchWithTimeout(
+      `${OFF_BASE}/api/v2/product/${encodeURIComponent(barcode)}.json`,
+    );
     if (!res.ok) {
       cacheSet(cacheKey, null);
       return null;

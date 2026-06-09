@@ -79,10 +79,7 @@ describe('fetchByBarcode', () => {
 
 describe('fetchByName', () => {
   it('returns first matching product from search results', async () => {
-    vi.stubGlobal(
-      'fetch',
-      mockFetch(200, { products: [{ code: '111', ...OFF_PRODUCT }] }),
-    );
+    vi.stubGlobal('fetch', mockFetch(200, { products: [{ code: '111', ...OFF_PRODUCT }] }));
     const result = await fetchByName('Chocolinas', 'Bagley');
     expect(result).not.toBeNull();
     expect(result?.barcode).toBe('111');

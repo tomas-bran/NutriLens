@@ -48,9 +48,7 @@ export function ResultView({ product, back, contextLabel }: ResultViewProps) {
 
       {showLowConfidence && <LowConfidenceBanner />}
 
-      {product.offEnrichment?.matched && (
-        <OFFBadge enrichment={product.offEnrichment} />
-      )}
+      {product.offEnrichment?.matched && <OFFBadge enrichment={product.offEnrichment} />}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-[1fr_1.6fr]">
         <ProductImageCard product={product} />

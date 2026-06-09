@@ -28,16 +28,11 @@ export function OFFBadge({ enrichment }: OFFBadgeProps) {
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span
-            className="text-lg"
-            aria-hidden="true"
-          >
+          <span className="text-lg" aria-hidden="true">
             🌿
           </span>
           <div>
-            <p className="text-sm font-semibold text-[#00695C]">
-              Verificado con Open Food Facts
-            </p>
+            <p className="text-sm font-semibold text-[#00695C]">Verificado con Open Food Facts</p>
             {enrichment.confirmedFields.length > 0 && (
               <p className="text-xs text-[#00695C]/80">
                 Confirmado: {enrichment.confirmedFields.join(', ')}
@@ -63,18 +58,20 @@ export function OFFBadge({ enrichment }: OFFBadgeProps) {
       {expanded && (
         <div className="mt-3 flex flex-col gap-2">
           {showWarning && (
-            <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
-              <p className="text-xs font-semibold text-amber-800 mb-1">
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+              <p className="mb-1 text-xs font-semibold text-amber-800">
                 ⚠️ Discrepancias encontradas
               </p>
               {enrichment.discrepancies.map((d) => (
                 <p key={d.field} className="text-xs text-amber-700">
-                  <span className="font-medium">{d.field}</span>: extraído "{d.extracted}" — OFF dice "{d.offValue}"
+                  <span className="font-medium">{d.field}</span>: extraído "{d.extracted}" — OFF
+                  dice "{d.offValue}"
                 </p>
               ))}
               {hasMissingAllergens && (
-                <p className="text-xs text-amber-700 mt-1">
-                  Alérgenos en OFF no detectados: <span className="font-medium">{enrichment.missingAllergens.join(', ')}</span>
+                <p className="mt-1 text-xs text-amber-700">
+                  Alérgenos en OFF no detectados:{' '}
+                  <span className="font-medium">{enrichment.missingAllergens.join(', ')}</span>
                 </p>
               )}
             </div>
