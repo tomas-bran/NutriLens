@@ -16,7 +16,7 @@
  */
 'use client';
 
-import { useCallback, useReducer } from 'react';
+import { useCallback, useReducer, useState } from 'react';
 import { ApiError } from '@schemas/errors';
 import { AppShell } from '@/components/layout/AppShell';
 import { ChatErrorBanner } from '@/components/chat/ChatErrorBanner';
@@ -86,6 +86,9 @@ export function ChatPageClient({
   fetchImpl = fetchChat,
 }: ChatPageClientProps) {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  // NL-702: pre-fill state for "ask about comparison" button
+  const [inputPrefill, setInputPrefill] = useState('');
+  const [inputKey, setInputKey] = useState(0);
 
   const handleSubmit = useCallback(
     async (question: string) => {
@@ -125,6 +128,11 @@ export function ChatPageClient({
     dispatch({ type: 'reset' });
   }, []);
 
+  const handleAskFollowUp = useCallback((prefill: string) => {
+    setInputPrefill(prefill);
+    setInputKey((k) => k + 1);
+  }, []);
+
   const hasMessages = state.messages.length > 0;
   const inputDisabled = state.status === 'THINKING';
 
@@ -142,7 +150,11 @@ export function ChatPageClient({
             {!hasMessages && state.status !== 'THINKING' ? (
               <ChatHero onPick={handleSubmit} />
             ) : (
-              <ChatThread messages={state.messages} status={state.status} />
+              <ChatThread
+                messages={state.messages}
+                status={state.status}
+                onAskFollowUp={handleAskFollowUp}
+              />
             )}
           </div>
 
@@ -155,7 +167,12 @@ export function ChatPageClient({
           )}
 
           <div className="sticky bottom-0 bg-[var(--color-bg)] pt-2">
-            <ChatInput onSubmit={handleSubmit} disabled={inputDisabled} />
+            <ChatInput
+              key={inputKey}
+              onSubmit={handleSubmit}
+              disabled={inputDisabled}
+              initialValue={inputPrefill}
+            />
           </div>
         </div>
       </div>

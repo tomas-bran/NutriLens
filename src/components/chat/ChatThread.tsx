@@ -15,9 +15,10 @@ import type { ChatMessage, ChatStatus } from '@/components/chat/types';
 interface ChatThreadProps {
   messages: ChatMessage[];
   status: ChatStatus;
+  onAskFollowUp?: (prefill: string) => void;
 }
 
-export function ChatThread({ messages, status }: ChatThreadProps) {
+export function ChatThread({ messages, status, onAskFollowUp }: ChatThreadProps) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export function ChatThread({ messages, status }: ChatThreadProps) {
             text={msg.text}
             products={msg.products}
             fallback={msg.fallback}
+            onAskFollowUp={onAskFollowUp}
           />
         ),
       )}
