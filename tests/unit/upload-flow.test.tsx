@@ -175,3 +175,59 @@ describe('<UploadFlow> — SELECTED preview (wireframe D01)', () => {
     expect(screen.getByText(/image\/jpeg/)).toBeInTheDocument();
   });
 });
+
+// NL-501: paste image support
+describe('<UploadFlow> — paste image (NL-501)', () => {
+  function makePasteEvent(file: File | null) {
+    const dataTransfer = {
+      items: file
+        ? [{ type: file.type, getAsFile: () => file } as DataTransferItem]
+        : [],
+    } as unknown as DataTransfer;
+    return new ClipboardEvent('paste', { clipboardData: dataTransfer, bubbles: true });
+  }
+
+  it('selects the pasted image and shows SELECTED state', async () => {
+    render(<UploadFlow />);
+    expect(screen.getByTestId('dropzone')).toBeInTheDocument();
+
+    const file = mkFile('pasted.png', 'image/png', 2048);
+    document.dispatchEvent(makePasteEvent(file));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('selected-file')).toBeInTheDocument();
+    });
+    expect(screen.getByText('pasted.png')).toBeInTheDocument();
+  });
+
+  it('rejects a pasted non-image (text/plain) and stays in IDLE', () => {
+    render(<UploadFlow />);
+
+    const textFile = mkFile('note.txt', 'text/plain', 100);
+    const event = makePasteEvent(textFile);
+    // Override the item type to text/plain so the paste handler skips it
+    (event.clipboardData!.items[0] as unknown as { type: string }).type = 'text/plain';
+    document.dispatchEvent(event);
+
+    expect(screen.getByTestId('dropzone')).toBeInTheDocument();
+    expect(screen.queryByTestId('selected-file')).not.toBeInTheDocument();
+  });
+
+  it('ignores paste events with no items', () => {
+    render(<UploadFlow />);
+    document.dispatchEvent(makePasteEvent(null));
+    expect(screen.getByTestId('dropzone')).toBeInTheDocument();
+  });
+
+  it('replaces a previously selected file when pasting again', async () => {
+    render(<UploadFlow />);
+    const file1 = mkFile('first.jpg', 'image/jpeg', 1024);
+    document.dispatchEvent(makePasteEvent(file1));
+    await waitFor(() => expect(screen.getByText('first.jpg')).toBeInTheDocument());
+
+    const file2 = mkFile('second.png', 'image/png', 2048);
+    document.dispatchEvent(makePasteEvent(file2));
+    await waitFor(() => expect(screen.getByText('second.png')).toBeInTheDocument());
+    expect(screen.queryByText('first.jpg')).not.toBeInTheDocument();
+  });
+});

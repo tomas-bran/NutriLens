@@ -123,6 +123,30 @@ export function UploadFlow() {
     }
   }, [state, showToast]);
 
+  // NL-501: global paste listener — active when user hasn't already submitted.
+  useEffect(() => {
+    const canAcceptPaste = state.kind === 'IDLE' || state.kind === 'SELECTED' || state.kind === 'ERROR';
+    if (!canAcceptPaste) return;
+
+    function handlePaste(e: ClipboardEvent) {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            handleFileSelected(file);
+          }
+          return;
+        }
+      }
+    }
+
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [state.kind, handleFileSelected]);
+
   const handleRetry = useCallback(() => {
     if (state.kind !== 'ERROR') return;
     const ui = mapErrorCodeToUi(state.error);

@@ -129,6 +129,20 @@ function IdleControls({
           PDF
         </Button>
       </div>
+
+      <p
+        className="hidden text-[12px] text-[var(--color-text-muted)] md:block"
+        data-testid="paste-hint"
+      >
+        o pegá con{' '}
+        <kbd className="rounded bg-[var(--color-primary-soft)] px-1 py-0.5 font-mono text-[11px]">
+          Ctrl+V
+        </kbd>
+        {' / '}
+        <kbd className="rounded bg-[var(--color-primary-soft)] px-1 py-0.5 font-mono text-[11px]">
+          ⌘V
+        </kbd>
+      </p>
     </>
   );
 }
