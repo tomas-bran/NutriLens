@@ -14,12 +14,22 @@
  *     abre un BOTTOMSHEET (panel que sube desde abajo). Los selects se
  *     renderean UNA sola vez (mismo `data-testid`): el contenedor cambia de
  *     toolbar inline a panel-sheet según el breakpoint y el estado `open`.
+ *
+ * Búsqueda: el input mantiene un estado local `qDraft` que se sincroniza
+ * con la URL **300 ms después** del último keystroke (debounce). Si el
+ * usuario aprieta Enter o submitea el form, el push es inmediato.
+ *
+ * Selects: usan `<FilterSelect>` custom basado en `@radix-ui/react-select`
+ * (accesible, sin dropdown nativo del SO, look consistente con los tokens
+ * de NutriLens).
  */
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import type { ChangeEvent, FormEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { FormEvent } from 'react';
 import { Icon } from '@/components/ui/Icon';
+import { FilterSelect } from '@/components/ui/FilterSelect';
 import { cn } from '@/lib/cn';
+import { useDebouncedValue } from '@/lib/hooks/use-debounced-value';
 import {
   buildHistoryUrl,
   setFilter,
@@ -33,6 +43,8 @@ import {
   type Riesgo,
 } from '@schemas/product';
 import { type Apto } from '@/lib/products/query-schema';
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 export interface HistoryFiltersProps {
   /** Current filter state, derived from the URL on the server. */
@@ -53,13 +65,15 @@ const RIESGO_OPTIONS: ReadonlyArray<{ value: Riesgo; label: string }> = [
 
 export function HistoryFilters({ value }: HistoryFiltersProps) {
   const router = useRouter();
-  // Local `q` state so the input doesn't re-render the entire grid on each
-  // keystroke. We push the URL only on form submit (Enter / Search).
+  // Estado local del input: re-renderea instantáneo en cada tecla.
   const [qDraft, setQDraft] = useState(value.q ?? '');
   // Estado del bottomsheet de filtros (solo relevante en mobile).
   const [sheetOpen, setSheetOpen] = useState(false);
+  // El valor debounced (300ms) es el que dispara el push a URL. Esto evita
+  // un push por tecla — solo un push después que el usuario hace una pausa.
+  const debouncedQ = useDebouncedValue(qDraft, SEARCH_DEBOUNCE_MS);
 
-  // If the URL changes externally (e.g. clicking a chip), keep the input in sync.
+  // Si la URL cambia externamente (back/forward, click en chip), resync el input.
   useEffect(() => {
     setQDraft(value.q ?? '');
   }, [value.q]);
@@ -79,24 +93,41 @@ export function HistoryFilters({ value }: HistoryFiltersProps) {
     };
   }, [sheetOpen]);
 
+  // Track del último `q` que pusheamos para no re-pushear el mismo valor.
+  const lastPushedQRef = useRef<string>(value.q ?? '');
+  useEffect(() => {
+    lastPushedQRef.current = value.q ?? '';
+  }, [value.q]);
+  useEffect(() => {
+    const normalized = debouncedQ.trim();
+    const current = (value.q ?? '').trim();
+    if (normalized === current) return;
+    if (normalized === lastPushedQRef.current.trim()) return;
+    lastPushedQRef.current = normalized;
+    router.push(buildHistoryUrl(setFilter(value, 'q', normalized || undefined)), {
+      scroll: false,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedQ]);
+
   function go(next: HistoryFiltersValue) {
     router.push(buildHistoryUrl(next), { scroll: false });
   }
 
-  function onSelectCategoria(e: ChangeEvent<HTMLSelectElement>) {
-    const v = (e.target.value || undefined) as Categoria | undefined;
+  function onSelectCategoria(next: string) {
+    const v = (next || undefined) as Categoria | undefined;
     go(setFilter(value, 'categoria', v));
   }
-  function onSelectRiesgo(e: ChangeEvent<HTMLSelectElement>) {
-    const v = (e.target.value || undefined) as Riesgo | undefined;
+  function onSelectRiesgo(next: string) {
+    const v = (next || undefined) as Riesgo | undefined;
     go(setFilter(value, 'riesgo', v));
   }
-  function onSelectAlergeno(e: ChangeEvent<HTMLSelectElement>) {
-    const v = (e.target.value || undefined) as Alergeno | undefined;
+  function onSelectAlergeno(next: string) {
+    const v = (next || undefined) as Alergeno | undefined;
     go(setFilter(value, 'alergeno', v));
   }
-  function onSelectApto(e: ChangeEvent<HTMLSelectElement>) {
-    const v = (e.target.value || undefined) as Apto | undefined;
+  function onSelectApto(next: string) {
+    const v = (next || undefined) as Apto | undefined;
     go(setFilter(value, 'apto', v));
   }
   function onSubmitSearch(e: FormEvent<HTMLFormElement>) {
@@ -213,77 +244,34 @@ export function HistoryFilters({ value }: HistoryFiltersProps) {
         </div>
 
         <FilterSelect
-          name="categoria"
           label="Categoría"
           value={value.categoria ?? ''}
-          onChange={onSelectCategoria}
+          onValueChange={onSelectCategoria}
           testId="history-filter-categoria"
           options={CATEGORIAS.map((c) => ({ value: c, label: c }))}
         />
         <FilterSelect
-          name="riesgo"
           label="Riesgo"
           value={value.riesgo ?? ''}
-          onChange={onSelectRiesgo}
+          onValueChange={onSelectRiesgo}
           testId="history-filter-riesgo"
           options={RIESGO_OPTIONS}
         />
         <FilterSelect
-          name="alergeno"
           label="Alérgeno"
           value={value.alergeno ?? ''}
-          onChange={onSelectAlergeno}
+          onValueChange={onSelectAlergeno}
           testId="history-filter-alergeno"
           options={ALERGENOS.map((a) => ({ value: a, label: a }))}
         />
         <FilterSelect
-          name="apto"
           label="Aptitud"
           value={value.apto ?? ''}
-          onChange={onSelectApto}
+          onValueChange={onSelectApto}
           testId="history-filter-apto"
           options={APTO_OPTIONS}
         />
       </div>
     </section>
-  );
-}
-
-interface FilterSelectProps {
-  name: string;
-  label: string;
-  value: string;
-  testId: string;
-  onChange: (e: ChangeEvent<HTMLSelectElement>) => void;
-  options: ReadonlyArray<{ value: string; label: string }>;
-}
-
-function FilterSelect({ name, label, value, testId, onChange, options }: FilterSelectProps) {
-  const active = value !== '';
-  return (
-    <label className="flex flex-col gap-1 text-[11px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-      {label}
-      <select
-        name={name}
-        value={value}
-        onChange={onChange}
-        data-testid={testId}
-        aria-label={label}
-        className={cn(
-          'w-full rounded-full border bg-white px-3 py-2 text-[13px] font-medium capitalize transition-colors md:w-auto md:min-w-[140px]',
-          'focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2',
-          active
-            ? 'border-[var(--color-primary)] text-[var(--color-primary-strong)]'
-            : 'border-[var(--color-border)] text-[var(--color-text)]',
-        )}
-      >
-        <option value="">Todas</option>
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-    </label>
   );
 }

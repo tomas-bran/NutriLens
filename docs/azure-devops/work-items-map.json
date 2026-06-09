@@ -1,0 +1,150 @@
+{
+  "E1": {
+    "adoId": 52,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/52"
+  },
+  "E2": {
+    "adoId": 53,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/53"
+  },
+  "E3": {
+    "adoId": 54,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/54"
+  },
+  "E4": {
+    "adoId": 55,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/55"
+  },
+  "E5": {
+    "adoId": 56,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/56"
+  },
+  "E6": {
+    "adoId": 57,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/57"
+  },
+  "E7": {
+    "adoId": 58,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/58"
+  },
+  "E8": {
+    "adoId": 59,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/59"
+  },
+  "E9": {
+    "adoId": 60,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/60"
+  },
+  "NL-101": {
+    "adoId": 61,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/61"
+  },
+  "NL-102": {
+    "adoId": 62,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/62"
+  },
+  "NL-103": {
+    "adoId": 63,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/63"
+  },
+  "NL-104": {
+    "adoId": 64,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/64"
+  },
+  "NL-201": {
+    "adoId": 65,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/65"
+  },
+  "NL-202": {
+    "adoId": 66,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/66"
+  },
+  "NL-203": {
+    "adoId": 67,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/67"
+  },
+  "NL-301": {
+    "adoId": 68,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/68"
+  },
+  "NL-302": {
+    "adoId": 69,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/69"
+  },
+  "NL-303": {
+    "adoId": 70,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/70"
+  },
+  "NL-401": {
+    "adoId": 71,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/71"
+  },
+  "NL-402": {
+    "adoId": 72,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/72"
+  },
+  "NL-403": {
+    "adoId": 73,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/73"
+  },
+  "NL-404": {
+    "adoId": 74,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/74"
+  },
+  "NL-501": {
+    "adoId": 75,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/75"
+  },
+  "NL-502": {
+    "adoId": 76,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/76"
+  },
+  "NL-503": {
+    "adoId": 77,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/77"
+  },
+  "NL-601": {
+    "adoId": 78,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/78"
+  },
+  "NL-602": {
+    "adoId": 79,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/79"
+  },
+  "NL-701": {
+    "adoId": 80,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/80"
+  },
+  "NL-702": {
+    "adoId": 81,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/81"
+  },
+  "NL-801": {
+    "adoId": 82,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/82"
+  },
+  "NL-802": {
+    "adoId": 83,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/83"
+  },
+  "NL-803": {
+    "adoId": 84,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/84"
+  },
+  "NL-901": {
+    "adoId": 85,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/85"
+  },
+  "NL-902": {
+    "adoId": 86,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/86"
+  },
+  "NL-903": {
+    "adoId": 87,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/87"
+  },
+  "NL-904": {
+    "adoId": 88,
+    "url": "https://dev.azure.com/tbranchesi/c5b0b456-57b8-4716-ad92-dc0e93eb044a/_apis/wit/workItems/88"
+  }
+}
