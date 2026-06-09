@@ -51,9 +51,7 @@ export function computeHealthScore(product: HealthScoreInput): HealthScoreResult
   const sellos_delta = -sellos_count * SELLO_PENALTY;
 
   const aptitudes_count =
-    (product.aptoVegano ? 1 : 0) +
-    (product.aptoCeliaco ? 1 : 0) +
-    (product.aptoSinLactosa ? 1 : 0);
+    (product.aptoVegano ? 1 : 0) + (product.aptoCeliaco ? 1 : 0) + (product.aptoSinLactosa ? 1 : 0);
   const aptitud_bonus = aptitudes_count * APTITUD_BONUS;
 
   const score = BASE_SCORE + riesgo_delta + sellos_delta + aptitud_bonus;
@@ -82,7 +80,9 @@ export function computeHealthScore(product: HealthScoreInput): HealthScoreResult
   };
 }
 
-export function rankByHealthScore<T extends HealthScoreInput>(products: T[]): Array<T & { healthScore: HealthScoreResult }> {
+export function rankByHealthScore<T extends HealthScoreInput>(
+  products: T[],
+): Array<T & { healthScore: HealthScoreResult }> {
   return [...products]
     .map((p) => ({ ...p, healthScore: computeHealthScore(p) }))
     .sort((a, b) => {

@@ -36,8 +36,11 @@ describe('computeHealthScore — tabla de verdad', () => {
 
   it('5 sellos = −15pts', () => {
     const sellos = JSON.stringify([
-      'exceso en azúcares', 'exceso en sodio', 'exceso en grasas saturadas',
-      'exceso en grasas totales', 'exceso en calorías',
+      'exceso en azúcares',
+      'exceso en sodio',
+      'exceso en grasas saturadas',
+      'exceso en grasas totales',
+      'exceso en calorías',
     ]);
     expect(computeHealthScore({ ...BASE, sellos }).score).toBe(85);
   });
@@ -55,7 +58,12 @@ describe('computeHealthScore — tabla de verdad', () => {
   });
 
   it('todas las aptitudes = +6pts', () => {
-    const s = computeHealthScore({ ...BASE, aptoVegano: true, aptoCeliaco: true, aptoSinLactosa: true });
+    const s = computeHealthScore({
+      ...BASE,
+      aptoVegano: true,
+      aptoCeliaco: true,
+      aptoSinLactosa: true,
+    });
     expect(s.score).toBe(106);
     expect(s.breakdown.aptitudes).toBe(6);
   });
@@ -64,7 +72,11 @@ describe('computeHealthScore — tabla de verdad', () => {
     const s = computeHealthScore({
       ...BASE,
       riesgo: 'alto',
-      sellos: JSON.stringify(['exceso en azúcares', 'exceso en sodio', 'exceso en grasas saturadas']),
+      sellos: JSON.stringify([
+        'exceso en azúcares',
+        'exceso en sodio',
+        'exceso en grasas saturadas',
+      ]),
     });
     expect(s.score).toBe(71);
   });
