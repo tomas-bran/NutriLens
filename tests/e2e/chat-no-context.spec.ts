@@ -31,14 +31,22 @@ test('DB vacía + pregunta → fallback "no_context" + CTA Analizar nuevo produc
   await chat.expectAnalyzeCtaVisible();
 });
 
-test('intent unknown → mensaje fallback "No te entendí bien" SIN CTA de analizar', async ({
+test('intent unknown → smalltalk del asistente SIN CTA de analizar (post 68d9e4b)', async ({
   page,
 }) => {
+  // El commit `68d9e4b feat(chat): smalltalk conversacional para intents
+  // desconocidos` reemplazó el fallback canned "No te entendí bien" por una
+  // call al LLM con el prompt `chat_smalltalk-v1`. El AC clave que sigue
+  // valiendo es: NO hay productos en contexto, NO se muestra el CTA de
+  // analizar, y la app responde con algo coherente (no rompe con 500).
   const chat = new ChatPage(page);
   await chat.goto();
 
   await chat.askQuestion('contame un chiste sobre el clima');
 
-  await chat.expectAssistantAnswerContains('No te entendí bien');
+  // El asistente responde algo (MockIaProvider en CI devuelve un texto
+  // canned con el disclaimer). Solo verificamos que el bubble se renderizó.
+  await chat.expectAssistantMessagesCount(1);
   await chat.expectAnalyzeCtaHidden();
+  await chat.expectProductChipsCount(0);
 });

@@ -87,6 +87,11 @@ beforeEach(() => {
   cache.clear();
   _resetIaProvider();
   process.env.IA_PROVIDER = 'mock';
+  // El step `enrich_with_off` golpea la API pública de Open Food Facts.
+  // En tests integration agrega ~3s por request y rompe los 5s de timeout
+  // default cuando el runner está bajo carga (Vitest paralelo). El feature
+  // tiene cobertura propia en unit tests, así que lo desactivamos acá.
+  process.env.OFF_ENABLED = 'false';
 });
 
 afterEach(async () => {
@@ -451,6 +456,7 @@ describe('POST /api/analyze — detect_label_kind gate (US-05)', () => {
       'detect_label_kind',
       'extract_with_ia',
       'validate_schema',
+      'enrich_with_off',
       'apply_rules',
       'compute_risk',
       'generate_explanation',

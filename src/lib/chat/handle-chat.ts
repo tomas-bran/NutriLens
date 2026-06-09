@@ -29,10 +29,10 @@ import { findMissingComparables } from '@/lib/chat/compare-helpers';
 import {
   missingCompareFallback,
   noContextFallback,
-  unknownIntentFallback,
   type ChatFallback,
 } from '@/lib/chat/empty-response';
 import { generateChatAnswer } from '@/lib/chat/generate-answer';
+import { generateSmallTalkAnswer } from '@/lib/chat/generate-smalltalk';
 import type { ChatIntent } from '@/lib/chat/intent-schema';
 import { parseChatIntent } from '@/lib/chat/parse-intent';
 import { retrieveProducts } from '@/lib/chat/retrieve';
@@ -81,16 +81,28 @@ export async function handleChat(
     });
   }
 
-  // US-30 / §8: intent unknown — no retrieve, no answer.
+  // US-30 / §8 (refinado): intent unknown — no hacemos retrieve, pero en vez
+  // del fallback canned dejamos que el LLM mantenga conversación dentro del
+  // dominio (saludos, chit-chat, redirección a funciones de la app).
+  // El prompt `chat_smalltalk-v1` restringe al modelo a no inventar productos.
   if (intent.kind === 'unknown') {
-    const fb = unknownIntentFallback();
-    logger.info('chat.no_context', { requestId, reason: fb.reason });
+    const smalltalk = await generateSmallTalkAnswer(question, { ia });
+    logger.info('chat.smalltalk', {
+      requestId,
+      tokensIn: parse.tokensIn + smalltalk.tokensIn,
+      tokensOut: parse.tokensOut + smalltalk.tokensOut,
+      parseLatencyMs: parse.latencyMs,
+      answerLatencyMs: smalltalk.latencyMs,
+    });
     return {
-      answer: fb.answer,
+      answer: smalltalk.text,
       products: [],
       intent,
-      tokensUsed: { in: parse.tokensIn, out: parse.tokensOut },
-      fallback: fb,
+      tokensUsed: {
+        in: parse.tokensIn + smalltalk.tokensIn,
+        out: parse.tokensOut + smalltalk.tokensOut,
+      },
+      fallback: null,
       questionWasTruncated: truncated,
     };
   }
