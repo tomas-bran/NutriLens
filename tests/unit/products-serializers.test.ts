@@ -80,10 +80,10 @@ function makeRow(overrides: Partial<PrismaProduct> = {}): PrismaProduct {
     jsonRaw: '{"raw":"json"}',
     pipelineTrace: JSON.stringify([{ name: 'validate_file', status: 'ok' }]),
     imagenPath: '/uploads/abc.jpg',
+    imagenMime: 'image/jpeg',
+    imagenBytes: 1024,
     promptVersion: 'extract_product-v1',
     offEnrichment: null,
-    imagenBytes: null,
-    imagenMime: null,
     createdAt: new Date('2026-05-16T14:32:11.000Z'),
     ...overrides,
   };

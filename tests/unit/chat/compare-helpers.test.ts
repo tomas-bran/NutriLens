@@ -28,10 +28,10 @@ function row(nombre: string): PrismaProduct {
     jsonRaw: '{}',
     pipelineTrace: '[]',
     imagenPath: '/x.jpg',
+    imagenMime: 'image/jpeg',
+    imagenBytes: 1024,
     promptVersion: 'extract_product-v1',
     offEnrichment: null,
-    imagenBytes: null,
-    imagenMime: null,
     createdAt: new Date(),
   };
 }

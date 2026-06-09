@@ -34,8 +34,8 @@ model Product {
   pipelineTrace   String   @db.Text  // JSON.stringify(StepTrace[])
   offEnrichment   String?  @db.Text  // JSON.stringify(OFFEnrichmentResult) — NL-601
   imagenPath      String
-  imagenBytes     Int?
   imagenMime      String?
+  imagenBytes     Int?
   promptVersion   String
   createdAt       DateTime @default(now())
 

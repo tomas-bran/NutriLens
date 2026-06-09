@@ -9,6 +9,8 @@ export const StepNameSchema = z.enum([
   'detect_label_kind',
   'extract_with_ia',
   'validate_schema',
+  // `enrich_with_off` (Open Food Facts) corre opcional entre validate_schema
+  // y apply_rules cuando la extracción del LLM viene con huecos.
   'enrich_with_off',
   'apply_rules',
   'compute_risk',

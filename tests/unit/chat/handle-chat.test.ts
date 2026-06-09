@@ -13,7 +13,7 @@ import { describe, it, expect, vi } from 'vitest';
 import type { Product as PrismaProduct } from '@prisma/client';
 import { ApiError } from '@schemas/errors';
 import { handleChat } from '@/lib/chat/handle-chat';
-import { EMPTY_CONTEXT_ANSWER, UNKNOWN_INTENT_ANSWER } from '@/lib/chat/empty-response';
+import { EMPTY_CONTEXT_ANSWER } from '@/lib/chat/empty-response';
 import type { ChatIntent } from '@/lib/chat/intent-schema';
 import type { IaProvider } from '@/lib/ai/types';
 
@@ -36,10 +36,10 @@ function row(overrides: Partial<PrismaProduct> = {}): PrismaProduct {
     jsonRaw: '{}',
     pipelineTrace: '[]',
     imagenPath: '/x.jpg',
+    imagenMime: 'image/jpeg',
+    imagenBytes: 1024,
     promptVersion: 'extract_product-v1',
     offEnrichment: null,
-    imagenBytes: null,
-    imagenMime: null,
     createdAt: new Date(),
   };
 }
@@ -115,24 +115,35 @@ describe('handleChat — validación de input (caso borde §13)', () => {
   });
 });
 
-describe('handleChat — kind=unknown (US-30 unknown branch, E05 §8)', () => {
-  it('NO llama al LLM de generación, devuelve fallback canónico + showAnalyzeCta=false', async () => {
-    const { ia, answerWithContext } = makeIa({ intent: { kind: 'unknown' } });
-    const r = await handleChat('contame un chiste', { ia, requestId: 'r1' });
-    expect(answerWithContext).not.toHaveBeenCalled();
-    expect(r.answer).toBe(UNKNOWN_INTENT_ANSWER);
+describe('handleChat — kind=unknown (smalltalk LLM, refinamiento US-30 §8)', () => {
+  it('llama al LLM con prompt smalltalk y devuelve la respuesta conversacional', async () => {
+    const { ia, answerWithContext } = makeIa({
+      intent: { kind: 'unknown' },
+      answerText: '¡Hola! Soy NutriLens, ¿en qué te ayudo?',
+    });
+    const r = await handleChat('hola', { ia, requestId: 'r1' });
+    // Se llamó al LLM exactamente una vez (smalltalk), sin productos en contexto.
+    expect(answerWithContext).toHaveBeenCalledTimes(1);
+    const [, products, opts] = answerWithContext.mock.calls[0] as [
+      string,
+      unknown[],
+      { promptVersion: string },
+    ];
+    expect(products).toEqual([]);
+    expect(opts.promptVersion).toBe('chat_smalltalk-v1');
+    expect(r.answer).toContain('NutriLens');
     expect(r.products).toEqual([]);
-    expect(r.fallback?.reason).toBe('unknown_intent');
-    expect(r.fallback?.showAnalyzeCta).toBe(false);
+    expect(r.fallback).toBeNull();
   });
 
-  it('reporta solo los tokens del parser cuando hay unknown (no se gastó answer)', async () => {
+  it('suma tokens del parser + smalltalk', async () => {
     const { ia } = makeIa({
       intent: { kind: 'unknown' },
       parseTokens: { in: 77, out: 11 },
+      answerTokens: { in: 40, out: 30 },
     });
     const r = await handleChat('x', { ia, requestId: 'r1' });
-    expect(r.tokensUsed).toEqual({ in: 77, out: 11 });
+    expect(r.tokensUsed).toEqual({ in: 117, out: 41 });
   });
 });
 
