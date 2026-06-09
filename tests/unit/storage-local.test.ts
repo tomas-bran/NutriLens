@@ -33,10 +33,14 @@ describe('LocalStorage', () => {
     rmSync(dir, { recursive: true, force: true });
   });
 
-  it('writes the buffer to <baseDir>/<hash>.<ext> and returns the public URL', async () => {
+  it('writes the buffer to <baseDir>/<hash>.<ext> and returns metadata', async () => {
     const buf = Buffer.from('image bytes');
-    const url = await storage.save(buf, 'image/jpeg', 'abc123');
-    expect(url).toBe('/test-uploads/abc123.jpg');
+    const result = await storage.save(buf, 'image/jpeg', 'abc123');
+    expect(result).toEqual({
+      path: '/test-uploads/abc123.jpg',
+      mime: 'image/jpeg',
+      bytes: buf.length,
+    });
     expect(existsSync(join(dir, 'abc123.jpg'))).toBe(true);
     expect(readFileSync(join(dir, 'abc123.jpg'))).toEqual(buf);
   });
@@ -45,8 +49,9 @@ describe('LocalStorage', () => {
     ['image/png', 'png'],
     ['application/pdf', 'pdf'],
   ])('uses the right extension for mime %s', async (mime, ext) => {
-    const url = await storage.save(Buffer.from('x'), mime, 'h');
-    expect(url).toBe(`/test-uploads/h.${ext}`);
+    const result = await storage.save(Buffer.from('x'), mime, 'h');
+    expect(result.path).toBe(`/test-uploads/h.${ext}`);
+    expect(result.mime).toBe(mime);
   });
 
   it('does not overwrite the file when called twice with the same hash (idempotent)', async () => {
@@ -60,5 +65,10 @@ describe('LocalStorage', () => {
     const s = new LocalStorage(nested);
     await s.save(Buffer.from('x'), 'image/jpeg', 'k');
     expect(existsSync(join(nested, 'k.jpg'))).toBe(true);
+  });
+
+  it('reports the byte size of the buffer it wrote', async () => {
+    const result = await storage.save(Buffer.alloc(1024), 'image/jpeg', 'big');
+    expect(result.bytes).toBe(1024);
   });
 });
