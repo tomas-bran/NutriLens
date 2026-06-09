@@ -45,6 +45,8 @@ function makeRow(overrides: Partial<PrismaProduct> = {}): PrismaProduct {
     jsonRaw: overrides.jsonRaw ?? '{}',
     pipelineTrace: overrides.pipelineTrace ?? '[]',
     imagenPath: overrides.imagenPath ?? '/uploads/x.jpg',
+    imagenMime: 'image/jpeg',
+    imagenBytes: 1024,
     promptVersion: overrides.promptVersion ?? 'extract_product-v1',
     createdAt: overrides.createdAt ?? now,
   };

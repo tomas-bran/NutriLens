@@ -51,7 +51,7 @@ export async function persist(ctx: AnalysisContext): Promise<AnalysisContext> {
     };
   }
 
-  const imagenPath = await getStorage().save(ctx.file.buffer, ctx.file.mime, ctx.file.hash);
+  const stored = await getStorage().save(ctx.file.buffer, ctx.file.mime, ctx.file.hash);
 
   let saved;
   try {
@@ -72,7 +72,9 @@ export async function persist(ctx: AnalysisContext): Promise<AnalysisContext> {
         explanation: ctx.explanation ?? null,
         jsonRaw: ctx.extractionRaw,
         pipelineTrace: JSON.stringify(ctx.steps),
-        imagenPath,
+        imagenPath: stored.path,
+        imagenMime: stored.mime,
+        imagenBytes: stored.bytes,
         promptVersion: PROMPT_VERSION,
       },
     });
@@ -113,7 +115,7 @@ export async function persist(ctx: AnalysisContext): Promise<AnalysisContext> {
   // cambio de cumplir el AC §3 escenario 1.
   const fullSteps = [
     ...ctx.steps,
-    makeTrace('persist', 'ok', startedAt, { id: saved.id, imagenPath }),
+    makeTrace('persist', 'ok', startedAt, { id: saved.id, imagenPath: stored.path }),
   ];
   saved = await prisma.product.update({
     where: { id: saved.id },

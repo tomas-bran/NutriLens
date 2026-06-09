@@ -11,50 +11,14 @@ export class HistoryPage {
   private readonly empty: Locator;
   private readonly noResults: Locator;
   private readonly noResultsClear: Locator;
-  private readonly categoriaSelect: Locator;
-  private readonly riesgoSelect: Locator;
-  private readonly alergenoSelect: Locator;
-  private readonly aptoSelect: Locator;
   private readonly activeChips: Locator;
-  // NL-502: en mobile los filtros viven en un bottomsheet detrás de "Filtros".
-  private readonly filterOpenBtn: Locator;
-  private readonly filterCloseBtn: Locator;
-
   constructor(private readonly page: Page) {
     this.view = page.getByTestId('history-view');
     this.grid = page.getByTestId('history-grid');
     this.empty = page.getByTestId('history-empty');
     this.noResults = page.getByTestId('history-no-results');
     this.noResultsClear = page.getByTestId('history-no-results-clear');
-    this.categoriaSelect = page.getByTestId('history-filter-categoria');
-    this.riesgoSelect = page.getByTestId('history-filter-riesgo');
-    this.alergenoSelect = page.getByTestId('history-filter-alergeno');
-    this.aptoSelect = page.getByTestId('history-filter-apto');
     this.activeChips = page.getByTestId('active-filter-chips');
-    this.filterOpenBtn = page.getByTestId('history-filter-open');
-    this.filterCloseBtn = page.getByTestId('history-filter-close');
-  }
-
-  /**
-   * En desktop los selects están inline (siempre visibles). En mobile están
-   * dentro del bottomsheet: si no se ven, lo abrimos tocando "Filtros".
-   */
-  private async openFiltersIfMobile() {
-    if (await this.categoriaSelect.isVisible()) return;
-    await this.filterOpenBtn.click();
-    await expect(this.categoriaSelect).toBeVisible();
-  }
-
-  /**
-   * Cierra el bottomsheet si quedó abierto (mobile), así no tapa el contenido
-   * del listado al hacer las aserciones siguientes. En desktop es un no-op
-   * (el botón de cerrar es `md:hidden`).
-   */
-  private async closeFiltersIfOpen() {
-    if (await this.filterCloseBtn.isVisible()) {
-      await this.filterCloseBtn.click();
-      await expect(this.filterCloseBtn).toBeHidden();
-    }
   }
 
   async goto() {
@@ -88,32 +52,33 @@ export class HistoryPage {
     await this.noResultsClear.click();
   }
 
+  /**
+   * Selecciona un valor en un combobox de Radix Select. El trigger es un
+   * `<button>`; el listbox aparece en un Portal con `data-testid` derivado
+   * (`${triggerId}-content`) y cada opción tiene
+   * `data-testid="${triggerId}-option-${value}"`. Se clickea el trigger
+   * para abrir y luego la opción.
+   */
+  private async selectRadixOption(triggerTestId: string, value: string, expectedUrl: RegExp) {
+    await this.page.getByTestId(triggerTestId).click();
+    await this.page.getByTestId(`${triggerTestId}-option-${value}`).click();
+    await this.page.waitForURL(expectedUrl);
+  }
+
   async selectCategoria(value: string) {
-    await this.openFiltersIfMobile();
-    await this.categoriaSelect.selectOption(value);
-    await this.page.waitForURL(/categoria=/);
-    await this.closeFiltersIfOpen();
+    await this.selectRadixOption('history-filter-categoria', value, /categoria=/);
   }
 
   async selectRiesgo(value: string) {
-    await this.openFiltersIfMobile();
-    await this.riesgoSelect.selectOption(value);
-    await this.page.waitForURL(/riesgo=/);
-    await this.closeFiltersIfOpen();
+    await this.selectRadixOption('history-filter-riesgo', value, /riesgo=/);
   }
 
   async selectAlergeno(value: string) {
-    await this.openFiltersIfMobile();
-    await this.alergenoSelect.selectOption(value);
-    await this.page.waitForURL(/alergeno=/);
-    await this.closeFiltersIfOpen();
+    await this.selectRadixOption('history-filter-alergeno', value, /alergeno=/);
   }
 
   async selectApto(value: string) {
-    await this.openFiltersIfMobile();
-    await this.aptoSelect.selectOption(value);
-    await this.page.waitForURL(/apto=/);
-    await this.closeFiltersIfOpen();
+    await this.selectRadixOption('history-filter-apto', value, /apto=/);
   }
 
   async expectActiveChip(key: string) {
