@@ -28,17 +28,13 @@ describe('<SuggestionPills>', () => {
 
   it('excludes lastQuestion case-insensitively', () => {
     const first = CHAT_SUGGESTIONS[0] ?? '';
-    render(
-      <SuggestionPills onPick={vi.fn()} lastQuestion={first.toUpperCase()} />,
-    );
+    render(<SuggestionPills onPick={vi.fn()} lastQuestion={first.toUpperCase()} />);
     expect(screen.queryByRole('button', { name: first })).not.toBeInTheDocument();
   });
 
   it('renders N-1 pills when one suggestion matches lastQuestion', () => {
     const first = CHAT_SUGGESTIONS[0];
-    const { container } = render(
-      <SuggestionPills onPick={vi.fn()} lastQuestion={first} />,
-    );
+    const { container } = render(<SuggestionPills onPick={vi.fn()} lastQuestion={first} />);
     const buttons = container.querySelectorAll('button');
     expect(buttons.length).toBe(CHAT_SUGGESTIONS.length - 1);
   });

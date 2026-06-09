@@ -26,7 +26,7 @@ export function SuggestionPills({ onPick, lastQuestion, className }: SuggestionP
     <div
       data-testid="suggestion-pills"
       aria-label="Sugerencias de preguntas"
-      className={cn('flex gap-2 overflow-x-auto pb-1 scrollbar-hide', className)}
+      className={cn('scrollbar-hide flex gap-2 overflow-x-auto pb-1', className)}
     >
       {pills.map((text) => (
         <button
