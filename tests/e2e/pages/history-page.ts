@@ -61,7 +61,6 @@ export class HistoryPage {
     const openBtn = this.page.getByTestId('history-filter-open');
     if (await openBtn.isVisible({ timeout: 500 }).catch(() => false)) {
       await openBtn.click();
-      // Esperar a que el primer trigger sea visible antes de continuar.
       await this.page.getByTestId('history-filter-categoria').waitFor({ state: 'visible' });
     }
   }
