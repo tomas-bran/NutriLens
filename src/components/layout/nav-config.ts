@@ -1,7 +1,8 @@
 /**
- * Single source of truth for the app navigation. Both the desktop Sidebar
- * (`iLsWo` Pencil component) and the mobile BottomNav (`Z2rHzQ`) consume
- * this list. To add a route, append a new entry here and nothing else.
+ * Single source of truth for the app navigation. Consumido por el <Sidebar>
+ * (`iLsWo` Pencil component), que es la navegación única en todos los tamaños
+ * (completo en desktop, rail de íconos en móvil). Para agregar una ruta, sumá
+ * una entrada acá y nada más.
  */
 import type { IconName } from '@/components/ui/Icon';
 

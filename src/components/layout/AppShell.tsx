@@ -1,18 +1,21 @@
 /**
- * <AppShell> — desktop sidebar + mobile bottom nav wrapper.
+ * <AppShell> — layout raíz: navegación + área de contenido, responsive.
  *
- * Pencil references:
- *   - `iLsWo` Component/Desktop/Sidebar
- *   - `Z2rHzQ` Component/Mobile/BottomNav
- *   - `h4PArD` D01 layout
+ * NL-502 (AB#76):
+ *   - Desktop (`≥md`): grid `md:grid-cols-[15rem_1fr]`. La primera columna
+ *     (15rem = 240px) reserva el hueco del <Sidebar>, que está `position:
+ *     fixed` y por lo tanto fuera del flujo; la segunda es el contenido. El
+ *     ancho de la columna calza con el `w-60` del sidebar para que no se
+ *     solapen.
+ *   - Mobile (`<md`): columna flex de alto fijo (`h-[100dvh]`). El scroll vive
+ *     DENTRO de `main` (`flex-1 overflow-y-auto`), no en el documento, así la
+ *     barra de scroll termina justo arriba del <MobileBottomNav> y no lo
+ *     abarca. El bottom nav es un hijo en flujo (`flex-shrink-0`) al pie.
  *
- * Composition lives in three sibling files (Sidebar / MobileTopBar /
- * MobileBottomNav). This file is intentionally thin — it only assembles
- * the layout grid + bottom padding for the floating mobile nav.
+ * Pencil refs: `iLsWo` Component/Desktop/Sidebar + `Q3hjvQ` Component/BottomNav.
  */
 import type { ReactNode } from 'react';
 import { MobileBottomNav } from './MobileBottomNav';
-import { MobileTopBar } from './MobileTopBar';
 import { Sidebar } from './Sidebar';
 import type { ActiveNavItem } from './nav-config';
 
@@ -27,14 +30,16 @@ export interface AppShellProps {
 
 export function AppShell({ active, historialCount, children }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] p-4 pb-24 md:pb-4">
-      <div className="mx-auto flex max-w-[1280px] items-start gap-4">
-        <Sidebar active={active} historialCount={historialCount} />
-        <main className="flex w-full min-w-0 flex-col gap-6 rounded-3xl bg-[var(--color-bg)] md:gap-6 md:p-2">
-          <MobileTopBar />
+    <div
+      data-testid="app-shell"
+      className="flex h-[100dvh] flex-col bg-[var(--color-bg)] md:grid md:h-auto md:min-h-screen md:grid-cols-[15rem_1fr]"
+    >
+      <Sidebar active={active} historialCount={historialCount} />
+      <main className="flex min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-3 py-3 md:col-start-2 md:block md:overflow-y-visible md:px-6 md:py-6">
+        <div className="mx-auto flex min-h-0 w-full max-w-[1100px] flex-1 flex-col gap-6">
           {children}
-        </main>
-      </div>
+        </div>
+      </main>
       <MobileBottomNav active={active} historialCount={historialCount} />
     </div>
   );

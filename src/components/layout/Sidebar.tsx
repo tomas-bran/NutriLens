@@ -1,6 +1,17 @@
 /**
- * Desktop sticky sidebar. Pencil ref: `iLsWo` Component/Desktop/Sidebar
- * (240px white card, padding 20, cornerRadius 20, ink-200 border).
+ * Sidebar de escritorio — anclado a la izquierda con `position: fixed`.
+ *
+ * NL-502 (AB#76, corrección de bug del MVP):
+ *   - Desktop (`≥md`): panel fijo de 240px pegado al borde izquierdo
+ *     (`fixed inset-y-0 left-0`). Es `fixed`, no `sticky`, así que queda
+ *     TOTALMENTE inmóvil: no se mueve con el scroll, el overscroll/rubber-band
+ *     ni cuando la barra del browser colapsa. `overflow-y-auto` evita que el
+ *     contenido se corte en viewports bajos.
+ *   - Mobile (`<md`): el sidebar se oculta (`hidden`) y la navegación pasa al
+ *     <MobileBottomNav> (barra inferior). Por eso acá NO hay versión "rail".
+ *
+ * El espacio que ocupa en desktop lo reserva el grid del <AppShell>
+ * (`md:grid-cols-[15rem_1fr]`), cuya primera columna calza con el ancho fijo.
  */
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
@@ -16,10 +27,10 @@ export function Sidebar({ active, historialCount }: SidebarProps) {
   return (
     <aside
       data-testid="app-sidebar"
-      className="sticky top-4 hidden h-[calc(100vh-2rem)] w-60 flex-shrink-0 flex-col gap-1.5 rounded-3xl border border-[var(--color-border)] bg-white p-5 md:flex"
+      className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-shrink-0 flex-col gap-1.5 overflow-y-auto border-r border-[var(--color-border)] bg-white p-5 md:flex"
     >
       <BrandBlock />
-      <nav className="flex flex-col gap-1.5 pt-2" aria-label="Navegación principal">
+      <nav className="flex flex-1 flex-col gap-1.5 pt-2" aria-label="Navegación principal">
         {NAV_ITEMS.map((item) => (
           <SidebarNavLink
             key={item.id}
@@ -29,9 +40,7 @@ export function Sidebar({ active, historialCount }: SidebarProps) {
           />
         ))}
       </nav>
-      <div className="mt-auto">
-        <TeamCard />
-      </div>
+      <TeamCard />
     </aside>
   );
 }
@@ -39,7 +48,7 @@ export function Sidebar({ active, historialCount }: SidebarProps) {
 function BrandBlock() {
   return (
     <div className="flex items-center gap-3 pb-4">
-      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-primary)] text-white">
+      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary)] text-white">
         <Icon name="scan-eye" strokeWidth={2} />
       </span>
       <div className="flex flex-col leading-tight">
@@ -57,6 +66,7 @@ interface SidebarNavLinkProps {
 }
 
 function SidebarNavLink({ item, active, badge }: SidebarNavLinkProps) {
+  const hasBadge = typeof badge === 'number' && badge > 0;
   return (
     <Link
       href={item.href}
@@ -69,9 +79,13 @@ function SidebarNavLink({ item, active, badge }: SidebarNavLinkProps) {
           : 'text-[var(--color-text)]/80 hover:bg-[var(--color-surface)]',
       )}
     >
-      <Icon name={item.icon} strokeWidth={active ? 2.25 : 2} className="h-[18px] w-[18px]" />
+      <Icon
+        name={item.icon}
+        strokeWidth={active ? 2.25 : 2}
+        className="h-[18px] w-[18px] flex-shrink-0"
+      />
       <span className="flex-1">{item.label}</span>
-      {typeof badge === 'number' && badge > 0 && (
+      {hasBadge && (
         <span className="rounded-full bg-[var(--color-surface)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--color-text-muted)]">
           {badge}
         </span>
@@ -82,8 +96,8 @@ function SidebarNavLink({ item, active, badge }: SidebarNavLinkProps) {
 
 function TeamCard() {
   return (
-    <div className="flex items-center gap-2.5 rounded-[10px] bg-[var(--color-bg)] p-2.5">
-      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-xs font-bold text-[var(--color-primary-strong)]">
+    <div className="mt-auto flex items-center gap-2.5 rounded-[10px] bg-[var(--color-bg)] p-2.5">
+      <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-xs font-bold text-[var(--color-primary-strong)]">
         F
       </span>
       <div className="flex min-w-0 flex-col leading-tight">

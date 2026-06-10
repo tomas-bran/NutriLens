@@ -130,7 +130,7 @@ export function ChatPageClient({
 
   return (
     <AppShell active="chat" historialCount={historialCount}>
-      <div className="flex h-full min-h-[calc(100vh-8rem)] flex-col gap-4 md:min-h-[calc(100vh-2rem)]">
+      <div className="flex h-full flex-col gap-4 md:min-h-[calc(100vh-2rem)]">
         <ChatHeader
           productsInBase={productsInBase}
           hasMessages={hasMessages}
