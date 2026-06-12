@@ -5,7 +5,8 @@
  * Supported values:
  *   - "mock"          → MockIaProvider (fail-safe default)
  *   - "foundry"       → FoundryProvider (Azure AI Foundry, Phi-4)
- *   - "azure-openai"  → AzureOpenAIProvider (Azure OpenAI, gpt-4o)
+ *   - "azure-openai"  → AzureOpenAIProvider (Azure OpenAI endpoint)
+ *   - "openai"        → OpenAIProvider (api.openai.com, OPENAI_API_KEY)
  *
  * Real providers are implemented in US-08 / US-09 (E02). For now the
  * switch only knows the mock; when implementing FoundryProvider, wire
@@ -14,6 +15,7 @@
 import { AzureOpenAIProvider } from './azure-openai-provider';
 import { FoundryProvider } from './foundry-provider';
 import { MockIaProvider } from './mock-provider';
+import { OpenAIProvider } from './openai-provider';
 import { logger } from '@/lib/logger';
 import type { IaProvider } from './types';
 
@@ -32,6 +34,9 @@ export function getIaProvider(): IaProvider {
     case 'azure-openai':
       cached = new AzureOpenAIProvider();
       break;
+    case 'openai':
+      cached = new OpenAIProvider();
+      break;
     default:
       logger.warn('ia.fallback_to_mock', { requested: kind, reason: 'unknown provider' });
       cached = new MockIaProvider();
@@ -47,6 +52,7 @@ export function _resetIaProvider(): void {
 export { AzureOpenAIProvider } from './azure-openai-provider';
 export { FoundryProvider } from './foundry-provider';
 export { MockIaProvider } from './mock-provider';
+export { OpenAIProvider } from './openai-provider';
 export { OpenAICompatibleProvider, mapProviderError } from './openai-compatible-provider';
 export { stripJsonFences } from './strip-json-fences';
 export type {

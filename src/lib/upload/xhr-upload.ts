@@ -43,6 +43,9 @@ export function xhrUpload(opts: XhrUploadOptions): Promise<XhrUploadResult> {
 
   return new Promise((resolve) => {
     const xhr = xhrFactory ? xhrFactory() : new XMLHttpRequest();
+    // US-39: hard client-side cap so the browser never hangs indefinitely.
+    // 30s gives the server its 25s pipeline budget + network overhead.
+    xhr.timeout = 30_000;
     xhr.open('POST', '/api/analyze');
     xhr.setRequestHeader('X-File-Hash', fileHash);
 
