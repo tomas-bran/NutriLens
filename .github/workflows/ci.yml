@@ -90,7 +90,7 @@ jobs:
         run: npm run test:coverage
       - name: Upload coverage artifact
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: coverage/
@@ -161,14 +161,14 @@ jobs:
           IA_PROVIDER: mock
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
       - name: Upload Playwright traces (on failure)
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-traces
           path: test-results/
