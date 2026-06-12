@@ -51,4 +51,8 @@ export class LocalStorage implements Storage {
       bytes: buffer.length,
     };
   }
+
+  resolveUrl(path: string): string {
+    return path;
+  }
 }

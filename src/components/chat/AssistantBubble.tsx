@@ -11,7 +11,7 @@
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { ProductChip } from '@/components/chat/ProductChip';
-import { MarkdownMini, hasMarkdownTable } from '@/components/chat/markdown-mini';
+import { MarkdownMessage } from '@/components/chat/MarkdownMessage';
 import type { ChatProductRef } from '@/lib/chat/response';
 import type { ChatFallback } from '@/lib/chat/empty-response';
 
@@ -22,8 +22,6 @@ interface AssistantBubbleProps {
 }
 
 export function AssistantBubble({ text, products, fallback }: AssistantBubbleProps) {
-  const isMarkdown = hasMarkdownTable(text);
-
   return (
     <div className="flex w-full justify-start gap-2.5">
       <div
@@ -38,7 +36,7 @@ export function AssistantBubble({ text, products, fallback }: AssistantBubblePro
           data-testid="chat-assistant-bubble"
           className="rounded-3xl rounded-bl-md border border-[var(--color-border)] bg-white px-4 py-3 text-sm leading-relaxed text-[var(--color-text)] shadow-sm md:px-5 md:py-4 md:text-base"
         >
-          {isMarkdown ? <MarkdownMini text={text} /> : text}
+          <MarkdownMessage text={text} />
         </div>
 
         {products.length > 0 && (

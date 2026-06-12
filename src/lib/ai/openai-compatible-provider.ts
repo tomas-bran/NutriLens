@@ -50,7 +50,10 @@ const PARSE_INTENT_TIMEOUT_MS = 8_000;
 const PARSE_INTENT_MAX_TOKENS = 200;
 const PARSE_INTENT_TEMPERATURE = 0;
 const ANSWER_TIMEOUT_MS = 10_000;
-const ANSWER_MAX_TOKENS = 350;
+// 350 (spec E05 §6.3 original) quedó corto para las respuestas con markdown
+// (listas/tablas de v3): el modelo se truncaba a mitad de frase. En gpt-5.x
+// además el cap incluye los reasoning tokens.
+const ANSWER_MAX_TOKENS = 800;
 const ANSWER_TEMPERATURE = 0.2;
 const ANSWER_TOP_K = 5;
 
@@ -176,8 +179,11 @@ export class OpenAICompatibleProvider implements IaProvider {
       messages: [
         { role: 'system', content: systemPrompt },
         {
+          // Neutral a propósito: cada prompt de sistema (answer/smalltalk)
+          // trae sus propias reglas de grounding — un nudge "usá solo los
+          // productos" acá rompía las preguntas generales del smalltalk.
           role: 'user',
-          content: 'Respondé la pregunta usando solo los productos del contexto.',
+          content: 'Respondé la pregunta del usuario siguiendo las reglas del SISTEMA.',
         },
       ],
       timeoutMs: opts.timeoutMs ?? ANSWER_TIMEOUT_MS,
