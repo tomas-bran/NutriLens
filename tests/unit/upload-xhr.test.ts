@@ -315,4 +315,29 @@ describe('xhrUpload — request setup', () => {
     expect(captured.open).toHaveBeenCalledWith('POST', '/api/analyze');
     expect(captured.setRequestHeader).toHaveBeenCalledWith('X-File-Hash', TEST_HASH);
   });
+
+  // US-39: hard client timeout so the browser never hangs.
+  it('sets xhr.timeout to 30_000ms', async () => {
+    let capturedTimeout = 0;
+    const fakeXhr = makeFakeXhr({
+      status: 200,
+      responseText: JSON.stringify({ id: 'x' }),
+      trigger: 'load',
+    });
+    const xhrWithTimeout = new Proxy(fakeXhr, {
+      set(target, prop, value) {
+        if (prop === 'timeout') capturedTimeout = value as number;
+        (target as unknown as Record<PropertyKey, unknown>)[prop] = value;
+        return true;
+      },
+    });
+    await xhrUpload({
+      file: TEST_FILE,
+      fileHash: TEST_HASH,
+      onProgress: vi.fn(),
+      onUploadDone: vi.fn(),
+      xhrFactory: () => xhrWithTimeout,
+    });
+    expect(capturedTimeout).toBe(30_000);
+  });
 });
