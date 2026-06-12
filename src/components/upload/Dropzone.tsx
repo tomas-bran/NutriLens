@@ -5,6 +5,7 @@
  * Pencil reference: `ekBlR` Component/UploadZone — solid green border,
  * `#F0FDF4` bg, cornerRadius 24, padding 40, gap 20.
  */
+import Image from 'next/image';
 import { useState } from 'react';
 import type { DragEvent, RefObject } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -13,6 +14,7 @@ import { cn } from '@/lib/cn';
 import { formatFileSize } from '@/lib/format-file-size';
 import type { UploadState } from '@/lib/upload/machine';
 import { HiddenFileInputs } from './HiddenFileInputs';
+import { useFilePreviewUrl } from './hooks/use-file-preview-url';
 
 export interface DropzoneProps {
   state: Extract<UploadState, { kind: 'IDLE' | 'SELECTED' }>;
@@ -35,6 +37,9 @@ export function Dropzone({
 }: DropzoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const selected = state.kind === 'SELECTED' ? state.file : null;
+  // The image preview replaces the cloud badge as the visual anchor; PDFs
+  // (no inline preview) keep the badge.
+  const showsImagePreview = selected?.type.startsWith('image/') ?? false;
 
   return (
     <div
@@ -58,7 +63,7 @@ export function Dropzone({
           : 'border-[var(--color-primary-border)] bg-[var(--color-primary-soft)]',
       )}
     >
-      <CloudUploadBadge />
+      {!showsImagePreview && <CloudUploadBadge />}
 
       {selected ? (
         <SelectedFilePreview file={selected} onSubmit={onSubmit} onClear={onClear} />
@@ -156,8 +161,20 @@ function SelectedFilePreview({
   onSubmit: () => void;
   onClear: () => void;
 }) {
+  const previewUrl = useFilePreviewUrl(file);
   return (
     <div className="flex flex-col items-center gap-4" data-testid="selected-file">
+      {previewUrl && (
+        <Image
+          src={previewUrl}
+          alt={`Vista previa de ${file.name}`}
+          width={400}
+          height={300}
+          unoptimized
+          data-testid="selected-file-preview"
+          className="max-h-60 w-auto max-w-full rounded-[12px] bg-white object-contain p-2 shadow-[0_8px_24px_rgba(22,163,74,0.2)]"
+        />
+      )}
       <div className="flex flex-col gap-1">
         <p className="font-semibold text-[var(--color-text)]">Archivo cargado</p>
         <p className="text-sm text-[var(--color-text-muted)]">{file.name}</p>
