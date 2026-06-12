@@ -22,9 +22,13 @@ FORMATO SEGÚN EL TIPO DE PREGUNTA
   (`intent.kind = compare`), respondé con:
   1. Una frase introductoria de UNA línea presentando los productos comparados.
   2. Una TABLA en Markdown GitHub-flavored con UNA columna por producto y
-     UNA fila por dimensión. Dimensiones obligatorias: **Riesgo**,
-     **Alérgenos**, **Sellos**. Dimensión opcional: **Aptitudes** (vegano /
-     celíaco / sin lactosa, sólo las que sean true).
+     UNA fila por dimensión. El encabezado de cada columna es el producto
+     LINKEADO a su detalle con el `id` exacto del contexto:
+     `[Nombre](/historial/<id>)` — nunca inventes ids. Dimensiones
+     obligatorias: **Riesgo**, **Alérgenos**, **Sellos**. Opcionales:
+     **Aptitudes** (vegano / celíaco / sin lactosa, sólo las true) e
+     **Ingredientes** (resumen de los del contexto, sólo si el usuario los
+     pidió). Usá siempre los datos REALES del contexto, nunca genéricos.
   3. Un **Veredicto** de 1-2 oraciones:
      - Indicá cuál conviene y por qué (riesgo, sellos, aptitudes).
      - Si alguno tiene alérgenos, agregá "⚠️ Atención: [producto] contiene [alérgeno]".
@@ -36,8 +40,8 @@ EJEMPLO DE TABLA (compare)
 
 Acá comparamos Galletitas X y Galletitas Y:
 
-| Dimensión | Galletitas X        | Galletitas Y       |
-| --------- | ------------------- | ------------------ |
+| Dimensión | [Galletitas X](/historial/id-x) | [Galletitas Y](/historial/id-y) |
+| --------- | ------------------------------- | ------------------------------- |
 | Riesgo    | bajo                | medio              |
 | Alérgenos | ninguno             | gluten             |
 | Sellos    | ninguno             | exceso en azúcares |

@@ -11,7 +11,7 @@
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { ProductChip } from '@/components/chat/ProductChip';
-import { MarkdownMini, hasMarkdownTable } from '@/components/chat/markdown-mini';
+import { MarkdownMessage } from '@/components/chat/MarkdownMessage';
 import type { ChatProductRef } from '@/lib/chat/response';
 import type { ChatFallback } from '@/lib/chat/empty-response';
 
@@ -40,7 +40,7 @@ export function AssistantBubble({ text, products, fallback, onAskFollowUp }: Ass
           data-testid="chat-assistant-bubble"
           className="rounded-3xl rounded-bl-md border border-[var(--color-border)] bg-white px-4 py-3 text-sm leading-relaxed text-[var(--color-text)] shadow-sm md:px-5 md:py-4 md:text-base"
         >
-          {isMarkdown ? <MarkdownMini text={text} /> : text}
+          <MarkdownMessage text={text} />
         </div>
 
         {products.length > 0 && (
@@ -82,4 +82,13 @@ export function AssistantBubble({ text, products, fallback, onAskFollowUp }: Ass
       </div>
     </div>
   );
+}
+
+/**
+ * Detecta una tabla GFM (fila de celdas + fila separadora) para mostrar el
+ * CTA de seguimiento (NL-702). Antes vivía en markdown-mini (reemplazado por
+ * react-markdown en NL-303).
+ */
+function hasMarkdownTable(text: string): boolean {
+  return /^\|.+\|\s*$/m.test(text) && /^\|[\s:|-]+\|\s*$/m.test(text);
 }

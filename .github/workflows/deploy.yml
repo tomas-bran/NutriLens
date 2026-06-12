@@ -1,0 +1,67 @@
+name: Deploy a Azure
+
+# NL-803 (AB#84): deploy automático del App Service en cada merge a main.
+# Requiere dos secrets (ya cargados): AZURE_WEBAPP_PUBLISH_PROFILE y
+# DATABASE_URL (la de producción, para correr migraciones antes de publicar).
+# Las env vars de runtime (AZURE_OPENAI_*, AZURE_BLOB_*, etc.) NO van acá:
+# viven en las App Settings de la webapp y persisten entre deploys.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Un deploy a la vez; si entran merges seguidos, gana el último.
+concurrency:
+  group: deploy-azure
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Build standalone + deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx prisma generate
+
+      # Migraciones contra la DB de prod ANTES de publicar el código nuevo.
+      - name: Aplicar migraciones
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # Build standalone (gated por BUILD_STANDALONE, ver next.config.mjs).
+      # En ubuntu el bundle sale completo: engine Prisma debian + binario
+      # linux de @napi-rs/canvas (los dos gotchas del deploy manual desde mac).
+      - name: Build
+        run: npm run build
+        env:
+          BUILD_STANDALONE: '1'
+
+      - name: Empaquetar standalone con assets
+        run: |
+          cp -r .next/static .next/standalone/.next/static
+          cp -r public .next/standalone/public
+
+      - uses: azure/webapps-deploy@v3
+        with:
+          app-name: nutrilens-app
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: .next/standalone
+
+      - name: Smoke test
+        run: |
+          sleep 30
+          for i in 1 2 3 4 5; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -m 60 https://nutrilens-app.azurewebsites.net/) && \
+            [ "$code" = "200" ] && echo "App responde 200 ✓" && exit 0
+            echo "intento $i: HTTP $code — reintentando (cold start F1)..."
+            sleep 30
+          done
+          echo "::error::La app no respondió 200 después del deploy"
+          exit 1
