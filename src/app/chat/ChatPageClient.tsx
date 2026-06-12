@@ -24,6 +24,7 @@ import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatHero } from '@/components/chat/ChatHero';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatThread } from '@/components/chat/ChatThread';
+import { SuggestionPills } from '@/components/chat/SuggestionPills';
 import type { ChatMessage, ChatStatus } from '@/components/chat/types';
 import { fetchChat } from '@/lib/chat/fetch-chat';
 import type { ChatApiResponse } from '@/lib/chat/response';
@@ -40,11 +41,13 @@ interface State {
   status: ChatStatus;
   error: string | null;
   lastUserQuestion: string | null;
+  /** Pills contextuales del último response (NL-503); null => set estático. */
+  suggestions: string[] | null;
 }
 
 type Action =
   | { type: 'submit'; userMessage: ChatMessage; question: string }
-  | { type: 'success'; assistant: ChatMessage }
+  | { type: 'success'; assistant: ChatMessage; suggestions: string[] | null }
   | { type: 'error'; message: string }
   | { type: 'reset' };
 
@@ -52,6 +55,7 @@ function reducer(state: State, action: Action): State {
   switch (action.type) {
     case 'submit':
       return {
+        ...state,
         messages: [...state.messages, action.userMessage],
         status: 'THINKING',
         error: null,
@@ -59,15 +63,24 @@ function reducer(state: State, action: Action): State {
       };
     case 'success':
       return {
+        ...state,
         messages: [...state.messages, action.assistant],
         status: 'IDLE',
         error: null,
-        lastUserQuestion: state.lastUserQuestion,
+        // Si este response no trajo sugerencias, conservamos las anteriores
+        // (mejor contexto viejo que volver al set estático a mitad de charla).
+        suggestions: action.suggestions ?? state.suggestions,
       };
     case 'error':
       return { ...state, status: 'ERROR', error: action.message };
     case 'reset':
-      return { messages: [], status: 'IDLE', error: null, lastUserQuestion: null };
+      return {
+        messages: [],
+        status: 'IDLE',
+        error: null,
+        lastUserQuestion: null,
+        suggestions: null,
+      };
     default:
       return state;
   }
@@ -78,6 +91,7 @@ const INITIAL_STATE: State = {
   status: 'IDLE',
   error: null,
   lastUserQuestion: null,
+  suggestions: null,
 };
 
 export function ChatPageClient({
@@ -107,6 +121,7 @@ export function ChatPageClient({
             products: res.products,
             fallback: res.fallback,
           },
+          suggestions: res.suggestions ?? null,
         });
       } catch (err) {
         const reason =
@@ -155,6 +170,14 @@ export function ChatPageClient({
           )}
 
           <div className="sticky bottom-0 bg-[var(--color-bg)] pt-2">
+            {hasMessages && state.status === 'IDLE' && (
+              <SuggestionPills
+                onPick={handleSubmit}
+                suggestions={state.suggestions}
+                lastQuestion={state.lastUserQuestion}
+                className="mb-2"
+              />
+            )}
             <ChatInput onSubmit={handleSubmit} disabled={inputDisabled} />
           </div>
         </div>

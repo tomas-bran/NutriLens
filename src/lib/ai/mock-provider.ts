@@ -82,6 +82,15 @@ export class MockIaProvider implements IaProvider {
     products: SavedProductLite[],
     opts: AnswerOpts,
   ): Promise<IaCallResult> {
+    // NL-503: pills de seguimiento contextuales — el mock devuelve un set
+    // canned válido para que unit/E2E verifiquen el flujo sin LLM real.
+    if (opts.promptVersion === 'chat_suggestions-v1') {
+      return {
+        raw: '["¿Cuál tiene menos azúcar?", "Compará los dos primeros", "¿Alguno apto celíacos?"]',
+        usage: { in: 0, out: 0 },
+        latencyMs: 2,
+      };
+    }
     // US-31: cuando el caller pide `chat_answer-v2` (o pasa intent_kind=compare
     // en opts.extra), emulamos la tabla markdown que produciría el LLM real
     // para que los E2E del compare puedan verificar el render de la tabla

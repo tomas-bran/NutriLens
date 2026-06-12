@@ -42,6 +42,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       intent: result.intent,
       tokensUsed: result.tokensUsed,
       fallback: result.fallback,
+      suggestions: result.suggestions,
     };
 
     return NextResponse.json(payload, {

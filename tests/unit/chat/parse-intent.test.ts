@@ -39,7 +39,7 @@ describe('parseChatIntent — happy path', () => {
     expect(r.tokensOut).toBe(22);
     expect(r.latencyMs).toBe(120);
     expect(r.fellBackToUnknown).toBe(false);
-    expect(r.promptVersion).toBe('chat_parse_intent-v1');
+    expect(r.promptVersion).toBe(PARSE_INTENT_PROMPT_VERSION);
   });
 
   it('usa la versión canónica del prompt al llamar al provider', async () => {
