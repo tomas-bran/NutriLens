@@ -76,6 +76,7 @@ describe('MockIaProvider — answerWithContext', () => {
           riesgo: 'bajo',
           alergenos: [],
           sellos: [],
+          ingredientes: [],
         },
         {
           id: '2',
@@ -84,6 +85,7 @@ describe('MockIaProvider — answerWithContext', () => {
           riesgo: 'medio',
           alergenos: [],
           sellos: [],
+          ingredientes: [],
         },
       ],
       opts,
