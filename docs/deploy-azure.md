@@ -143,10 +143,10 @@ Notas:
 
 Secrets en el repo (`Settings → Secrets and variables → Actions`):
 
-| Secret | Valor |
-| --- | --- |
-| `AZURE_WEBAPP_PUBLISH_PROFILE` | App Service → Overview → *Get publish profile* (XML completo) |
-| `DATABASE_URL` | la connection string de producción |
+| Secret                         | Valor                                                         |
+| ------------------------------ | ------------------------------------------------------------- |
+| `AZURE_WEBAPP_PUBLISH_PROFILE` | App Service → Overview → _Get publish profile_ (XML completo) |
+| `DATABASE_URL`                 | la connection string de producción                            |
 
 Crear `.github/workflows/deploy.yml`:
 
