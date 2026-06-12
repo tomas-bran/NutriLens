@@ -176,8 +176,11 @@ export class OpenAICompatibleProvider implements IaProvider {
       messages: [
         { role: 'system', content: systemPrompt },
         {
+          // Neutral a propósito: cada prompt de sistema (answer/smalltalk)
+          // trae sus propias reglas de grounding — un nudge "usá solo los
+          // productos" acá rompía las preguntas generales del smalltalk.
           role: 'user',
-          content: 'Respondé la pregunta usando solo los productos del contexto.',
+          content: 'Respondé la pregunta del usuario siguiendo las reglas del SISTEMA.',
         },
       ],
       timeoutMs: opts.timeoutMs ?? ANSWER_TIMEOUT_MS,
