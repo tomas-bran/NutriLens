@@ -30,6 +30,7 @@
     "docker:rebuild": "docker compose up -d --build"
   },
   "dependencies": {
+    "@azure/storage-blob": "^12.32.0",
     "@napi-rs/canvas": "^0.1.100",
     "@prisma/client": "^6.1.0",
     "@radix-ui/react-select": "^2.2.6",
