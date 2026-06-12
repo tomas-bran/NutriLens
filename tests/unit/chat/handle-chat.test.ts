@@ -129,7 +129,7 @@ describe('handleChat — kind=unknown (smalltalk LLM, refinamiento US-30 §8)', 
       { promptVersion: string },
     ];
     expect(products).toEqual([]);
-    expect(opts.promptVersion).toBe('chat_smalltalk-v1');
+    expect(opts.promptVersion).toBe('chat_smalltalk-v2');
     expect(r.answer).toContain('NutriLens');
     expect(r.products).toEqual([]);
     expect(r.fallback).toBeNull();
