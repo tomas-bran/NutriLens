@@ -22,6 +22,15 @@ const nextConfig = {
   // from node_modules, which is fine because it only runs in the Node
   // runtime of `/api/analyze` anyway.
   serverExternalPackages: ['pdf-parse'],
+  // pdfjs-dist (vía pdf-parse) carga @napi-rs/canvas dinámicamente, así que
+  // el file tracing del standalone no lo detecta y /api/analyze muere en
+  // Linux con "DOMMatrix is not defined". Se incluye explícito. Nota: el
+  // binario nativo es por plataforma — un build de deploy hecho en macOS
+  // igual necesita inyectar canvas-linux-x64-gnu (ver docs/deploy-azure.md);
+  // en CI (ubuntu) sale completo.
+  outputFileTracingIncludes: {
+    '/api/analyze': ['./node_modules/@napi-rs/canvas/**'],
+  },
   // KI-01 fix: los prompts (`src/lib/ai/prompts/*.md`) se importan como
   // strings vía `import x from './foo.md?raw'`. Esta regla le dice a
   // webpack que cualquier import con query `?raw` se resuelva como el
