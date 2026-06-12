@@ -92,7 +92,7 @@ describe('pickAnswerPromptVersion', () => {
 });
 
 describe('generateChatAnswer — selección de prompt según intent', () => {
-  it('llama al provider con chat_answer-v1 cuando el intent NO es compare', async () => {
+  it('llama al provider con el prompt default (chat_answer-v3) cuando el intent NO es compare', async () => {
     const { ia, answerWithContext } = makeIa('respuesta ok');
     await generateChatAnswer('mostrame galletitas', [row()], FILTER, { ia });
     const [, , opts] = answerWithContext.mock.calls[0] as [

@@ -8,6 +8,10 @@
 
 generator client {
   provider = "prisma-client-js"
+  // "native" para dev local + el engine Linux que necesita App Service:
+  // sin él, el bundle standalone buildeado desde macOS levanta en Azure
+  // pero todo acceso a DB devuelve 500 (query engine not found).
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {

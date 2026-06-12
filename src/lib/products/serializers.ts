@@ -8,6 +8,7 @@
 import type { Categoria as PrismaCategoria, Product as PrismaProduct } from '@prisma/client';
 import type { Categoria, Riesgo, Sello } from '@schemas/product';
 import type { OFFEnrichmentResult } from '@/lib/off/enrich';
+import { resolveImageUrl } from '@/lib/storage';
 
 const CAT_ZOD_TO_PRISMA: Record<Categoria, PrismaCategoria> = {
   galletitas: 'galletitas',
@@ -69,7 +70,7 @@ export function toListItem(p: PrismaProduct): ProductListItem {
     aptoVegano: p.aptoVegano,
     aptoCeliaco: p.aptoCeliaco,
     aptoSinLactosa: p.aptoSinLactosa,
-    imagenUrl: p.imagenPath,
+    imagenUrl: resolveImageUrl(p.imagenPath),
     createdAt: p.createdAt.toISOString(),
   };
 }

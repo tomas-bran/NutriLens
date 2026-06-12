@@ -72,3 +72,9 @@ evals/.cache/
 .cache/
 tmp/
 temp/
+
+# Artefactos locales del Playwright MCP (snapshots/console logs de debug)
+.playwright-mcp/
+
+# Permisos locales de Claude Code (por máquina, no del equipo)
+.claude/settings.local.json

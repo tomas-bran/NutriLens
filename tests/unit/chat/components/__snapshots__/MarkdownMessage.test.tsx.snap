@@ -1,0 +1,128 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`<MarkdownMessage> — AC#4 snapshots > snapshot: respuesta con bold + lista + tabla 1`] = `
+<div
+  class="break-words"
+  data-testid="markdown-message"
+>
+  <p
+    class="my-1.5 first:mt-0 last:mb-0"
+    node="[object Object]"
+  >
+    Tenés 
+    <strong
+      class="font-semibold"
+      node="[object Object]"
+    >
+      3 galletitas
+    </strong>
+     guardadas. Las más saludables:
+  </p>
+  
+
+  <ol
+    class="my-1.5 list-decimal space-y-0.5 pl-5"
+    node="[object Object]"
+  >
+    
+
+    <li
+      class="leading-relaxed"
+      node="[object Object]"
+    >
+      Galletitas de arroz
+    </li>
+    
+
+    <li
+      class="leading-relaxed"
+      node="[object Object]"
+    >
+      Galletitas integrales
+    </li>
+    
+
+  </ol>
+  
+
+  <div
+    class="my-2 overflow-x-auto"
+  >
+    <table
+      class="w-full border-collapse text-sm"
+      node="[object Object]"
+    >
+      <thead
+        node="[object Object]"
+      >
+        <tr>
+          <th
+            class="border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1 text-left font-semibold text-[var(--color-text)]"
+            node="[object Object]"
+          >
+            Producto
+          </th>
+          <th
+            class="border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1 text-left font-semibold text-[var(--color-text)]"
+            node="[object Object]"
+          >
+            Riesgo
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td
+            class="border border-[var(--color-border)] px-2 py-1 align-top text-[var(--color-text)]"
+            node="[object Object]"
+          >
+            Arroz
+          </td>
+          <td
+            class="border border-[var(--color-border)] px-2 py-1 align-top text-[var(--color-text)]"
+            node="[object Object]"
+          >
+            bajo
+          </td>
+        </tr>
+        <tr>
+          <td
+            class="border border-[var(--color-border)] px-2 py-1 align-top text-[var(--color-text)]"
+            node="[object Object]"
+          >
+            Choco
+          </td>
+          <td
+            class="border border-[var(--color-border)] px-2 py-1 align-top text-[var(--color-text)]"
+            node="[object Object]"
+          >
+            alto
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+
+  <p
+    class="my-1.5 first:mt-0 last:mb-0"
+    node="[object Object]"
+  >
+    Basado en productos analizados por vos.
+  </p>
+</div>
+`;
+
+exports[`<MarkdownMessage> — AC#4 snapshots > snapshot: texto plano simple 1`] = `
+<div
+  class="break-words"
+  data-testid="markdown-message"
+>
+  <p
+    class="my-1.5 first:mt-0 last:mb-0"
+    node="[object Object]"
+  >
+    No tengo productos guardados que respondan a esa pregunta.
+  </p>
+</div>
+`;

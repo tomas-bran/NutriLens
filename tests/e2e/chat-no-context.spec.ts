@@ -36,7 +36,7 @@ test('intent unknown → smalltalk del asistente SIN CTA de analizar (post 68d9e
 }) => {
   // El commit `68d9e4b feat(chat): smalltalk conversacional para intents
   // desconocidos` reemplazó el fallback canned "No te entendí bien" por una
-  // call al LLM con el prompt `chat_smalltalk-v1`. El AC clave que sigue
+  // call al LLM con el prompt `chat_smalltalk-v2`. El AC clave que sigue
   // valiendo es: NO hay productos en contexto, NO se muestra el CTA de
   // analizar, y la app responde con algo coherente (no rompe con 500).
   const chat = new ChatPage(page);

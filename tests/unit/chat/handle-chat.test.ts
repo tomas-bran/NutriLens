@@ -122,15 +122,16 @@ describe('handleChat — kind=unknown (smalltalk LLM, refinamiento US-30 §8)', 
       answerText: '¡Hola! Soy NutriLens, ¿en qué te ayudo?',
     });
     const r = await handleChat('hola', { ia, requestId: 'r1' });
-    // Se llamó al LLM exactamente una vez (smalltalk), sin productos en contexto.
-    expect(answerWithContext).toHaveBeenCalledTimes(1);
+    // Dos llamadas al LLM: smalltalk + sugerencias contextuales (NL-503);
+    // la primera es la del smalltalk, sin productos.
+    expect(answerWithContext).toHaveBeenCalledTimes(2);
     const [, products, opts] = answerWithContext.mock.calls[0] as [
       string,
       unknown[],
       { promptVersion: string },
     ];
     expect(products).toEqual([]);
-    expect(opts.promptVersion).toBe('chat_smalltalk-v1');
+    expect(opts.promptVersion).toBe('chat_smalltalk-v2');
     expect(r.answer).toContain('NutriLens');
     expect(r.products).toEqual([]);
     expect(r.fallback).toBeNull();
@@ -200,7 +201,8 @@ describe('handleChat — happy path con contexto (US-29 §1 + US-32 §1)', () =>
       requestId: 'r1',
       retrieve,
     });
-    expect(answerWithContext).toHaveBeenCalledOnce();
+    // answer + sugerencias contextuales (NL-503)
+    expect(answerWithContext).toHaveBeenCalledTimes(2);
     expect(r.products).toEqual(products);
     expect(r.fallback).toBeNull();
     expect(r.answer).toContain('Tenés 2 galletitas');
@@ -264,7 +266,8 @@ describe('handleChat — compare con ambos productos en DB (US-31 §1)', () => {
       requestId: 'r1',
       retrieve,
     });
-    expect(answerWithContext).toHaveBeenCalledOnce();
+    // answer + sugerencias contextuales (NL-503)
+    expect(answerWithContext).toHaveBeenCalledTimes(2);
     expect(r.fallback).toBeNull();
     expect(r.intent.kind).toBe('compare');
     expect(r.products).toHaveLength(2);
@@ -329,7 +332,8 @@ describe('handleChat — compare degenerado (caso borde E05 §13)', () => {
     expect(r.intent.comparar).toEqual([]);
     expect(r.intent.keywords).toContain('Galletitas X');
     // Y como retrieve devolvió 1 producto, se llamó al LLM como info normal.
-    expect(answerWithContext).toHaveBeenCalledOnce();
+    // answer + sugerencias contextuales (NL-503)
+    expect(answerWithContext).toHaveBeenCalledTimes(2);
   });
 
   it('kind=compare con 0 productos → normalizamos a info SIN keywords (no hay nada que buscar)', async () => {

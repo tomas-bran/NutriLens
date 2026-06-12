@@ -24,6 +24,14 @@ export interface Storage {
    * que podamos mover los archivos a cloud sin perder la metadata.
    */
   save(buffer: Buffer, mime: string, hash: string): Promise<StorageSaveResult>;
+
+  /**
+   * Traduce el `imagenPath` persistido a una URL servible por la UI.
+   * LocalStorage: identidad (el path público ya es la URL). AzureBlob:
+   * firma una SAS de lectura corta (sync, HMAC local). Se llama al
+   * serializar cada response — nunca persistir su resultado.
+   */
+  resolveUrl(path: string): string;
 }
 
 /**

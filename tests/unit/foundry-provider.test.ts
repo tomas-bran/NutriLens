@@ -101,6 +101,7 @@ describe('FoundryProvider.generateExplanation (US-18)', () => {
     ingredientes_detectados: ['harina de trigo'],
     alergenos: ['gluten' as const],
     sellos: ['exceso en azúcares' as const],
+    ingredientes: [],
     apto_vegano: false,
     apto_celiaco: false,
     apto_sin_lactosa: true,
@@ -313,6 +314,7 @@ describe('FoundryProvider.answerWithContext (US-29 / E05 §6.3)', () => {
       riesgo: 'bajo',
       alergenos: [],
       sellos: [],
+      ingredientes: [],
     },
     {
       id: 'p2',
@@ -321,10 +323,11 @@ describe('FoundryProvider.answerWithContext (US-29 / E05 §6.3)', () => {
       riesgo: 'medio',
       alergenos: ['leche'],
       sellos: ['exceso en azúcares'],
+      ingredientes: [],
     },
   ];
 
-  it('usa Phi-4-mini con temperature=0.2, max_tokens=350 y timeout=10s por default', async () => {
+  it('usa Phi-4-mini con temperature=0.2, max_tokens=800 y timeout=10s por default', async () => {
     const create = vi.fn().mockResolvedValue(okCompletion('Tenés 2 galletitas.'));
     const provider = new FoundryProvider({ client: makeFakeClient(create) });
 
@@ -336,7 +339,7 @@ describe('FoundryProvider.answerWithContext (US-29 / E05 §6.3)', () => {
     expect(body).toMatchObject({
       model: 'Phi-4-mini-instruct',
       temperature: 0.2,
-      max_tokens: 350,
+      max_tokens: 800,
     });
     expect(reqOpts.timeout).toBe(10_000);
   });

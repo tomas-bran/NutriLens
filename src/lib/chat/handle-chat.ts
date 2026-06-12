@@ -31,8 +31,9 @@ import {
   noContextFallback,
   type ChatFallback,
 } from '@/lib/chat/empty-response';
-import { generateChatAnswer } from '@/lib/chat/generate-answer';
+import { generateChatAnswer, toSavedProductLite } from '@/lib/chat/generate-answer';
 import { generateSmallTalkAnswer } from '@/lib/chat/generate-smalltalk';
+import { generateSuggestions } from '@/lib/chat/generate-suggestions';
 import type { ChatIntent } from '@/lib/chat/intent-schema';
 import { parseChatIntent } from '@/lib/chat/parse-intent';
 import { retrieveProducts } from '@/lib/chat/retrieve';
@@ -53,6 +54,11 @@ export interface HandleChatResult {
   /** Truthy cuando NO se llamó al LLM de generación. */
   fallback: ChatFallback | null;
   questionWasTruncated: boolean;
+  /**
+   * Pills de seguimiento contextuales (NL-503). `null` cuando la generación
+   * falló o el camino fue un fallback canned — la UI cae al set estático.
+   */
+  suggestions: string[] | null;
 }
 
 export async function handleChat(
@@ -94,6 +100,7 @@ export async function handleChat(
       parseLatencyMs: parse.latencyMs,
       answerLatencyMs: smalltalk.latencyMs,
     });
+    const smalltalkSuggestions = await generateSuggestions(question, smalltalk.text, [], { ia });
     return {
       answer: smalltalk.text,
       products: [],
@@ -104,6 +111,7 @@ export async function handleChat(
       },
       fallback: null,
       questionWasTruncated: truncated,
+      suggestions: smalltalkSuggestions,
     };
   }
 
@@ -121,6 +129,7 @@ export async function handleChat(
       tokensUsed: { in: parse.tokensIn, out: parse.tokensOut },
       fallback: fb,
       questionWasTruncated: truncated,
+      suggestions: null,
     };
   }
 
@@ -140,6 +149,7 @@ export async function handleChat(
         tokensUsed: { in: parse.tokensIn, out: parse.tokensOut },
         fallback: fb,
         questionWasTruncated: truncated,
+        suggestions: null,
       };
     }
   }
@@ -156,6 +166,13 @@ export async function handleChat(
     sanitized: ans.sanitized,
   });
 
+  const suggestions = await generateSuggestions(
+    question,
+    ans.text,
+    products.map(toSavedProductLite),
+    { ia },
+  );
+
   return {
     answer: ans.text,
     products,
@@ -166,6 +183,7 @@ export async function handleChat(
     },
     fallback: null,
     questionWasTruncated: truncated,
+    suggestions,
   };
 }
 

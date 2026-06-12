@@ -38,6 +38,7 @@ const ANSWER_OK: ChatApiResponse = {
   },
   tokensUsed: { in: 80, out: 22 },
   fallback: null,
+  suggestions: ['¿Cuál tiene menos azúcar?', 'Compará los dos primeros'],
 };
 
 const ANSWER_EMPTY: ChatApiResponse = {
@@ -54,6 +55,7 @@ const ANSWER_EMPTY: ChatApiResponse = {
   },
   tokensUsed: { in: 50, out: 10 },
   fallback: { answer: 'irrelevant', reason: 'no_context', showAnalyzeCta: true },
+  suggestions: null,
 };
 
 beforeAll(() => {

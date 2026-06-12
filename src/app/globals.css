@@ -22,6 +22,15 @@
   }
 }
 
+/* Hide scrollbar on overflow-x containers while keeping scroll functionality. */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Scanning-line animation used by the analyzing-preview panel
  * (wireframe D02-Loading). Travels top→bottom→top on a 2s loop.
  */
