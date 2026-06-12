@@ -57,7 +57,10 @@ export function sanitizeExplanation(raw: string, opts: SanitizeOpts = {}): Sanit
 
   let disclaimerAppended = false;
   if (!text.includes(DISCLAIMER_NEEDLE)) {
-    text = text.length > 0 ? `${text} ${tail}` : tail;
+    // Párrafo propio (no espacio): si el modelo quedó truncado a mitad de
+    // frase, pegar el tail con espacio producía "...suele resultar más Basado
+    // en productos analizados...". Con \n\n el disclaimer renderiza separado.
+    text = text.length > 0 ? `${text}\n\n${tail}` : tail;
     disclaimerAppended = true;
   }
 

@@ -18,8 +18,11 @@
  * dependemos de `@tailwindcss/typography` para no acoplar el bundle a un
  * plugin extra.
  */
+import Link from 'next/link';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+
+const LINK_CLASS = 'font-medium text-[var(--color-primary)] underline underline-offset-2';
 
 interface MarkdownMessageProps {
   text: string;
@@ -41,15 +44,22 @@ const COMPONENTS: Components = {
       {...props}
     />
   ),
-  a: ({ href, ...props }) => (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="font-medium text-[var(--color-primary)] underline underline-offset-2"
-      {...props}
-    />
-  ),
+  a: ({ href, ...props }) => {
+    // Links internos (ej. [Producto](/historial/<id>) que emite el chat para
+    // referenciar productos del historial): navegación SPA en la misma tab.
+    // Externos: tab nueva con noopener.
+    if (href?.startsWith('/')) {
+      const { children, ...rest } = props;
+      return (
+        <Link href={href} className={LINK_CLASS} {...rest}>
+          {children}
+        </Link>
+      );
+    }
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={LINK_CLASS} {...props} />
+    );
+  },
   table: (props) => (
     <div className="my-2 overflow-x-auto">
       <table className="w-full border-collapse text-sm" {...props} />

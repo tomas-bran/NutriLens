@@ -25,6 +25,8 @@ export interface ChatApiResponse {
   intent: ChatIntent;
   tokensUsed: { in: number; out: number };
   fallback: ChatFallback | null;
+  /** Pills de seguimiento contextuales (NL-503); null => la UI usa el set estático. */
+  suggestions: string[] | null;
 }
 
 export function toChatProductRef(p: PrismaProduct): ChatProductRef {

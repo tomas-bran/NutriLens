@@ -82,7 +82,15 @@ function toLite(p: PrismaProduct): SavedProductLite {
     riesgo: p.riesgo,
     alergenos: safeArray(p.alergenos),
     sellos: safeArray(p.sellos),
+    // Cap para no inflar el prompt: 12 ingredientes alcanzan para responder
+    // "¿qué tiene X?" sin pegar listas industriales completas.
+    ingredientes: safeArray(p.ingredientes).slice(0, 12),
   };
+}
+
+/** Exportado para reuso: generate-suggestions necesita el mismo shape lite. */
+export function toSavedProductLite(p: PrismaProduct): SavedProductLite {
+  return toLite(p);
 }
 
 function safeArray(raw: string): string[] {

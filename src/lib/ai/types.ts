@@ -56,6 +56,8 @@ export type SavedProductLite = {
   riesgo: string;
   alergenos: string[];
   sellos: string[];
+  /** Primeros N ingredientes reales del producto (NL-503: data grounding). */
+  ingredientes: string[];
 };
 
 export interface IaProvider {

@@ -13,7 +13,7 @@ import type { IaProvider } from '@/lib/ai/types';
 import { logger } from '@/lib/logger';
 import { ChatIntentSchema, UNKNOWN_INTENT, type ChatIntent } from '@/lib/chat/intent-schema';
 
-export const PARSE_INTENT_PROMPT_VERSION = 'chat_parse_intent-v1' as const;
+export const PARSE_INTENT_PROMPT_VERSION = 'chat_parse_intent-v2' as const;
 
 export interface ParseIntentResult {
   intent: ChatIntent;
