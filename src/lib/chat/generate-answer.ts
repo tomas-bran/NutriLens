@@ -7,10 +7,12 @@
  *
  * Versionado del prompt:
  *   - `kind = compare` (US-31) → `chat_answer-v2` (tabla markdown).
- *   - cualquier otro kind → `chat_answer-v3` (markdown liviano + permite
- *     responder preguntas nutricionales generales cuando los productos del
- *     contexto no aplican; sucede a `chat_answer-v1`, el "texto plano" previo
- *     a que NL-303 renderizara markdown en el chat).
+ *   - cualquier otro kind → `chat_answer-v1` (texto plano, default histórico).
+ *
+ * Bumpeamos a v2 sólo para compare porque la salida cambia de "texto plano"
+ * (spec §6.1 v1) a "frase intro + tabla markdown + frase final + disclaimer"
+ * (v2). El resto de los flows del chat sigue con v1 — la decisión se documenta
+ * en el PR de US-31 (que también actualiza el spec §6.1 con la nueva versión).
  *
  * No persistimos la conversación (MVP, ver Non-goals del spec).
  */
@@ -20,7 +22,7 @@ import { mapCategoriaFromPrisma } from '@/lib/products/serializers';
 import type { ChatIntent } from '@/lib/chat/intent-schema';
 import { sanitizeChatAnswer } from '@/lib/chat/sanitize-chat-answer';
 
-export const ANSWER_PROMPT_VERSION_DEFAULT = 'chat_answer-v3' as const;
+export const ANSWER_PROMPT_VERSION_DEFAULT = 'chat_answer-v1' as const;
 export const ANSWER_PROMPT_VERSION_COMPARE = 'chat_answer-v2' as const;
 
 export type AnswerPromptVersion =
