@@ -13,6 +13,21 @@ import type { AnalysisContext } from '../context';
 export async function enrich_with_off(ctx: AnalysisContext): Promise<AnalysisContext> {
   const startedAt = new Date();
 
+  // Kill-switch: OFF_ENABLED=false apaga el enriquecimiento por completo
+  // (tests de integración y CI no deben depender de la API real de OFF).
+  // Se lee en cada llamada — no a nivel módulo — para que los tests puedan
+  // setearlo en beforeAll sin depender del orden de imports.
+  if (process.env.OFF_ENABLED === 'false') {
+    return {
+      ...ctx,
+      offEnrichment: null,
+      steps: [
+        ...ctx.steps,
+        makeTrace('enrich_with_off', 'skipped', startedAt, { reason: 'disabled' }),
+      ],
+    };
+  }
+
   if (!ctx.product) {
     return {
       ...ctx,
