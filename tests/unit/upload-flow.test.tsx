@@ -229,3 +229,44 @@ describe('<UploadFlow> — paste image (NL-501)', () => {
     expect(screen.queryByText('first.jpg')).not.toBeInTheDocument();
   });
 });
+
+describe('<UploadFlow> — SELECTED image preview', () => {
+  it('shows an inline preview when an image is selected from the picker', async () => {
+    const user = userEvent.setup();
+    render(<UploadFlow />);
+    const input = screen.getByLabelText('Subir foto o PDF') as HTMLInputElement;
+    await user.upload(input, mkFile('etiqueta.jpg', 'image/jpeg'));
+
+    const preview = await screen.findByTestId('selected-file-preview');
+    expect(preview).toHaveAttribute('alt', 'Vista previa de etiqueta.jpg');
+    expect(preview).toHaveAttribute('src', expect.stringContaining('blob:') as unknown as string);
+  });
+
+  it('shows an inline preview when an image is pasted', async () => {
+    render(<UploadFlow />);
+    const dataTransfer = {
+      items: [
+        {
+          type: 'image/png',
+          getAsFile: () => mkFile('pasted.png', 'image/png', 2048),
+        } as unknown as DataTransferItem,
+      ],
+    } as unknown as DataTransfer;
+    document.dispatchEvent(
+      new ClipboardEvent('paste', { clipboardData: dataTransfer, bubbles: true }),
+    );
+
+    const preview = await screen.findByTestId('selected-file-preview');
+    expect(preview).toHaveAttribute('alt', 'Vista previa de pasted.png');
+  });
+
+  it('does not render a preview for a selected PDF', async () => {
+    const user = userEvent.setup();
+    render(<UploadFlow />);
+    const input = screen.getByLabelText('Subir PDF') as HTMLInputElement;
+    await user.upload(input, mkFile('etiqueta.pdf', 'application/pdf'));
+
+    expect(screen.getByTestId('selected-file')).toBeInTheDocument();
+    expect(screen.queryByTestId('selected-file-preview')).not.toBeInTheDocument();
+  });
+});
