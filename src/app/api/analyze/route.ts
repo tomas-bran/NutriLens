@@ -31,11 +31,24 @@ import { validate_schema } from '@/lib/pipeline/steps/validate-schema';
 // body parsing also benefits from the larger Node defaults.
 export const runtime = 'nodejs';
 
+// US-39: total pipeline budget in ms. Keeps the demo under 20s in the happy
+// path. Individual AI step timeouts are lower (25s extract, 10s explain) so
+// this fires only when a step is hung or the sum exceeds the budget.
+const PIPELINE_TIMEOUT_MS = Number(process.env.PIPELINE_TIMEOUT_MS ?? 25_000);
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SHA256_HEX_RE = /^[0-9a-f]{64}$/i;
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const requestId = pickRequestId(request.headers.get('x-request-id'));
+
+  // US-39: race the entire pipeline against a hard wall-clock timeout.
+  const controller = new AbortController();
+  const pipelineTimer = setTimeout(
+    () =>
+      controller.abort(new ApiError('model_timeout', 'El análisis superó el tiempo máximo.', 504)),
+    PIPELINE_TIMEOUT_MS,
+  );
 
   try {
     let formData: FormData;
@@ -88,13 +101,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const ia = getIaProvider();
     let ctx = await validate_file(initialCtx);
+    throwIfAborted(controller.signal);
     ctx = await detect_label_kind(ctx, ia);
+    throwIfAborted(controller.signal);
     ctx = await extract_with_ia(ctx, ia);
+    throwIfAborted(controller.signal);
     ctx = await validate_schema(ctx, ia);
     ctx = await enrich_with_off(ctx);
+    throwIfAborted(controller.signal);
     ctx = await apply_rules(ctx);
     ctx = await compute_risk(ctx);
+    throwIfAborted(controller.signal);
     ctx = await generate_explanation(ctx, ia);
+    throwIfAborted(controller.signal);
     ctx = await persist(ctx);
 
     if (!ctx.saved) {
@@ -105,6 +124,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // from E03. `id` and `savedAt` come from the persisted row (so re-uploads
     // via dedup return the same id), while `product` stays as the in-memory
     // ProductExtraction the frontend has been consuming since US-09/US-14.
+    clearTimeout(pipelineTimer);
     return NextResponse.json(
       {
         id: ctx.saved.id,
@@ -123,11 +143,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       { status: 200, headers: { 'X-Request-Id': requestId } },
     );
   } catch (err) {
-    return apiErrorResponse(err, requestId);
+    clearTimeout(pipelineTimer);
+    // AbortController fires with the ApiError as its reason — unwrap it.
+    const actual =
+      err instanceof Error && err.name === 'AbortError' ? controller.signal.reason : err;
+    return apiErrorResponse(actual, requestId);
   }
 }
 
 function pickRequestId(header: string | null): string {
   if (header && UUID_RE.test(header)) return header.toLowerCase();
   return randomUUID();
+}
+
+function throwIfAborted(signal: AbortSignal): void {
+  if (signal.aborted) throw signal.reason;
 }
