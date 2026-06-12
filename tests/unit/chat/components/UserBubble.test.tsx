@@ -13,4 +13,15 @@ describe('<UserBubble>', () => {
     const wrapper = container.firstChild as HTMLElement;
     expect(wrapper.className).toContain('justify-end');
   });
+
+  it('muestra el mensaje del usuario como TEXTO PLANO, sin interpretar markdown (NL-303 AC#3)', () => {
+    // El markdown del usuario NO debe renderizarse: **negrita** queda literal,
+    // sin <strong>, sin <table>, sin <ul>.
+    const md = '**no soy negrita** y | no | soy | tabla |';
+    const { container } = render(<UserBubble text={md} />);
+    const bubble = screen.getByTestId('chat-user-bubble');
+    expect(bubble).toHaveTextContent('**no soy negrita**');
+    expect(container.querySelector('strong')).toBeNull();
+    expect(container.querySelector('table')).toBeNull();
+  });
 });
