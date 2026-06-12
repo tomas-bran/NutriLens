@@ -1,11 +1,20 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Required for the Docker production image (Dockerfile copies .next/standalone).
-  output: 'standalone',
-  experimental: {
-    typedRoutes: true,
-  },
+  // Pin the tracing root to this repo: stray lockfiles in parent dirs would
+  // otherwise make Next.js infer the wrong workspace root (warns on every
+  // build and can mis-trace files in the standalone output).
+  outputFileTracingRoot: path.dirname(fileURLToPath(import.meta.url)),
+  // Standalone output is only needed by the Docker production image (the
+  // Dockerfile copies `.next/standalone` and sets BUILD_STANDALONE=1). It's
+  // gated because `next start` — used by the Playwright webServer and local
+  // smoke runs — doesn't serve standalone output and warns on every run.
+  ...(process.env.BUILD_STANDALONE === '1' ? { output: 'standalone' } : {}),
+  // Stable since Next 15.5 (was `experimental.typedRoutes`).
+  typedRoutes: true,
   // `pdf-parse@2.x` ships dual CJS/ESM with `"type": "module"`; webpack's
   // server bundler hits an `Object.defineProperty called on non-object` in
   // dev/RSC mode trying to interop the two. Keeping it as a server-external
