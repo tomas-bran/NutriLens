@@ -64,3 +64,14 @@ enum Riesgo {
   medio
   alto
 }
+
+// NL-301: persistent chat conversations
+model Conversation {
+  id        String   @id @default(uuid())
+  title     String
+  messages  String   @db.Text  // JSON.stringify(StoredMessage[])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([updatedAt])
+}
