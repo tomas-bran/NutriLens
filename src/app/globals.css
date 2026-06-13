@@ -102,3 +102,98 @@
   --risk-banner-bg: var(--color-risk-high-bg);
   --risk-banner-fg: var(--color-risk-high);
 }
+
+/* ---------------------------------------------------------------------------
+ * Home moderna (NL-504) — elementos flotantes + entradas suaves.
+ * Todo gated por prefers-reduced-motion: con la preferencia activa, los
+ * elementos quedan estáticos en su posición final (sin movimiento).
+ * ------------------------------------------------------------------------- */
+
+/* Flotación vertical lenta (pills/chips que "levitan"). */
+@keyframes home-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+/* Entrada con leve subida + fade, encadenable con animation-delay. */
+@keyframes home-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Gradiente del hero que se desplaza muy lento, da sensación "viva". */
+@keyframes home-gradient-pan {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Halo que respira detrás del hero. */
+@keyframes home-pulse-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.08);
+  }
+}
+
+.home-float {
+  animation: home-float 6s ease-in-out infinite;
+  will-change: transform;
+}
+
+.home-rise-in {
+  animation: home-rise-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.home-gradient {
+  background: linear-gradient(
+    120deg,
+    var(--color-primary-strong) 0%,
+    var(--color-primary) 45%,
+    #15a06a 70%,
+    var(--color-primary-strong) 100%
+  );
+  background-size: 200% 200%;
+  animation: home-gradient-pan 14s ease infinite;
+}
+
+.home-glow {
+  animation: home-pulse-glow 7s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-float,
+  .home-rise-in,
+  .home-gradient,
+  .home-glow {
+    animation: none;
+  }
+  /* La entrada deja los elementos visibles aunque no anime. */
+  .home-rise-in {
+    opacity: 1;
+    transform: none;
+  }
+}
