@@ -72,7 +72,7 @@ export function HelpSection() {
             ¿Necesitás más ayuda?
           </div>
           <div className="mt-0.5 text-[13px] text-[var(--color-primary-strong)]">
-            Escribinos a soporte@nutrilens.app
+            Escribinos a soporte@nutrilens.app o chatea con el asistente
           </div>
         </div>
         <Link
