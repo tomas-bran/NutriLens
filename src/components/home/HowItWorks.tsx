@@ -54,7 +54,7 @@ export function HowItWorks() {
             >
               {/* En hover el fondo del color del ícono se expande circularmente
                   desde el círculo del ícono hasta cubrir toda la card. */}
-              <span className="pointer-events-none absolute right-4 top-4 z-0 h-9 w-9 origin-center scale-0 rounded-full bg-[var(--color-primary-soft)] transition-transform duration-700 ease-out group-hover:scale-[18]" />
+              <span className="pointer-events-none absolute right-4 top-4 z-0 h-9 w-9 origin-center scale-0 rounded-full bg-[var(--color-primary-soft)] transition-transform duration-700 ease-out group-hover:scale-[32]" />
 
               <div className="relative z-10 flex h-full flex-col gap-2.5">
                 {/* Número grande a la izquierda + ícono, a la misma altura. */}

@@ -276,9 +276,11 @@ html {
  * `.rail-hide` desaparece, `.rail-center` centra los íconos, y el botón-círculo
  * sigue el borde del sidebar.
  * ------------------------------------------------------------------------- */
-/* El círculo del toggle sigue el borde del sidebar (expandido = 15rem). */
+/* El círculo del toggle sigue el borde del sidebar (expandido = 15rem) y se
+ * traslada CON el sidebar (misma duración) para no quedar en el aire unos ms. */
 .sidebar-toggle {
   left: calc(15rem - 13px);
+  transition: left 0.28s ease;
 }
 
 @media (min-width: 768px) {
