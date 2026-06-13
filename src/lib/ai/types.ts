@@ -49,6 +49,17 @@ export type ParseIntentOpts = {
   timeoutMs?: number;
 };
 
+export type EmbedOpts = {
+  timeoutMs?: number;
+};
+
+export type EmbedResult = {
+  /** Vector normalizado del modelo de embeddings (1536 dims). */
+  vector: number[];
+  usage: TokenUsage;
+  latencyMs: number;
+};
+
 export type SavedProductLite = {
   id: string;
   nombre: string;
@@ -74,4 +85,9 @@ export interface IaProvider {
     products: SavedProductLite[],
     opts: AnswerOpts,
   ): Promise<IaCallResult>;
+  /**
+   * Embedding de un texto (NL-401). Usado por persist (al guardar un
+   * producto) y por el retrieve semántico del chat (NL-402).
+   */
+  embed(text: string, opts?: EmbedOpts): Promise<EmbedResult>;
 }

@@ -114,7 +114,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     throwIfAborted(controller.signal);
     ctx = await generate_explanation(ctx, ia);
     throwIfAborted(controller.signal);
-    ctx = await persist(ctx);
+    ctx = await persist(ctx, { ia });
 
     if (!ctx.saved) {
       throw new Error('analyze: persist step did not produce a saved product');

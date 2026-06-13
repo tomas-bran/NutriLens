@@ -11,6 +11,8 @@ import type {
   IaProvider,
   ParseIntentOpts,
   SavedProductLite,
+  EmbedOpts,
+  EmbedResult,
 } from './types';
 import type { ProductExtraction } from '@schemas/product';
 
@@ -112,6 +114,39 @@ export class MockIaProvider implements IaProvider {
       latencyMs: 3,
     };
   }
+
+  // NL-401: embedding determinístico (xorshift seedeado por hash del texto),
+  // normalizado a norma 1. No captura semántica — garantiza reproducibilidad
+  // en tests/CI sin red: mismo texto => mismo vector.
+  async embed(text: string, _opts: EmbedOpts = {}): Promise<EmbedResult> {
+    return {
+      vector: pseudoEmbedding(text, 1536),
+      usage: { in: 0, out: 0 },
+      latencyMs: 1,
+    };
+  }
+}
+
+function pseudoEmbedding(text: string, dims: number): number[] {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  let x = h >>> 0 || 1;
+  const v = new Array<number>(dims);
+  let normSq = 0;
+  for (let i = 0; i < dims; i++) {
+    x ^= x << 13;
+    x ^= x >>> 17;
+    x ^= x << 5;
+    const val = (x >>> 0) / 0xffffffff - 0.5;
+    v[i] = val;
+    normSq += val * val;
+  }
+  const norm = Math.sqrt(normSq) || 1;
+  for (let i = 0; i < dims; i++) v[i] = v[i]! / norm;
+  return v;
 }
 
 /**

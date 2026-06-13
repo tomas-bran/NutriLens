@@ -19,7 +19,15 @@ export class AzureOpenAIProvider extends OpenAICompatibleProvider {
         baseURL: required('AZURE_OPENAI_ENDPOINT'),
         apiKey: required('AZURE_OPENAI_KEY'),
       });
-    super({ name: 'azure-openai', client, multimodalModel, miniModel });
+    super({
+      name: 'azure-openai',
+      client,
+      multimodalModel,
+      miniModel,
+      // Nombre del deployment de embeddings (NL-401); el default de la base
+      // ('text-embedding-3-small') coincide con el deployment creado en Azure.
+      embeddingModel: process.env.AZURE_OPENAI_MODEL_EMBEDDINGS || undefined,
+    });
   }
 }
 
