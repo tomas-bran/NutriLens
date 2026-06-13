@@ -12,7 +12,16 @@ describe('<Hero>', () => {
 
   it('shows the brand wordmark above the title', () => {
     render(<Hero />);
-    expect(screen.getByText('NutriLens')).toBeInTheDocument();
+    expect(screen.getByText(/IA nutricional/i)).toBeInTheDocument();
+  });
+
+  it('ofrece ambos CTAs: analizar y chat (NL-504)', () => {
+    render(<Hero />);
+    expect(screen.getByTestId('hero-cta')).toHaveAttribute('href', '/analizar');
+    expect(screen.getByRole('link', { name: /Preguntá al asistente/i })).toHaveAttribute(
+      'href',
+      '/chat',
+    );
   });
 
   it('renders a 1-line subtitle mentioning alérgenos, sellos y riesgo (US-07 §AC1)', () => {
