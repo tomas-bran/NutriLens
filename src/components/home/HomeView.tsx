@@ -22,11 +22,21 @@ export function HomeView({ historyCount }: HomeViewProps) {
       <div className="flex flex-col gap-6 px-4 py-2 md:px-6 md:py-6">
         <PageHeader />
 
+        {/* NL-504: entrada escalonada — cada bloque sube con un pequeño delay.
+            `home-rise-in` se neutraliza con prefers-reduced-motion. */}
         <div className="flex flex-col gap-6">
           <Hero />
-          <HowItWorks />
-          <Examples />
-          {historyCount > 0 && <HistoryCard count={historyCount} />}
+          <div className="home-rise-in" style={{ animationDelay: '0.08s' }}>
+            <HowItWorks />
+          </div>
+          <div className="home-rise-in" style={{ animationDelay: '0.16s' }}>
+            <Examples />
+          </div>
+          {historyCount > 0 && (
+            <div className="home-rise-in" style={{ animationDelay: '0.24s' }}>
+              <HistoryCard count={historyCount} />
+            </div>
+          )}
         </div>
 
         <footer className="pt-4">
