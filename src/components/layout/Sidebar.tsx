@@ -16,6 +16,7 @@
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/cn';
+import { SidebarUser } from './SidebarUser';
 import { NAV_ITEMS, type ActiveNavItem, type NavItem } from './nav-config';
 
 export interface SidebarProps {
@@ -40,7 +41,9 @@ export function Sidebar({ active, historialCount }: SidebarProps) {
           />
         ))}
       </nav>
-      <TeamCard />
+      {/* Componente async aislado: resuelve la sesión sin volver async todo
+          el árbol del shell (NL-201). */}
+      <SidebarUser />
     </aside>
   );
 }
@@ -91,21 +94,5 @@ function SidebarNavLink({ item, active, badge }: SidebarNavLinkProps) {
         </span>
       )}
     </Link>
-  );
-}
-
-function TeamCard() {
-  return (
-    <div className="mt-auto flex items-center gap-2.5 rounded-[10px] bg-[var(--color-bg)] p-2.5">
-      <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-xs font-bold text-[var(--color-primary-strong)]">
-        F
-      </span>
-      <div className="flex min-w-0 flex-col leading-tight">
-        <span className="truncate text-[11px] font-bold text-[var(--color-text)]">
-          Equipo NutriLens
-        </span>
-        <span className="truncate text-[10px] text-[var(--color-text-muted)]">4 · UNLaM</span>
-      </div>
-    </div>
   );
 }

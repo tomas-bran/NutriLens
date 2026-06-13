@@ -56,6 +56,11 @@ export default defineConfig({
       // `expectRiskLevel('bajo')`. Lo desactivamos — su feature tiene
       // cobertura propia en unit + integration tests.
       OFF_ENABLED: 'false',
+      // NL-202: el middleware exige login con Google, que no se puede
+      // automatizar en CI. Este flag (solo honrado fuera de producción) deja
+      // pasar al middleware como un usuario de test fijo, para que los E2E
+      // corran sin OAuth real. El login tiene cobertura manual + unit del helper.
+      E2E_AUTH_BYPASS: 'true',
     },
   },
 });

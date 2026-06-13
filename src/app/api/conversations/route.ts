@@ -4,10 +4,20 @@
  */
 import { NextResponse, type NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
+import { requireUserId, Unauthorized } from '@/lib/auth/current-user';
 import { generateTitle, type StoredMessage } from '@/lib/conversations/types';
 
 export async function GET(): Promise<NextResponse> {
+  let userId: string;
+  try {
+    userId = await requireUserId();
+  } catch (err) {
+    if (err instanceof Unauthorized) return unauthorized();
+    throw err;
+  }
+
   const rows = await prisma.conversation.findMany({
+    where: { userId },
     orderBy: { updatedAt: 'desc' },
     take: 50,
   });
@@ -32,6 +42,14 @@ export async function GET(): Promise<NextResponse> {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  let userId: string;
+  try {
+    userId = await requireUserId();
+  } catch (err) {
+    if (err instanceof Unauthorized) return unauthorized();
+    throw err;
+  }
+
   let body: { messages: StoredMessage[] };
   try {
     body = (await request.json()) as { messages: StoredMessage[] };
@@ -54,8 +72,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     data: {
       title,
       messages: JSON.stringify(messages),
+      userId,
     },
   });
 
   return NextResponse.json({ id: conv.id, title: conv.title }, { status: 201 });
+}
+
+function unauthorized(): NextResponse {
+  return NextResponse.json(
+    { error: 'unauthorized', reason: 'Iniciá sesión para continuar.' },
+    { status: 401 },
+  );
 }
