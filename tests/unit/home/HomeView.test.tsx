@@ -19,7 +19,7 @@ describe('<HomeView> — common sections (US-07 §AC1)', () => {
   it('renders the "Cómo funciona" section with 3 steps', () => {
     render(<HomeView historyCount={0} />);
     expect(screen.getByRole('heading', { level: 2, name: 'Cómo funciona' })).toBeInTheDocument();
-    expect(screen.getAllByText(/Paso \d/)).toHaveLength(3);
+    expect(screen.getAllByText(/^0\d$/)).toHaveLength(3);
   });
 
   it('renders the "Ejemplos válidos" section with 3 thumbnails', () => {

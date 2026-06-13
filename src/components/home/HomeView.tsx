@@ -18,8 +18,8 @@ export interface HomeViewProps {
 
 export function HomeView({ historyCount }: HomeViewProps) {
   return (
-    <AppShell active="inicio" historialCount={historyCount}>
-      <div className="flex flex-col gap-6 px-4 py-2 md:px-6 md:py-6">
+    <AppShell active="inicio" historialCount={historyCount} fluid>
+      <div className="flex flex-col gap-6 py-2 md:py-4">
         <PageHeader />
 
         {/* NL-504: entrada escalonada — cada bloque sube con un pequeño delay.
