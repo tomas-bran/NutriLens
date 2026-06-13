@@ -42,10 +42,10 @@ Acá comparamos Galletitas X y Galletitas Y:
 
 | Dimensión | [Galletitas X](/historial/id-x) | [Galletitas Y](/historial/id-y) |
 | --------- | ------------------------------- | ------------------------------- |
-| Riesgo    | bajo                | medio              |
-| Alérgenos | ninguno             | gluten             |
-| Sellos    | ninguno             | exceso en azúcares |
-| Aptitudes | vegano, sin lactosa | —                  |
+| Riesgo    | bajo                            | medio                           |
+| Alérgenos | ninguno                         | gluten                          |
+| Sellos    | ninguno                         | exceso en azúcares              |
+| Aptitudes | vegano, sin lactosa             | —                               |
 
 **Veredicto:** Galletitas X es la mejor opción: menor riesgo y sin alérgenos. ⚠️ Atención: Galletitas Y contiene gluten.
 
