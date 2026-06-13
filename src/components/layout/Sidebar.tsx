@@ -15,6 +15,7 @@
  */
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
+import { NutriMark } from '@/components/ui/NutriMark';
 import { cn } from '@/lib/cn';
 import { SidebarUser } from './SidebarUser';
 import { NAV_ITEMS, type ActiveNavItem, type NavItem } from './nav-config';
@@ -32,7 +33,7 @@ export function Sidebar({ active, historialCount }: SidebarProps) {
     >
       <BrandBlock />
       <nav className="flex flex-1 flex-col gap-1.5 pt-2" aria-label="Navegación principal">
-        {NAV_ITEMS.map((item) => (
+        {NAV_ITEMS.filter((item) => !item.mobileOnly).map((item) => (
           <SidebarNavLink
             key={item.id}
             item={item}
@@ -52,7 +53,7 @@ function BrandBlock() {
   return (
     <div className="flex items-center gap-3 pb-4">
       <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary)] text-white">
-        <Icon name="scan-eye" strokeWidth={2} />
+        <NutriMark size={24} />
       </span>
       <div className="flex flex-col leading-tight">
         <span className="text-base font-bold text-[var(--color-text)]">NutriLens</span>

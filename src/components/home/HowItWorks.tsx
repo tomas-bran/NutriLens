@@ -22,7 +22,7 @@ const STEPS: ReadonlyArray<Step> = [
   {
     number: 2,
     title: 'Esperá unos segundos',
-    description: 'NutriLens analiza la etiqueta con IA multimodal.',
+    description: 'NutriLens lee la etiqueta y entiende lo que dice.',
     icon: 'sparkles',
   },
   {

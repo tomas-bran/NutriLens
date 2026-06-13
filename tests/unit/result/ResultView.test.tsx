@@ -212,26 +212,47 @@ describe('<ResultView> — product image + confidence pill', () => {
   });
 });
 
-describe('<ResultView> — JSON extraído + pipeline trace (E06 §3+§4)', () => {
-  it('renderiza el bloque <JsonViewer> con el jsonRaw del producto', () => {
+describe('<ResultView> — vistas técnicas solo para admin (NL-204)', () => {
+  it('por defecto (usuario común) NO muestra el JSON ni el pipeline trace', () => {
     render(
       <ResultView
         product={mkProduct({
-          jsonRaw: JSON.stringify({ producto: 'X', categoria: 'snacks' }),
+          jsonRaw: JSON.stringify({ producto: 'X' }),
+          pipelineTrace: [
+            {
+              name: 'validate_file',
+              status: 'ok',
+              startedAt: '2026-05-18T10:00:00.000Z',
+              durationMs: 10,
+            },
+          ],
         })}
+      />,
+    );
+    expect(screen.queryByTestId('json-viewer')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('pipeline-trace')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('admin-technical-views')).not.toBeInTheDocument();
+  });
+
+  it('con showTechnicalViews (admin) renderiza el <JsonViewer> con el jsonRaw', () => {
+    render(
+      <ResultView
+        showTechnicalViews
+        product={mkProduct({ jsonRaw: JSON.stringify({ producto: 'X', categoria: 'snacks' }) })}
       />,
     );
     expect(screen.getByTestId('json-viewer')).toBeInTheDocument();
   });
 
-  it('NO renderiza <PipelineTrace> cuando pipelineTrace está vacío', () => {
-    render(<ResultView product={mkProduct({ pipelineTrace: [] })} />);
+  it('admin: NO renderiza <PipelineTrace> cuando pipelineTrace está vacío', () => {
+    render(<ResultView showTechnicalViews product={mkProduct({ pipelineTrace: [] })} />);
     expect(screen.queryByTestId('pipeline-trace')).not.toBeInTheDocument();
   });
 
-  it('renderiza <PipelineTrace> cuando hay al menos un step válido', () => {
+  it('admin: renderiza <PipelineTrace> cuando hay al menos un step válido', () => {
     render(
       <ResultView
+        showTechnicalViews
         product={mkProduct({
           pipelineTrace: [
             {

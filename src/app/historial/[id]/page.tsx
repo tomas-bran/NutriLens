@@ -8,6 +8,7 @@
 import { notFound } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import { ResultView } from '@/components/result/ResultView';
+import { isCurrentUserAdmin } from '@/lib/auth/is-admin';
 import { prisma } from '@/lib/db';
 import { getHistorialCount } from '@/lib/products/count';
 import { toDetail } from '@/lib/products/serializers';
@@ -31,7 +32,7 @@ export default async function HistorialDetailPage({ params }: PageProps) {
   }
 
   const detail = toDetail(product);
-  const historialCount = await getHistorialCount();
+  const [historialCount, isAdmin] = await Promise.all([getHistorialCount(), isCurrentUserAdmin()]);
 
   return (
     <AppShell active="historial" historialCount={historialCount}>
@@ -39,6 +40,7 @@ export default async function HistorialDetailPage({ params }: PageProps) {
         product={detail}
         back={{ href: '/historial', label: 'Volver al historial' }}
         contextLabel="Producto guardado"
+        showTechnicalViews={isAdmin}
       />
     </AppShell>
   );

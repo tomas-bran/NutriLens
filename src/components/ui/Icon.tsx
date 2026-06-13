@@ -30,6 +30,12 @@ export type IconName =
   | 'line-chart'
   | 'arrow-right'
   | 'filter'
+  | 'user'
+  | 'logout'
+  | 'chevron-right'
+  | 'chevron-down'
+  | 'settings'
+  | 'leaf'
   // Allergens — hand-rolled glyphs (no lucide equivalents).
   | 'wheat'
   | 'milk'
@@ -149,6 +155,31 @@ const ICON_PATHS: Record<IconName, IconPathDef> = {
   // Funnel — filtros.
   filter: {
     paths: ['M22 3H2l8 9.46V19l4 2v-8.54L22 3z'],
+  },
+  user: {
+    paths: ['M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'],
+    circles: [{ cx: 12, cy: 7, r: 4 }],
+  },
+  logout: {
+    paths: ['M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4', 'M16 17l5-5-5-5', 'M21 12H9'],
+  },
+  'chevron-right': {
+    paths: ['M9 18l6-6-6-6'],
+  },
+  'chevron-down': {
+    paths: ['M6 9l6 6 6-6'],
+  },
+  settings: {
+    paths: [
+      'M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z',
+    ],
+    circles: [{ cx: 12, cy: 12, r: 3 }],
+  },
+  leaf: {
+    paths: [
+      'M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z',
+      'M2 21c0-3 1.85-5.36 5.08-6',
+    ],
   },
   // Wheat ear — gluten allergen.
   wheat: {

@@ -23,7 +23,7 @@ export interface PipelineStep {
 
 const STEPS: ReadonlyArray<PipelineStep> = [
   { id: 'validate', title: 'Validación de etiqueta', pendingIcon: 'check' },
-  { id: 'extract', title: 'OCR + extracción multimodal', pendingIcon: 'check' },
+  { id: 'extract', title: 'Leyendo la etiqueta', pendingIcon: 'check' },
   {
     id: 'allergens',
     title: 'Clasificando alérgenos…',

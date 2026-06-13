@@ -43,7 +43,7 @@ describe('<PipelineStepper>', () => {
   it('lists the canonical step titles from the spec/Pencil', () => {
     render(<PipelineStepper currentStepIndex={0} />);
     expect(screen.getByText('Validación de etiqueta')).toBeInTheDocument();
-    expect(screen.getByText('OCR + extracción multimodal')).toBeInTheDocument();
+    expect(screen.getByText('Leyendo la etiqueta')).toBeInTheDocument();
     expect(screen.getByText('Clasificando alérgenos…')).toBeInTheDocument();
     expect(screen.getByText('Cálculo de riesgo')).toBeInTheDocument();
     expect(screen.getByText('Generar explicación + guardar')).toBeInTheDocument();

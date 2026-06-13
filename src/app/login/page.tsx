@@ -1,11 +1,12 @@
 /**
- * `/login` — pantalla de inicio de sesión con Google (NL-201).
+ * `/login` — inicio de sesión con Google (NL-201, rediseño Claude Design).
  *
- * Server component: el botón es un `<form>` con server action que invoca
- * `signIn('google', { redirectTo })`. Sin JS de cliente. El middleware ya
- * redirige acá a los no-logueados y de vuelta al destino vía `callbackUrl`.
+ * Layout partido: panel de marca a la izquierda (gradiente + beneficios) y la
+ * card de Google a la derecha. En mobile el panel de marca pasa a una franja
+ * superior compacta. Server component; el botón es un `<form>` con server
+ * action `signInWithGoogle`. El middleware redirige acá a los no-logueados.
  */
-import { Icon } from '@/components/ui/Icon';
+import { NutriMark } from '@/components/ui/NutriMark';
 import { signInWithGoogle } from '@/lib/auth/actions';
 
 interface LoginPageProps {
@@ -14,40 +15,94 @@ interface LoginPageProps {
 
 export const metadata = { title: 'Ingresar · NutriLens' };
 
+const PERKS = [
+  { title: 'Análisis instantáneo', desc: 'Foto o PDF de la etiqueta, con resultado en segundos.' },
+  { title: 'Tu historial sincronizado', desc: 'Cada análisis queda guardado en tu cuenta.' },
+  { title: 'Chat sobre tus productos', desc: 'Preguntá y compará lo que ya escaneaste.' },
+];
+
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { callbackUrl } = await searchParams;
   const redirectTo = safeRedirect(callbackUrl);
 
   return (
-    <main className="flex min-h-[100dvh] flex-col items-center justify-center bg-[var(--color-bg)] px-6">
-      <div className="home-rise-in flex w-full max-w-sm flex-col items-center gap-6 rounded-[28px] border border-[var(--color-border)] bg-white p-8 shadow-[0_20px_60px_-24px_rgba(22,163,74,0.4)]">
-        <div className="home-gradient flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-[0_8px_24px_rgba(22,163,74,0.35)]">
-          <Icon name="scan-eye" className="h-8 w-8" />
+    <main className="flex min-h-[100dvh] bg-[var(--color-bg)] md:items-stretch">
+      {/* Panel de marca — franja superior en mobile, columna en desktop */}
+      <aside className="home-gradient relative hidden flex-col justify-between overflow-hidden p-11 text-white md:flex md:w-[46%]">
+        <div className="relative flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-[13px] bg-white/20 backdrop-blur">
+            <NutriMark size={24} />
+          </span>
+          <span className="text-lg font-extrabold tracking-tight">NutriLens</span>
         </div>
 
-        <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">NutriLens</h1>
-          <p className="max-w-[18rem] text-sm text-[var(--color-text-muted)]">
-            Entrá con tu cuenta de Google para analizar etiquetas y guardar tus consultas.
+        <div className="relative">
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[1.5px] backdrop-blur">
+            Entendé qué comés
+          </span>
+          <h2 className="mb-7 max-w-[26rem] text-[34px] font-extrabold leading-[1.08] tracking-tight">
+            Analizá cualquier etiqueta y{' '}
+            <span className="text-[var(--color-accent-lime)]">guardá todo</span> en tu cuenta.
+          </h2>
+          <ul className="grid max-w-sm gap-4">
+            {PERKS.map((p) => (
+              <li key={p.title} className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
+                  <CheckGlyph />
+                </span>
+                <div>
+                  <div className="text-[14.5px] font-bold">{p.title}</div>
+                  <div className="mt-0.5 text-[13px] leading-snug text-white/80">{p.desc}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="relative text-xs text-white/65">Equipo NutriLens · UNLaM · 2026</p>
+      </aside>
+
+      {/* Card de acceso */}
+      <section className="flex flex-1 flex-col items-center justify-center px-6 py-12 md:px-10">
+        <div className="home-rise-in flex w-full max-w-sm flex-col items-center gap-6">
+          <span className="home-gradient flex h-[60px] w-[60px] items-center justify-center rounded-[18px] text-white shadow-[0_10px_26px_rgba(22,163,74,0.35)] md:hidden">
+            <NutriMark size={34} />
+          </span>
+
+          <div className="flex flex-col items-center gap-2 text-center">
+            <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text)]">
+              Entrá a NutriLens
+            </h1>
+            <p className="max-w-[19rem] text-sm leading-relaxed text-[var(--color-text-muted)]">
+              Iniciá sesión con Google para analizar etiquetas y guardar tus consultas.
+            </p>
+          </div>
+
+          <form action={signInWithGoogle.bind(null, redirectTo)} className="w-full">
+            <button
+              type="submit"
+              data-testid="google-signin"
+              className="flex w-full items-center justify-center gap-3 rounded-2xl border border-[var(--color-border)] bg-white px-5 py-4 text-[15px] font-bold text-[var(--color-text)] shadow-[0_2px_10px_rgba(15,23,42,0.06)] transition-colors hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+            >
+              <GoogleGlyph />
+              Continuar con Google
+            </button>
+          </form>
+
+          <div className="flex w-full items-center gap-3 text-[var(--color-text-muted)]">
+            <span className="h-px flex-1 bg-[var(--color-border)]" />
+            <span className="text-[11.5px] font-semibold">acceso seguro y privado</span>
+            <span className="h-px flex-1 bg-[var(--color-border)]" />
+          </div>
+
+          <p className="max-w-[20rem] text-center text-[11.5px] leading-relaxed text-[var(--color-text-muted)]">
+            Al continuar aceptás los{' '}
+            <b className="font-semibold text-[var(--color-text)]">Términos</b> y la{' '}
+            <b className="font-semibold text-[var(--color-text)]">Política de privacidad</b>.
+            NutriLens es un asistente informativo, no reemplaza el consejo profesional.
           </p>
         </div>
-
-        <form action={signInWithGoogle.bind(null, redirectTo)} className="w-full">
-          <button
-            type="submit"
-            data-testid="google-signin"
-            className="flex w-full items-center justify-center gap-3 rounded-full border border-[var(--color-border)] bg-white px-5 py-3 text-sm font-semibold text-[var(--color-text)] transition-colors hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
-          >
-            <GoogleGlyph />
-            Continuar con Google
-          </button>
-        </form>
-
-        <p className="text-center text-[11px] text-[var(--color-text-muted)]">
-          NutriLens es un asistente informativo. No reemplaza el consejo de un profesional de la
-          salud.
-        </p>
-      </div>
+      </section>
     </main>
   );
 }
@@ -56,6 +111,23 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 function safeRedirect(raw: string | undefined): string {
   if (raw && raw.startsWith('/') && !raw.startsWith('//')) return raw;
   return '/';
+}
+
+function CheckGlyph() {
+  return (
+    <svg
+      className="h-4 w-4"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
 }
 
 function GoogleGlyph() {
