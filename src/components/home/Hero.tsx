@@ -66,34 +66,7 @@ export function Hero() {
  * Las 3 olas: cada anillo arranca su expansión con un desfasaje distinto, así
  * sale una ola nueva cada ~0.8s (animación de 2.4s ÷ 3) de forma continua.
  */
-const PULSE_RINGS = ['0s', '0.8s', '1.6s'];
-
-/** PRNG sembrado (mulberry32): scatter "random" pero estable entre renders
- * — evita hydration mismatch y layout jank. Cambiar SEED regenera el patrón. */
-function mulberry32(seed: number): () => number {
-  return () => {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-/**
- * Estrellitas que titilan en posiciones y tamaños pseudo-aleatorios, acotados
- * a un umbral prolijo: dispersas alrededor del lente (-6%..96%), tamaño 11-22px,
- * delay y duración variados para que parpadeen desacompasadas.
- */
-const LENS_SPARKLES = (() => {
-  const rand = mulberry32(0x5eed);
-  return Array.from({ length: 7 }, () => ({
-    top: `${Math.round(rand() * 102 - 6)}%`,
-    left: `${Math.round(rand() * 102 - 6)}%`,
-    size: Math.round(11 + rand() * 11),
-    delay: `${(rand() * 2.8).toFixed(2)}s`,
-    duration: `${(2.6 + rand() * 1.8).toFixed(2)}s`,
-  }));
-})();
+const PULSE_RINGS = ['1.2s', '2.4s', '4.8s'];
 
 /**
  * Contained scanner-lens illustration on the right of the hero.
@@ -120,26 +93,6 @@ function DecorLens() {
         <div className="absolute inset-10 flex items-center justify-center rounded-full bg-white shadow-[0_8px_24px_0_rgba(0,0,0,0.12)]">
           <Icon name="camera" className="h-12 w-12 text-[var(--color-primary)]" />
         </div>
-        {/* Estrellitas que aparecen y desaparecen en distintas posiciones. */}
-        {LENS_SPARKLES.map((s, i) => (
-          <span
-            key={i}
-            className="nl-twinkle absolute text-[var(--color-accent-lime)]"
-            style={{
-              top: s.top,
-              left: s.left,
-              animationDelay: s.delay,
-              animationDuration: s.duration,
-            }}
-          >
-            <Icon
-              name="sparkles"
-              strokeWidth={0}
-              fill="currentColor"
-              style={{ width: s.size, height: s.size }}
-            />
-          </span>
-        ))}
       </div>
     </div>
   );
