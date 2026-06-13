@@ -63,11 +63,11 @@ export function HelpSection() {
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3.5 rounded-2xl border border-[var(--color-primary-border)] bg-[var(--color-primary-soft)] p-5">
+      <div className="flex flex-col items-center gap-3.5 rounded-2xl border border-[var(--color-primary-border)] bg-[var(--color-primary-soft)] p-5 text-center md:flex-row md:text-left">
         <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white text-[var(--color-primary)]">
           <Icon name="chat" className="h-[22px] w-[22px]" />
         </span>
-        <div className="min-w-[180px] flex-1">
+        <div className="flex-1">
           <div className="text-[15px] font-bold text-[var(--color-text)]">
             ¿Necesitás más ayuda?
           </div>
@@ -77,7 +77,7 @@ export function HelpSection() {
         </div>
         <Link
           href="/chat"
-          className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-4 py-2.5 text-[13.5px] font-bold text-white transition-colors hover:bg-[var(--color-primary-strong)]"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] px-4 py-2.5 text-[13.5px] font-bold text-white transition-colors hover:bg-[var(--color-primary-strong)]"
         >
           <Icon name="chat" className="h-[17px] w-[17px]" />
           Abrir chat

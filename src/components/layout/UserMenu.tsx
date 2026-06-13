@@ -45,20 +45,33 @@ export function UserMenu({ name, email, image }: UserMenuProps) {
 
   return (
     <div ref={rootRef} className="relative mt-auto">
-      <div className="flex items-center gap-2.5 rounded-[10px] bg-[var(--color-bg)] p-2.5">
+      {/* La card del usuario queda abajo; el menú crece hacia arriba desde acá.
+          Cuando está abierto, cuadramos las esquinas de arriba para que el menú
+          y la card se vean como una sola superficie gris continua. */}
+      <div
+        className={`rail-center flex items-center gap-2.5 bg-[var(--color-bg)] p-2.5 ${open ? 'rounded-b-2xl rounded-t-none border border-[var(--color-border)]' : 'rounded-[10px]'}`}
+      >
         {/* El bloque de usuario lleva a Mi cuenta (atajo). */}
         <Link
           href="/mi-cuenta"
           data-testid="user-menu-account"
-          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md transition-colors hover:opacity-80"
+          className="rail-center flex min-w-0 flex-1 items-center gap-2.5 rounded-md transition-colors hover:opacity-80"
         >
           <Avatar name={name} email={email} image={image} initial={initial} size={28} />
-          <div className="flex min-w-0 flex-col leading-tight">
-            <span className="truncate text-[11px] font-bold text-[var(--color-text)]">
+          <div className="rail-hide flex min-w-0 flex-col leading-tight">
+            <span
+              title={name ?? undefined}
+              className="truncate text-[11px] font-bold text-[var(--color-text)]"
+            >
               {name ?? 'Mi cuenta'}
             </span>
             {email && (
-              <span className="truncate text-[10px] text-[var(--color-text-muted)]">{email}</span>
+              <span
+                title={email}
+                className="truncate text-[10px] text-[var(--color-text-muted)]"
+              >
+                {email}
+              </span>
             )}
           </div>
         </Link>
@@ -70,7 +83,7 @@ export function UserMenu({ name, email, image }: UserMenuProps) {
           aria-haspopup="menu"
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
-          className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-[var(--color-text-muted)] transition-colors hover:bg-white hover:text-[var(--color-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+          className="rail-hide flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-[var(--color-text-muted)] transition-colors hover:bg-white hover:text-[var(--color-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
         >
           <Icon name="more-vertical" className="h-4 w-4" />
         </button>
@@ -80,22 +93,8 @@ export function UserMenu({ name, email, image }: UserMenuProps) {
         <div
           role="menu"
           aria-label="Opciones de cuenta"
-          className="nl-menu-pop absolute inset-x-0 bottom-[calc(100%+6px)] z-40 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white p-1.5 shadow-[0_16px_40px_-10px_rgba(15,23,42,0.3)]"
+          className="nl-menu-pop absolute inset-x-0 bottom-full z-40 -mb-px overflow-hidden rounded-t-2xl border border-b-0 border-[var(--color-border)] bg-[var(--color-bg)] p-1.5 shadow-[0_-12px_32px_-12px_rgba(15,23,42,0.22)]"
         >
-          {/* Identidad */}
-          <div className="flex items-center gap-2.5 px-2 py-2">
-            <Avatar name={name} email={email} image={image} initial={initial} size={32} />
-            <div className="min-w-0">
-              <div className="truncate text-[12.5px] font-bold text-[var(--color-text)]">
-                {name ?? 'Mi cuenta'}
-              </div>
-              {email && (
-                <div className="truncate text-[11px] text-[var(--color-text-muted)]">{email}</div>
-              )}
-            </div>
-          </div>
-          <div className="my-1 h-px bg-[var(--color-border)]" />
-
           <MenuLink
             href="/mi-cuenta"
             icon="user"

@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { NutriMark } from '@/components/ui/NutriMark';
 import { cn } from '@/lib/cn';
+import { SidebarToggle } from './SidebarToggle';
 import { SidebarUser } from './SidebarUser';
 import { NAV_ITEMS, type ActiveNavItem, type NavItem } from './nav-config';
 
@@ -45,17 +46,20 @@ export function Sidebar({ active, historialCount }: SidebarProps) {
       {/* Componente async aislado: resuelve la sesión sin volver async todo
           el árbol del shell (NL-201). */}
       <SidebarUser />
+
+      {/* Círculo en el borde que colapsa/expande el sidebar (rail de íconos). */}
+      <SidebarToggle />
     </aside>
   );
 }
 
 function BrandBlock() {
   return (
-    <div className="flex items-center gap-3 pb-4">
+    <div className="rail-center flex items-center gap-3 pb-4">
       <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary)] text-white">
         <NutriMark size={24} />
       </span>
-      <div className="flex flex-col leading-tight">
+      <div className="rail-hide flex flex-col leading-tight">
         <span className="text-base font-bold text-[var(--color-text)]">NutriLens</span>
       </div>
     </div>
@@ -76,7 +80,7 @@ function SidebarNavLink({ item, active, badge }: SidebarNavLinkProps) {
       data-testid={`nav-${item.id}`}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-[13px] font-medium transition-colors',
+        'rail-center flex items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-[13px] font-medium transition-colors',
         active
           ? 'bg-[var(--color-primary-soft)] font-bold text-[var(--color-primary-strong)]'
           : 'text-[var(--color-text)]/80 hover:bg-[var(--color-surface)]',
@@ -87,9 +91,9 @@ function SidebarNavLink({ item, active, badge }: SidebarNavLinkProps) {
         strokeWidth={active ? 2.25 : 2}
         className="h-[18px] w-[18px] flex-shrink-0"
       />
-      <span className="flex-1">{item.label}</span>
+      <span className="rail-hide flex-1">{item.label}</span>
       {hasBadge && (
-        <span className="rounded-full bg-[var(--color-surface)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--color-text-muted)]">
+        <span className="rail-hide rounded-full bg-[var(--color-surface)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--color-text-muted)]">
           {badge}
         </span>
       )}

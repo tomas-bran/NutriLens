@@ -50,22 +50,27 @@ export function HowItWorks() {
           <li key={step.number} className="h-full">
             <Card
               padding="md"
-              className="group flex h-full flex-col gap-2.5 transition-colors hover:border-[var(--color-primary)]"
+              className="group relative h-full overflow-hidden transition-colors hover:border-[var(--color-primary)]"
             >
-              {/* Número grande a la izquierda + ícono, a la misma altura. En
-                  hover: borde verde (Card) + número con fondo verde claro. */}
-              <div className="flex items-center justify-between">
-                <span className="rounded-lg px-1.5 font-mono text-[26px] font-extrabold leading-none text-[var(--color-text-muted)]/40 transition-colors group-hover:bg-[var(--color-primary-soft)] group-hover:text-[var(--color-primary)]">
-                  0{step.number}
-                </span>
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
-                  <Icon name={step.icon} className="h-5 w-5" />
-                </span>
+              {/* En hover el fondo del color del ícono se expande circularmente
+                  desde el círculo del ícono hasta cubrir toda la card. */}
+              <span className="pointer-events-none absolute right-4 top-4 z-0 h-9 w-9 origin-center scale-0 rounded-full bg-[var(--color-primary-soft)] transition-transform duration-700 ease-out group-hover:scale-[18]" />
+
+              <div className="relative z-10 flex h-full flex-col gap-2.5">
+                {/* Número grande a la izquierda + ícono, a la misma altura. */}
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[26px] font-extrabold leading-none text-[var(--color-text-muted)]/40 transition-colors group-hover:text-[var(--color-primary)]">
+                    0{step.number}
+                  </span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+                    <Icon name={step.icon} className="h-5 w-5" />
+                  </span>
+                </div>
+                <h3 className="text-[15px] font-bold text-[var(--color-text)]">{step.title}</h3>
+                <p className="text-[13px] leading-relaxed text-[var(--color-text-muted)]">
+                  {step.description}
+                </p>
               </div>
-              <h3 className="text-[15px] font-bold text-[var(--color-text)]">{step.title}</h3>
-              <p className="text-[13px] leading-relaxed text-[var(--color-text-muted)]">
-                {step.description}
-              </p>
             </Card>
           </li>
         ))}

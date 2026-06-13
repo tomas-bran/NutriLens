@@ -34,6 +34,7 @@ export type IconName =
   | 'user'
   | 'logout'
   | 'chevron-right'
+  | 'chevron-left'
   | 'chevron-down'
   | 'settings'
   | 'leaf'
@@ -183,6 +184,9 @@ const ICON_PATHS: Record<IconName, IconPathDef> = {
   },
   'chevron-right': {
     paths: ['M9 18l6-6-6-6'],
+  },
+  'chevron-left': {
+    paths: ['m15 18-6-6 6-6'],
   },
   'chevron-down': {
     paths: ['M6 9l6 6 6-6'],
