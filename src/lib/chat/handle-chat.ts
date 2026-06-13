@@ -44,6 +44,12 @@ export interface HandleChatDeps {
   requestId: string;
   /** Inyectable para tests de integración con DB en memoria. */
   retrieve?: typeof retrieveProducts;
+  /**
+   * NL-208: resumen de las preferencias de dieta del usuario, resuelto por la
+   * route (transport). Vacío => sin preferencias. Mantener la resolución de
+   * identidad fuera del orquestador lo deja testeable sin auth/next-server.
+   */
+  userPrefs?: string;
 }
 
 export interface HandleChatResult {
@@ -63,7 +69,7 @@ export interface HandleChatResult {
 
 export async function handleChat(
   rawQuestion: string,
-  { ia, requestId, retrieve = retrieveProducts }: HandleChatDeps,
+  { ia, requestId, retrieve = retrieveProducts, userPrefs = '' }: HandleChatDeps,
 ): Promise<HandleChatResult> {
   const validated = validateQuestion(rawQuestion);
 
@@ -154,7 +160,9 @@ export async function handleChat(
     }
   }
 
-  const ans = await generateChatAnswer(question, products, intent, { ia });
+  // NL-208: las preferencias del usuario (resueltas por la route, deps.userPrefs)
+  // entran como contexto para que la respuesta priorice avisarle lo que importa.
+  const ans = await generateChatAnswer(question, products, intent, { ia, userPrefs });
 
   logger.info('chat.answered', {
     requestId,

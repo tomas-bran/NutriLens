@@ -184,16 +184,54 @@
   will-change: opacity, transform;
 }
 
+/* ---------------------------------------------------------------------------
+ * Login decor (redesign) — estrellitas que titilan + lente que escanea.
+ * ------------------------------------------------------------------------- */
+@keyframes nl-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1);
+  }
+}
+
+/* Línea de escaneo que baja y sube dentro del scan-frame. */
+@keyframes nl-scan-sweep {
+  0%,
+  100% {
+    top: 12%;
+  }
+  50% {
+    top: 82%;
+  }
+}
+
+.nl-twinkle {
+  animation: nl-twinkle 3.2s ease-in-out infinite;
+}
+.nl-scan-sweep {
+  animation: nl-scan-sweep 2.6s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-float,
   .home-rise-in,
   .home-gradient,
-  .home-glow {
+  .home-glow,
+  .nl-twinkle,
+  .nl-scan-sweep {
     animation: none;
   }
   /* La entrada deja los elementos visibles aunque no anime. */
   .home-rise-in {
     opacity: 1;
     transform: none;
+  }
+  .nl-twinkle {
+    opacity: 0.6;
   }
 }

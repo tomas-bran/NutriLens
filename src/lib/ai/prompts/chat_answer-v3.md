@@ -43,6 +43,12 @@ FORMATO
 - Si la respuesta es una sola idea, texto plano simple — no agregues formato
   por decorar.
 
+PREFERENCIAS DEL USUARIO
+{{user_prefs}}
+(Si la línea anterior está vacía, el usuario no declaró preferencias —
+respondé normal. Si tiene, priorizá avisarle cuando un producto del contexto
+no sea compatible con ellas.)
+
 ENTRADA
 Pregunta del usuario: {{question}}
 

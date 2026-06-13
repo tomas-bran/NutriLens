@@ -35,8 +35,9 @@ const FAQS = [
 export function HelpView() {
   const [open, setOpen] = useState(0);
   return (
-    <div className="flex flex-col gap-5 px-4 py-2 md:max-w-3xl md:px-6 md:py-6">
-      <header className="flex flex-col gap-1">
+    // Centrado respecto al área de contenido (sin sidebar): mx-auto + ancho máx.
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-2 md:px-6 md:py-6">
+      <header className="flex flex-col gap-1 text-center">
         <p className="text-[13px] text-[var(--color-text-muted)]">Ayuda</p>
         <h1 className="text-[26px] font-extrabold leading-tight tracking-tight text-[var(--color-text)]">
           ¿Cómo te ayudamos?
@@ -107,11 +108,17 @@ function FaqItem({
           className={`h-[18px] w-[18px] flex-shrink-0 text-[var(--color-text-muted)] transition-transform ${open ? 'rotate-180' : ''}`}
         />
       </button>
-      {open && (
-        <div className="text-[var(--color-text)]/80 px-4 pb-4 text-[13.5px] leading-relaxed">
-          {a}
+      {/* Animación smooth de alto: grid-rows 0fr→1fr (sin medir altura en JS). */}
+      <div
+        className="grid transition-[grid-template-rows] duration-300 ease-out"
+        style={{ gridTemplateRows: open ? '1fr' : '0fr' }}
+      >
+        <div className="overflow-hidden">
+          <div className="text-[var(--color-text)]/80 px-4 pb-4 text-[13.5px] leading-relaxed">
+            {a}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

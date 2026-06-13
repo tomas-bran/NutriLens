@@ -11,10 +11,12 @@
  */
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState, useTransition } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import type { IconName } from '@/components/ui/Icon';
 import { signOutAction } from '@/lib/auth/actions';
+import { saveMyPrefs } from '@/lib/prefs/actions';
+import type { DietPrefs } from '@/lib/prefs/server';
 
 export interface ProfileUser {
   name: string;
@@ -28,35 +30,24 @@ export interface ProfileStats {
   sinAlergenos: number;
 }
 
-interface Prefs {
-  vegano: boolean;
-  celiaco: boolean;
-  lactosa: boolean;
-  avisos: boolean;
-}
+export function ProfileView({
+  user,
+  stats,
+  initialPrefs,
+}: {
+  user: ProfileUser;
+  stats: ProfileStats;
+  initialPrefs: DietPrefs;
+}) {
+  const [prefs, setPrefs] = useState<DietPrefs>(initialPrefs);
+  const [, startTransition] = useTransition();
 
-const DEFAULT_PREFS: Prefs = { vegano: false, celiaco: false, lactosa: false, avisos: true };
-const PREFS_KEY = 'nutrilens.prefs';
-
-export function ProfileView({ user, stats }: { user: ProfileUser; stats: ProfileStats }) {
-  const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(PREFS_KEY);
-      if (raw) setPrefs({ ...DEFAULT_PREFS, ...(JSON.parse(raw) as Partial<Prefs>) });
-    } catch {
-      /* localStorage no disponible — quedan los defaults */
-    }
-  }, []);
-  const setPref = (k: keyof Prefs, v: boolean) => {
-    setPrefs((p) => {
-      const next = { ...p, [k]: v };
-      try {
-        localStorage.setItem(PREFS_KEY, JSON.stringify(next));
-      } catch {
-        /* ignore */
-      }
-      return next;
+  // NL-208: optimista en cliente + persistencia por usuario vía server action.
+  const setPref = (k: keyof DietPrefs, v: boolean) => {
+    const next = { ...prefs, [k]: v };
+    setPrefs(next);
+    startTransition(() => {
+      void saveMyPrefs(next);
     });
   };
 
@@ -130,8 +121,8 @@ function PrefsCard({
   prefs,
   setPref,
 }: {
-  prefs: Prefs;
-  setPref: (k: keyof Prefs, v: boolean) => void;
+  prefs: DietPrefs;
+  setPref: (k: keyof DietPrefs, v: boolean) => void;
 }) {
   return (
     <section className="rounded-3xl border border-[var(--color-border)] bg-white px-5 py-5">
@@ -206,9 +197,13 @@ function PrefRow({
         aria-checked={on}
         aria-label={label}
         onClick={() => onChange(!on)}
-        className={`flex h-7 w-12 flex-shrink-0 items-center rounded-full p-0.5 transition-colors ${on ? 'justify-end bg-[var(--color-primary)]' : 'justify-start bg-[var(--color-surface-strong,#e4eae0)]'}`}
+        className={`relative flex h-7 w-12 flex-shrink-0 items-center rounded-full p-0.5 transition-colors duration-300 ease-out ${on ? 'bg-[var(--color-primary)]' : 'bg-[#e4eae0]'}`}
       >
-        <span className="h-[22px] w-[22px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.25)]" />
+        {/* Knob animado con transform (transición suave, no salta como justify). */}
+        <span
+          className="h-[22px] w-[22px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.25)] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+          style={{ transform: on ? 'translateX(20px)' : 'translateX(0)' }}
+        />
       </button>
     </div>
   );

@@ -80,3 +80,15 @@ model Conversation {
 
   @@index([userId, updatedAt])
 }
+
+// NL-208: preferencias de dieta por usuario. Una fila por usuario (Google
+// `sub`). Alimentan los avisos del perfil y se inyectan como contexto al chat
+// para que las respuestas prioricen lo que al usuario le importa.
+model UserPrefs {
+  userId    String   @id
+  vegano    Boolean  @default(false)
+  celiaco   Boolean  @default(false)
+  lactosa   Boolean  @default(false)
+  avisos    Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+}

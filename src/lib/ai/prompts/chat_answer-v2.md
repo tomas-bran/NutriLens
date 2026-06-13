@@ -43,6 +43,11 @@ Te recomendaría Galletitas X porque no tiene alérgenos y su riesgo es menor.
 
 Basado en productos analizados por vos. NutriLens es un asistente informativo.
 
+PREFERENCIAS DEL USUARIO
+{{user_prefs}}
+(Si está vacío, no hay preferencias declaradas. Si tiene, en el veredicto
+priorizá avisar si alguno de los productos comparados no es compatible.)
+
 ENTRADA
 Pregunta del usuario: {{question}}
 Tipo de intent: {{intent_kind}}

@@ -6,6 +6,7 @@
  * superior compacta. Server component; el botón es un `<form>` con server
  * action `signInWithGoogle`. El middleware redirige acá a los no-logueados.
  */
+import { LoginDecor } from '@/components/auth/LoginDecor';
 import { NutriMark } from '@/components/ui/NutriMark';
 import { signInWithGoogle } from '@/lib/auth/actions';
 
@@ -29,6 +30,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     <main className="flex min-h-[100dvh] bg-[var(--color-bg)] md:items-stretch">
       {/* Panel de marca — franja superior en mobile, columna en desktop */}
       <aside className="home-gradient relative hidden flex-col justify-between overflow-hidden p-11 text-white md:flex md:w-[46%]">
+        <LoginDecor />
         <div className="relative flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-[13px] bg-white/20 backdrop-blur">
             <NutriMark size={24} />
