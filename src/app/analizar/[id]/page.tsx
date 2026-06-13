@@ -11,6 +11,7 @@
 import { notFound } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import { ResultView } from '@/components/result/ResultView';
+import { isCurrentUserAdmin } from '@/lib/auth/is-admin';
 import { prisma } from '@/lib/db';
 import { getHistorialCount } from '@/lib/products/count';
 import { toDetail } from '@/lib/products/serializers';
@@ -34,11 +35,11 @@ export default async function AnalizarResultPage({ params }: PageProps) {
   }
 
   const detail = toDetail(product);
-  const historialCount = await getHistorialCount();
+  const [historialCount, isAdmin] = await Promise.all([getHistorialCount(), isCurrentUserAdmin()]);
 
   return (
     <AppShell active="analizar" historialCount={historialCount}>
-      <ResultView product={detail} />
+      <ResultView product={detail} showTechnicalViews={isAdmin} />
     </AppShell>
   );
 }

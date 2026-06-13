@@ -14,13 +14,15 @@ import { HowItWorks } from './HowItWorks';
 
 export interface HomeViewProps {
   historyCount: number;
+  /** Primer nombre del usuario logueado, para personalizar el saludo (neutro). */
+  userName?: string | null;
 }
 
-export function HomeView({ historyCount }: HomeViewProps) {
+export function HomeView({ historyCount, userName }: HomeViewProps) {
   return (
-    <AppShell active="inicio" historialCount={historyCount}>
-      <div className="flex flex-col gap-6 px-4 py-2 md:px-6 md:py-6">
-        <PageHeader />
+    <AppShell active="inicio" historialCount={historyCount} fluid>
+      <div className="flex flex-col gap-6 py-2 md:py-4">
+        <PageHeader userName={userName} />
 
         {/* NL-504: entrada escalonada — cada bloque sube con un pequeño delay.
             `home-rise-in` se neutraliza con prefers-reduced-motion. */}
@@ -52,12 +54,14 @@ export function HomeView({ historyCount }: HomeViewProps) {
  * eyebrow, fontSize 26 h1). Stays small on mobile where the AppShell shows
  * the brand strip instead.
  */
-function PageHeader() {
+function PageHeader({ userName }: { userName?: string | null }) {
   return (
     <header className="hidden flex-col gap-1 md:flex">
-      <p className="text-[13px] text-[var(--color-text-muted)]">Hola</p>
+      <p className="text-[13px] text-[var(--color-text-muted)]">
+        Hola{userName ? `, ${userName}` : ''}
+      </p>
       <h1 className="text-[26px] font-bold leading-tight text-[var(--color-text)]">
-        Bienvenida a NutriLens
+        Te damos la bienvenida
       </h1>
     </header>
   );

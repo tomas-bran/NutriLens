@@ -36,9 +36,20 @@ export interface ResultViewProps {
    * on the historial detail page).
    */
   contextLabel?: string;
+  /**
+   * NL-204: las vistas técnicas (JSON crudo + pipeline trace) son solo para
+   * admins — el usuario común ve la interfaz limpia. Las páginas resuelven
+   * `isCurrentUserAdmin()` y lo pasan acá. Default `false` (UI de usuario).
+   */
+  showTechnicalViews?: boolean;
 }
 
-export function ResultView({ product, back, contextLabel }: ResultViewProps) {
+export function ResultView({
+  product,
+  back,
+  contextLabel,
+  showTechnicalViews = false,
+}: ResultViewProps) {
   const showLowConfidence = product.confidence < LOW_CONFIDENCE_THRESHOLD;
 
   return (
@@ -62,11 +73,21 @@ export function ResultView({ product, back, contextLabel }: ResultViewProps) {
 
       {/*
        * E06 §4 (US-34) + §3 (US-33): JSON crudo + pipeline trace, ambos
-       * colapsables. El JSON arriba porque el orden del spec §4 lo pone
-       * primero ("debajo de JSON extraído" para PipelineTrace, §3.1).
+       * colapsables. NL-204: solo visibles para admins (el usuario común no ve
+       * detalles de implementación). Bajo un encabezado de "Vista técnica".
        */}
-      <JsonViewer raw={product.jsonRaw} />
-      <PipelineTrace trace={product.pipelineTrace} />
+      {showTechnicalViews && (
+        <section className="flex flex-col gap-4" data-testid="admin-technical-views">
+          <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[var(--color-text-muted)]">
+            <span className="inline-flex h-4 items-center rounded bg-[var(--color-surface)] px-1.5 text-[10px] text-[var(--color-text-muted)]">
+              admin
+            </span>
+            Vista técnica
+          </p>
+          <JsonViewer raw={product.jsonRaw} />
+          <PipelineTrace trace={product.pipelineTrace} />
+        </section>
+      )}
 
       <footer className="mt-2 flex flex-col gap-4">
         <Disclaimer />

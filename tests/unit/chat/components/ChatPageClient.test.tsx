@@ -67,7 +67,7 @@ describe('<ChatPageClient> — flujo happy (US-27 §1 + US-29 §1)', () => {
     const user = userEvent.setup();
     const fetchImpl = vi.fn().mockResolvedValue(ANSWER_OK);
 
-    render(<ChatPageClient productsInBase={5} historialCount={5} fetchImpl={fetchImpl} />);
+    render(<ChatPageClient productsInBase={5} fetchImpl={fetchImpl} />);
 
     // Estado inicial: hero visible, sin thread.
     expect(screen.getByTestId('chat-hero')).toBeInTheDocument();
@@ -99,7 +99,7 @@ describe('<ChatPageClient> — flujo happy (US-27 §1 + US-29 §1)', () => {
         products: [],
       });
 
-    render(<ChatPageClient productsInBase={5} historialCount={5} fetchImpl={fetchImpl} />);
+    render(<ChatPageClient productsInBase={5} fetchImpl={fetchImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'primera{Enter}');
     await waitFor(() =>
@@ -123,7 +123,7 @@ describe('<ChatPageClient> — reset (US-27 §3)', () => {
   it('"Nueva conversación" limpia el thread y vuelve al hero', async () => {
     const user = userEvent.setup();
     const fetchImpl = vi.fn().mockResolvedValue(ANSWER_OK);
-    render(<ChatPageClient productsInBase={5} historialCount={5} fetchImpl={fetchImpl} />);
+    render(<ChatPageClient productsInBase={5} fetchImpl={fetchImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'pregunta 1{Enter}');
     await waitFor(() => expect(screen.getByTestId('chat-assistant-bubble')).toBeInTheDocument());
@@ -140,7 +140,7 @@ describe('<ChatPageClient> — sugerencias (spec §9.5)', () => {
   it('clickear una sugerencia dispara el flujo de envío', async () => {
     const user = userEvent.setup();
     const fetchImpl = vi.fn().mockResolvedValue(ANSWER_OK);
-    render(<ChatPageClient productsInBase={5} historialCount={5} fetchImpl={fetchImpl} />);
+    render(<ChatPageClient productsInBase={5} fetchImpl={fetchImpl} />);
 
     await user.click(screen.getAllByTestId('chat-suggestion')[0]!);
 
@@ -155,7 +155,7 @@ describe('<ChatPageClient> — fallback no_context (US-30 §1+§2)', () => {
     const user = userEvent.setup();
     const fetchImpl = vi.fn().mockResolvedValue(ANSWER_EMPTY);
 
-    render(<ChatPageClient productsInBase={0} historialCount={0} fetchImpl={fetchImpl} />);
+    render(<ChatPageClient productsInBase={0} fetchImpl={fetchImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'mostrame snacks{Enter}');
 
@@ -180,7 +180,7 @@ describe('<ChatPageClient> — estado ERROR (spec §9.4)', () => {
       .mockRejectedValueOnce(new ApiError('model_rate_limited', 'Saturado, probá en un rato.', 429))
       .mockResolvedValueOnce(ANSWER_OK);
 
-    render(<ChatPageClient productsInBase={3} historialCount={3} fetchImpl={fetchImpl} />);
+    render(<ChatPageClient productsInBase={3} fetchImpl={fetchImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'mostrame galletitas{Enter}');
 
@@ -199,7 +199,7 @@ describe('<ChatPageClient> — estado ERROR (spec §9.4)', () => {
     const user = userEvent.setup();
     const fetchImpl = vi.fn().mockRejectedValue(new Error('boom'));
 
-    render(<ChatPageClient productsInBase={3} historialCount={3} fetchImpl={fetchImpl} />);
+    render(<ChatPageClient productsInBase={3} fetchImpl={fetchImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'algo{Enter}');
     await waitFor(() => expect(screen.getByTestId('chat-error')).toBeInTheDocument());
@@ -218,7 +218,7 @@ describe('<ChatPageClient> — input bloqueado en THINKING', () => {
         }),
     );
 
-    render(<ChatPageClient productsInBase={3} historialCount={3} fetchImpl={fetchImpl} />);
+    render(<ChatPageClient productsInBase={3} fetchImpl={fetchImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'q{Enter}');
 

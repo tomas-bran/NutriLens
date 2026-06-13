@@ -24,7 +24,7 @@ export function ChatHero({ onPick }: ChatHeroProps) {
           Preguntame sobre tus productos
         </h2>
         <p className="max-w-md text-sm text-[var(--color-text-muted)] md:text-base">
-          Respondo usando los productos que ya analizaste (RAG).
+          Respondo usando los productos que ya analizaste.
         </p>
       </div>
       <div className="flex w-full flex-col gap-2">

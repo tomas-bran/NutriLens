@@ -41,6 +41,12 @@ export interface GenerateAnswerResult {
 
 export interface GenerateAnswerDeps {
   ia: IaProvider;
+  /**
+   * NL-208: resumen en lenguaje natural de las preferencias de dieta del
+   * usuario (celíaco/vegano/sin lactosa). Se inyecta al prompt para que la
+   * respuesta priorice avisar sobre lo que le importa. Vacío = sin prefs.
+   */
+  userPrefs?: string;
 }
 
 export function pickAnswerPromptVersion(intent: ChatIntent): AnswerPromptVersion {
@@ -51,14 +57,15 @@ export async function generateChatAnswer(
   question: string,
   products: PrismaProduct[],
   intent: ChatIntent,
-  { ia }: GenerateAnswerDeps,
+  { ia, userPrefs = '' }: GenerateAnswerDeps,
 ): Promise<GenerateAnswerResult> {
   const lite = products.map(toLite);
   const promptVersion = pickAnswerPromptVersion(intent);
   const { raw, usage, latencyMs } = await ia.answerWithContext(question, lite, {
     promptVersion,
     // El prompt v2 lee `intent_kind` para activar el formato tabla en compare.
-    extra: { intent_kind: intent.kind },
+    // `user_prefs` (NL-208) lo usan ambos prompts para personalizar avisos.
+    extra: { intent_kind: intent.kind, user_prefs: userPrefs },
   });
   const sanitized = sanitizeChatAnswer(raw);
   return {

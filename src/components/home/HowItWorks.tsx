@@ -22,7 +22,7 @@ const STEPS: ReadonlyArray<Step> = [
   {
     number: 2,
     title: 'Esperá unos segundos',
-    description: 'NutriLens analiza la etiqueta con IA multimodal.',
+    description: 'NutriLens lee la etiqueta y entiende lo que dice.',
     icon: 'sparkles',
   },
   {
@@ -48,19 +48,29 @@ export function HowItWorks() {
       <ol className="grid grid-cols-1 gap-3 md:grid-cols-3">
         {STEPS.map((step) => (
           <li key={step.number} className="h-full">
-            <Card padding="md" className="flex h-full flex-col gap-2.5">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
-                  <Icon name={step.icon} className="h-5 w-5" />
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-[1.5px] text-[var(--color-primary-strong)]">
-                  Paso {step.number}
-                </span>
+            <Card
+              padding="md"
+              className="group relative h-full overflow-hidden transition-colors hover:border-[var(--color-primary)]"
+            >
+              {/* En hover el fondo del color del ícono se expande circularmente
+                  desde el círculo del ícono hasta cubrir toda la card. */}
+              <span className="pointer-events-none absolute right-4 top-4 z-0 h-9 w-9 origin-center scale-0 rounded-full bg-[var(--color-primary-soft)] transition-transform duration-700 ease-out group-hover:scale-[32]" />
+
+              <div className="relative z-10 flex h-full flex-col gap-2.5">
+                {/* Número grande a la izquierda + ícono, a la misma altura. */}
+                <div className="flex items-center justify-between">
+                  <span className="text-[var(--color-text-muted)]/40 font-mono text-[26px] font-extrabold leading-none transition-colors group-hover:text-[var(--color-primary)]">
+                    0{step.number}
+                  </span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+                    <Icon name={step.icon} className="h-5 w-5" />
+                  </span>
+                </div>
+                <h3 className="text-[15px] font-bold text-[var(--color-text)]">{step.title}</h3>
+                <p className="text-[13px] leading-relaxed text-[var(--color-text-muted)]">
+                  {step.description}
+                </p>
               </div>
-              <h3 className="text-[15px] font-bold text-[var(--color-text)]">{step.title}</h3>
-              <p className="text-[13px] leading-relaxed text-[var(--color-text-muted)]">
-                {step.description}
-              </p>
             </Card>
           </li>
         ))}

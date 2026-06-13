@@ -71,8 +71,24 @@ model Conversation {
   id        String   @id @default(uuid())
   title     String
   messages  String   @db.Text  // JSON.stringify(StoredMessage[])
+  /// NL-203: dueño de la conversación (Google `sub` del usuario logueado).
+  /// El historial de chats es por-usuario; los productos siguen siendo una
+  /// base de conocimiento compartida (no llevan userId).
+  userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([updatedAt])
+  @@index([userId, updatedAt])
+}
+
+// NL-208: preferencias de dieta por usuario. Una fila por usuario (Google
+// `sub`). Alimentan los avisos del perfil y se inyectan como contexto al chat
+// para que las respuestas prioricen lo que al usuario le importa.
+model UserPrefs {
+  userId    String   @id
+  vegano    Boolean  @default(false)
+  celiaco   Boolean  @default(false)
+  lactosa   Boolean  @default(false)
+  avisos    Boolean  @default(true)
+  updatedAt DateTime @updatedAt
 }
