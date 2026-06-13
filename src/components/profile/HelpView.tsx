@@ -37,10 +37,7 @@ export function HelpSection() {
   const [open, setOpen] = useState(0);
   return (
     // Anclaje del scroll desde "Ayuda y preguntas frecuentes" (scroll-mt deja aire arriba).
-    <section
-      id="ayuda"
-      className="mx-auto flex w-full max-w-2xl scroll-mt-6 flex-col gap-5"
-    >
+    <section id="ayuda" className="mx-auto flex w-full max-w-2xl scroll-mt-6 flex-col gap-5">
       <header className="flex flex-col gap-1 text-center">
         <p className="text-[13px] text-[var(--color-text-muted)]">Ayuda</p>
         <h2 className="text-[26px] font-extrabold leading-tight tracking-tight text-[var(--color-text)]">

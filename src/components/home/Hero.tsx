@@ -85,7 +85,14 @@ const LENS_CHIPS: ReadonlyArray<{
   { icon: 'wheat-off', label: 'Sin gluten', top: '-14%', left: '64%', delay: '0s', duration: '6s' },
   { icon: 'vegan', label: 'Vegano', top: '-4%', left: '20%', delay: '0.6s', duration: '6.5s' },
   { icon: 'nut', label: 'Frutos secos', top: '46%', left: '92%', delay: '2s', duration: '7.5s' },
-  { icon: 'milk-off', label: 'Sin lactosa', top: '96%', left: '22%', delay: '1.2s', duration: '7s' },
+  {
+    icon: 'milk-off',
+    label: 'Sin lactosa',
+    top: '96%',
+    left: '22%',
+    delay: '1.2s',
+    duration: '7s',
+  },
 ];
 
 /**

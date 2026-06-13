@@ -59,7 +59,7 @@ export function HowItWorks() {
               <div className="relative z-10 flex h-full flex-col gap-2.5">
                 {/* Número grande a la izquierda + ícono, a la misma altura. */}
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-[26px] font-extrabold leading-none text-[var(--color-text-muted)]/40 transition-colors group-hover:text-[var(--color-primary)]">
+                  <span className="text-[var(--color-text-muted)]/40 font-mono text-[26px] font-extrabold leading-none transition-colors group-hover:text-[var(--color-primary)]">
                     0{step.number}
                   </span>
                   <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary)]">

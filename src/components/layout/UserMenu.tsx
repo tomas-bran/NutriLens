@@ -66,10 +66,7 @@ export function UserMenu({ name, email, image }: UserMenuProps) {
               {name ?? 'Mi cuenta'}
             </span>
             {email && (
-              <span
-                title={email}
-                className="truncate text-[10px] text-[var(--color-text-muted)]"
-              >
+              <span title={email} className="truncate text-[10px] text-[var(--color-text-muted)]">
                 {email}
               </span>
             )}

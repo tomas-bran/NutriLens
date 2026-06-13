@@ -372,7 +372,14 @@ export function Icon({ name, strokeWidth = 2, className, ...rest }: IconProps) {
         <circle key={`${c.cx}-${c.cy}-${c.r}`} cx={c.cx} cy={c.cy} r={c.r} />
       ))}
       {def.rects?.map((r) => (
-        <rect key={`${r.x}-${r.y}-${r.w}-${r.h}`} x={r.x} y={r.y} width={r.w} height={r.h} rx={r.rx} />
+        <rect
+          key={`${r.x}-${r.y}-${r.w}-${r.h}`}
+          x={r.x}
+          y={r.y}
+          width={r.w}
+          height={r.h}
+          rx={r.rx}
+        />
       ))}
       {def.lines?.map(([x1, y1, x2, y2]) => (
         <line key={`${x1}-${y1}-${x2}-${y2}`} x1={x1} y1={y1} x2={x2} y2={y2} />

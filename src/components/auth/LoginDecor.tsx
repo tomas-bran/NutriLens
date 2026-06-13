@@ -76,7 +76,7 @@ function ScanFrame({ size }: { size: number }) {
       <span className={`${corner} bottom-0 left-0 rounded-bl-2xl border-b-2 border-l-2`} />
       <span className={`${corner} bottom-0 right-0 rounded-br-2xl border-b-2 border-r-2`} />
       {/* línea de escaneo — sutil (baja opacidad), se mueve todo el tiempo */}
-      <span className="nl-scan-sweep absolute inset-x-3 h-0.5 rounded-full bg-[var(--color-accent-lime)]/35 shadow-[0_0_8px_rgba(163,230,53,0.3)]" />
+      <span className="nl-scan-sweep bg-[var(--color-accent-lime)]/35 absolute inset-x-3 h-0.5 rounded-full shadow-[0_0_8px_rgba(163,230,53,0.3)]" />
       {/* código QR escaneándose en el centro */}
       <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white/85">
         <Icon name="scan-qr-code" className="h-12 w-12" strokeWidth={1.75} />
