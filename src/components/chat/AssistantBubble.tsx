@@ -19,9 +19,13 @@ interface AssistantBubbleProps {
   text: string;
   products: ChatProductRef[];
   fallback: ChatFallback | null;
+  /** NL-702: fires when user clicks "Preguntar sobre esta comparación". */
+  onAskFollowUp?: (prefill: string) => void;
 }
 
-export function AssistantBubble({ text, products, fallback }: AssistantBubbleProps) {
+export function AssistantBubble({ text, products, fallback, onAskFollowUp }: AssistantBubbleProps) {
+  const isMarkdown = hasMarkdownTable(text);
+
   return (
     <div className="flex w-full justify-start gap-2.5">
       <div
@@ -53,6 +57,18 @@ export function AssistantBubble({ text, products, fallback }: AssistantBubblePro
           </ul>
         )}
 
+        {isMarkdown && onAskFollowUp && (
+          <button
+            type="button"
+            data-testid="chat-ask-follow-up"
+            onClick={() => onAskFollowUp('¿Tengo una pregunta sobre esta comparación: ')}
+            className="inline-flex w-fit items-center gap-2 rounded-full border border-[var(--color-primary)] px-4 py-2 text-xs font-semibold text-[var(--color-primary)] transition-colors hover:bg-[var(--color-primary-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+          >
+            <Icon name="sparkles" className="h-3.5 w-3.5" aria-hidden="true" />
+            Preguntar sobre esta comparación
+          </button>
+        )}
+
         {fallback?.showAnalyzeCta && (
           <Link
             href="/analizar"
@@ -66,4 +82,13 @@ export function AssistantBubble({ text, products, fallback }: AssistantBubblePro
       </div>
     </div>
   );
+}
+
+/**
+ * Detecta una tabla GFM (fila de celdas + fila separadora) para mostrar el
+ * CTA de seguimiento (NL-702). Antes vivía en markdown-mini (reemplazado por
+ * react-markdown en NL-303).
+ */
+function hasMarkdownTable(text: string): boolean {
+  return /^\|.+\|\s*$/m.test(text) && /^\|[\s:|-]+\|\s*$/m.test(text);
 }

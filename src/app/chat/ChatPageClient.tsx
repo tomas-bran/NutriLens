@@ -9,7 +9,7 @@
  */
 'use client';
 
-import { useCallback, useRef, useReducer } from 'react';
+import { useCallback, useRef, useReducer, useState } from 'react';
 import { ApiError } from '@schemas/errors';
 import { AppShell } from '@/components/layout/AppShell';
 import { ChatErrorBanner } from '@/components/chat/ChatErrorBanner';
@@ -110,6 +110,10 @@ export function ChatPageClient({
   fetchImpl = fetchChat,
 }: ChatPageClientProps) {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  // NL-702: pre-fill state for "ask about comparison" button
+  const [inputPrefill, setInputPrefill] = useState('');
+  const [inputKey, setInputKey] = useState(0);
+
   const conversationIdRef = useRef<string | null>(null);
 
   const persistMessages = useCallback(async (messages: ChatMessage[]) => {
@@ -181,6 +185,11 @@ export function ChatPageClient({
     dispatch({ type: 'reset' });
   }, []);
 
+  const handleAskFollowUp = useCallback((prefill: string) => {
+    setInputPrefill(prefill);
+    setInputKey((k) => k + 1);
+  }, []);
+
   const handleLoadConversation = useCallback(async (id: string) => {
     const { getConversation } = await import('@/lib/conversations/client');
     const conv = await getConversation(id);
@@ -223,7 +232,11 @@ export function ChatPageClient({
                 )}
               </div>
             ) : (
-              <ChatThread messages={state.messages} status={state.status} />
+              <ChatThread
+                messages={state.messages}
+                status={state.status}
+                onAskFollowUp={handleAskFollowUp}
+              />
             )}
           </div>
 
@@ -244,7 +257,12 @@ export function ChatPageClient({
                 className="mb-2"
               />
             )}
-            <ChatInput onSubmit={handleSubmit} disabled={inputDisabled} />
+            <ChatInput
+              key={inputKey}
+              onSubmit={handleSubmit}
+              disabled={inputDisabled}
+              initialValue={inputPrefill}
+            />
           </div>
         </div>
       </div>
