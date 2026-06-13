@@ -31,6 +31,7 @@ function row(nombre: string): PrismaProduct {
     imagenMime: 'image/jpeg',
     imagenBytes: 1024,
     promptVersion: 'extract_product-v1',
+    offEnrichment: null,
     createdAt: new Date(),
   };
 }

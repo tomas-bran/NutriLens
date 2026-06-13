@@ -139,6 +139,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         savedAt: ctx.saved.createdAt.toISOString(),
         cachedFromDedup: ctx.cachedFromDedup === true,
         pipelineTrace: ctx.steps,
+        offEnrichment: ctx.offEnrichment ?? null,
       },
       { status: 200, headers: { 'X-Request-Id': requestId } },
     );
