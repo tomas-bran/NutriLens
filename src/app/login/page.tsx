@@ -61,12 +61,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </ul>
         </div>
 
-        <p className="relative text-xs text-white/65">Equipo NutriLens · UNLaM · 2026</p>
+        <p className="relative text-xs text-white/65">© 2026 NutriLens®</p>
       </aside>
 
       {/* Card de acceso */}
-      <section className="flex flex-1 flex-col items-center justify-center px-6 py-12 md:px-10">
-        <div className="home-rise-in flex w-full max-w-sm flex-col items-center gap-6">
+      <section className="flex flex-1 flex-col items-center px-6 py-12 md:px-10">
+        <div className="home-rise-in flex w-full max-w-sm flex-1 flex-col items-center justify-center gap-6">
           <span className="home-gradient flex h-[60px] w-[60px] items-center justify-center rounded-[18px] text-white shadow-[0_10px_26px_rgba(22,163,74,0.35)] md:hidden">
             <NutriMark size={34} />
           </span>
@@ -101,9 +101,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             Al continuar aceptás los{' '}
             <b className="font-semibold text-[var(--color-text)]">Términos</b> y la{' '}
             <b className="font-semibold text-[var(--color-text)]">Política de privacidad</b>.
-            NutriLens es un asistente informativo, no reemplaza el consejo profesional.
           </p>
         </div>
+
+        {/* Disclaimer como footer, desligado de Términos/Privacidad. */}
+        <footer className="mt-10 max-w-sm text-center text-[11px] leading-relaxed text-[var(--color-text-muted)]">
+          NutriLens es un asistente informativo: no reemplaza el consejo de un profesional de la
+          salud ni la lectura del etiquetado oficial del producto.
+        </footer>
       </section>
     </main>
   );

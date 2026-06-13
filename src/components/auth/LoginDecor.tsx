@@ -1,21 +1,33 @@
 /**
  * <LoginDecor> (redesign) — decoración del panel de marca del login:
- * estrellitas lima que titilan + un "scan-frame" de cámara con la línea que
- * escanea. Puramente decorativo (aria-hidden), CSS-animado (sin JS), con
- * posiciones fijas para que sea un server component sin hidration mismatch.
+ * estrellitas lima que titilan (en posiciones pseudo-aleatorias por todo el
+ * verde) + un "scan-frame" con un código QR escaneándose. Puramente decorativo
+ * (aria-hidden), CSS-animado (sin JS). El scatter es sembrado (mulberry32) para
+ * que sea estable entre renders — server component sin hidration mismatch.
  * Las animaciones se neutralizan con prefers-reduced-motion (ver globals.css).
  */
+import { Icon } from '@/components/ui/Icon';
 
-const SPARKLES = [
-  { top: '6%', left: '70%', size: 14, delay: '0s' },
-  { top: '18%', left: '90%', size: 9, delay: '0.6s' },
-  { top: '44%', left: '60%', size: 11, delay: '1.2s' },
-  { top: '60%', left: '85%', size: 8, delay: '0.3s' },
-  { top: '74%', left: '52%', size: 13, delay: '1.8s' },
-  { top: '88%', left: '78%', size: 9, delay: '0.9s' },
-  { top: '32%', left: '40%', size: 8, delay: '2.2s' },
-  { top: '52%', left: '30%', size: 10, delay: '1.5s' },
-];
+/** PRNG sembrado: scatter "random" pero estable entre renders. */
+function mulberry32(seed: number): () => number {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const SPARKLES = (() => {
+  const rand = mulberry32(0x10f1);
+  return Array.from({ length: 14 }, () => ({
+    top: `${Math.round(rand() * 100)}%`,
+    left: `${Math.round(rand() * 100)}%`,
+    size: Math.round(8 + rand() * 10),
+    delay: `${(rand() * 3).toFixed(2)}s`,
+    duration: `${(2.6 + rand() * 1.8).toFixed(2)}s`,
+  }));
+})();
 
 export function LoginDecor() {
   return (
@@ -24,7 +36,12 @@ export function LoginDecor() {
         <span
           key={i}
           className="nl-twinkle absolute"
-          style={{ top: s.top, left: s.left, animationDelay: s.delay }}
+          style={{
+            top: s.top,
+            left: s.left,
+            animationDelay: s.delay,
+            animationDuration: s.duration,
+          }}
         >
           <Sparkle size={s.size} />
         </span>
@@ -58,11 +75,11 @@ function ScanFrame({ size }: { size: number }) {
       <span className={`${corner} right-0 top-0 rounded-tr-2xl border-r-2 border-t-2`} />
       <span className={`${corner} bottom-0 left-0 rounded-bl-2xl border-b-2 border-l-2`} />
       <span className={`${corner} bottom-0 right-0 rounded-br-2xl border-b-2 border-r-2`} />
-      {/* línea de escaneo */}
-      <span className="nl-scan-sweep absolute inset-x-3 h-0.5 rounded-full bg-[var(--color-accent-lime)] shadow-[0_0_10px_rgba(163,230,53,0.7)]" />
-      {/* lente central */}
-      <span className="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/40">
-        <span className="h-3.5 w-3.5 rounded-full border-2 border-white/50" />
+      {/* línea de escaneo — sutil (baja opacidad), se mueve todo el tiempo */}
+      <span className="nl-scan-sweep absolute inset-x-3 h-0.5 rounded-full bg-[var(--color-accent-lime)]/35 shadow-[0_0_8px_rgba(163,230,53,0.3)]" />
+      {/* código QR escaneándose en el centro */}
+      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white/85">
+        <Icon name="scan-qr-code" className="h-12 w-12" strokeWidth={1.75} />
       </span>
     </div>
   );

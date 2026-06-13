@@ -20,7 +20,7 @@ export interface NavItem {
 export const NAV_ITEMS: ReadonlyArray<NavItem> = [
   { id: 'inicio', href: '/', icon: 'home', label: 'Inicio' },
   { id: 'analizar', href: '/analizar', icon: 'scan-line', label: 'Analizar' },
-  { id: 'historial', href: '/historial', icon: 'history', label: 'Historial' },
+  { id: 'historial', href: '/historial', icon: 'salad', label: 'Catálogo' },
   { id: 'chat', href: '/chat', icon: 'chat', label: 'Chat' },
   // Redesign: en desktop el acceso a la cuenta vive en el UserMenu del sidebar;
   // en mobile es una pestaña propia.

@@ -1,19 +1,10 @@
 /**
- * `/ayuda` — FAQ + contacto (rediseño). Copy sin tecnicismos. Protegida por
- * el middleware.
+ * `/ayuda` — la Ayuda/FAQ ahora vive embebida dentro de Mi cuenta (mismo
+ * "SPA"): redirigimos al ancla #ayuda para no mantener dos renders y para que
+ * cualquier link viejo siga funcionando.
  */
-import { AppShell } from '@/components/layout/AppShell';
-import { HelpView } from '@/components/profile/HelpView';
-import { getHistorialCount } from '@/lib/products/count';
+import { redirect } from 'next/navigation';
 
-export const metadata = { title: 'Ayuda · NutriLens' };
-export const dynamic = 'force-dynamic';
-
-export default async function AyudaPage() {
-  const historialCount = await getHistorialCount();
-  return (
-    <AppShell active="perfil" historialCount={historialCount}>
-      <HelpView />
-    </AppShell>
-  );
+export default function AyudaPage() {
+  redirect('/mi-cuenta#ayuda');
 }

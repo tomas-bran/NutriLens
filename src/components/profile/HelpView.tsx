@@ -1,9 +1,10 @@
 'use client';
 
 /**
- * <HelpView> (rediseño) — Ayuda: FAQ acordeón + contacto. Copy orientado al
- * usuario, sin tecnicismos (no menciona modelos/implementación). Client por el
- * estado abierto/cerrado de cada item.
+ * <HelpSection> (rediseño) — Ayuda: FAQ acordeón + contacto. Vive embebida
+ * dentro de la página de Mi cuenta (es parte del mismo "SPA"): el link
+ * "Ayuda y preguntas frecuentes" hace scroll hasta su título (#ayuda). Copy
+ * orientado al usuario, sin tecnicismos. Client por el estado abierto/cerrado.
  */
 import Link from 'next/link';
 import { useState } from 'react';
@@ -32,16 +33,19 @@ const FAQS = [
   },
 ];
 
-export function HelpView() {
+export function HelpSection() {
   const [open, setOpen] = useState(0);
   return (
-    // Centrado respecto al área de contenido (sin sidebar): mx-auto + ancho máx.
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-2 md:px-6 md:py-6">
+    // Anclaje del scroll desde "Ayuda y preguntas frecuentes" (scroll-mt deja aire arriba).
+    <section
+      id="ayuda"
+      className="mx-auto flex w-full max-w-2xl scroll-mt-6 flex-col gap-5"
+    >
       <header className="flex flex-col gap-1 text-center">
         <p className="text-[13px] text-[var(--color-text-muted)]">Ayuda</p>
-        <h1 className="text-[26px] font-extrabold leading-tight tracking-tight text-[var(--color-text)]">
+        <h2 className="text-[26px] font-extrabold leading-tight tracking-tight text-[var(--color-text)]">
           ¿Cómo te ayudamos?
-        </h1>
+        </h2>
       </header>
 
       <div className="flex flex-col gap-2.5">
@@ -68,7 +72,7 @@ export function HelpView() {
             ¿Necesitás más ayuda?
           </div>
           <div className="mt-0.5 text-[13px] text-[var(--color-primary-strong)]">
-            Escribinos a hola@nutrilens.app
+            Escribinos a soporte@nutrilens.app
           </div>
         </div>
         <Link
@@ -79,7 +83,7 @@ export function HelpView() {
           Abrir chat
         </Link>
       </div>
-    </div>
+    </section>
   );
 }
 

@@ -29,6 +29,7 @@ export type IconName =
   | 'sparkles'
   | 'line-chart'
   | 'arrow-right'
+  | 'arrow-left'
   | 'filter'
   | 'user'
   | 'logout'
@@ -36,6 +37,9 @@ export type IconName =
   | 'chevron-down'
   | 'settings'
   | 'leaf'
+  | 'salad'
+  | 'scan-qr-code'
+  | 'more-vertical'
   // Allergens — hand-rolled glyphs (no lucide equivalents).
   | 'wheat'
   | 'wheat-off'
@@ -54,6 +58,8 @@ interface IconPathDef {
   circles?: ReadonlyArray<{ cx: number; cy: number; r: number }>;
   /** Lines as [x1, y1, x2, y2]. */
   lines?: ReadonlyArray<[number, number, number, number]>;
+  /** Rounded rects (e.g. el cuadro del QR de `scan-qr-code`). */
+  rects?: ReadonlyArray<{ x: number; y: number; w: number; h: number; rx?: number }>;
   /** Strokes that should be `fill="currentColor"` instead of `stroke=`. */
   filled?: boolean;
 }
@@ -83,8 +89,14 @@ const ICON_PATHS: Record<IconName, IconPathDef> = {
   history: {
     paths: ['M3 12a9 9 0 1 0 3-6.7', 'M3 4v5h5', 'M12 7v5l3 2'],
   },
+  // Chat IA — dos globos de diálogo + destello. messages-square (lucide) +
+  // un sparkle arriba a la derecha para el toque "asistente IA".
   chat: {
-    paths: ['M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'],
+    paths: [
+      'M16 10a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 14.286V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z',
+      'M20 9a2 2 0 0 1 2 2v10.286a.71.71 0 0 1-1.212.502l-2.202-2.202A2 2 0 0 0 17.172 19H10a2 2 0 0 1-2-2v-1',
+      'M19.5 1c.25 1.05.7 1.5 1.75 1.75-1.05.25-1.5.7-1.75 1.75-.25-1.05-.7-1.5-1.75-1.75C18.8 1.7 19.25 1.25 19.5 1z',
+    ],
   },
   camera: {
     paths: [
@@ -155,6 +167,9 @@ const ICON_PATHS: Record<IconName, IconPathDef> = {
   'arrow-right': {
     paths: ['M5 12h14', 'M13 5l7 7-7 7'],
   },
+  'arrow-left': {
+    paths: ['M19 12H5', 'm12 19-7-7 7-7'],
+  },
   // Funnel — filtros.
   filter: {
     paths: ['M22 3H2l8 9.46V19l4 2v-8.54L22 3z'],
@@ -182,6 +197,38 @@ const ICON_PATHS: Record<IconName, IconPathDef> = {
     paths: [
       'M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z',
       'M2 21c0-3 1.85-5.36 5.08-6',
+    ],
+  },
+  // Salad — catálogo de productos. Path data oficial de lucide `salad`.
+  salad: {
+    paths: [
+      'M7 21h10',
+      'M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9Z',
+      'M11.38 12a2.4 2.4 0 0 1-.4-4.77 2.4 2.4 0 0 1 3.2-2.77 2.4 2.4 0 0 1 3.47-.63 2.4 2.4 0 0 1 3.37 3.37 2.4 2.4 0 0 1-1.1 3.7 2.51 2.51 0 0 1 .03 1.1',
+      'm13 12 4-4',
+      'M10.9 7.25A3.99 3.99 0 0 0 4 10c0 .73.2 1.41.54 2',
+    ],
+  },
+  // Scan QR — lente de escaneo del login. Path data oficial de lucide `scan-qr-code`.
+  'scan-qr-code': {
+    paths: [
+      'M17 12v4a1 1 0 0 1-1 1h-4',
+      'M17 3h2a2 2 0 0 1 2 2v2',
+      'M17 8V7',
+      'M21 17v2a2 2 0 0 1-2 2h-2',
+      'M3 7V5a2 2 0 0 1 2-2h2',
+      'M7 17h.01',
+      'M7 21H5a2 2 0 0 1-2-2v-2',
+    ],
+    rects: [{ x: 7, y: 7, w: 5, h: 5, rx: 1 }],
+  },
+  // Kebab — menú de tres puntos. Path data oficial de lucide `ellipsis-vertical`.
+  'more-vertical': {
+    paths: [],
+    circles: [
+      { cx: 12, cy: 12, r: 1 },
+      { cx: 12, cy: 5, r: 1 },
+      { cx: 12, cy: 19, r: 1 },
     ],
   },
   // Wheat ear — gluten allergen. Path data oficial de lucide `wheat`
@@ -319,6 +366,9 @@ export function Icon({ name, strokeWidth = 2, className, ...rest }: IconProps) {
       ))}
       {def.circles?.map((c) => (
         <circle key={`${c.cx}-${c.cy}-${c.r}`} cx={c.cx} cy={c.cy} r={c.r} />
+      ))}
+      {def.rects?.map((r) => (
+        <rect key={`${r.x}-${r.y}-${r.w}-${r.h}`} x={r.x} y={r.y} width={r.w} height={r.h} rx={r.rx} />
       ))}
       {def.lines?.map(([x1, y1, x2, y2]) => (
         <line key={`${x1}-${y1}-${x2}-${y2}`} x1={x1} y1={y1} x2={x2} y2={y2} />

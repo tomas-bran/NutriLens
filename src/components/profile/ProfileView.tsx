@@ -17,6 +17,7 @@ import type { IconName } from '@/components/ui/Icon';
 import { signOutAction } from '@/lib/auth/actions';
 import { saveMyPrefs } from '@/lib/prefs/actions';
 import type { DietPrefs } from '@/lib/prefs/server';
+import { HelpSection } from './HelpView';
 
 export interface ProfileUser {
   name: string;
@@ -53,6 +54,14 @@ export function ProfileView({
 
   return (
     <div className="flex flex-col gap-5 px-4 py-2 md:px-6 md:py-6">
+      <Link
+        href="/"
+        className="inline-flex w-fit items-center gap-1.5 text-[13px] font-semibold text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text)]"
+      >
+        <Icon name="arrow-left" className="h-4 w-4" />
+        Volver al inicio
+      </Link>
+
       <header className="flex flex-col gap-1">
         <p className="text-[13px] text-[var(--color-text-muted)]">Perfil</p>
         <h1 className="text-[26px] font-extrabold leading-tight tracking-tight text-[var(--color-text)]">
@@ -66,6 +75,11 @@ export function ProfileView({
         <PrefsCard prefs={prefs} setPref={setPref} />
         <LinksCard analizados={stats.analizados} />
       </div>
+
+      {/* Divider entre la cuenta y la ayuda — ambas viven en la misma página. */}
+      <hr className="my-3 border-t border-[var(--color-border)]" />
+
+      <HelpSection />
     </div>
   );
 }
@@ -131,21 +145,21 @@ function PrefsCard({
         Resaltamos en cada análisis lo que te importa.
       </p>
       <PrefRow
-        icon="leaf"
+        icon="vegan"
         label="Dieta vegana"
         desc="Avisar si contiene origen animal"
         on={prefs.vegano}
         onChange={(v) => setPref('vegano', v)}
       />
       <PrefRow
-        icon="wheat"
+        icon="wheat-off"
         label="Sin gluten (celíaco)"
         desc="Avisar si contiene gluten"
         on={prefs.celiaco}
         onChange={(v) => setPref('celiaco', v)}
       />
       <PrefRow
-        icon="milk"
+        icon="milk-off"
         label="Sin lactosa"
         desc="Avisar si contiene lácteos"
         on={prefs.lactosa}
@@ -183,7 +197,7 @@ function PrefRow({
       className={`flex items-center gap-3 py-3 ${last ? '' : 'border-b border-[var(--color-border)]'}`}
     >
       <span
-        className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${on ? 'bg-[var(--color-primary-soft)] text-[var(--color-primary)]' : 'bg-[var(--color-surface)] text-[var(--color-text-muted)]'}`}
+        className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl transition-colors duration-300 ease-out ${on ? 'bg-[var(--color-primary-soft)] text-[var(--color-primary)]' : 'bg-[var(--color-surface)] text-[var(--color-text-muted)]'}`}
       >
         <Icon name={icon} className="h-[19px] w-[19px]" />
       </span>
@@ -210,19 +224,24 @@ function PrefRow({
 }
 
 function LinksCard({ analizados }: { analizados: number }) {
+  // La ayuda vive en esta misma página: scrolleamos a la sección #ayuda.
+  const scrollToAyuda = () => {
+    document.getElementById('ayuda')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
   return (
     <section className="overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white">
       <LinkRow
-        href="/historial"
-        icon="history"
+        href="/historial?filtro=mios"
+        icon="salad"
         title="Mis análisis"
         desc={`${analizados} productos guardados`}
       />
-      <LinkRow
-        href="/ayuda"
+      <RowButton
         icon="info"
+        chevron="chevron-down"
         title="Ayuda y preguntas frecuentes"
         desc="Cómo funciona NutriLens"
+        onClick={scrollToAyuda}
       />
       <form action={signOutAction}>
         <button
@@ -265,5 +284,36 @@ function LinkRow({
       </div>
       <Icon name="chevron-right" className="h-[18px] w-[18px] text-[var(--color-text-muted)]" />
     </Link>
+  );
+}
+
+function RowButton({
+  icon,
+  chevron,
+  title,
+  desc,
+  onClick,
+}: {
+  icon: IconName;
+  chevron: IconName;
+  title: string;
+  desc: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 border-b border-[var(--color-border)] px-4 py-3.5 text-left transition-colors hover:bg-[var(--color-surface)]"
+    >
+      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[var(--color-surface)] text-[var(--color-primary)]">
+        <Icon name={icon} className="h-[19px] w-[19px]" />
+      </span>
+      <div className="flex-1">
+        <div className="text-[14.5px] font-semibold text-[var(--color-text)]">{title}</div>
+        <div className="text-[12.5px] text-[var(--color-text-muted)]">{desc}</div>
+      </div>
+      <Icon name={chevron} className="h-[18px] w-[18px] text-[var(--color-text-muted)]" />
+    </button>
   );
 }

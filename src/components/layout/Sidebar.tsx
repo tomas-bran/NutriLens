@@ -57,7 +57,6 @@ function BrandBlock() {
       </span>
       <div className="flex flex-col leading-tight">
         <span className="text-base font-bold text-[var(--color-text)]">NutriLens</span>
-        <span className="text-[10px] text-[var(--color-text-muted)]">MVP · v0.1</span>
       </div>
     </div>
   );

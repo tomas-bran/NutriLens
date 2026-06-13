@@ -235,6 +235,22 @@
   will-change: transform, opacity;
 }
 
+/* Popup del menú de cuenta: crece desde la card (origin abajo) con fade. */
+@keyframes nl-menu-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.nl-menu-pop {
+  animation: nl-menu-pop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: bottom center;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-float,
   .home-rise-in,
@@ -242,7 +258,8 @@
   .home-glow,
   .nl-twinkle,
   .nl-scan-sweep,
-  .nl-pulse-ring {
+  .nl-pulse-ring,
+  .nl-menu-pop {
     animation: none;
   }
   /* Sin movimiento, dejamos los pulsos invisibles para no apilar bordes. */
