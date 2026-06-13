@@ -49,7 +49,7 @@ export function UserMenu({ name, email, image }: UserMenuProps) {
           Cuando está abierto, cuadramos las esquinas de arriba para que el menú
           y la card se vean como una sola superficie gris continua. */}
       <div
-        className={`rail-center flex items-center gap-2.5 bg-[var(--color-bg)] p-2.5 ${open ? 'rounded-b-2xl rounded-t-none border border-[var(--color-border)]' : 'rounded-[10px]'}`}
+        className={`rail-center flex items-center gap-2.5 bg-[var(--color-bg)] p-2.5 ${open ? 'rounded-b-2xl rounded-t-none border border-t-0 border-[var(--color-border)]' : 'rounded-[10px]'}`}
       >
         {/* El bloque de usuario lleva a Mi cuenta (atajo). */}
         <Link
@@ -93,7 +93,7 @@ export function UserMenu({ name, email, image }: UserMenuProps) {
         <div
           role="menu"
           aria-label="Opciones de cuenta"
-          className="nl-menu-pop absolute inset-x-0 bottom-full z-40 -mb-px overflow-hidden rounded-t-2xl border border-b-0 border-[var(--color-border)] bg-[var(--color-bg)] p-1.5 shadow-[0_-12px_32px_-12px_rgba(15,23,42,0.22)]"
+          className="nl-menu-pop absolute inset-x-0 bottom-full z-40 overflow-hidden rounded-t-2xl border border-[var(--color-border)] bg-[var(--color-bg)] p-1.5 shadow-[0_-12px_32px_-12px_rgba(15,23,42,0.22)]"
         >
           <MenuLink
             href="/mi-cuenta"
