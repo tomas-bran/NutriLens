@@ -210,11 +210,30 @@
   }
 }
 
+/* Pulso tipo "ping" que emana del lente: crece hacia afuera y se desvanece. */
+@keyframes nl-pulse-ring {
+  0% {
+    transform: scale(0.55);
+    opacity: 0.55;
+  }
+  70% {
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
 .nl-twinkle {
   animation: nl-twinkle 3.2s ease-in-out infinite;
 }
 .nl-scan-sweep {
   animation: nl-scan-sweep 2.6s ease-in-out infinite;
+}
+.nl-pulse-ring {
+  animation: nl-pulse-ring 3s ease-out infinite;
+  will-change: transform, opacity;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -223,8 +242,13 @@
   .home-gradient,
   .home-glow,
   .nl-twinkle,
-  .nl-scan-sweep {
+  .nl-scan-sweep,
+  .nl-pulse-ring {
     animation: none;
+  }
+  /* Sin movimiento, dejamos los pulsos invisibles para no apilar bordes. */
+  .nl-pulse-ring {
+    opacity: 0;
   }
   /* La entrada deja los elementos visibles aunque no anime. */
   .home-rise-in {
