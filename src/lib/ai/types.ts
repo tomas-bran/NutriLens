@@ -74,4 +74,14 @@ export interface IaProvider {
     products: SavedProductLite[],
     opts: AnswerOpts,
   ): Promise<IaCallResult>;
+  /**
+   * NL-304: igual que `answerWithContext` pero streameando deltas de texto.
+   * El caller acumula y sanitiza al final (la sanitización opera sobre el
+   * texto completo).
+   */
+  answerWithContextStream(
+    question: string,
+    products: SavedProductLite[],
+    opts: AnswerOpts,
+  ): AsyncIterable<string>;
 }
