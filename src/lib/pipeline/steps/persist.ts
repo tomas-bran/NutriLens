@@ -15,7 +15,10 @@
  * normal dedup path.
  */
 import { Prisma } from '@prisma/client';
+import type { IaProvider } from '@/lib/ai/types';
 import { prisma } from '@/lib/db';
+import { buildProductEmbeddingText } from '@/lib/rag/embedding-text';
+import { upsertProductEmbedding } from '@/lib/rag/vector';
 import { logger } from '@/lib/logger';
 import type { AnalysisContext } from '@/lib/pipeline/context';
 import { makeTrace } from '@/lib/pipeline/trace';
@@ -24,7 +27,16 @@ import { getStorage } from '@/lib/storage';
 
 const PROMPT_VERSION = 'extract_product-v1' as const;
 
-export async function persist(ctx: AnalysisContext): Promise<AnalysisContext> {
+export interface PersistDeps {
+  /** NL-401: provider para embeber el producto al guardarlo. Opcional —
+   *  sin provider (tests viejos, scripts) el embedding queda para backfill. */
+  ia?: IaProvider;
+}
+
+export async function persist(
+  ctx: AnalysisContext,
+  deps: PersistDeps = {},
+): Promise<AnalysisContext> {
   const startedAt = new Date();
   if (!ctx.product || !ctx.rules || !ctx.extractionRaw) {
     throw new Error('persist: context not ready (product/rules/extractionRaw missing)');
@@ -127,6 +139,34 @@ export async function persist(ctx: AnalysisContext): Promise<AnalysisContext> {
     productId: saved.id,
     riesgo: saved.riesgo,
   });
+
+  // NL-401: embedding del producto recién guardado. Fail-open SIEMPRE — un
+  // embedding faltante se recupera con el backfill; un análisis caído por
+  // el embedding, no.
+  if (deps.ia) {
+    try {
+      const { vector } = await deps.ia.embed(
+        buildProductEmbeddingText({
+          nombre: ctx.product.producto,
+          categoria: ctx.product.categoria,
+          ingredientes: ctx.product.ingredientes_detectados,
+          alergenos: ctx.product.alergenos,
+          sellos: ctx.product.sellos,
+          aptoVegano: ctx.rules.apto_vegano,
+          aptoCeliaco: ctx.rules.apto_celiaco,
+          aptoSinLactosa: ctx.rules.apto_sin_lactosa,
+        }),
+      );
+      await upsertProductEmbedding(saved.id, vector);
+      logger.info('persist.embedded', { requestId: ctx.requestId, productId: saved.id });
+    } catch (err) {
+      logger.warn('persist.embed_failed', {
+        requestId: ctx.requestId,
+        productId: saved.id,
+        message: err instanceof Error ? err.message : 'unknown',
+      });
+    }
+  }
 
   return {
     ...ctx,

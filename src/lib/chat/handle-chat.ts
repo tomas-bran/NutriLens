@@ -115,7 +115,7 @@ export async function handleChat(
     };
   }
 
-  const products = await retrieve(intent);
+  const products = await retrieve(intent, { ia, question });
   logger.info('chat.retrieved', { requestId, count: products.length });
 
   // US-30 / §7: retrieve vacío — no answer.
