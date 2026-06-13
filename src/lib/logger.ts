@@ -26,10 +26,10 @@ function emit(level: LogLevel, event: string, fields: BaseFields = {}) {
   const stream = level === 'warn' || level === 'error' ? process.stderr : process.stdout;
   if (stream && typeof stream.write === 'function') {
     stream.write(payload + '\n');
-  } else if (level === 'warn' || level === 'error') {
-    console.error(payload);
   } else {
-    console.log(payload);
+    // Edge/browser: sin process streams. console.warn está permitido por el
+    // lint (no-console) y sirve igual como salida estructurada de diagnóstico.
+    console.warn(payload);
   }
 }
 
