@@ -62,17 +62,38 @@ export function Hero() {
   );
 }
 
-/** Desfasajes de los anillos para que el ripple salga continuo. */
-const PULSE_RINGS = ['0s', '1s', '2s'];
+/**
+ * Las 3 olas: cada anillo arranca su expansión con un desfasaje distinto, así
+ * sale una ola nueva cada ~0.8s (animación de 2.4s ÷ 3) de forma continua.
+ */
+const PULSE_RINGS = ['0s', '0.8s', '1.6s'];
 
-/** Estrellitas que titilan en distintas posiciones alrededor del lente. */
-const LENS_SPARKLES = [
-  { top: '0%', left: '6%', cls: 'h-5 w-5', delay: '0s' },
-  { top: '12%', left: '90%', cls: 'h-3.5 w-3.5', delay: '0.9s' },
-  { top: '72%', left: '-4%', cls: 'h-4 w-4', delay: '1.5s' },
-  { top: '88%', left: '80%', cls: 'h-4 w-4', delay: '0.4s' },
-  { top: '46%', left: '98%', cls: 'h-3 w-3', delay: '2.1s' },
-];
+/** PRNG sembrado (mulberry32): scatter "random" pero estable entre renders
+ * — evita hydration mismatch y layout jank. Cambiar SEED regenera el patrón. */
+function mulberry32(seed: number): () => number {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Estrellitas que titilan en posiciones y tamaños pseudo-aleatorios, acotados
+ * a un umbral prolijo: dispersas alrededor del lente (-6%..96%), tamaño 11-22px,
+ * delay y duración variados para que parpadeen desacompasadas.
+ */
+const LENS_SPARKLES = (() => {
+  const rand = mulberry32(0x5eed);
+  return Array.from({ length: 7 }, () => ({
+    top: `${Math.round(rand() * 102 - 6)}%`,
+    left: `${Math.round(rand() * 102 - 6)}%`,
+    size: Math.round(11 + rand() * 11),
+    delay: `${(rand() * 2.8).toFixed(2)}s`,
+    duration: `${(2.6 + rand() * 1.8).toFixed(2)}s`,
+  }));
+})();
 
 /**
  * Contained scanner-lens illustration on the right of the hero.
@@ -87,11 +108,12 @@ function DecorLens() {
       <div className="relative h-44 w-44">
         <div className="absolute inset-0 rounded-full bg-white/10" />
         <div className="absolute inset-5 rounded-full bg-white/20" />
-        {/* Pulsos que emanan del lente — el efecto "tira pulsos" de una cámara. */}
+        {/* Pulsos que emanan del lente — cada anillo es una ola que viaja hacia
+            afuera (el efecto "tira pulsos" de una cámara escaneando). */}
         {PULSE_RINGS.map((delay) => (
           <span
             key={delay}
-            className="nl-pulse-ring absolute inset-10 rounded-full border-2 border-white/60"
+            className="nl-pulse-ring absolute inset-10 rounded-full border-2 border-white/70"
             style={{ animationDelay: delay }}
           />
         ))}
@@ -99,13 +121,23 @@ function DecorLens() {
           <Icon name="camera" className="h-12 w-12 text-[var(--color-primary)]" />
         </div>
         {/* Estrellitas que aparecen y desaparecen en distintas posiciones. */}
-        {LENS_SPARKLES.map((s) => (
+        {LENS_SPARKLES.map((s, i) => (
           <span
-            key={`${s.top}-${s.left}`}
+            key={i}
             className="nl-twinkle absolute text-[var(--color-accent-lime)]"
-            style={{ top: s.top, left: s.left, animationDelay: s.delay }}
+            style={{
+              top: s.top,
+              left: s.left,
+              animationDelay: s.delay,
+              animationDuration: s.duration,
+            }}
           >
-            <Icon name="sparkles" className={s.cls} strokeWidth={0} fill="currentColor" />
+            <Icon
+              name="sparkles"
+              strokeWidth={0}
+              fill="currentColor"
+              style={{ width: s.size, height: s.size }}
+            />
           </span>
         ))}
       </div>
