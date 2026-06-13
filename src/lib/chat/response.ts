@@ -8,6 +8,7 @@
 import type { Product as PrismaProduct } from '@prisma/client';
 import type { Categoria, Riesgo } from '@schemas/product';
 import { mapCategoriaFromPrisma } from '@/lib/products/serializers';
+import { resolveImageUrl } from '@/lib/storage';
 import type { ChatIntent } from '@/lib/chat/intent-schema';
 import type { ChatFallback } from '@/lib/chat/empty-response';
 
@@ -25,6 +26,8 @@ export interface ChatApiResponse {
   intent: ChatIntent;
   tokensUsed: { in: number; out: number };
   fallback: ChatFallback | null;
+  /** Pills de seguimiento contextuales (NL-503); null => la UI usa el set estático. */
+  suggestions: string[] | null;
 }
 
 export function toChatProductRef(p: PrismaProduct): ChatProductRef {
@@ -33,6 +36,6 @@ export function toChatProductRef(p: PrismaProduct): ChatProductRef {
     nombre: p.nombre,
     categoria: mapCategoriaFromPrisma(p.categoria),
     riesgo: p.riesgo as Riesgo,
-    imagenUrl: p.imagenPath,
+    imagenUrl: resolveImageUrl(p.imagenPath),
   };
 }

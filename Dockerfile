@@ -21,6 +21,8 @@ RUN npm ci --no-audit --no-fund && npx prisma generate
 FROM node:20-alpine AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
+# Enables `output: 'standalone'` in next.config.mjs (only wanted in Docker).
+ENV BUILD_STANDALONE=1
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/prisma ./prisma
