@@ -38,8 +38,11 @@ export type IconName =
   | 'leaf'
   // Allergens — hand-rolled glyphs (no lucide equivalents).
   | 'wheat'
+  | 'wheat-off'
   | 'milk'
+  | 'milk-off'
   | 'egg'
+  | 'vegan'
   | 'soy'
   | 'fish'
   | 'nut'
@@ -195,13 +198,45 @@ const ICON_PATHS: Record<IconName, IconPathDef> = {
       'M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z',
     ],
   },
+  // Wheat-off — "sin gluten / sin TACC". Path data oficial de lucide `wheat-off`.
+  'wheat-off': {
+    paths: [
+      'm2 22 10-10',
+      'm16 8-1.17 1.17',
+      'M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z',
+      'm8 8-.53.53a3.5 3.5 0 0 0 0 4.94L9 15l1.53-1.53c.55-.55.88-1.25.98-1.97',
+      'M10.91 5.26c.15-.26.34-.51.56-.73L13 3l1.53 1.53a3.5 3.5 0 0 1 .28 4.62',
+      'M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z',
+      'M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z',
+      'm16 16-.53.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.49 3.49 0 0 1 1.97-.98',
+      'M18.74 13.09c.26-.15.51-.34.73-.56L21 11l-1.53-1.53a3.5 3.5 0 0 0-4.62-.28',
+    ],
+    lines: [[2, 2, 22, 22]],
+  },
   // Milk carton — leche allergen.
   milk: {
     paths: ['M8 2h8', 'M8 2v3l-2 3v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8l-2-3V2', 'M8 14h8'],
   },
+  // Milk-off — "sin lactosa". Path data oficial de lucide `milk-off`.
+  'milk-off': {
+    paths: [
+      'M8 2h8',
+      'M9 2v1.343M15 2v2.789a4 4 0 0 0 .672 2.219l.656.984a4 4 0 0 1 .672 2.22v1.131M7.8 7.8l-.128.192A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-3',
+      'M7 15a6.47 6.47 0 0 1 5 0 6.472 6.472 0 0 0 3.435.435',
+    ],
+    lines: [[2, 2, 22, 22]],
+  },
   // Egg — huevo allergen.
   egg: {
     paths: ['M12 22a7 7 0 0 1-7-7c0-5 3-13 7-13s7 8 7 13a7 7 0 0 1-7 7z'],
+  },
+  // Vegan — sello "vegano". Path data oficial de lucide `vegan`.
+  vegan: {
+    paths: [
+      'M16 8q6 0 6-6-6 0-6 6',
+      'M17.41 3.59a10 10 0 1 0 3 3',
+      'M2 2a26.6 26.6 0 0 1 10 20c.9-6.82 1.5-9.5 4-14',
+    ],
   },
   // Soy bean — soja allergen. Two beans inside a pod.
   soy: {

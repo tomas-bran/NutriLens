@@ -29,9 +29,9 @@ interface Chip {
 }
 
 const CHIPS: Chip[] = [
-  { icon: 'wheat', label: 'Sin gluten', top: '12%', right: '8%', delay: '0s', duration: '6s' },
+  { icon: 'wheat-off', label: 'Sin gluten', top: '12%', right: '8%', delay: '0s', duration: '6s' },
   {
-    icon: 'milk',
+    icon: 'milk-off',
     label: 'Sin lactosa',
     top: '80%',
     right: '29%',
@@ -40,7 +40,7 @@ const CHIPS: Chip[] = [
     scale: '0.92',
   },
   {
-    icon: 'egg',
+    icon: 'vegan',
     label: 'Vegano',
     top: '30%',
     right: '38%',
