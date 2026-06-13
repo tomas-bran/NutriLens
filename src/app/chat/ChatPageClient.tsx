@@ -205,7 +205,7 @@ export function ChatPageClient({
         <div className="flex-1 overflow-y-auto pb-2">
           {!hasMessages && state.status !== 'THINKING' ? (
             <div className="flex flex-col gap-6">
-              <ChatHero onPick={handleSubmit} />
+              <ChatHero onPick={handleSubmit} productsInBase={productsInBase} />
               {initialConversations.length > 0 && (
                 <ConversationList
                   conversations={initialConversations}

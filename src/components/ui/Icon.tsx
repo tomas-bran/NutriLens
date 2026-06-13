@@ -41,6 +41,7 @@ export type IconName =
   | 'salad'
   | 'scan-qr-code'
   | 'more-vertical'
+  | 'search-sparkle'
   // Allergens — hand-rolled glyphs (no lucide equivalents).
   | 'wheat'
   | 'wheat-off'
@@ -234,6 +235,15 @@ const ICON_PATHS: Record<IconName, IconPathDef> = {
       { cx: 12, cy: 5, r: 1 },
       { cx: 12, cy: 19, r: 1 },
     ],
+  },
+  // Lupa con destellos — "Más sugerencias" (IA). Lente + mango + 2 sparkles.
+  'search-sparkle': {
+    paths: [
+      'm21 21-4.3-4.3',
+      'M10 7c.2 1.1.9 1.8 2 2-1.1.2-1.8.9-2 2-.2-1.1-.9-1.8-2-2 1.1-.2 1.8-.9 2-2z',
+      'M18 3c.22 1.1.7 1.58 1.8 1.8-1.1.22-1.58.7-1.8 1.8-.22-1.1-.7-1.58-1.8-1.8 1.1-.22 1.58-.7 1.8-1.8z',
+    ],
+    circles: [{ cx: 10, cy: 10, r: 7 }],
   },
   // Wheat ear — gluten allergen. Path data oficial de lucide `wheat`
   // (lucide-static v1.18.0) — espigas en diagonal sobre el tallo.

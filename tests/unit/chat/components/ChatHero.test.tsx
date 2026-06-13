@@ -8,7 +8,7 @@ describe('<ChatHero> — sugerencias iniciales (spec §9.5)', () => {
   it('muestra el copy del hero', () => {
     render(<ChatHero onPick={vi.fn()} />);
     expect(screen.getByText('Preguntame sobre tus productos')).toBeInTheDocument();
-    expect(screen.getByText(/Respondo usando los productos/)).toBeInTheDocument();
+    expect(screen.getByText(/Respondo usando solo los productos/)).toBeInTheDocument();
   });
 
   it('lista las 4 sugerencias canónicas', () => {

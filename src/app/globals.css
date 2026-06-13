@@ -331,6 +331,23 @@ html {
   transform-origin: bottom center;
 }
 
+/* Lupa "buscando": wobble + escala mientras se regeneran las sugerencias. */
+@keyframes nl-lupa-loading {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  35% {
+    transform: scale(1.18) rotate(-14deg);
+  }
+  70% {
+    transform: scale(1.05) rotate(10deg);
+  }
+}
+.nl-lupa-loading {
+  animation: nl-lupa-loading 0.9s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-float,
   .home-rise-in,
@@ -339,7 +356,8 @@ html {
   .nl-twinkle,
   .nl-scan-sweep,
   .nl-pulse-ring,
-  .nl-menu-pop {
+  .nl-menu-pop,
+  .nl-lupa-loading {
     animation: none;
   }
   /* Sin movimiento, dejamos los pulsos invisibles para no apilar bordes. */
