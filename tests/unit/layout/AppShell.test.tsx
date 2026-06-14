@@ -103,14 +103,16 @@ describe('<AppShell> — sidebar (desktop)', () => {
     expect(screen.getByTestId('nav-historial')).toHaveTextContent('24');
   });
 
-  it('renderiza la team card al pie del sidebar', () => {
+  it('monta el slot de usuario (<SidebarUser>) al pie del sidebar', () => {
+    // El footer del sidebar es ahora <SidebarUser> (server component async que
+    // resuelve la sesión; NL-201). En tests está stubeado en setup.ts, así que
+    // acá verificamos la estructura del shell, no su contenido.
     render(
       <AppShell>
         <p>x</p>
       </AppShell>,
     );
-    expect(screen.getByText('Equipo NutriLens')).toBeInTheDocument();
-    expect(screen.getByText(/4 · UNLaM/)).toBeInTheDocument();
+    expect(screen.getByTestId('app-sidebar')).toBeInTheDocument();
   });
 
   it('el sidebar es fixed (totalmente anclado) y se oculta en mobile (hidden md:flex)', () => {
