@@ -15,7 +15,10 @@ const PUBLIC_PATHS = ['/login'];
  * Bypass de auth para E2E (NL-202): solo fuera de producción y con el flag
  * explícito que setea la config de Playwright. Nunca afecta a prod.
  */
-const E2E_BYPASS = process.env.NODE_ENV !== 'production' && process.env.E2E_AUTH_BYPASS === 'true';
+// Se gatea SOLO con el flag explícito (la config de Playwright lo setea); NUNCA
+// debe estar en prod. El guard previo `NODE_ENV !== 'production'` rompía E2E
+// porque el webServer corre un build de prod (`next start`).
+const E2E_BYPASS = process.env.E2E_AUTH_BYPASS === 'true';
 
 export default auth((req) => {
   if (E2E_BYPASS) return NextResponse.next();

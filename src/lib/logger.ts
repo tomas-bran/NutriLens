@@ -22,7 +22,13 @@ function emit(level: LogLevel, event: string, fields: BaseFields = {}) {
       ...fields,
     }) + '\n';
   const stream = level === 'warn' || level === 'error' ? process.stderr : process.stdout;
-  stream.write(line);
+  // En el runtime Edge (middleware) y en el browser, `process.std*` no existen.
+  // Caemos a `console.warn` (permitido por el no-console) para no romper.
+  if (stream && typeof stream.write === 'function') {
+    stream.write(line);
+    return;
+  }
+  console.warn(line.trimEnd());
 }
 
 export const logger = {

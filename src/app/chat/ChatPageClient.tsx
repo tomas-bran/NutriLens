@@ -11,7 +11,6 @@
 
 import { useCallback, useRef, useReducer } from 'react';
 import { ApiError } from '@schemas/errors';
-import { AppShell } from '@/components/layout/AppShell';
 import { ChatErrorBanner } from '@/components/chat/ChatErrorBanner';
 import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatHero } from '@/components/chat/ChatHero';
@@ -27,7 +26,6 @@ import { ConversationList } from '@/components/chat/ConversationList';
 
 interface ChatPageClientProps {
   productsInBase: number;
-  historialCount: number;
   /** Pre-loaded conversation list (SSR) for the initial empty state. */
   initialConversations?: ConversationSummary[];
   /** Inyectable para tests. */
@@ -105,7 +103,6 @@ const INITIAL_STATE: State = {
 
 export function ChatPageClient({
   productsInBase,
-  historialCount,
   initialConversations = [],
   fetchImpl = fetchChat,
 }: ChatPageClientProps) {
@@ -201,54 +198,51 @@ export function ChatPageClient({
   const inputDisabled = state.status === 'THINKING';
 
   return (
-    <AppShell active="chat" historialCount={historialCount}>
-      <div className="flex h-full flex-col gap-4 md:min-h-[calc(100vh-2rem)]">
-        <ChatHeader
-          productsInBase={productsInBase}
-          hasMessages={hasMessages}
-          onReset={handleReset}
-        />
+    // AppShell lo renderiza el server `ChatPage` (envuelve esto como children).
+    // Si lo renderizáramos acá (cliente) meteríamos a <SidebarUser> (async server
+    // component) dentro de un árbol cliente → "uncached promise" / loop infinito.
+    <div className="flex h-full flex-col gap-4 md:min-h-[calc(100vh-2rem)]">
+      <ChatHeader productsInBase={productsInBase} hasMessages={hasMessages} onReset={handleReset} />
 
-        <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-          <div className="flex-1 overflow-y-auto pb-2">
-            {!hasMessages && state.status !== 'THINKING' ? (
-              <div className="flex flex-col gap-6">
-                <ChatHero onPick={handleSubmit} />
-                {initialConversations.length > 0 && (
-                  <ConversationList
-                    conversations={initialConversations}
-                    onOpen={handleLoadConversation}
-                    onDelete={handleReset}
-                  />
-                )}
-              </div>
-            ) : (
-              <ChatThread messages={state.messages} status={state.status} />
-            )}
-          </div>
+      <div className="flex flex-1 flex-col gap-4 overflow-hidden">
+        <div className="flex-1 overflow-y-auto pb-2">
+          {!hasMessages && state.status !== 'THINKING' ? (
+            <div className="flex flex-col gap-6">
+              <ChatHero onPick={handleSubmit} />
+              {initialConversations.length > 0 && (
+                <ConversationList
+                  conversations={initialConversations}
+                  onOpen={handleLoadConversation}
+                  onDelete={handleReset}
+                />
+              )}
+            </div>
+          ) : (
+            <ChatThread messages={state.messages} status={state.status} />
+          )}
+        </div>
 
-          {state.error && state.status === 'ERROR' && (
-            <ChatErrorBanner
-              message={state.error}
-              onRetry={handleRetry}
-              canRetry={state.lastUserQuestion !== null}
+        {state.error && state.status === 'ERROR' && (
+          <ChatErrorBanner
+            message={state.error}
+            onRetry={handleRetry}
+            canRetry={state.lastUserQuestion !== null}
+          />
+        )}
+
+        <div className="sticky bottom-0 bg-[var(--color-bg)] pt-2">
+          {hasMessages && state.status === 'IDLE' && (
+            <SuggestionPills
+              onPick={handleSubmit}
+              suggestions={state.suggestions}
+              lastQuestion={state.lastUserQuestion}
+              className="mb-2"
             />
           )}
-
-          <div className="sticky bottom-0 bg-[var(--color-bg)] pt-2">
-            {hasMessages && state.status === 'IDLE' && (
-              <SuggestionPills
-                onPick={handleSubmit}
-                suggestions={state.suggestions}
-                lastQuestion={state.lastUserQuestion}
-                className="mb-2"
-              />
-            )}
-            <ChatInput onSubmit={handleSubmit} disabled={inputDisabled} />
-          </div>
+          <ChatInput onSubmit={handleSubmit} disabled={inputDisabled} />
         </div>
       </div>
-    </AppShell>
+    </div>
   );
 }
 

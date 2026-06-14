@@ -6,10 +6,15 @@
  */
 import { auth } from '@/lib/auth';
 
-/** Usuario fijo para el bypass de E2E (ver middleware). Solo no-producción. */
+/** Usuario fijo para el bypass de E2E (ver middleware). */
 const E2E_USER_ID = 'e2e-test-user';
+// Se gatea SOLO con el flag explícito `E2E_AUTH_BYPASS`, que la config de
+// Playwright setea y que NUNCA debe estar en las App Settings de prod. (Antes
+// exigía además `NODE_ENV !== 'production'`, pero el webServer de E2E corre un
+// build de producción (`next start`), así que ese guard desactivaba el bypass
+// y todas las rutas protegidas redirigían a /login → E2E roto.)
 function e2eBypass(): boolean {
-  return process.env.NODE_ENV !== 'production' && process.env.E2E_AUTH_BYPASS === 'true';
+  return process.env.E2E_AUTH_BYPASS === 'true';
 }
 
 export class Unauthorized extends Error {
