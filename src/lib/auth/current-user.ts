@@ -8,13 +8,13 @@ import { auth } from '@/lib/auth';
 
 /** Usuario fijo para el bypass de E2E (ver middleware). */
 const E2E_USER_ID = 'e2e-test-user';
-// Se gatea SOLO con el flag explícito `E2E_AUTH_BYPASS`, que la config de
-// Playwright setea y que NUNCA debe estar en las App Settings de prod. (Antes
-// exigía además `NODE_ENV !== 'production'`, pero el webServer de E2E corre un
-// build de producción (`next start`), así que ese guard desactivaba el bypass
-// y todas las rutas protegidas redirigían a /login → E2E roto.)
+// Se activa con el flag explícito `E2E_AUTH_BYPASS` y NUNCA en un deploy real:
+// `WEBSITE_HOSTNAME` lo setea siempre Azure App Service, así que aunque el flag
+// se filtrara a las App Settings de prod, el bypass queda desactivado. (No
+// usamos NODE_ENV porque el webServer de E2E corre un build de prod `next
+// start` → NODE_ENV=production, y eso desactivaba el bypass → E2E roto.)
 function e2eBypass(): boolean {
-  return process.env.E2E_AUTH_BYPASS === 'true';
+  return process.env.E2E_AUTH_BYPASS === 'true' && !process.env.WEBSITE_HOSTNAME;
 }
 
 export class Unauthorized extends Error {

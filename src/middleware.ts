@@ -15,10 +15,12 @@ const PUBLIC_PATHS = ['/login'];
  * Bypass de auth para E2E (NL-202): solo fuera de producción y con el flag
  * explícito que setea la config de Playwright. Nunca afecta a prod.
  */
-// Se gatea SOLO con el flag explícito (la config de Playwright lo setea); NUNCA
-// debe estar en prod. El guard previo `NODE_ENV !== 'production'` rompía E2E
-// porque el webServer corre un build de prod (`next start`).
-const E2E_BYPASS = process.env.E2E_AUTH_BYPASS === 'true';
+// Bypass de auth para E2E: se activa con el flag explícito y NUNCA en un deploy
+// real. `WEBSITE_HOSTNAME` lo setea siempre Azure App Service, así que aunque el
+// flag se filtrara a las App Settings de prod, el bypass queda desactivado.
+// (No usamos NODE_ENV porque el webServer de E2E corre un build de prod
+// `next start` → NODE_ENV=production, y eso desactivaba el bypass.)
+const E2E_BYPASS = process.env.E2E_AUTH_BYPASS === 'true' && !process.env.WEBSITE_HOSTNAME;
 
 export default auth((req) => {
   if (E2E_BYPASS) return NextResponse.next();
