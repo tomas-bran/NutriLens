@@ -16,6 +16,7 @@ import { useCallback, useEffect, useReducer, useRef } from 'react';
 import { AnalyzingPanel } from '@/components/upload/AnalyzingPanel';
 import { Dropzone } from '@/components/upload/Dropzone';
 import { HiddenFileInputs } from '@/components/upload/HiddenFileInputs';
+import { ObservablePipeline } from '@/components/upload/ObservablePipeline';
 import { Card } from '@/components/ui/Card';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { useToast } from '@/components/ui/Toaster';
@@ -217,15 +218,20 @@ export function UploadFlow() {
     );
   }
 
+  // Idle/seleccionado: dropzone (col 1) + pipeline observable (col 2), como en
+  // el diseño — el usuario ve qué pasos hará el análisis antes de arrancar.
   return (
-    <Dropzone
-      state={state}
-      onFileSelected={handleFileSelected}
-      onSubmit={handleSubmit}
-      onClear={() => dispatch({ type: 'CLEAR' })}
-      cameraInputRef={cameraInputRef}
-      galleryInputRef={galleryInputRef}
-      pdfInputRef={pdfInputRef}
-    />
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.3fr_1fr] lg:items-stretch">
+      <Dropzone
+        state={state}
+        onFileSelected={handleFileSelected}
+        onSubmit={handleSubmit}
+        onClear={() => dispatch({ type: 'CLEAR' })}
+        cameraInputRef={cameraInputRef}
+        galleryInputRef={galleryInputRef}
+        pdfInputRef={pdfInputRef}
+      />
+      <ObservablePipeline />
+    </div>
   );
 }

@@ -34,15 +34,14 @@ describe('<UploadFlow> — IDLE', () => {
   it('renders the dropzone with prompt text', () => {
     render(<UploadFlow />);
     expect(screen.getByTestId('dropzone')).toBeInTheDocument();
-    expect(screen.getByText(/Arrastrá una foto o PDF/i)).toBeInTheDocument();
+    expect(screen.getByText(/Arrastrá una foto/i)).toBeInTheDocument();
   });
 
-  it('renders the 3 upload CTAs from wireframe D01 (Cámara / Galería / PDF)', () => {
+  it('renders the upload CTAs (Cámara / Galería)', () => {
     render(<UploadFlow />);
     expect(screen.getByTestId('upload-cta-group')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Cámara/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Galería/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /PDF/ })).toBeInTheDocument();
   });
 
   it('exposes 3 distinct file inputs with the right accept semantics', () => {
@@ -78,7 +77,7 @@ describe('<UploadFlow> — selecting a valid file', () => {
     await user.click(screen.getByRole('button', { name: 'Elegir otro archivo' }));
 
     expect(screen.queryByText('Archivo cargado')).not.toBeInTheDocument();
-    expect(screen.getByText(/Arrastrá una foto o PDF/i)).toBeInTheDocument();
+    expect(screen.getByText(/Arrastrá una foto/i)).toBeInTheDocument();
   });
 });
 

@@ -20,6 +20,7 @@ export type IconName =
   | 'image'
   | 'file-text'
   | 'cloud-upload'
+  | 'upload'
   | 'check'
   | 'circle-alert'
   | 'triangle-alert'
@@ -116,6 +117,10 @@ const ICON_PATHS: Record<IconName, IconPathDef> = {
   },
   'cloud-upload': {
     paths: ['M12 13v8', 'M9 16l3-3 3 3', 'M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25'],
+  },
+  // Bandeja con flecha hacia arriba (lucide `upload`).
+  upload: {
+    paths: ['M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4', 'M17 8l-5-5-5 5', 'M12 3v12'],
   },
   check: {
     paths: ['M20 6L9 17l-5-5'],

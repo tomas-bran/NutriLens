@@ -42,7 +42,7 @@ export function validateClientFile(file: File): ValidationResult {
     return {
       ok: false,
       error: 'unsupported_file_type',
-      reason: 'Formato no soportado. Subí una imagen (JPG/PNG) o un PDF.',
+      reason: 'Formato no soportado. Subí una imagen (JPG/PNG).',
     };
   }
 
@@ -52,7 +52,7 @@ export function validateClientFile(file: File): ValidationResult {
     return {
       ok: false,
       error: 'unsupported_file_type',
-      reason: 'Formato no soportado. Subí una imagen (JPG/PNG) o un PDF.',
+      reason: 'Formato no soportado. Subí una imagen (JPG/PNG).',
     };
   }
 

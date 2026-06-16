@@ -20,7 +20,6 @@ export default async function AnalizarPage() {
     <AppShell active="analizar" historialCount={historialCount}>
       <div className="flex flex-col gap-6 px-4 py-2 md:px-6 md:py-6">
         <header className="hidden flex-col gap-1 md:flex">
-          <p className="text-[13px] text-[var(--color-text-muted)]">Hola</p>
           <h1 className="text-[26px] font-bold leading-tight text-[var(--color-text)]">
             ¿Qué vamos a analizar hoy?
           </h1>

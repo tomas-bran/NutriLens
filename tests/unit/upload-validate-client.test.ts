@@ -84,7 +84,6 @@ describe('validateClientFile — unsupported MIME', () => {
     if (!result.ok) {
       expect(result.error).toBe('unsupported_file_type');
       expect(result.reason).toContain('JPG/PNG');
-      expect(result.reason).toContain('PDF');
     }
   });
 

@@ -10,31 +10,13 @@
  */
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { cn } from '@/lib/cn';
+import { PIPELINE_STEPS, PIPELINE_STEPS_COUNT } from './pipeline-steps';
 
 export type PipelineStepStatus = 'done' | 'active' | 'pending';
 
-export interface PipelineStep {
-  id: string;
-  title: string;
-  /** Optional secondary line — used by the active step in the wireframe. */
-  subtitle?: string;
-  pendingIcon: IconName;
-}
+const STEPS = PIPELINE_STEPS;
 
-const STEPS: ReadonlyArray<PipelineStep> = [
-  { id: 'validate', title: 'Validación de etiqueta', pendingIcon: 'check' },
-  { id: 'extract', title: 'Leyendo la etiqueta', pendingIcon: 'check' },
-  {
-    id: 'allergens',
-    title: 'Clasificando alérgenos…',
-    subtitle: 'Identificando ingredientes y sellos.',
-    pendingIcon: 'check',
-  },
-  { id: 'risk', title: 'Cálculo de riesgo', pendingIcon: 'shield-check' },
-  { id: 'explain', title: 'Generar explicación + guardar', pendingIcon: 'sparkles' },
-];
-
-export const PIPELINE_STEPS_COUNT = STEPS.length;
+export { PIPELINE_STEPS_COUNT };
 
 export interface PipelineStepperProps {
   /**
@@ -73,7 +55,7 @@ function statusFor(stepIdx: number, currentIdx: number): PipelineStepStatus {
 }
 
 interface StepCardProps {
-  step: PipelineStep;
+  step: (typeof STEPS)[number];
   status: PipelineStepStatus;
 }
 
@@ -100,9 +82,9 @@ function StepCard({ step, status }: StepCardProps) {
           {step.title}
         </p>
         {status === 'done' && <p className="text-[10px] text-[var(--color-text-muted)]">Listo</p>}
-        {status === 'active' && step.subtitle && (
-          <p className="text-[10px] font-medium text-[var(--color-primary-strong)]">
-            {step.subtitle}
+        {status === 'active' && (
+          <p className="font-mono text-[10px] font-medium text-[var(--color-primary-strong)]">
+            {step.detail}
           </p>
         )}
       </div>
