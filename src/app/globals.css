@@ -331,6 +331,16 @@ html {
   transform-origin: bottom center;
 }
 
+/* Aguja del medidor de riesgo (RiskGauge): barre del centro al ángulo. */
+.nl-gauge-needle {
+  transition: transform 1.2s cubic-bezier(0.34, 1.4, 0.5, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nl-gauge-needle {
+    transition: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-float,
   .home-rise-in,

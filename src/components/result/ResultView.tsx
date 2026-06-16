@@ -9,7 +9,7 @@
  * `ProductDetail` from Prisma and passes it in.
  */
 import { AllergenList } from './AllergenList';
-import { AptitudesChips } from './AptitudesChips';
+import { AptitudeRows } from './AptitudeRows';
 import { ExplanationCard } from './ExplanationCard';
 import { IngredientList } from './IngredientList';
 import { JsonViewer } from './JsonViewer';
@@ -17,7 +17,7 @@ import { LowConfidenceBanner } from './LowConfidenceBanner';
 import { PipelineTrace } from './PipelineTrace';
 import { ProductImageCard } from './ProductImageCard';
 import { ResultHeader, type ResultHeaderBackAction } from './ResultHeader';
-import { RiskBanner } from './RiskBanner';
+import { RiskHero } from './RiskHero';
 import { SelloChips } from './SelloChips';
 import { Disclaimer } from '@/components/ui/Disclaimer';
 import type { ProductDetail } from '@/lib/products/serializers';
@@ -58,12 +58,14 @@ export function ResultView({
 
       {showLowConfidence && <LowConfidenceBanner />}
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-[1fr_1.6fr]">
-        <ProductImageCard product={product} />
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-[1fr_1.6fr] md:items-start">
+        <div className="flex flex-col gap-5">
+          <ProductImageCard product={product} />
+          <RiskHero product={product} />
+        </div>
 
         <div className="flex flex-col gap-5">
-          <RiskBanner product={product} />
-          <AptitudesChips product={product} />
+          <AptitudeRows product={product} />
           <ExplanationCard explanation={product.explanation} />
           <AllergenList allergens={product.alergenos} />
           <SelloChips sellos={product.sellos} />

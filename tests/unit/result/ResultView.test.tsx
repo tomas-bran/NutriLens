@@ -57,7 +57,6 @@ describe('<ResultView> — risk banner (§6.2, all three levels)', () => {
     const banner = screen.getByTestId('risk-banner');
     expect(banner).toHaveAttribute('data-risk', 'bajo');
     expect(within(banner).getByRole('heading', { name: 'Riesgo bajo' })).toBeInTheDocument();
-    expect(banner.className).toContain('risk-banner-low');
   });
 
   it('renders "Riesgo medio" with the medium variant class', () => {
@@ -65,7 +64,6 @@ describe('<ResultView> — risk banner (§6.2, all three levels)', () => {
     const banner = screen.getByTestId('risk-banner');
     expect(banner).toHaveAttribute('data-risk', 'medio');
     expect(within(banner).getByRole('heading', { name: 'Riesgo medio' })).toBeInTheDocument();
-    expect(banner.className).toContain('risk-banner-medium');
   });
 
   it('renders "Riesgo alto" with the high variant class', () => {
@@ -73,7 +71,6 @@ describe('<ResultView> — risk banner (§6.2, all three levels)', () => {
     const banner = screen.getByTestId('risk-banner');
     expect(banner).toHaveAttribute('data-risk', 'alto');
     expect(within(banner).getByRole('heading', { name: 'Riesgo alto' })).toBeInTheDocument();
-    expect(banner.className).toContain('risk-banner-high');
   });
 
   it('builds a reason line from allergens + sellos when both are present', () => {
@@ -121,24 +118,25 @@ describe('<ResultView> — aptitudes chips', () => {
     expect(screen.getByTestId('aptitude-sin_lactosa')).toBeInTheDocument();
   });
 
-  it('shows the "No apto" copy when apto* fields are false', () => {
+  it('marca cada aptitud como "No apto" (data-apto=false) con su etiqueta', () => {
     render(<ResultView product={mkProduct()} />);
     expect(screen.getByTestId('aptitude-vegano')).toHaveAttribute('data-apto', 'false');
-    expect(screen.getByTestId('aptitude-vegano')).toHaveTextContent('No vegano');
-    expect(screen.getByTestId('aptitude-celiaco')).toHaveTextContent('No apto celíaco');
-    expect(screen.getByTestId('aptitude-sin_lactosa')).toHaveTextContent('Tiene lactosa');
+    expect(screen.getByTestId('aptitude-celiaco')).toHaveAttribute('data-apto', 'false');
+    expect(screen.getByTestId('aptitude-sin_lactosa')).toHaveAttribute('data-apto', 'false');
+    expect(screen.getByTestId('aptitude-vegano')).toHaveTextContent('Vegano');
+    expect(screen.getByTestId('aptitude-celiaco')).toHaveTextContent('Apto celíaco');
+    expect(screen.getByTestId('aptitude-sin_lactosa')).toHaveTextContent('Sin lactosa');
   });
 
-  it('shows the "Apto" copy when apto* fields are true', () => {
+  it('marca cada aptitud como apta (data-apto=true) cuando los apto* son true', () => {
     render(
       <ResultView
         product={mkProduct({ aptoVegano: true, aptoCeliaco: true, aptoSinLactosa: true })}
       />,
     );
     expect(screen.getByTestId('aptitude-vegano')).toHaveAttribute('data-apto', 'true');
-    expect(screen.getByTestId('aptitude-vegano')).toHaveTextContent('Vegano');
-    expect(screen.getByTestId('aptitude-celiaco')).toHaveTextContent('Apto celíaco');
-    expect(screen.getByTestId('aptitude-sin_lactosa')).toHaveTextContent('Sin lactosa');
+    expect(screen.getByTestId('aptitude-celiaco')).toHaveAttribute('data-apto', 'true');
+    expect(screen.getByTestId('aptitude-sin_lactosa')).toHaveAttribute('data-apto', 'true');
   });
 });
 
