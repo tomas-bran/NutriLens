@@ -32,6 +32,7 @@ export type IconName =
   | 'arrow-right'
   | 'arrow-left'
   | 'filter'
+  | 'pencil'
   | 'user'
   | 'logout'
   | 'chevron-right'
@@ -179,6 +180,13 @@ const ICON_PATHS: Record<IconName, IconPathDef> = {
   // Funnel — filtros.
   filter: {
     paths: ['M22 3H2l8 9.46V19l4 2v-8.54L22 3z'],
+  },
+  // Pencil — editar / renombrar. Path data oficial de lucide `pencil`.
+  pencil: {
+    paths: [
+      'M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z',
+      'm15 5 4 4',
+    ],
   },
   user: {
     paths: ['M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'],

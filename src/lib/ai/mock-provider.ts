@@ -78,10 +78,26 @@ export class MockIaProvider implements IaProvider {
   }
 
   async answerWithContext(
-    _question: string,
+    question: string,
     products: SavedProductLite[],
     opts: AnswerOpts,
   ): Promise<IaCallResult> {
+    // Título de conversación: derivamos un resumen corto y determinístico de la
+    // primera línea del usuario para que unit/E2E tengan un título estable sin
+    // tocar el LLM real (en prod lo resuelve el provider configurado).
+    if (opts.promptVersion === 'chat_title-v1') {
+      const firstUserLine = question
+        .split('\n')
+        .find((l) => l.startsWith('Usuario:'))
+        ?.replace(/^Usuario:\s*/, '')
+        .trim();
+      const base = firstUserLine && firstUserLine.length > 0 ? firstUserLine : 'Consulta general';
+      return {
+        raw: base.length > 48 ? base.slice(0, 48) : base,
+        usage: { in: 0, out: 0 },
+        latencyMs: 2,
+      };
+    }
     // NL-503: pills de seguimiento contextuales — el mock devuelve un set
     // canned válido para que unit/E2E verifiquen el flujo sin LLM real.
     if (opts.promptVersion === 'chat_suggestions-v1') {

@@ -5,7 +5,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireUserId, Unauthorized } from '@/lib/auth/current-user';
-import { generateTitle, type StoredMessage } from '@/lib/conversations/types';
+import { type StoredMessage } from '@/lib/conversations/types';
+import { generateConversationTitle } from '@/lib/conversations/generate-title';
+import { getIaProvider } from '@/lib/ai';
 
 export async function GET(): Promise<NextResponse> {
   let userId: string;
@@ -65,8 +67,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const firstUser = messages.find((m) => m.role === 'user');
-  const title = firstUser ? generateTitle(firstUser.text) : 'Nueva conversación';
+  // NL-302: el título se genera con IA resumiendo la conversación, una sola vez
+  // (acá, al crearla). Es best-effort — cae a un heurístico si la IA falla.
+  const title = await generateConversationTitle(messages, { ia: getIaProvider() });
 
   const conv = await prisma.conversation.create({
     data: {
