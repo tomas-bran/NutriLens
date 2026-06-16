@@ -99,12 +99,16 @@ describe('<HistoryListView> — populated grid (US-23)', () => {
     expect(within(chips).getAllByRole('listitem')).toHaveLength(2);
   });
 
-  it('omits the allergen list when the item has no allergens', () => {
+  it('omits the allergen list and shows the "sin alérgenos" pill when the item has no allergens', () => {
     const items = [mkItem({ id: 'p', alergenos: [] })];
     render(
       <HistoryListView items={items} page={1} totalPages={1} total={1} filters={{ page: 1 }} />,
     );
     expect(screen.queryByTestId('history-item-allergens')).not.toBeInTheDocument();
+    const card = screen.getByTestId('history-item-p');
+    expect(within(card).getByTestId('history-item-no-allergens')).toHaveTextContent(
+      'sin alérgenos',
+    );
   });
 });
 
