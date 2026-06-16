@@ -55,14 +55,20 @@ export function Dropzone({
         const f = e.dataTransfer.files?.[0];
         if (f) onFileSelected(f);
       }}
-      style={{ minHeight: 420 }}
+      style={{
+        minHeight: 420,
+        ...(isDragging
+          ? {}
+          : { background: 'linear-gradient(160deg, var(--color-primary-soft), #e7faee)' }),
+      }}
       className={cn(
-        'flex flex-col items-center justify-center gap-5 rounded-[24px] border-2 p-10 text-center transition-colors',
+        'relative flex flex-col items-center justify-center gap-5 overflow-hidden rounded-[24px] border-2 border-dashed p-10 text-center transition-colors',
         isDragging
           ? 'border-[var(--color-primary-strong)] bg-[var(--color-risk-low-bg)]'
-          : 'border-[var(--color-primary-border)] bg-[var(--color-primary-soft)]',
+          : 'border-[var(--color-primary-border)]',
       )}
     >
+      <DropzoneSparkles />
       {!showsImagePreview && <CloudUploadBadge />}
 
       {selected ? (
@@ -86,13 +92,47 @@ export function Dropzone({
 }
 
 function CloudUploadBadge() {
-  // Pencil `kx3k0` — 88x88 white circle, drop shadow rgba(22,163,74,0.2) blur 12 y 4.
+  // 88x88 white circle que "levita" (home-float, respeta reduced-motion).
   return (
     <div
-      className="flex h-[88px] w-[88px] items-center justify-center rounded-full bg-white"
-      style={{ boxShadow: '0 4px 12px 0 rgba(22, 163, 74, 0.2)' }}
+      className="home-float relative flex h-[88px] w-[88px] items-center justify-center rounded-full bg-white"
+      style={{ boxShadow: '0 10px 26px 0 rgba(22, 163, 74, 0.18)' }}
     >
-      <Icon name="cloud-upload" strokeWidth={2} className="h-10 w-10 text-[var(--color-primary)]" />
+      <Icon
+        name="cloud-upload"
+        strokeWidth={1.9}
+        className="h-10 w-10 text-[var(--color-primary)]"
+      />
+    </div>
+  );
+}
+
+/** Estrellitas lima que titilan dentro de la dropzone (decorativo, NL-504). */
+const DZ_SPARKLES = [
+  { top: '14%', left: '12%', size: 12, delay: '0s' },
+  { top: '22%', left: '84%', size: 9, delay: '0.8s' },
+  { top: '70%', left: '8%', size: 10, delay: '1.4s' },
+  { top: '78%', left: '88%', size: 13, delay: '0.4s' },
+  { top: '46%', left: '94%', size: 8, delay: '2s' },
+];
+
+function DropzoneSparkles() {
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+      {DZ_SPARKLES.map((s) => (
+        <span
+          key={`${s.top}-${s.left}`}
+          className="nl-twinkle absolute text-[var(--color-primary)]"
+          style={{ top: s.top, left: s.left, animationDelay: s.delay }}
+        >
+          <Icon
+            name="sparkles"
+            strokeWidth={0}
+            fill="currentColor"
+            style={{ width: s.size, height: s.size }}
+          />
+        </span>
+      ))}
     </div>
   );
 }
