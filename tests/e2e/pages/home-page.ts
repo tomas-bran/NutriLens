@@ -41,10 +41,10 @@ export class HomePage {
 
   async expectHowItWorksSection() {
     await expect(this.howItWorksHeading).toBeVisible();
-    // 3 step labels — every one must be present
-    await expect(this.page.getByText('Paso 1')).toBeVisible();
-    await expect(this.page.getByText('Paso 2')).toBeVisible();
-    await expect(this.page.getByText('Paso 3')).toBeVisible();
+    // 3 step cards (rediseño: títulos + numeración 01/02/03) — todos presentes
+    await expect(this.page.getByText('Sacá una foto')).toBeVisible();
+    await expect(this.page.getByText('Esperá unos segundos')).toBeVisible();
+    await expect(this.page.getByText('Mirá el análisis')).toBeVisible();
   }
 
   async expectExamplesSection() {

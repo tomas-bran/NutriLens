@@ -11,6 +11,9 @@ import { adminEmails, isAdminEmail, isCurrentUserAdmin } from '@/lib/auth/is-adm
 afterEach(() => {
   vi.clearAllMocks();
   delete process.env.ADMIN_EMAILS;
+  // El bypass de E2E hace admin=true; lo limpiamos para que estos tests
+  // ejerciten la lógica de sesión real.
+  delete process.env.E2E_AUTH_BYPASS;
 });
 
 describe('is-admin (NL-204)', () => {

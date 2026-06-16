@@ -22,7 +22,10 @@ export function isAdminEmail(email: string | null | undefined): boolean {
 
 /** True si la sesión actual es admin. Server-side. */
 export async function isCurrentUserAdmin(): Promise<boolean> {
-  // Bypass de E2E: el usuario de test NO es admin (la UI limpia es el default).
+  // Bypass de E2E: el usuario de test ES admin para poder ejercitar las vistas
+  // técnicas (JSON + pipeline trace, US-33/34) en los E2E. Nunca aplica en un
+  // deploy real (gate por WEBSITE_HOSTNAME, igual que el bypass de auth).
+  if (process.env.E2E_AUTH_BYPASS === 'true' && !process.env.WEBSITE_HOSTNAME) return true;
   if ((await getUserId()) === null) return false;
   const session = await auth();
   return isAdminEmail(session?.user?.email);
