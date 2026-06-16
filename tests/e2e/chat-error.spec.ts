@@ -33,8 +33,7 @@ test('error 500 del backend → banner con retry → retry reusa la pregunta y m
       await route.fulfill({
         status: 200,
         contentType: 'text/event-stream',
-        body:
-          'data: {"type":"error","error":"internal_error","reason":"Algo se rompió en el servidor."}\n\n',
+        body: 'data: {"type":"error","error":"internal_error","reason":"Algo se rompió en el servidor."}\n\n',
       });
       return;
     }
