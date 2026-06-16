@@ -51,22 +51,36 @@ export function SelloChips({ sellos }: { sellos: ReadonlyArray<Sello> }) {
 
 function SelloBadge({ sello }: { sello: Sello }) {
   const { line1, line2 } = SELLO_PARTS[sello];
+  // Octágono en capas: borde negro exterior → marco blanco → cuerpo negro, como
+  // el sello regulatorio real (Ley 27.642).
   return (
     <span
       role="listitem"
       data-testid={`sello-${selloTestId(sello)}`}
       aria-label={`Sello: ${sello}`}
-      className={cn(
-        'flex h-24 w-24 flex-col items-center justify-center gap-0.5 bg-[var(--color-ink-900)] px-1 text-center text-white',
-      )}
+      className="flex h-24 w-24 items-center justify-center bg-[var(--color-ink-900)] p-[2px]"
       style={{ clipPath: OCTAGON_CLIP_PATH }}
     >
-      <span className="text-[9px] font-bold uppercase leading-tight tracking-wide">{line1}</span>
-      <span className="text-[11px] font-extrabold uppercase leading-tight">{line2}</span>
-      <span className="mt-0.5 text-[6px] font-medium uppercase leading-tight tracking-wider text-white/80">
-        Ministerio
-        <br />
-        de Salud
+      <span
+        className="flex h-full w-full items-center justify-center bg-white p-[3px]"
+        style={{ clipPath: OCTAGON_CLIP_PATH }}
+      >
+        <span
+          className={cn(
+            'flex h-full w-full flex-col items-center justify-center gap-0.5 bg-[var(--color-ink-900)] px-1 text-center text-white',
+          )}
+          style={{ clipPath: OCTAGON_CLIP_PATH }}
+        >
+          <span className="text-[9px] font-bold uppercase leading-tight tracking-wide">
+            {line1}
+          </span>
+          <span className="text-[11px] font-extrabold uppercase leading-tight">{line2}</span>
+          <span className="mt-0.5 text-[6px] font-medium uppercase leading-tight tracking-wider text-white/80">
+            Ministerio
+            <br />
+            de Salud
+          </span>
+        </span>
       </span>
     </span>
   );

@@ -62,13 +62,22 @@ export function ResultView({
         <div className="flex flex-col gap-5">
           <ProductImageCard product={product} />
           <RiskHero product={product} />
+          {/* Alérgenos + sellos en una misma fila, debajo del riesgo. */}
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+            <div className="flex-1">
+              <AllergenList allergens={product.alergenos} />
+            </div>
+            {product.sellos.length > 0 && (
+              <div className="flex-1">
+                <SelloChips sellos={product.sellos} />
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-col gap-5">
           <AptitudeRows product={product} />
           <ExplanationCard explanation={product.explanation} />
-          <AllergenList allergens={product.alergenos} />
-          <SelloChips sellos={product.sellos} />
           <IngredientList ingredients={product.ingredientes} />
         </div>
       </div>
