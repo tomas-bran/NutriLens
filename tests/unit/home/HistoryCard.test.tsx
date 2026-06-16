@@ -18,10 +18,10 @@ describe('<HistoryCard>', () => {
     expect(screen.getByText('Ya analizaste 24 productos.')).toBeInTheDocument();
   });
 
-  it('exposes a link to /historial', () => {
+  it('exposes a link to /catalogo', () => {
     render(<HistoryCard count={3} />);
-    const cta = screen.getByTestId('history-cta');
-    expect(cta).toHaveAttribute('href', '/historial');
+    const cta = screen.getByTestId('catalogo-cta');
+    expect(cta).toHaveAttribute('href', '/catalogo');
     expect(cta).toHaveTextContent(/Ver catálogo/);
   });
 });

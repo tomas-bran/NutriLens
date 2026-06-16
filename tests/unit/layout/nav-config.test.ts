@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { NAV_ITEMS } from '@/components/layout/nav-config';
 
 describe('NAV_ITEMS — single source of truth for app navigation', () => {
-  it('tiene las 5 entradas (Inicio / Analizar / Historial / Chat / Perfil)', () => {
+  it('tiene las 5 entradas (Inicio / Analizar / Catálogo / Chat / Perfil)', () => {
     expect(NAV_ITEMS).toHaveLength(5);
     expect(NAV_ITEMS.map((i) => i.id)).toEqual([
       'inicio',
       'analizar',
-      'historial',
+      'catalogo',
       'chat',
       'perfil',
     ]);

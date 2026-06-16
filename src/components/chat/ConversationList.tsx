@@ -2,7 +2,7 @@
 
 /**
  * <ConversationList> — lista de conversaciones guardadas en el empty state del chat.
- * NL-301: muestra historial de chats con fecha legible.
+ * NL-301: muestra catálogo de chats con fecha legible.
  * NL-302: permite renombrar (inline) y eliminar con confirmación.
  */
 import { useRef, useState } from 'react';

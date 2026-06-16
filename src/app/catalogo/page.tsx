@@ -1,5 +1,5 @@
 /**
- * `/historial` — listado paginado y filtrable.
+ * `/catalogo` — listado paginado y filtrable.
  * Spec: `docs/specs/E04 §6.1 / §6.4` (US-23, US-24, US-26).
  *
  * Server Component. Lee `searchParams`, los pasa por `parseHistoryFilters`
@@ -10,7 +10,7 @@ import type { Prisma } from '@prisma/client';
 import { AppShell } from '@/components/layout/AppShell';
 import { HistoryListView } from '@/components/history/HistoryListView';
 import { prisma } from '@/lib/db';
-import { getHistorialCount } from '@/lib/products/count';
+import { getCatalogoCount } from '@/lib/products/count';
 import { parseHistoryFilters, type RawSearchParams } from '@/lib/products/history-filters';
 import { mapCategoriaToPrisma, toListItem } from '@/lib/products/serializers';
 
@@ -26,7 +26,7 @@ interface PageProps {
   searchParams: Promise<RawSearchParams>;
 }
 
-export default async function HistorialPage({ searchParams }: PageProps) {
+export default async function CatalogoPage({ searchParams }: PageProps) {
   const raw = await searchParams;
   const filters = parseHistoryFilters(raw);
 
@@ -43,7 +43,7 @@ export default async function HistorialPage({ searchParams }: PageProps) {
   if (filters.apto === 'celiaco') where.aptoCeliaco = true;
   if (filters.apto === 'sin_lactosa') where.aptoSinLactosa = true;
 
-  const [items, total, historialCount] = await Promise.all([
+  const [items, total, catalogoCount] = await Promise.all([
     prisma.product.findMany({
       where,
       orderBy: { createdAt: 'desc' },
@@ -51,13 +51,13 @@ export default async function HistorialPage({ searchParams }: PageProps) {
       take: PAGE_SIZE,
     }),
     prisma.product.count({ where }),
-    getHistorialCount(),
+    getCatalogoCount(),
   ]);
 
   const totalPages = total === 0 ? 0 : Math.ceil(total / PAGE_SIZE);
 
   return (
-    <AppShell active="historial" historialCount={historialCount}>
+    <AppShell active="catalogo" catalogoCount={catalogoCount}>
       <HistoryListView
         items={items.map(toListItem)}
         page={filters.page}

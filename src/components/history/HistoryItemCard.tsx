@@ -1,5 +1,5 @@
 /**
- * Single product card in the `/historial` grid (spec E04 §6.1).
+ * Single product card in the `/catalogo` grid (spec E04 §6.1).
  *
  * Layout (Claude Design `DeskProductCard`): tarjeta vertical con la foto del
  * producto arriba (full-width), badge de riesgo flotante sobre la imagen, y
@@ -29,8 +29,8 @@ const RISK_LABEL = {
 export function HistoryItemCard({ item }: { item: ProductListItem }) {
   return (
     <Link
-      href={`/historial/${item.id}`}
-      data-testid={`history-item-${item.id}`}
+      href={`/catalogo/${item.id}`}
+      data-testid={`catalogo-item-${item.id}`}
       // `h-full` makes every card stretch to the tallest neighbor in the grid
       // row — items without allergens render at the same height as those with
       // a stack of chips.
@@ -66,7 +66,7 @@ export function HistoryItemCard({ item }: { item: ProductListItem }) {
               role="list"
               aria-label="Alérgenos"
               className="mt-2 flex flex-wrap gap-1.5"
-              data-testid="history-item-allergens"
+              data-testid="catalogo-item-allergens"
             >
               {item.alergenos.map((a) => (
                 <li
@@ -79,7 +79,7 @@ export function HistoryItemCard({ item }: { item: ProductListItem }) {
             </ul>
           ) : (
             <span
-              data-testid="history-item-no-allergens"
+              data-testid="catalogo-item-no-allergens"
               className="mt-2 inline-flex w-fit items-center rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-[11px] font-semibold text-[var(--color-primary-strong)]"
             >
               sin alérgenos

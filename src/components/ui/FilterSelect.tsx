@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * `<FilterSelect>` — combobox accesible para filtros del historial (US-24).
+ * `<FilterSelect>` — combobox accesible para filtros del catálogo (US-24).
  *
  * Construido sobre `@radix-ui/react-select`: trigger custom + listbox flotante,
  * navegable por teclado y compatible con lectores de pantalla. Reemplaza el

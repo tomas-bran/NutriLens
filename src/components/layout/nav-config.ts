@@ -6,7 +6,7 @@
  */
 import type { IconName } from '@/components/ui/Icon';
 
-export type ActiveNavItem = 'inicio' | 'analizar' | 'historial' | 'chat' | 'perfil';
+export type ActiveNavItem = 'inicio' | 'analizar' | 'catalogo' | 'chat' | 'perfil';
 
 export interface NavItem {
   id: ActiveNavItem;
@@ -20,7 +20,7 @@ export interface NavItem {
 export const NAV_ITEMS: ReadonlyArray<NavItem> = [
   { id: 'inicio', href: '/', icon: 'home', label: 'Inicio' },
   { id: 'analizar', href: '/analizar', icon: 'scan-line', label: 'Analizar' },
-  { id: 'historial', href: '/historial', icon: 'salad', label: 'Catálogo' },
+  { id: 'catalogo', href: '/catalogo', icon: 'salad', label: 'Catálogo' },
   { id: 'chat', href: '/chat', icon: 'chat', label: 'Chat' },
   // Redesign: en desktop el acceso a la cuenta vive en el UserMenu del sidebar;
   // en mobile es una pestaña propia.

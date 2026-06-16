@@ -29,7 +29,7 @@ const MOBILE_BREAKPOINTS = [
 for (const bp of DESKTOP_BREAKPOINTS) {
   test(`desktop ${bp.w}px: sidebar fijo a la izquierda, sin bottom nav`, async ({ page }) => {
     await page.setViewportSize({ width: bp.w, height: bp.h });
-    await page.goto('/historial');
+    await page.goto('/catalogo');
     const sidebar = new Sidebar(page);
     const bottomNav = new BottomNav(page);
     await sidebar.expectVisible();
@@ -43,7 +43,7 @@ for (const bp of DESKTOP_BREAKPOINTS) {
 for (const bp of MOBILE_BREAKPOINTS) {
   test(`mobile ${bp.w}px: sidebar oculto, bottom nav anclado abajo`, async ({ page }) => {
     await page.setViewportSize({ width: bp.w, height: bp.h });
-    await page.goto('/historial');
+    await page.goto('/catalogo');
     const sidebar = new Sidebar(page);
     const bottomNav = new BottomNav(page);
     await sidebar.expectHidden();

@@ -100,7 +100,7 @@ export function UserMenu({ name, email, image }: UserMenuProps) {
             testid="menu-ver-perfil"
           />
           <MenuLink
-            href="/historial?filtro=mios"
+            href="/catalogo?filtro=mios"
             icon="history"
             label="Mis análisis"
             onClick={close}

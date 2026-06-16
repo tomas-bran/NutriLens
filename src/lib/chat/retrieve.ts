@@ -1,6 +1,6 @@
 /**
  * Step `retrieve_products` del pipeline de chat — traduce el intent en un
- * `Prisma.ProductWhereInput` y devuelve hasta TOP-K productos del historial.
+ * `Prisma.ProductWhereInput` y devuelve hasta TOP-K productos del catálogo.
  *
  * Spec: `docs/specs/E05-chat-rag.md §5`. Notas vs. el snippet del spec:
  *
@@ -9,7 +9,7 @@
  *      `mapCategoriaToPrisma`.
  *   2. `alergenos`/`ingredientes` se persisten como JSON.stringify de un
  *      array, no como Postgres text[] — buscamos con `contains: '"<term>"'`
- *      (mismo patrón que usa `historial/page.tsx` y `GET /api/products`)
+ *      (mismo patrón que usa `catálogo/page.tsx` y `GET /api/products`)
  *      para evitar falsos positivos tipo "leche" matcheando "sin leche".
  *   3. Cuando `intent.riesgo_max = 'bajo'`, traemos un set más amplio y
  *      aplicamos `rankByRiskAndSellos` para devolver los top-K "más sanos"

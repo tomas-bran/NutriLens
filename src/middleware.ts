@@ -4,7 +4,7 @@
  * (con `callbackUrl`) y las APIs responden 401.
  *
  * Públicas: /login, /api/auth/* (el flujo OAuth), y los estáticos (excluidos
- * por el matcher). El analyzer/historial/chat y sus APIs quedan protegidos.
+ * por el matcher). El analyzer/catalogo/chat y sus APIs quedan protegidos.
  */
 import { auth } from '@/lib/auth';
 import { NextResponse } from 'next/server';

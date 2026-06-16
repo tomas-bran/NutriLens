@@ -167,7 +167,7 @@ describe('Product — indexes (Escenario 1: schema definido)', () => {
   });
 });
 
-describe('Product — filtros usados por el historial (E04 §5.1)', () => {
+describe('Product — filtros usados por el catálogo (E04 §5.1)', () => {
   beforeEach(async () => {
     await prisma.product.createMany({
       data: [
@@ -196,7 +196,7 @@ describe('Product — filtros usados por el historial (E04 §5.1)', () => {
     expect(r).toHaveLength(1);
   });
 
-  it('orders by createdAt desc (default sort of the historial endpoint)', async () => {
+  it('orders by createdAt desc (default sort of the catálogo endpoint)', async () => {
     const r = await prisma.product.findMany({ orderBy: { createdAt: 'desc' } });
     expect(r).toHaveLength(3);
     for (let i = 0; i < r.length - 1; i++) {

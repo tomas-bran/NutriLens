@@ -53,7 +53,7 @@ describe('<AppShell> — estructura', () => {
 });
 
 describe('<AppShell> — sidebar (desktop)', () => {
-  it('renderiza el sidebar con los 4 nav items (Inicio / Analizar / Historial / Chat)', () => {
+  it('renderiza el sidebar con los 4 nav items (Inicio / Analizar / Catálogo / Chat)', () => {
     render(
       <AppShell>
         <p>x</p>
@@ -61,7 +61,7 @@ describe('<AppShell> — sidebar (desktop)', () => {
     );
     expect(screen.getByTestId('nav-inicio')).toHaveAttribute('href', '/');
     expect(screen.getByTestId('nav-analizar')).toHaveAttribute('href', '/analizar');
-    expect(screen.getByTestId('nav-historial')).toHaveAttribute('href', '/historial');
+    expect(screen.getByTestId('nav-catalogo')).toHaveAttribute('href', '/catalogo');
     expect(screen.getByTestId('nav-chat')).toHaveAttribute('href', '/chat');
   });
 
@@ -85,22 +85,22 @@ describe('<AppShell> — sidebar (desktop)', () => {
     expect(screen.getByTestId('nav-chat')).toHaveTextContent('Chat');
   });
 
-  it('oculta el badge de historial cuando el count es 0', () => {
+  it('oculta el badge de catálogo cuando el count es 0', () => {
     render(
-      <AppShell historialCount={0}>
+      <AppShell catalogoCount={0}>
         <p>x</p>
       </AppShell>,
     );
-    expect(screen.getByTestId('nav-historial')).not.toHaveTextContent(/^Historial\s*0$/);
+    expect(screen.getByTestId('nav-catalogo')).not.toHaveTextContent(/^Catálogo\s*0$/);
   });
 
-  it('muestra el badge de historial cuando el count > 0', () => {
+  it('muestra el badge de catálogo cuando el count > 0', () => {
     render(
-      <AppShell historialCount={24}>
+      <AppShell catalogoCount={24}>
         <p>x</p>
       </AppShell>,
     );
-    expect(screen.getByTestId('nav-historial')).toHaveTextContent('24');
+    expect(screen.getByTestId('nav-catalogo')).toHaveTextContent('24');
   });
 
   it('monta el slot de usuario (<SidebarUser>) al pie del sidebar', () => {
@@ -142,7 +142,7 @@ describe('<AppShell> — bottom nav (mobile)', () => {
     expect(screen.getByTestId('app-bottom-nav')).toBeInTheDocument();
     expect(screen.getByTestId('bottom-nav-inicio')).toHaveAttribute('href', '/');
     expect(screen.getByTestId('bottom-nav-analizar')).toHaveAttribute('href', '/analizar');
-    expect(screen.getByTestId('bottom-nav-historial')).toHaveAttribute('href', '/historial');
+    expect(screen.getByTestId('bottom-nav-catalogo')).toHaveAttribute('href', '/catalogo');
     expect(screen.getByTestId('bottom-nav-chat')).toHaveAttribute('href', '/chat');
   });
 

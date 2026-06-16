@@ -1,5 +1,5 @@
 /**
- * Seed helper for /historial filter E2Es (US-24).
+ * Seed helper for /catalogo filter E2Es (US-24).
  *
  * Inserts a deterministic set of products with varied categoría/riesgo/alérgenos
  * so the filter selectors actually have something to discriminate between.

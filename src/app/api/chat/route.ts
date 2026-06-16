@@ -1,5 +1,5 @@
 /**
- * POST /api/chat — endpoint del chat RAG sobre el historial.
+ * POST /api/chat — endpoint del chat RAG sobre el catálogo.
  *
  * Pipeline (delegado a `handleChat`, ver `src/lib/chat/handle-chat.ts`):
  *   parse_intent (Phi-mini) → retrieve_products (SQL) →

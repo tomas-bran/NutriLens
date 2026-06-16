@@ -1,5 +1,5 @@
 /**
- * Unit tests for the historial listing (US-23, US-26).
+ * Unit tests for the catálogo listing (US-23, US-26).
  * Covers: card list with N items, empty state, pagination visibility,
  * "Nuevo análisis" CTA + total count copy.
  */
@@ -33,23 +33,23 @@ function mkItem(overrides: Partial<ProductListItem> = {}): ProductListItem {
 describe('<HistoryListView> — empty state (US-26)', () => {
   it('shows the empty state when total === 0', () => {
     render(<HistoryListView items={[]} page={1} totalPages={0} total={0} filters={{ page: 1 }} />);
-    expect(screen.getByTestId('history-empty')).toBeInTheDocument();
+    expect(screen.getByTestId('catalogo-empty')).toBeInTheDocument();
     expect(screen.getByText(/Todavía no analizaste/)).toBeInTheDocument();
   });
 
   it('empty-state CTA links to /analizar', () => {
     render(<HistoryListView items={[]} page={1} totalPages={0} total={0} filters={{ page: 1 }} />);
-    expect(screen.getByTestId('history-empty-cta')).toHaveAttribute('href', '/analizar');
+    expect(screen.getByTestId('catalogo-empty-cta')).toHaveAttribute('href', '/analizar');
   });
 
   it('does NOT render the grid when total is 0', () => {
     render(<HistoryListView items={[]} page={1} totalPages={0} total={0} filters={{ page: 1 }} />);
-    expect(screen.queryByTestId('history-grid')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('catalogo-grid')).not.toBeInTheDocument();
   });
 
   it('does NOT render pagination when total is 0', () => {
     render(<HistoryListView items={[]} page={1} totalPages={0} total={0} filters={{ page: 1 }} />);
-    expect(screen.queryByTestId('history-pagination')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('catalogo-pagination')).not.toBeInTheDocument();
   });
 });
 
@@ -61,18 +61,18 @@ describe('<HistoryListView> — populated grid (US-23)', () => {
     );
     // Each card has a stable testid; the generic `listitem` role would also
     // pick up nested allergen <li> elements inside each card.
-    expect(screen.getByTestId('history-item-a')).toBeInTheDocument();
-    expect(screen.getByTestId('history-item-b')).toBeInTheDocument();
-    expect(screen.getByTestId('history-item-c')).toBeInTheDocument();
+    expect(screen.getByTestId('catalogo-item-a')).toBeInTheDocument();
+    expect(screen.getByTestId('catalogo-item-b')).toBeInTheDocument();
+    expect(screen.getByTestId('catalogo-item-c')).toBeInTheDocument();
   });
 
-  it('every card links to /historial/[id]', () => {
+  it('every card links to /catalogo/[id]', () => {
     const items = [mkItem({ id: 'aaa' }), mkItem({ id: 'bbb' })];
     render(
       <HistoryListView items={items} page={1} totalPages={1} total={2} filters={{ page: 1 }} />,
     );
-    expect(screen.getByTestId('history-item-aaa')).toHaveAttribute('href', '/historial/aaa');
-    expect(screen.getByTestId('history-item-bbb')).toHaveAttribute('href', '/historial/bbb');
+    expect(screen.getByTestId('catalogo-item-aaa')).toHaveAttribute('href', '/catalogo/aaa');
+    expect(screen.getByTestId('catalogo-item-bbb')).toHaveAttribute('href', '/catalogo/bbb');
   });
 
   it('shows the risk badge with the right variant per item', () => {
@@ -84,9 +84,9 @@ describe('<HistoryListView> — populated grid (US-23)', () => {
     render(
       <HistoryListView items={items} page={1} totalPages={1} total={3} filters={{ page: 1 }} />,
     );
-    expect(screen.getByTestId('history-item-lo')).toHaveTextContent('Bajo');
-    expect(screen.getByTestId('history-item-md')).toHaveTextContent('Medio');
-    expect(screen.getByTestId('history-item-hi')).toHaveTextContent('Alto');
+    expect(screen.getByTestId('catalogo-item-lo')).toHaveTextContent('Bajo');
+    expect(screen.getByTestId('catalogo-item-md')).toHaveTextContent('Medio');
+    expect(screen.getByTestId('catalogo-item-hi')).toHaveTextContent('Alto');
   });
 
   it('renders the allergen chips when the array is non-empty', () => {
@@ -94,8 +94,8 @@ describe('<HistoryListView> — populated grid (US-23)', () => {
     render(
       <HistoryListView items={items} page={1} totalPages={1} total={1} filters={{ page: 1 }} />,
     );
-    const card = screen.getByTestId('history-item-p');
-    const chips = within(card).getByTestId('history-item-allergens');
+    const card = screen.getByTestId('catalogo-item-p');
+    const chips = within(card).getByTestId('catalogo-item-allergens');
     expect(within(chips).getAllByRole('listitem')).toHaveLength(2);
   });
 
@@ -104,9 +104,9 @@ describe('<HistoryListView> — populated grid (US-23)', () => {
     render(
       <HistoryListView items={items} page={1} totalPages={1} total={1} filters={{ page: 1 }} />,
     );
-    expect(screen.queryByTestId('history-item-allergens')).not.toBeInTheDocument();
-    const card = screen.getByTestId('history-item-p');
-    expect(within(card).getByTestId('history-item-no-allergens')).toHaveTextContent(
+    expect(screen.queryByTestId('catalogo-item-allergens')).not.toBeInTheDocument();
+    const card = screen.getByTestId('catalogo-item-p');
+    expect(within(card).getByTestId('catalogo-item-no-allergens')).toHaveTextContent(
       'sin alérgenos',
     );
   });
@@ -123,7 +123,7 @@ describe('<HistoryListView> — header copy', () => {
         filters={{ page: 1 }}
       />,
     );
-    expect(screen.getByTestId('history-total')).toHaveTextContent('1 producto analizado');
+    expect(screen.getByTestId('catalogo-total')).toHaveTextContent('1 producto analizado');
   });
 
   it('shows plural copy when total > 1', () => {
@@ -131,7 +131,7 @@ describe('<HistoryListView> — header copy', () => {
     render(
       <HistoryListView items={items} page={1} totalPages={1} total={42} filters={{ page: 1 }} />,
     );
-    expect(screen.getByTestId('history-total')).toHaveTextContent('42 productos analizados');
+    expect(screen.getByTestId('catalogo-total')).toHaveTextContent('42 productos analizados');
   });
 
   it('"Nuevo análisis" CTA always links to /analizar', () => {
@@ -144,7 +144,7 @@ describe('<HistoryListView> — header copy', () => {
         filters={{ page: 1 }}
       />,
     );
-    expect(screen.getByTestId('history-new-analysis')).toHaveAttribute('href', '/analizar');
+    expect(screen.getByTestId('catalogo-new-analysis')).toHaveAttribute('href', '/analizar');
   });
 });
 
@@ -159,7 +159,7 @@ describe('<HistoryListView> — pagination', () => {
         filters={{ page: 1 }}
       />,
     );
-    expect(screen.queryByTestId('history-pagination')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('catalogo-pagination')).not.toBeInTheDocument();
   });
 
   it('renders pagination when totalPages > 1', () => {
@@ -167,7 +167,7 @@ describe('<HistoryListView> — pagination', () => {
     render(
       <HistoryListView items={items} page={1} totalPages={3} total={36} filters={{ page: 1 }} />,
     );
-    expect(screen.getByTestId('history-pagination')).toBeInTheDocument();
+    expect(screen.getByTestId('catalogo-pagination')).toBeInTheDocument();
     expect(screen.getByText('Página 1 de 3')).toBeInTheDocument();
   });
 
@@ -176,7 +176,7 @@ describe('<HistoryListView> — pagination', () => {
     render(
       <HistoryListView items={items} page={1} totalPages={3} total={36} filters={{ page: 1 }} />,
     );
-    const prev = screen.getByTestId('history-page-prev');
+    const prev = screen.getByTestId('catalogo-page-prev');
     expect(prev).toHaveAttribute('aria-disabled', 'true');
   });
 
@@ -185,7 +185,7 @@ describe('<HistoryListView> — pagination', () => {
     render(
       <HistoryListView items={items} page={3} totalPages={3} total={36} filters={{ page: 1 }} />,
     );
-    const next = screen.getByTestId('history-page-next');
+    const next = screen.getByTestId('catalogo-page-next');
     expect(next).toHaveAttribute('aria-disabled', 'true');
   });
 
@@ -194,7 +194,7 @@ describe('<HistoryListView> — pagination', () => {
     render(
       <HistoryListView items={items} page={2} totalPages={3} total={36} filters={{ page: 1 }} />,
     );
-    expect(screen.getByTestId('history-page-prev')).toHaveAttribute('href', '/historial');
-    expect(screen.getByTestId('history-page-next')).toHaveAttribute('href', '/historial?page=3');
+    expect(screen.getByTestId('catalogo-page-prev')).toHaveAttribute('href', '/catalogo');
+    expect(screen.getByTestId('catalogo-page-next')).toHaveAttribute('href', '/catalogo?page=3');
   });
 });

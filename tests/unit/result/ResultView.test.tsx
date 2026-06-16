@@ -267,23 +267,23 @@ describe('<ResultView> — vistas técnicas solo para admin (NL-204)', () => {
   });
 });
 
-describe('<ResultView> — historial detail variant (spec E04 §6.5)', () => {
+describe('<ResultView> — catálogo detail variant (spec E04 §6.5)', () => {
   it('defaults back link to /analizar when no `back` is passed', () => {
     render(<ResultView product={mkProduct()} />);
     expect(screen.getByTestId('result-back')).toHaveAttribute('href', '/analizar');
     expect(screen.getByTestId('result-back')).toHaveAttribute('aria-label', 'Volver al upload');
   });
 
-  it('respects an explicit `back` override (e.g. historial detail page)', () => {
+  it('respects an explicit `back` override (e.g. catálogo detail page)', () => {
     render(
       <ResultView
         product={mkProduct()}
-        back={{ href: '/historial', label: 'Volver al historial' }}
+        back={{ href: '/catalogo', label: 'Volver al catálogo' }}
       />,
     );
     const back = screen.getByTestId('result-back');
-    expect(back).toHaveAttribute('href', '/historial');
-    expect(back).toHaveAttribute('aria-label', 'Volver al historial');
+    expect(back).toHaveAttribute('href', '/catalogo');
+    expect(back).toHaveAttribute('aria-label', 'Volver al catálogo');
   });
 
   it('renders the `contextLabel` eyebrow above the category when provided', () => {

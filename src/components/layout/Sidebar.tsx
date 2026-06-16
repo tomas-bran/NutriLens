@@ -23,10 +23,10 @@ import { NAV_ITEMS, type ActiveNavItem, type NavItem } from './nav-config';
 
 export interface SidebarProps {
   active?: ActiveNavItem;
-  historialCount?: number;
+  catalogoCount?: number;
 }
 
-export function Sidebar({ active, historialCount }: SidebarProps) {
+export function Sidebar({ active, catalogoCount }: SidebarProps) {
   return (
     <aside
       data-testid="app-sidebar"
@@ -39,7 +39,7 @@ export function Sidebar({ active, historialCount }: SidebarProps) {
             key={item.id}
             item={item}
             active={active === item.id}
-            badge={item.id === 'historial' ? historialCount : undefined}
+            badge={item.id === 'catalogo' ? catalogoCount : undefined}
           />
         ))}
       </nav>

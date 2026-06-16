@@ -29,7 +29,7 @@ const ok = (raw: string): IaCallResult => ({ raw, usage: { in: 1, out: 1 }, late
 
 const convo: StoredMessage[] = [
   { role: 'user', text: '¿Qué galletitas sin gluten tengo?' },
-  { role: 'assistant', text: 'Tenés 2 productos sin gluten en tu historial.' },
+  { role: 'assistant', text: 'Tenés 2 productos sin gluten en tu catálogo.' },
 ];
 
 describe('buildTranscript', () => {

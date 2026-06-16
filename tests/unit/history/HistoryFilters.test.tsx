@@ -54,10 +54,10 @@ describe('<HistoryFilters>', () => {
 
   it('renders one select for each filter dimension', () => {
     render(<HistoryFilters value={{ page: 1 }} />);
-    expect(screen.getByTestId('history-filter-categoria')).toBeInTheDocument();
-    expect(screen.getByTestId('history-filter-riesgo')).toBeInTheDocument();
-    expect(screen.getByTestId('history-filter-alergeno')).toBeInTheDocument();
-    expect(screen.getByTestId('history-filter-apto')).toBeInTheDocument();
+    expect(screen.getByTestId('catalogo-filter-categoria')).toBeInTheDocument();
+    expect(screen.getByTestId('catalogo-filter-riesgo')).toBeInTheDocument();
+    expect(screen.getByTestId('catalogo-filter-alergeno')).toBeInTheDocument();
+    expect(screen.getByTestId('catalogo-filter-apto')).toBeInTheDocument();
   });
 
   it('reflects the current filter value in each select', () => {
@@ -73,52 +73,52 @@ describe('<HistoryFilters>', () => {
         }}
       />,
     );
-    expect(screen.getByTestId('history-filter-categoria')).toHaveValue('galletitas');
-    expect(screen.getByTestId('history-filter-riesgo')).toHaveValue('alto');
-    expect(screen.getByTestId('history-filter-alergeno')).toHaveValue('gluten');
-    expect(screen.getByTestId('history-filter-apto')).toHaveValue('vegano');
-    expect(screen.getByTestId('history-search-input')).toHaveValue('choco');
+    expect(screen.getByTestId('catalogo-filter-categoria')).toHaveValue('galletitas');
+    expect(screen.getByTestId('catalogo-filter-riesgo')).toHaveValue('alto');
+    expect(screen.getByTestId('catalogo-filter-alergeno')).toHaveValue('gluten');
+    expect(screen.getByTestId('catalogo-filter-apto')).toHaveValue('vegano');
+    expect(screen.getByTestId('catalogo-search-input')).toHaveValue('choco');
   });
 
   it('pushes a URL with the new categoria when select changes', () => {
     render(<HistoryFilters value={{ page: 3 }} />);
-    fireEvent.change(screen.getByTestId('history-filter-categoria'), {
+    fireEvent.change(screen.getByTestId('catalogo-filter-categoria'), {
       target: { value: 'galletitas' },
     });
-    expect(push).toHaveBeenCalledWith('/historial?categoria=galletitas', { scroll: false });
+    expect(push).toHaveBeenCalledWith('/catalogo?categoria=galletitas', { scroll: false });
   });
 
-  it('resets page=1 when changing a filter (page=3 → /historial?categoria=...)', () => {
+  it('resets page=1 when changing a filter (page=3 → /catalogo?categoria=...)', () => {
     render(<HistoryFilters value={{ page: 3 }} />);
-    fireEvent.change(screen.getByTestId('history-filter-riesgo'), {
+    fireEvent.change(screen.getByTestId('catalogo-filter-riesgo'), {
       target: { value: 'medio' },
     });
     // page omitted in URL because the helper drops page=1
-    expect(push).toHaveBeenCalledWith('/historial?riesgo=medio', { scroll: false });
+    expect(push).toHaveBeenCalledWith('/catalogo?riesgo=medio', { scroll: false });
   });
 
   it('clears the filter when the user picks the "Todas" option', () => {
     render(<HistoryFilters value={{ categoria: 'snacks', page: 1 }} />);
-    fireEvent.change(screen.getByTestId('history-filter-categoria'), {
+    fireEvent.change(screen.getByTestId('catalogo-filter-categoria'), {
       target: { value: '' },
     });
-    expect(push).toHaveBeenCalledWith('/historial', { scroll: false });
+    expect(push).toHaveBeenCalledWith('/catalogo', { scroll: false });
   });
 
   it('submits the search input by pushing q=<value>', () => {
     render(<HistoryFilters value={{ page: 1 }} />);
-    const input = screen.getByTestId('history-search-input');
+    const input = screen.getByTestId('catalogo-search-input');
     fireEvent.change(input, { target: { value: 'leche' } });
     fireEvent.submit(input.closest('form')!);
-    expect(push).toHaveBeenCalledWith('/historial?q=leche', { scroll: false });
+    expect(push).toHaveBeenCalledWith('/catalogo?q=leche', { scroll: false });
   });
 
   it('treats whitespace-only search input as no filter', () => {
     render(<HistoryFilters value={{ q: 'something', page: 1 }} />);
-    const input = screen.getByTestId('history-search-input');
+    const input = screen.getByTestId('catalogo-search-input');
     fireEvent.change(input, { target: { value: '   ' } });
     fireEvent.submit(input.closest('form')!);
-    expect(push).toHaveBeenCalledWith('/historial', { scroll: false });
+    expect(push).toHaveBeenCalledWith('/catalogo', { scroll: false });
   });
 
   describe('debounce del buscador (auditoría 2026-05)', () => {
@@ -128,7 +128,7 @@ describe('<HistoryFilters>', () => {
 
     it('NO pushea hasta que pasaron 300ms del último keystroke', () => {
       render(<HistoryFilters value={{ page: 1 }} />);
-      const input = screen.getByTestId('history-search-input');
+      const input = screen.getByTestId('catalogo-search-input');
       fireEvent.change(input, { target: { value: 'l' } });
       fireEvent.change(input, { target: { value: 'le' } });
       fireEvent.change(input, { target: { value: 'lec' } });
@@ -142,12 +142,12 @@ describe('<HistoryFilters>', () => {
         vi.advanceTimersByTime(100);
       });
       expect(push).toHaveBeenCalledTimes(1);
-      expect(push).toHaveBeenCalledWith('/historial?q=lec', { scroll: false });
+      expect(push).toHaveBeenCalledWith('/catalogo?q=lec', { scroll: false });
     });
 
     it('cancela el push anterior si el usuario sigue tipeando antes del tick', () => {
       render(<HistoryFilters value={{ page: 1 }} />);
-      const input = screen.getByTestId('history-search-input');
+      const input = screen.getByTestId('catalogo-search-input');
       fireEvent.change(input, { target: { value: 'le' } });
       act(() => {
         vi.advanceTimersByTime(250);
@@ -163,30 +163,30 @@ describe('<HistoryFilters>', () => {
         vi.advanceTimersByTime(50);
       });
       expect(push).toHaveBeenCalledOnce();
-      expect(push).toHaveBeenCalledWith('/historial?q=leche', { scroll: false });
+      expect(push).toHaveBeenCalledWith('/catalogo?q=leche', { scroll: false });
     });
 
     it('limpia el filtro `q` cuando el usuario borra el input (string vacío)', () => {
       render(<HistoryFilters value={{ q: 'leche', page: 1 }} />);
-      const input = screen.getByTestId('history-search-input');
+      const input = screen.getByTestId('catalogo-search-input');
       fireEvent.change(input, { target: { value: '' } });
       act(() => {
         vi.advanceTimersByTime(300);
       });
-      expect(push).toHaveBeenCalledWith('/historial', { scroll: false });
+      expect(push).toHaveBeenCalledWith('/catalogo', { scroll: false });
     });
 
     it('submit (Enter) pushea inmediato sin esperar el debounce', () => {
       render(<HistoryFilters value={{ page: 1 }} />);
-      const input = screen.getByTestId('history-search-input');
+      const input = screen.getByTestId('catalogo-search-input');
       fireEvent.change(input, { target: { value: 'instant' } });
       fireEvent.submit(input.closest('form')!);
-      expect(push).toHaveBeenCalledWith('/historial?q=instant', { scroll: false });
+      expect(push).toHaveBeenCalledWith('/catalogo?q=instant', { scroll: false });
     });
 
     it('no pushea cuando el debounced normalizado coincide con el valor actual', () => {
       render(<HistoryFilters value={{ q: 'leche', page: 1 }} />);
-      const input = screen.getByTestId('history-search-input');
+      const input = screen.getByTestId('catalogo-search-input');
       // El usuario re-tipea el mismo texto (con espacios).
       fireEvent.change(input, { target: { value: '  leche  ' } });
       act(() => {
@@ -200,38 +200,38 @@ describe('<HistoryFilters>', () => {
 describe('<HistoryFilters> — bottomsheet en mobile', () => {
   it('muestra el contador de filtros activos en el botón "Filtros"', () => {
     render(<HistoryFilters value={{ categoria: 'galletitas', riesgo: 'alto', page: 1 }} />);
-    expect(screen.getByTestId('history-filter-count')).toHaveTextContent('2');
+    expect(screen.getByTestId('catalogo-filter-count')).toHaveTextContent('2');
   });
 
   it('no renderiza el contador cuando no hay filtros activos (solo la búsqueda no cuenta)', () => {
     render(<HistoryFilters value={{ q: 'choco', page: 1 }} />);
-    expect(screen.queryByTestId('history-filter-count')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('catalogo-filter-count')).not.toBeInTheDocument();
   });
 
   it('el botón "Filtros" abre el bottomsheet (el toolbar pasa a panel fixed + backdrop)', () => {
     render(<HistoryFilters value={{ page: 1 }} />);
     // Cerrado: el toolbar está oculto y no hay backdrop ni botón cerrar.
-    expect(screen.getByTestId('history-filter-toolbar').className).toContain('hidden');
-    expect(screen.queryByTestId('history-filter-backdrop')).not.toBeInTheDocument();
+    expect(screen.getByTestId('catalogo-filter-toolbar').className).toContain('hidden');
+    expect(screen.queryByTestId('catalogo-filter-backdrop')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByTestId('history-filter-open'));
+    fireEvent.click(screen.getByTestId('catalogo-filter-open'));
 
     // Abierto: el toolbar es un panel fixed al fondo + aparece backdrop y cerrar.
-    const toolbar = screen.getByTestId('history-filter-toolbar');
+    const toolbar = screen.getByTestId('catalogo-filter-toolbar');
     expect(toolbar.className).toContain('fixed');
     expect(toolbar.className).toContain('bottom-0');
-    expect(screen.getByTestId('history-filter-backdrop')).toBeInTheDocument();
-    expect(screen.getByTestId('history-filter-close')).toBeInTheDocument();
+    expect(screen.getByTestId('catalogo-filter-backdrop')).toBeInTheDocument();
+    expect(screen.getByTestId('catalogo-filter-close')).toBeInTheDocument();
   });
 
   it('el botón cerrar y el backdrop cierran el bottomsheet', () => {
     render(<HistoryFilters value={{ page: 1 }} />);
-    fireEvent.click(screen.getByTestId('history-filter-open'));
-    fireEvent.click(screen.getByTestId('history-filter-close'));
-    expect(screen.getByTestId('history-filter-toolbar').className).toContain('hidden');
+    fireEvent.click(screen.getByTestId('catalogo-filter-open'));
+    fireEvent.click(screen.getByTestId('catalogo-filter-close'));
+    expect(screen.getByTestId('catalogo-filter-toolbar').className).toContain('hidden');
 
-    fireEvent.click(screen.getByTestId('history-filter-open'));
-    fireEvent.click(screen.getByTestId('history-filter-backdrop'));
-    expect(screen.getByTestId('history-filter-toolbar').className).toContain('hidden');
+    fireEvent.click(screen.getByTestId('catalogo-filter-open'));
+    fireEvent.click(screen.getByTestId('catalogo-filter-backdrop'));
+    expect(screen.getByTestId('catalogo-filter-toolbar').className).toContain('hidden');
   });
 });

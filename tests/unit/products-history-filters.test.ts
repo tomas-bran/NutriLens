@@ -1,5 +1,5 @@
 /**
- * Unit tests for the `/historial` filter helpers.
+ * Unit tests for the `/catalogo` filter helpers.
  * Pure utilities (no React) — every Gherkin escenario of US-24 lands on
  * either these helpers or the UI components built on top.
  */
@@ -69,7 +69,7 @@ describe('parseHistoryFilters', () => {
 
 describe('buildHistoryUrl', () => {
   it('returns the bare path when no filter is active', () => {
-    expect(buildHistoryUrl({ page: 1 })).toBe('/historial');
+    expect(buildHistoryUrl({ page: 1 })).toBe('/catalogo');
   });
 
   it('emits all filters as query params and preserves order roughly', () => {
@@ -91,7 +91,7 @@ describe('buildHistoryUrl', () => {
 
   it('includes page when > 1', () => {
     const url = buildHistoryUrl({ page: 3 });
-    expect(url).toBe('/historial?page=3');
+    expect(url).toBe('/catalogo?page=3');
   });
 
   it('URL-encodes free-text q', () => {

@@ -1,7 +1,7 @@
 /**
  * Unit tests for <HomeView> — covers the two key US-07 escenarios:
  * AC1 (informative landing — hero/cómo funciona/ejemplos visible)
- * AC2 (historial CTA appears only when there are analyzed products).
+ * AC2 (catálogo CTA appears only when there are analyzed products).
  */
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -54,21 +54,21 @@ describe('<HomeView> — empty history (US-07 §AC2, no products yet)', () => {
     expect(
       screen.queryByRole('heading', { level: 3, name: 'Tu catálogo' }),
     ).not.toBeInTheDocument();
-    expect(screen.queryByTestId('history-cta')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('catalogo-cta')).not.toBeInTheDocument();
   });
 });
 
 describe('<HomeView> — with history (US-07 §AC2, productos previos)', () => {
-  it('renders the "Tu catálogo" card with the count and a link to /historial', () => {
+  it('renders the "Tu catálogo" card with the count and a link to /catalogo', () => {
     render(<HomeView historyCount={5} />);
     expect(screen.getByRole('heading', { level: 3, name: 'Tu catálogo' })).toBeInTheDocument();
     expect(screen.getByText('Ya analizaste 5 productos.')).toBeInTheDocument();
-    expect(screen.getByTestId('history-cta')).toHaveAttribute('href', '/historial');
+    expect(screen.getByTestId('catalogo-cta')).toHaveAttribute('href', '/catalogo');
   });
 
-  it('shows the badge count next to the Historial nav item', () => {
+  it('shows the badge count next to the Catálogo nav item', () => {
     render(<HomeView historyCount={12} />);
-    const navItem = screen.getByTestId('nav-historial');
+    const navItem = screen.getByTestId('nav-catalogo');
     expect(navItem).toHaveTextContent('12');
   });
 

@@ -1,7 +1,7 @@
 /**
  * GET /api/products/healthiest?categoria=X&topK=5
  *
- * Returns top-K healthiest products from the historial, scored by
+ * Returns top-K healthiest products from the catálogo, scored by
  * riesgo + sellos + aptitudes. NL-403.
  *
  * Query params:
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     // The ranking needs the full candidate set: any windowed fetch (e.g. the
     // N most recent) can leave the actual healthiest products out. At
-    // historial scale this is cheap; if it grows, move the score into SQL
+    // catálogo scale this is cheap; if it grows, move the score into SQL
     // and order there.
     const rows = await prisma.product.findMany({ where });
 

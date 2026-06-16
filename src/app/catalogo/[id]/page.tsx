@@ -1,8 +1,8 @@
 /**
- * `/historial/[id]` — detalle de un producto del historial.
+ * `/catalogo/[id]` — detalle de un producto del catálogo.
  *
  * Spec: `docs/specs/E04-persistencia-e-historial.md §6.5` — reutiliza
- * <ResultView> con `back` apuntando a `/historial` y un eyebrow
+ * <ResultView> con `back` apuntando a `/catalogo` y un eyebrow
  * contextual "Producto guardado".
  */
 import { notFound } from 'next/navigation';
@@ -10,7 +10,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { ResultView } from '@/components/result/ResultView';
 import { isCurrentUserAdmin } from '@/lib/auth/is-admin';
 import { prisma } from '@/lib/db';
-import { getHistorialCount } from '@/lib/products/count';
+import { getCatalogoCount } from '@/lib/products/count';
 import { toDetail } from '@/lib/products/serializers';
 
 interface PageProps {
@@ -23,7 +23,7 @@ export const metadata = {
 
 export const dynamic = 'force-dynamic';
 
-export default async function HistorialDetailPage({ params }: PageProps) {
+export default async function CatalogoDetailPage({ params }: PageProps) {
   const { id } = await params;
 
   const product = await prisma.product.findUnique({ where: { id } }).catch(() => null);
@@ -32,13 +32,13 @@ export default async function HistorialDetailPage({ params }: PageProps) {
   }
 
   const detail = toDetail(product);
-  const [historialCount, isAdmin] = await Promise.all([getHistorialCount(), isCurrentUserAdmin()]);
+  const [catalogoCount, isAdmin] = await Promise.all([getCatalogoCount(), isCurrentUserAdmin()]);
 
   return (
-    <AppShell active="historial" historialCount={historialCount} fluid>
+    <AppShell active="catalogo" catalogoCount={catalogoCount} fluid>
       <ResultView
         product={detail}
-        back={{ href: '/historial', label: 'Volver al catálogo' }}
+        back={{ href: '/catalogo', label: 'Volver al catálogo' }}
         contextLabel="Producto guardado"
         showTechnicalViews={isAdmin}
       />

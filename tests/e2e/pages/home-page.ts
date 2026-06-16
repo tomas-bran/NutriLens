@@ -23,7 +23,7 @@ export class HomePage {
     this.heroCta = page.getByTestId('hero-cta');
     this.howItWorksHeading = page.getByRole('heading', { level: 2, name: 'Cómo funciona' });
     this.examplesHeading = page.getByRole('heading', { level: 2, name: 'Ejemplos válidos' });
-    this.historyCta = page.getByTestId('history-cta');
+    this.historyCta = page.getByTestId('catalogo-cta');
     this.sidebar = page.getByTestId('app-sidebar');
     this.disclaimer = page.getByRole('note');
   }

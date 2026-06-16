@@ -5,7 +5,7 @@
  * Cada vez que el asistente responde, la conversación se guarda/actualiza.
  * Al resetear se crea una nueva conversación vacía en memoria.
  *
- * NL-302: renombrar y eliminar desde el panel de historial de chats.
+ * NL-302: renombrar y eliminar desde el panel de catálogo de chats.
  */
 'use client';
 

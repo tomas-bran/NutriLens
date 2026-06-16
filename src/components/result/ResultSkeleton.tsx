@@ -1,6 +1,6 @@
 /**
  * <ResultSkeleton> — placeholder con la silueta de <ResultView> mientras el
- * server resuelve el producto (loading.tsx de /analizar/[id] y /historial/[id]).
+ * server resuelve el producto (loading.tsx de /analizar/[id] y /catalogo/[id]).
  * Evita el "flash" de la página con solo los labels estáticos y sin datos.
  */
 const BLOCK = 'animate-pulse rounded-2xl bg-[var(--color-surface)]';

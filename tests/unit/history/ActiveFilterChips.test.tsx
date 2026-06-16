@@ -41,17 +41,17 @@ describe('<ActiveFilterChips>', () => {
     expect(screen.getByTestId('filter-chip-q')).toBeInTheDocument();
   });
 
-  it('each chip links to the historial URL without that filter', () => {
+  it('each chip links to the catálogo URL without that filter', () => {
     render(<ActiveFilterChips filters={{ categoria: 'galletitas', riesgo: 'alto', page: 1 }} />);
     // Removing `categoria` leaves only `riesgo`.
     expect(screen.getByTestId('filter-chip-categoria')).toHaveAttribute(
       'href',
-      '/historial?riesgo=alto',
+      '/catalogo?riesgo=alto',
     );
     // Removing `riesgo` leaves only `categoria`.
     expect(screen.getByTestId('filter-chip-riesgo')).toHaveAttribute(
       'href',
-      '/historial?categoria=galletitas',
+      '/catalogo?categoria=galletitas',
     );
   });
 
@@ -60,6 +60,6 @@ describe('<ActiveFilterChips>', () => {
     expect(screen.queryByTestId('filter-clear-all')).not.toBeInTheDocument();
 
     rerender(<ActiveFilterChips filters={{ categoria: 'snacks', riesgo: 'medio', page: 1 }} />);
-    expect(screen.getByTestId('filter-clear-all')).toHaveAttribute('href', '/historial');
+    expect(screen.getByTestId('filter-clear-all')).toHaveAttribute('href', '/catalogo');
   });
 });

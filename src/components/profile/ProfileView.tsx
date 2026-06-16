@@ -231,7 +231,7 @@ function LinksCard({ analizados }: { analizados: number }) {
   return (
     <section className="overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white">
       <LinkRow
-        href="/historial?filtro=mios"
+        href="/catalogo?filtro=mios"
         icon="salad"
         title="Mis análisis"
         desc={`${analizados} productos guardados`}

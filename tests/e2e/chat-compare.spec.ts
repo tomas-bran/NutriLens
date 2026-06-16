@@ -18,7 +18,7 @@ test.afterAll(async () => {
   await disconnect();
 });
 
-test.describe('US-31 §1 — ambos productos en historial', () => {
+test.describe('US-31 §1 — ambos productos en catálogo', () => {
   test.beforeAll(async () => {
     await clearProducts();
     await seedChatCompareFixtures();
@@ -45,7 +45,7 @@ test.describe('US-31 §1 — ambos productos en historial', () => {
   });
 });
 
-test.describe('US-31 §2 — un producto falta en el historial', () => {
+test.describe('US-31 §2 — un producto falta en el catálogo', () => {
   test.beforeAll(async () => {
     await clearProducts();
     await seedChatOnlyOneForCompare();

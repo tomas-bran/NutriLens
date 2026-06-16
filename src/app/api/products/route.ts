@@ -1,5 +1,5 @@
 /**
- * GET /api/products — historial paginado y filtrable (spec E04 §5.1).
+ * GET /api/products — catálogo paginado y filtrable (spec E04 §5.1).
  *
  * Query params: categoria, riesgo, alergeno, apto, q, page, pageSize, sort.
  * Response shape: { items: ProductListItem[], page, pageSize, total, totalPages }.

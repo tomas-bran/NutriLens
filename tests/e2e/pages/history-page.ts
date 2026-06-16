@@ -2,7 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 /**
- * Page Object for `/historial` and `/historial/[id]`.
+ * Page Object for `/catalogo` and `/catalogo/[id]`.
  * Spec: `docs/specs/E04 §6` (US-23, US-26).
  */
 export class HistoryPage {
@@ -13,16 +13,16 @@ export class HistoryPage {
   private readonly noResultsClear: Locator;
   private readonly activeChips: Locator;
   constructor(private readonly page: Page) {
-    this.view = page.getByTestId('history-view');
-    this.grid = page.getByTestId('history-grid');
-    this.empty = page.getByTestId('history-empty');
-    this.noResults = page.getByTestId('history-no-results');
-    this.noResultsClear = page.getByTestId('history-no-results-clear');
+    this.view = page.getByTestId('catalogo-view');
+    this.grid = page.getByTestId('catalogo-grid');
+    this.empty = page.getByTestId('catalogo-empty');
+    this.noResults = page.getByTestId('catalogo-no-results');
+    this.noResultsClear = page.getByTestId('catalogo-no-results-clear');
     this.activeChips = page.getByTestId('active-filter-chips');
   }
 
   async goto() {
-    await this.page.goto('/historial');
+    await this.page.goto('/catalogo');
     await expect(this.view).toBeVisible();
   }
 
@@ -31,12 +31,12 @@ export class HistoryPage {
   }
 
   async expectAtLeastNItems(n: number) {
-    const items = this.page.locator('a[data-testid^="history-item-"]');
+    const items = this.page.locator('a[data-testid^="catalogo-item-"]');
     await expect(items.nth(n - 1)).toBeVisible();
   }
 
   async expectExactlyNItems(n: number) {
-    const items = this.page.locator('a[data-testid^="history-item-"]');
+    const items = this.page.locator('a[data-testid^="catalogo-item-"]');
     await expect(items).toHaveCount(n);
   }
 
@@ -53,15 +53,15 @@ export class HistoryPage {
   }
 
   private async openFiltersIfNeeded() {
-    const openBtn = this.page.getByTestId('history-filter-open');
+    const openBtn = this.page.getByTestId('catalogo-filter-open');
     if (await openBtn.isVisible({ timeout: 500 }).catch(() => false)) {
       await openBtn.click();
-      await this.page.getByTestId('history-filter-categoria').waitFor({ state: 'visible' });
+      await this.page.getByTestId('catalogo-filter-categoria').waitFor({ state: 'visible' });
     }
   }
 
   private async closeFiltersIfNeeded() {
-    const closeBtn = this.page.getByTestId('history-filter-close');
+    const closeBtn = this.page.getByTestId('catalogo-filter-close');
     if (await closeBtn.isVisible({ timeout: 500 }).catch(() => false)) {
       await closeBtn.click();
     }
@@ -76,19 +76,19 @@ export class HistoryPage {
   }
 
   async selectCategoria(value: string) {
-    await this.selectRadixOption('history-filter-categoria', value, /categoria=/);
+    await this.selectRadixOption('catalogo-filter-categoria', value, /categoria=/);
   }
 
   async selectRiesgo(value: string) {
-    await this.selectRadixOption('history-filter-riesgo', value, /riesgo=/);
+    await this.selectRadixOption('catalogo-filter-riesgo', value, /riesgo=/);
   }
 
   async selectAlergeno(value: string) {
-    await this.selectRadixOption('history-filter-alergeno', value, /alergeno=/);
+    await this.selectRadixOption('catalogo-filter-alergeno', value, /alergeno=/);
   }
 
   async selectApto(value: string) {
-    await this.selectRadixOption('history-filter-apto', value, /apto=/);
+    await this.selectRadixOption('catalogo-filter-apto', value, /apto=/);
   }
 
   async expectActiveChip(key: string) {
@@ -111,9 +111,9 @@ export class HistoryPage {
    * Click the first product card and wait for the detail page.
    */
   async openFirstDetail() {
-    const first = this.page.locator('a[data-testid^="history-item-"]').first();
+    const first = this.page.locator('a[data-testid^="catalogo-item-"]').first();
     await first.click();
-    await this.page.waitForURL(/\/historial\/[^/]+$/);
+    await this.page.waitForURL(/\/catalogo\/[^/]+$/);
     await expect(this.page.getByTestId('result-view')).toBeVisible();
   }
 
@@ -123,6 +123,6 @@ export class HistoryPage {
 
   async backToHistoryFromDetail() {
     await this.page.getByTestId('result-back').click();
-    await this.page.waitForURL(/\/historial$/);
+    await this.page.waitForURL(/\/catalogo$/);
   }
 }

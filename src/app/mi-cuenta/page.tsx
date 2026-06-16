@@ -9,7 +9,7 @@ import { ProfileView } from '@/components/profile/ProfileView';
 import { auth } from '@/lib/auth';
 import { getUserId } from '@/lib/auth/current-user';
 import { prisma } from '@/lib/db';
-import { getHistorialCount } from '@/lib/products/count';
+import { getCatalogoCount } from '@/lib/products/count';
 import { getUserPrefs } from '@/lib/prefs/server';
 
 export const metadata = { title: 'Mi cuenta · NutriLens' };
@@ -24,8 +24,8 @@ export default async function MiCuentaPage() {
   // local el id de lectura y escritura divergen y las prefs "no persisten".
   const userId = (await getUserId()) ?? session.user.id;
 
-  const [historialCount, analizados, riesgoAlto, conAlergenos, initialPrefs] = await Promise.all([
-    getHistorialCount(),
+  const [catalogoCount, analizados, riesgoAlto, conAlergenos, initialPrefs] = await Promise.all([
+    getCatalogoCount(),
     prisma.product.count(),
     prisma.product.count({ where: { riesgo: 'alto' } }),
     // "sin alérgenos" = los que tienen el array vacío serializado como "[]".
@@ -41,7 +41,7 @@ export default async function MiCuentaPage() {
   const stats = { analizados, riesgoAlto, sinAlergenos: conAlergenos };
 
   return (
-    <AppShell active="perfil" historialCount={historialCount}>
+    <AppShell active="perfil" catalogoCount={catalogoCount}>
       <ProfileView user={user} stats={stats} initialPrefs={initialPrefs} />
     </AppShell>
   );

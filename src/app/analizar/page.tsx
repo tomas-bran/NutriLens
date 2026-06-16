@@ -6,7 +6,7 @@
 import { AppShell } from '@/components/layout/AppShell';
 import { Disclaimer } from '@/components/ui/Disclaimer';
 import { UploadFlow } from '@/components/upload/UploadFlow';
-import { getHistorialCount } from '@/lib/products/count';
+import { getCatalogoCount } from '@/lib/products/count';
 
 export const metadata = {
   title: 'Analizar etiqueta · NutriLens',
@@ -15,9 +15,9 @@ export const metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function AnalizarPage() {
-  const historialCount = await getHistorialCount();
+  const catalogoCount = await getCatalogoCount();
   return (
-    <AppShell active="analizar" historialCount={historialCount}>
+    <AppShell active="analizar" catalogoCount={catalogoCount}>
       <div className="flex flex-col gap-6 px-4 py-2 md:px-6 md:py-6">
         <header className="hidden flex-col gap-1 md:flex">
           <h1 className="text-[26px] font-bold leading-tight text-[var(--color-text)]">

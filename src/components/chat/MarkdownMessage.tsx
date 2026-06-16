@@ -45,8 +45,8 @@ const COMPONENTS: Components = {
     />
   ),
   a: ({ href, ...props }) => {
-    // Links internos (ej. [Producto](/historial/<id>) que emite el chat para
-    // referenciar productos del historial): navegación SPA en la misma tab.
+    // Links internos (ej. [Producto](/catalogo/<id>) que emite el chat para
+    // referenciar productos del catálogo): navegación SPA en la misma tab.
     // Externos: tab nueva con noopener.
     if (href?.startsWith('/')) {
       const { children, ...rest } = props;

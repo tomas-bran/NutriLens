@@ -1,6 +1,6 @@
 /**
- * "Tu historial" card — rendered only when the user already has products
- * analyzed (US-07 escenario 2). Links to `/historial`.
+ * "Tu catálogo" card — rendered only when the user already has products
+ * analyzed (US-07 escenario 2). Links to `/catalogo`.
  */
 import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
@@ -28,8 +28,8 @@ export function HistoryCard({ count }: HistoryCardProps) {
         </div>
       </div>
       <Link
-        href="/historial"
-        data-testid="history-cta"
+        href="/catalogo"
+        data-testid="catalogo-cta"
         className="inline-flex items-center justify-center gap-1.5 self-start rounded-full border border-[var(--color-border)] bg-white px-4 py-2 text-[13px] font-bold text-[var(--color-text)] transition-colors hover:bg-[var(--color-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 md:self-auto"
       >
         Ver catálogo

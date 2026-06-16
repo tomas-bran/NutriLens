@@ -24,8 +24,8 @@ export type { ActiveNavItem };
 
 export interface AppShellProps {
   active?: ActiveNavItem;
-  /** Optional badge count next to the Historial nav item. */
-  historialCount?: number;
+  /** Optional badge count next to the Catálogo nav item. */
+  catalogoCount?: number;
   /**
    * Cuando es true el contenido ocupa todo el ancho del área (menos el padding
    * del `main`), sin el cap de 1100px. La home lo usa para no dejar tanto
@@ -35,13 +35,13 @@ export interface AppShellProps {
   children: ReactNode;
 }
 
-export function AppShell({ active, historialCount, fluid, children }: AppShellProps) {
+export function AppShell({ active, catalogoCount, fluid, children }: AppShellProps) {
   return (
     <div
       data-testid="app-shell"
       className="flex h-[100dvh] flex-col bg-[var(--color-bg)] md:grid md:h-auto md:min-h-screen md:grid-cols-[15rem_1fr]"
     >
-      <Sidebar active={active} historialCount={historialCount} />
+      <Sidebar active={active} catalogoCount={catalogoCount} />
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-3 py-3 md:col-start-2 md:block md:overflow-y-visible md:px-6 md:py-6">
         <div
           className={cn(
@@ -52,7 +52,7 @@ export function AppShell({ active, historialCount, fluid, children }: AppShellPr
           {children}
         </div>
       </main>
-      <MobileBottomNav active={active} historialCount={historialCount} />
+      <MobileBottomNav active={active} catalogoCount={catalogoCount} />
     </div>
   );
 }

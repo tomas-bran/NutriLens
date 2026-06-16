@@ -1,5 +1,5 @@
 /**
- * Tipos para el historial de chats persistente (NL-301/302).
+ * Tipos para el catálogo de chats persistente (NL-301/302).
  */
 import type { ChatProductRef } from '@/lib/chat/response';
 import type { ChatFallback } from '@/lib/chat/empty-response';

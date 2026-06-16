@@ -20,7 +20,7 @@ export interface HomeViewProps {
 
 export function HomeView({ historyCount, userName }: HomeViewProps) {
   return (
-    <AppShell active="inicio" historialCount={historyCount} fluid>
+    <AppShell active="inicio" catalogoCount={historyCount} fluid>
       <div className="flex flex-col gap-6 py-2 md:py-4">
         <PageHeader userName={userName} />
 

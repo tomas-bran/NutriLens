@@ -250,7 +250,7 @@ describe('handleChat — errores del provider', () => {
 });
 
 describe('handleChat — compare con ambos productos en DB (US-31 §1)', () => {
-  it('llama al LLM con intent compare cuando ambos productos están en el historial', async () => {
+  it('llama al LLM con intent compare cuando ambos productos están en el catálogo', async () => {
     const products = [
       row({ id: 'p1', nombre: 'Galletitas X' }),
       row({ id: 'p2', nombre: 'Galletitas Y' }),

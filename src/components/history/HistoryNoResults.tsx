@@ -14,7 +14,7 @@ export function HistoryNoResults() {
       padding="lg"
       rounded="xl"
       className="mx-auto flex max-w-md flex-col items-center gap-4 text-center"
-      data-testid="history-no-results"
+      data-testid="catalogo-no-results"
     >
       <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-surface)] text-[var(--color-text-muted)]">
         <Icon name="scan-line" className="h-8 w-8" />
@@ -29,7 +29,7 @@ export function HistoryNoResults() {
       </div>
       <Link
         href={buildHistoryUrl({ page: 1 })}
-        data-testid="history-no-results-clear"
+        data-testid="catalogo-no-results-clear"
         scroll={false}
         className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-5 py-2.5 text-[14px] font-bold text-white shadow-[0_2px_8px_0_rgba(22,163,74,0.25)] transition-colors hover:bg-[var(--color-primary-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
       >

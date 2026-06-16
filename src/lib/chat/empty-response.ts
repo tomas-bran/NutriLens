@@ -1,7 +1,7 @@
 /**
  * Respuestas canónicas para los casos donde NO invocamos al LLM de
  * generación: retrieval vacío (US-30), intent unknown (E05 §8), y compare con
- * uno o más productos faltantes en el historial (US-31 §2 + E05 §13).
+ * uno o más productos faltantes en el catálogo (US-31 §2 + E05 §13).
  *
  * Mantener estos textos en un único lugar — son visibles para el usuario y
  * verificados por tests de integración + E2E.
@@ -23,7 +23,7 @@ export interface ChatFallback {
   showAnalyzeCta: boolean;
   /**
    * Solo presente cuando `reason = 'missing_compare'`. Lista los nombres que
-   * el usuario pidió comparar pero no están en el historial — la UI los puede
+   * el usuario pidió comparar pero no están en el catálogo — la UI los puede
    * destacar en el mensaje si quiere.
    */
   missingProducts?: string[];

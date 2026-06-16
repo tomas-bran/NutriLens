@@ -13,7 +13,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { ResultView } from '@/components/result/ResultView';
 import { isCurrentUserAdmin } from '@/lib/auth/is-admin';
 import { prisma } from '@/lib/db';
-import { getHistorialCount } from '@/lib/products/count';
+import { getCatalogoCount } from '@/lib/products/count';
 import { toDetail } from '@/lib/products/serializers';
 
 interface PageProps {
@@ -35,10 +35,10 @@ export default async function AnalizarResultPage({ params }: PageProps) {
   }
 
   const detail = toDetail(product);
-  const [historialCount, isAdmin] = await Promise.all([getHistorialCount(), isCurrentUserAdmin()]);
+  const [catalogoCount, isAdmin] = await Promise.all([getCatalogoCount(), isCurrentUserAdmin()]);
 
   return (
-    <AppShell active="analizar" historialCount={historialCount} fluid>
+    <AppShell active="analizar" catalogoCount={catalogoCount} fluid>
       <ResultView product={detail} showTechnicalViews={isAdmin} />
     </AppShell>
   );

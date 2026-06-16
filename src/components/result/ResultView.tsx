@@ -2,7 +2,7 @@
  * <ResultView> — analysis result screen layout.
  *
  * Spec: `docs/specs/E03-clasificacion-reglas-explicacion.md §6.1` for the
- * post-analysis variant and `E04 §6.5` for the historial detail variant
+ * post-analysis variant and `E04 §6.5` for the catálogo detail variant
  * (same body, different back target + context label).
  *
  * Pure presentational — the owning Server Component fetches the
@@ -28,12 +28,12 @@ export interface ResultViewProps {
   product: ProductDetail;
   /**
    * Back button target. Defaults to `/analizar` (post-analysis flow); set to
-   * `/historial` with the matching label for the historial detail variant.
+   * `/catalogo` with the matching label for the catálogo detail variant.
    */
   back?: ResultHeaderBackAction;
   /**
    * Optional eyebrow shown above the category (e.g. "Producto guardado"
-   * on the historial detail page).
+   * on the catálogo detail page).
    */
   contextLabel?: string;
   /**
