@@ -17,7 +17,7 @@ import { AnalyzingPanel } from '@/components/upload/AnalyzingPanel';
 import { Dropzone } from '@/components/upload/Dropzone';
 import { HiddenFileInputs } from '@/components/upload/HiddenFileInputs';
 import { ObservablePipeline } from '@/components/upload/ObservablePipeline';
-import { Card } from '@/components/ui/Card';
+import { ResultSkeleton } from '@/components/result/ResultSkeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { useToast } from '@/components/ui/Toaster';
 import { mapErrorCodeToUi, resolveErrorDescription } from '@/lib/upload/error-ui-mapping';
@@ -208,13 +208,14 @@ export function UploadFlow() {
   }
 
   if (state.kind === 'COMPLETED') {
-    // Brief flash before the router replaces the page.
+    // No mostramos un "Análisis completado" intermedio: pintamos directamente
+    // el esqueleto del resultado como placeholder de donde irá la info. Así el
+    // router.push hacia `/analizar/[id]` (cuyo loading.tsx también es el mismo
+    // skeleton) encadena sin estados vacíos hasta que monta el ResultView.
     return (
-      <Card padding="lg">
-        <div className="flex flex-col items-center gap-4 text-center" data-testid="completed-state">
-          <p className="text-base font-semibold text-[var(--color-text)]">Análisis completado</p>
-        </div>
-      </Card>
+      <div data-testid="completed-state">
+        <ResultSkeleton />
+      </div>
     );
   }
 
