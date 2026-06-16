@@ -18,7 +18,7 @@ export const metadata = { title: 'Ingresar · NutriLens' };
 
 const PERKS = [
   { title: 'Análisis instantáneo', desc: 'Foto o PDF de la etiqueta, con resultado en segundos.' },
-  { title: 'Tu historial sincronizado', desc: 'Cada análisis queda guardado en tu cuenta.' },
+  { title: 'Tu catálogo sincronizado', desc: 'Cada análisis queda guardado en tu cuenta.' },
   { title: 'Chat sobre tus productos', desc: 'Preguntá y compará lo que ya escaneaste.' },
 ];
 

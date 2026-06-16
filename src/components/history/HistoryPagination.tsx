@@ -21,7 +21,7 @@ export function HistoryPagination({ page, totalPages, filters }: HistoryPaginati
   return (
     <nav
       data-testid="history-pagination"
-      aria-label="Paginación del historial"
+      aria-label="Paginación del catálogo"
       className="flex items-center justify-between border-t border-[var(--color-border)] pt-4"
     >
       <p className="text-[12px] text-[var(--color-text-muted)]">

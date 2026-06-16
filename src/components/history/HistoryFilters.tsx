@@ -146,7 +146,7 @@ export function HistoryFilters({ value }: HistoryFiltersProps) {
       className="flex flex-col gap-3"
     >
       <h2 id="history-filters-title" className="sr-only">
-        Filtros del historial
+        Filtros del catálogo
       </h2>
 
       <div className="flex items-center gap-2">
@@ -230,7 +230,7 @@ export function HistoryFilters({ value }: HistoryFiltersProps) {
             aria-hidden="true"
           />
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-[var(--color-text)]">Filtrar historial</h3>
+            <h3 className="text-base font-bold text-[var(--color-text)]">Filtrar catálogo</h3>
             <button
               type="button"
               onClick={() => setSheetOpen(false)}

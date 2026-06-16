@@ -23,7 +23,7 @@ export function HistoryCard({ count }: HistoryCardProps) {
           <Icon name="history" className="h-5 w-5" />
         </span>
         <div className="flex flex-col gap-0.5">
-          <h3 className="text-[14px] font-bold text-[var(--color-text)]">Tu historial</h3>
+          <h3 className="text-[14px] font-bold text-[var(--color-text)]">Tu catálogo</h3>
           <p className="text-[12px] text-[var(--color-text-muted)]">{subtitle}</p>
         </div>
       </div>
@@ -32,7 +32,7 @@ export function HistoryCard({ count }: HistoryCardProps) {
         data-testid="history-cta"
         className="inline-flex items-center justify-center gap-1.5 self-start rounded-full border border-[var(--color-border)] bg-white px-4 py-2 text-[13px] font-bold text-[var(--color-text)] transition-colors hover:bg-[var(--color-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 md:self-auto"
       >
-        Ver historial
+        Ver catálogo
         <Icon name="arrow-right" className="h-4 w-4" />
       </Link>
     </Card>

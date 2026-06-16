@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { HistoryCard } from '@/components/home/HistoryCard';
 
 describe('<HistoryCard>', () => {
-  it('renders the heading "Tu historial"', () => {
+  it('renders the heading "Tu catálogo"', () => {
     render(<HistoryCard count={5} />);
-    expect(screen.getByRole('heading', { level: 3, name: 'Tu historial' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: 'Tu catálogo' })).toBeInTheDocument();
   });
 
   it('uses singular copy when count is 1', () => {
@@ -22,6 +22,6 @@ describe('<HistoryCard>', () => {
     render(<HistoryCard count={3} />);
     const cta = screen.getByTestId('history-cta');
     expect(cta).toHaveAttribute('href', '/historial');
-    expect(cta).toHaveTextContent(/Ver historial/);
+    expect(cta).toHaveTextContent(/Ver catálogo/);
   });
 });

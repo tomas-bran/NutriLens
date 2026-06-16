@@ -38,7 +38,7 @@ export default async function HistorialDetailPage({ params }: PageProps) {
     <AppShell active="historial" historialCount={historialCount} fluid>
       <ResultView
         product={detail}
-        back={{ href: '/historial', label: 'Volver al historial' }}
+        back={{ href: '/historial', label: 'Volver al catálogo' }}
         contextLabel="Producto guardado"
         showTechnicalViews={isAdmin}
       />

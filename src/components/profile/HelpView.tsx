@@ -25,7 +25,7 @@ const FAQS = [
   },
   {
     q: '¿Cómo se guardan mis datos?',
-    a: 'Tus análisis quedan asociados a tu cuenta para que puedas verlos en el historial y preguntar sobre ellos en el chat. Podés cerrar sesión cuando quieras.',
+    a: 'Tus análisis quedan asociados a tu cuenta para que puedas verlos en el catálogo y preguntar sobre ellos en el chat. Podés cerrar sesión cuando quieras.',
   },
   {
     q: '¿Qué tan precisa es la lectura?',

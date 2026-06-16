@@ -105,7 +105,7 @@ export function UploadFlow() {
       showToast({
         variant: 'success',
         title: 'Producto guardado',
-        description: 'Lo encontrás en tu historial.',
+        description: 'Lo encontrás en tu catálogo.',
       });
       dispatch({ type: 'COMPLETE', id: result.id });
     } else {

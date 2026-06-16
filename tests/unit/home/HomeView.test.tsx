@@ -49,19 +49,19 @@ describe('<HomeView> — common sections (US-07 §AC1)', () => {
 });
 
 describe('<HomeView> — empty history (US-07 §AC2, no products yet)', () => {
-  it('does NOT render the "Tu historial" card when count is 0', () => {
+  it('does NOT render the "Tu catálogo" card when count is 0', () => {
     render(<HomeView historyCount={0} />);
     expect(
-      screen.queryByRole('heading', { level: 3, name: 'Tu historial' }),
+      screen.queryByRole('heading', { level: 3, name: 'Tu catálogo' }),
     ).not.toBeInTheDocument();
     expect(screen.queryByTestId('history-cta')).not.toBeInTheDocument();
   });
 });
 
 describe('<HomeView> — with history (US-07 §AC2, productos previos)', () => {
-  it('renders the "Tu historial" card with the count and a link to /historial', () => {
+  it('renders the "Tu catálogo" card with the count and a link to /historial', () => {
     render(<HomeView historyCount={5} />);
-    expect(screen.getByRole('heading', { level: 3, name: 'Tu historial' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: 'Tu catálogo' })).toBeInTheDocument();
     expect(screen.getByText('Ya analizaste 5 productos.')).toBeInTheDocument();
     expect(screen.getByTestId('history-cta')).toHaveAttribute('href', '/historial');
   });

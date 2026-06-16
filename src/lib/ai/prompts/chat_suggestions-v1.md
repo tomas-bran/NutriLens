@@ -15,7 +15,7 @@ REGLAS
   debe profundizar sobre ellos (compararlos, ver alérgenos, ver sellos).
 - CRÍTICO — solo sugerí cosas que el sistema PUEDE responder después:
   - Comparar productos POR NOMBRE, solo nombres que aparezcan en el contexto.
-  - Filtrar el historial por categoría (galletitas, cereales, snacks,
+  - Filtrar el catálogo por categoría (galletitas, cereales, snacks,
     lácteos, bebidas, sin TACC, veganos), riesgo (bajo/medio/alto), aptitud
     (celíacos/veganos/sin lactosa) o excluyendo un alérgeno ("sin gluten").
   - Preguntas de información nutricional general (qué son los sellos, cómo

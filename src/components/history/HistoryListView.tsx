@@ -68,7 +68,7 @@ function HistoryHeader({ total }: { total: number }) {
   return (
     <header className="flex flex-wrap items-end justify-between gap-3">
       <div className="flex flex-col gap-0.5">
-        <h1 className="text-[26px] font-bold leading-tight text-[var(--color-text)]">Historial</h1>
+        <h1 className="text-[26px] font-bold leading-tight text-[var(--color-text)]">Catálogo</h1>
         {total > 0 && (
           <p className="text-[13px] text-[var(--color-text-muted)]" data-testid="history-total">
             {total === 1 ? '1 producto analizado' : `${total} productos analizados`}

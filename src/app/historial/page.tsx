@@ -15,7 +15,7 @@ import { parseHistoryFilters, type RawSearchParams } from '@/lib/products/histor
 import { mapCategoriaToPrisma, toListItem } from '@/lib/products/serializers';
 
 export const metadata = {
-  title: 'Historial · NutriLens',
+  title: 'Catálogo · NutriLens',
 };
 
 export const dynamic = 'force-dynamic';

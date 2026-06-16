@@ -45,6 +45,6 @@ describe('<PipelineStepper>', () => {
     expect(screen.getByText('¿Es una etiqueta?')).toBeInTheDocument();
     expect(screen.getByText('Lectura de la etiqueta')).toBeInTheDocument();
     expect(screen.getByText('Cálculo de riesgo')).toBeInTheDocument();
-    expect(screen.getByText('Guardar en tu historial')).toBeInTheDocument();
+    expect(screen.getByText('Guardar en tu catálogo')).toBeInTheDocument();
   });
 });

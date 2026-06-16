@@ -58,7 +58,7 @@ export const PIPELINE_STEPS: ReadonlyArray<PipelineStepDef> = [
   },
   {
     id: 'persist',
-    title: 'Guardar en tu historial',
+    title: 'Guardar en tu catálogo',
     detail: 'Disponible en tu cuenta',
     pendingIcon: 'history',
   },

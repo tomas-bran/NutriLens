@@ -9,7 +9,7 @@
 import { buildMissingProductMessage } from '@/lib/chat/compare-helpers';
 
 export const EMPTY_CONTEXT_ANSWER =
-  'No tengo productos guardados que respondan a esa pregunta. Subí más etiquetas para enriquecer tu historial.';
+  'No tengo productos guardados que respondan a esa pregunta. Subí más etiquetas para enriquecer tu catálogo.';
 
 export const UNKNOWN_INTENT_ANSWER =
   'No te entendí bien. Probá con preguntas como "mostrame productos sin gluten" o "qué galletitas tengo guardadas".';
