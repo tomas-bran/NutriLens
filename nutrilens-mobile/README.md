@@ -59,7 +59,14 @@ El cliente API esta en:
 src/services/api.ts
 ```
 
-La app calcula automaticamente la IP de la PC desde Expo:
+Si se define `EXPO_PUBLIC_API_BASE_URL`, la app usa esa URL como backend:
+
+```powershell
+$env:EXPO_PUBLIC_API_BASE_URL="https://TU-SUBDOMINIO.ngrok-free.app/api"
+npx expo start --tunnel
+```
+
+Si no se define esa variable, la app calcula automaticamente la IP de la PC desde Expo:
 
 ```ts
 const debuggerHost = Constants.expoConfig?.hostUri;
@@ -78,6 +85,48 @@ Fallbacks:
 - iOS simulator: `localhost`
 
 Si se prueba en un celular fisico, la PC y el telefono tienen que estar en la misma red Wi-Fi. Si la app no conecta, revisar firewall, Docker y que `localhost:3000` este accesible desde la PC.
+
+## Compartir una prueba local con otras personas
+
+Para que otras personas prueben la app sin estar en tu Wi-Fi, se puede exponer el backend local con ngrok y correr Expo en modo tunnel.
+
+Desde la raiz del proyecto, levantar el backend:
+
+```bash
+docker compose up -d
+```
+
+En otra terminal, exponer el puerto `3000`:
+
+```bash
+ngrok http 3000
+```
+
+Ngrok va a devolver una URL HTTPS parecida a:
+
+```txt
+https://abc123.ngrok-free.app
+```
+
+Desde `nutrilens-mobile`, iniciar Expo usando esa URL:
+
+```powershell
+$env:EXPO_PUBLIC_API_BASE_URL="https://abc123.ngrok-free.app/api"
+npx expo start --tunnel
+```
+
+Luego compartir el QR de Expo. Quien pruebe la app necesita tener Expo Go instalado. Mientras la prueba este activa, la PC debe seguir prendida, Docker debe seguir corriendo y la sesion de ngrok no debe cerrarse.
+
+### Resetear la URL del backend
+
+En la misma terminal de PowerShell:
+
+```powershell
+Remove-Item Env:EXPO_PUBLIC_API_BASE_URL
+npx expo start
+```
+
+O cerrar la terminal y abrir una nueva.
 
 ## Endpoints usados
 

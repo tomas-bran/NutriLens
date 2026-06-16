@@ -1,13 +1,15 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
-// Obtenemos automáticamente la IP de la PC que está corriendo Expo
+// Obtenemos automaticamente la IP de la PC que esta corriendo Expo
 const debuggerHost = Constants.expoConfig?.hostUri;
 const autoIP = debuggerHost ? debuggerHost.split(':')[0] : null;
 
-// Si falla (o estás en prod), usamos fallbacks: 10.0.2.2 (Android) o localhost (iOS)
+// Si falla, usamos fallbacks: 10.0.2.2 (Android) o localhost (iOS)
 const API_HOST = autoIP || (Platform.OS === 'android' ? '10.0.2.2' : 'localhost');
-const API_BASE_URL = `http://${API_HOST}:3000/api`;
+const localApiBaseUrl = `http://${API_HOST}:3000/api`;
+const configuredApiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+const API_BASE_URL = configuredApiBaseUrl || localApiBaseUrl;
 
 export const analyzeProduct = async (photoUri: string) => {
   const formData = new FormData();
