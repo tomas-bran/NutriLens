@@ -1,0 +1,197 @@
+# NutriLens Mobile
+
+Aplicacion mobile de NutriLens construida con Expo y React Native. Replica el flujo principal de la version web: inicio, captura o seleccion de imagen, analisis con IA, resultado, historial y chat sobre productos guardados.
+
+## Requisitos
+
+- Node.js 20 o superior
+- npm
+- Expo Go en el telefono, o un simulador iOS/Android
+- Backend web de NutriLens levantado en `http://localhost:3000`
+
+## Levantar el backend
+
+Desde la raiz del proyecto:
+
+```bash
+cd "D:\FedePucci\Archivos\UNLaM\Inteligencia Artificial Aplicada\NutriLens"
+docker compose up -d
+```
+
+Esto levanta:
+
+- `nutrilens-db`: PostgreSQL en el puerto `5432`
+- `nutrilens-app`: aplicacion web/API en el puerto `3000`
+
+Verificacion rapida:
+
+```txt
+http://localhost:3000
+```
+
+## Levantar la app mobile
+
+Desde esta carpeta:
+
+```bash
+cd "D:\FedePucci\Archivos\UNLaM\Inteligencia Artificial Aplicada\NutriLens\nutrilens-mobile"
+npm install
+npm start
+```
+
+Tambien se puede usar:
+
+```bash
+npx expo start
+```
+
+Luego:
+
+- Escanear el QR con Expo Go en iPhone/Android.
+- Usar `i` para simulador iOS, si esta disponible.
+- Usar `a` para emulador Android, si esta disponible.
+
+## Conexion con el backend
+
+El cliente API esta en:
+
+```txt
+src/services/api.ts
+```
+
+La app calcula automaticamente la IP de la PC desde Expo:
+
+```ts
+const debuggerHost = Constants.expoConfig?.hostUri;
+const autoIP = debuggerHost ? debuggerHost.split(':')[0] : null;
+```
+
+Y llama a:
+
+```txt
+http://<IP_DE_TU_PC>:3000/api
+```
+
+Fallbacks:
+
+- Android emulator: `10.0.2.2`
+- iOS simulator: `localhost`
+
+Si se prueba en un celular fisico, la PC y el telefono tienen que estar en la misma red Wi-Fi. Si la app no conecta, revisar firewall, Docker y que `localhost:3000` este accesible desde la PC.
+
+## Endpoints usados
+
+La app mobile usa los mismos endpoints del backend web:
+
+```txt
+POST /api/analyze
+POST /api/chat
+GET  /api/products
+GET  /api/products/:id
+```
+
+## Scripts
+
+```bash
+npm start
+```
+
+Inicia Expo.
+
+```bash
+npm run android
+```
+
+Inicia Expo apuntando a Android.
+
+```bash
+npm run ios
+```
+
+Inicia Expo apuntando a iOS.
+
+```bash
+npm run web
+```
+
+Inicia Expo Web.
+
+```bash
+npm run typecheck
+```
+
+Ejecuta TypeScript sin emitir archivos.
+
+```bash
+npm test
+```
+
+Ejecuta los tests con Jest.
+
+## Estructura
+
+```txt
+src/
+  navigation/
+    AppNavigator.tsx
+  screens/
+    HomeScreen.tsx
+    AnalyzeScreen.tsx
+    ResultScreen.tsx
+    HistoryScreen.tsx
+    ChatScreen.tsx
+  services/
+    api.ts
+  theme/
+    tokens.ts
+```
+
+## Funcionalidades actuales
+
+- Home mobile con accesos a analizar, historial y chat.
+- Captura con camara.
+- Seleccion de imagen desde galeria.
+- Envio de imagen a `POST /api/analyze`.
+- Pantalla de resultado con:
+  - riesgo
+  - aptitudes
+  - sellos
+  - reglas aplicadas
+  - ingredientes
+  - alergenos
+  - explicacion
+  - disclaimer
+- Historial conectado a `GET /api/products`.
+- Detalle real desde `GET /api/products/:id`.
+- Filtros de historial:
+  - busqueda
+  - riesgo
+  - aptitud
+  - categoria
+  - alergeno
+- Chat conectado a `POST /api/chat`.
+- Render basico de Markdown en el chat.
+- Productos del chat como tarjetas tocables.
+- Sugerencias del chat como chips.
+
+## Limitaciones conocidas
+
+- No soporta PDF desde mobile todavia.
+- No hay autenticacion ni perfiles de usuario.
+- El backend puede completar ingredientes usando Open Food Facts si la extraccion viene incompleta.
+- Si la foto no muestra ingredientes, el modelo o el enriquecimiento pueden devolver datos no visibles en la imagen. Esto debe corregirse desde la logica del backend si se requiere trazabilidad estricta.
+- El render Markdown del chat es simple, pensado para respuestas cortas y tablas basicas.
+
+## Verificacion usada
+
+```bash
+npm run typecheck
+npm test -- --silent
+```
+
+Estado actual:
+
+```txt
+6 test suites passed
+15 tests passed
+```
