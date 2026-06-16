@@ -49,20 +49,18 @@ describe('<HomeView> — common sections (US-07 §AC1)', () => {
 });
 
 describe('<HomeView> — empty history (US-07 §AC2, no products yet)', () => {
-  it('does NOT render the "Tu catálogo" card when count is 0', () => {
+  it('does NOT render the "Catálogo" card when count is 0', () => {
     render(<HomeView historyCount={0} />);
-    expect(
-      screen.queryByRole('heading', { level: 3, name: 'Tu catálogo' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 3, name: 'Catálogo' })).not.toBeInTheDocument();
     expect(screen.queryByTestId('catalogo-cta')).not.toBeInTheDocument();
   });
 });
 
 describe('<HomeView> — with history (US-07 §AC2, productos previos)', () => {
-  it('renders the "Tu catálogo" card with the count and a link to /catalogo', () => {
+  it('renders the "Catálogo" card with the count and a link to /catalogo', () => {
     render(<HomeView historyCount={5} />);
-    expect(screen.getByRole('heading', { level: 3, name: 'Tu catálogo' })).toBeInTheDocument();
-    expect(screen.getByText('Ya analizaste 5 productos.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: 'Catálogo' })).toBeInTheDocument();
+    expect(screen.getByText('5 productos en el catálogo.')).toBeInTheDocument();
     expect(screen.getByTestId('catalogo-cta')).toHaveAttribute('href', '/catalogo');
   });
 
@@ -74,6 +72,6 @@ describe('<HomeView> — with history (US-07 §AC2, productos previos)', () => {
 
   it('singular copy when count is exactly 1', () => {
     render(<HomeView historyCount={1} />);
-    expect(screen.getByText('Ya analizaste 1 producto.')).toBeInTheDocument();
+    expect(screen.getByText('1 producto en el catálogo.')).toBeInTheDocument();
   });
 });

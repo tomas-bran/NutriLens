@@ -48,10 +48,10 @@ export function findMissingComparables(
 export function buildMissingProductMessage(missing: string[]): string {
   if (missing.length === 0) return '';
   if (missing.length === 1) {
-    return `No tengo "${missing[0]}" guardado en tu catálogo. ¿Lo querés analizar primero?`;
+    return `No tengo "${missing[0]}" en el catálogo. ¿Lo querés analizar primero?`;
   }
   const list = missing.map((n) => `"${n}"`).join(' y ');
-  return `No tengo ${list} guardados en tu catálogo. ¿Los querés analizar primero?`;
+  return `No tengo ${list} en el catálogo. ¿Los querés analizar primero?`;
 }
 
 /**

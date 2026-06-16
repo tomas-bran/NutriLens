@@ -32,7 +32,8 @@ export function ChatHeader({ productsInBase, hasMessages, onReset }: ChatHeaderP
                 aria-hidden="true"
                 className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]"
               />
-              Listo · {productsInBase} {productsInBase === 1 ? 'producto' : 'productos'} en tu base
+              Listo · {productsInBase} {productsInBase === 1 ? 'producto' : 'productos'} en el
+              catálogo
             </span>
           </p>
         </div>

@@ -21,10 +21,10 @@ export function ChatHero({ onPick }: ChatHeroProps) {
       </div>
       <div className="flex flex-col items-center gap-2 text-center">
         <h2 className="text-lg font-bold text-[var(--color-text)] md:text-xl">
-          Preguntame sobre tus productos
+          Preguntame sobre el catálogo
         </h2>
         <p className="max-w-md text-sm text-[var(--color-text-muted)] md:text-base">
-          Respondo usando los productos que ya analizaste.
+          Respondo usando los productos del catálogo.
         </p>
       </div>
       <div className="flex w-full flex-col gap-2">

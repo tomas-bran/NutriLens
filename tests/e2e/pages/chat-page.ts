@@ -138,7 +138,7 @@ export class ChatPage {
   }
 
   async expectHeaderProductsCount(n: number) {
-    const label = n === 1 ? `${n} producto en tu base` : `${n} productos en tu base`;
+    const label = n === 1 ? `${n} producto en el catálogo` : `${n} productos en el catálogo`;
     await expect(this.page.getByText(label)).toBeVisible();
   }
 
