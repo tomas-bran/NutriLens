@@ -29,7 +29,7 @@ export class UploadPage {
     this.chooseOtherFileButton = page.getByRole('button', { name: 'Elegir otro archivo' });
     this.uploadingState = page.getByTestId('uploading-state');
     this.processingState = page.getByTestId('processing-state');
-    this.progressBar = page.getByRole('progressbar', { name: 'Progreso del upload' });
+    this.progressBar = page.getByRole('progressbar', { name: 'Progreso del análisis' });
   }
 
   async goto() {
