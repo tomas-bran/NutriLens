@@ -6,10 +6,12 @@
  */
 import { auth } from '@/lib/auth';
 
-/** Usuario fijo para el bypass de E2E (ver middleware). Solo no-producción. */
+/** Usuario fijo para el bypass de E2E (ver middleware). Nunca en deploy real. */
 const E2E_USER_ID = 'e2e-test-user';
 function e2eBypass(): boolean {
-  return process.env.NODE_ENV !== 'production' && process.env.E2E_AUTH_BYPASS === 'true';
+  // Igual que el middleware: flag explícito + nunca en Azure (WEBSITE_HOSTNAME).
+  // No usamos NODE_ENV porque el E2E corre sobre `next build && next start`.
+  return process.env.E2E_AUTH_BYPASS === 'true' && !process.env.WEBSITE_HOSTNAME;
 }
 
 export class Unauthorized extends Error {

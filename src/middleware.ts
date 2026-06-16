@@ -12,10 +12,14 @@ import { NextResponse } from 'next/server';
 const PUBLIC_PATHS = ['/login'];
 
 /**
- * Bypass de auth para E2E (NL-202): solo fuera de producción y con el flag
- * explícito que setea la config de Playwright. Nunca afecta a prod.
+ * Bypass de auth para E2E (NL-202): se activa con el flag explícito
+ * `E2E_AUTH_BYPASS` y NUNCA en un deploy real. `WEBSITE_HOSTNAME` lo setea
+ * siempre Azure App Service, así que aunque el flag se filtrara a las App
+ * Settings de prod, el bypass queda desactivado. (No usamos `NODE_ENV` porque
+ * el webServer de Playwright corre `next build && next start` → NODE_ENV=production,
+ * y eso desactivaba el bypass → E2E roto.)
  */
-const E2E_BYPASS = process.env.NODE_ENV !== 'production' && process.env.E2E_AUTH_BYPASS === 'true';
+const E2E_BYPASS = process.env.E2E_AUTH_BYPASS === 'true' && !process.env.WEBSITE_HOSTNAME;
 
 export default auth((req) => {
   if (E2E_BYPASS) return NextResponse.next();
