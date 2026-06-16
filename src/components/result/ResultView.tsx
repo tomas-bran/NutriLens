@@ -62,17 +62,10 @@ export function ResultView({
         <div className="flex flex-col gap-5">
           <ProductImageCard product={product} />
           <RiskHero product={product} />
-          {/* Alérgenos + sellos en una misma fila, debajo del riesgo. */}
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-            <div className="flex-1">
-              <AllergenList allergens={product.alergenos} />
-            </div>
-            {product.sellos.length > 0 && (
-              <div className="flex-1">
-                <SelloChips sellos={product.sellos} />
-              </div>
-            )}
-          </div>
+          {/* Alérgenos y sellos en dos filas separadas (cada una a lo ancho de
+              la columna); los chips de alérgenos fluyen uno al lado del otro. */}
+          <AllergenList allergens={product.alergenos} />
+          <SelloChips sellos={product.sellos} />
         </div>
 
         <div className="flex flex-col gap-5">

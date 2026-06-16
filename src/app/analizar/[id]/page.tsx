@@ -38,7 +38,7 @@ export default async function AnalizarResultPage({ params }: PageProps) {
   const [historialCount, isAdmin] = await Promise.all([getHistorialCount(), isCurrentUserAdmin()]);
 
   return (
-    <AppShell active="analizar" historialCount={historialCount}>
+    <AppShell active="analizar" historialCount={historialCount} fluid>
       <ResultView product={detail} showTechnicalViews={isAdmin} />
     </AppShell>
   );
