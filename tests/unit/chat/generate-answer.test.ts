@@ -6,7 +6,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { Product as PrismaProduct } from '@prisma/client';
 import {
-  ANSWER_PROMPT_VERSION_COMPARE,
   ANSWER_PROMPT_VERSION_DEFAULT,
   generateChatAnswer,
   pickAnswerPromptVersion,
@@ -72,8 +71,8 @@ const FILTER = intent({ kind: 'filter' });
 const COMPARE = intent({ kind: 'compare', comparar: ['Galletitas X', 'Galletitas Y'] });
 
 describe('pickAnswerPromptVersion', () => {
-  it('compare → v2 (US-31)', () => {
-    expect(pickAnswerPromptVersion(COMPARE)).toBe(ANSWER_PROMPT_VERSION_COMPARE);
+  it('compare → v3 (NL-702: el formato tabla lo activa intent_kind dentro del prompt)', () => {
+    expect(pickAnswerPromptVersion(COMPARE)).toBe(ANSWER_PROMPT_VERSION_DEFAULT);
   });
 
   it('filter → v1 (default)', () => {
@@ -103,7 +102,7 @@ describe('generateChatAnswer — selección de prompt según intent', () => {
     expect(opts.promptVersion).toBe(ANSWER_PROMPT_VERSION_DEFAULT);
   });
 
-  it('llama al provider con chat_answer-v2 cuando intent.kind === "compare" (US-31)', async () => {
+  it('llama al provider con chat_answer-v3 también cuando intent.kind === "compare"', async () => {
     const { ia, answerWithContext } = makeIa('| col1 | col2 |');
     await generateChatAnswer('comparame X con Y', [row()], COMPARE, { ia });
     const [, , opts] = answerWithContext.mock.calls[0] as [
@@ -111,13 +110,13 @@ describe('generateChatAnswer — selección de prompt según intent', () => {
       unknown,
       { promptVersion: string; extra?: Record<string, string> },
     ];
-    expect(opts.promptVersion).toBe(ANSWER_PROMPT_VERSION_COMPARE);
+    expect(opts.promptVersion).toBe(ANSWER_PROMPT_VERSION_DEFAULT);
   });
 
-  it('reporta promptVersion="chat_answer-v2" en el result cuando es compare', async () => {
+  it('reporta promptVersion="chat_answer-v3" en el result cuando es compare', async () => {
     const { ia } = makeIa('| col1 |');
     const r = await generateChatAnswer('q', [row()], COMPARE, { ia });
-    expect(r.promptVersion).toBe(ANSWER_PROMPT_VERSION_COMPARE);
+    expect(r.promptVersion).toBe(ANSWER_PROMPT_VERSION_DEFAULT);
   });
 
   it('pasa intent.kind en opts.extra para que el prompt v2 lo interpole', async () => {
