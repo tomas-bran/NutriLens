@@ -7,11 +7,10 @@
  * un link al detalle. En el grid (`md:grid-cols-2 xl:grid-cols-3`) quedan como
  * una galería de productos analizados.
  */
-import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
-import { Icon } from '@/components/ui/Icon';
+import { ProductImage } from '@/components/ui/ProductImage';
 import type { ProductListItem } from '@/lib/products/serializers';
 
 const RISK_BADGE_VARIANT = {
@@ -92,24 +91,13 @@ export function HistoryItemCard({ item }: { item: ProductListItem }) {
 }
 
 function ProductThumb({ item }: { item: ProductListItem }) {
-  if (item.imagenUrl) {
-    return (
-      <div className="relative h-[140px] w-full overflow-hidden rounded-[14px] bg-[var(--color-surface)]">
-        <Image
-          src={item.imagenUrl}
-          alt={`Foto de ${item.nombre}`}
-          fill
-          unoptimized
-          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-          className="object-cover"
-        />
-      </div>
-    );
-  }
   return (
-    <div className="flex h-[140px] w-full items-center justify-center rounded-[14px] bg-gradient-to-br from-[var(--color-primary-soft)] to-[var(--color-surface)] text-[var(--color-primary)]">
-      <Icon name="scan-eye" className="h-10 w-10" />
-    </div>
+    <ProductImage
+      src={item.imagenUrl}
+      alt={`Foto de ${item.nombre}`}
+      className="h-[140px] w-full rounded-[14px]"
+      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+    />
   );
 }
 

@@ -160,8 +160,15 @@ export function HistoryFilters({ value }: HistoryFiltersProps) {
         role="group"
         aria-label="Alcance del catálogo"
         data-testid="catalogo-scope"
-        className="inline-flex w-full max-w-md self-start rounded-full border border-[var(--color-border)] bg-white p-1"
+        className="relative mx-auto inline-flex w-full max-w-md rounded-full border border-[var(--color-border)] bg-white p-1"
       >
+        {/* Indicador deslizante: la "pastilla" verde se anima entre las dos
+            opciones (translateX) en vez de aparecer/desaparecer de golpe. */}
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-full bg-[var(--color-primary)] shadow-[0_2px_8px_0_rgba(22,163,74,0.25)] transition-transform duration-300 ease-out motion-reduce:transition-none"
+          style={{ transform: value.mios ? 'translateX(100%)' : 'translateX(0)' }}
+        />
         <ScopeButton
           active={!value.mios}
           onClick={() => onToggleMios(false)}
@@ -324,10 +331,9 @@ function ScopeButton({
       data-testid={testId}
       aria-pressed={active}
       className={cn(
-        'flex-1 rounded-full px-4 py-2 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1',
-        active
-          ? 'bg-[var(--color-primary)] text-white shadow-[0_2px_8px_0_rgba(22,163,74,0.25)]'
-          : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]',
+        // `relative z-10` para quedar por encima de la pastilla deslizante.
+        'relative z-10 flex-1 rounded-full px-4 py-2 text-[13px] font-semibold transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1',
+        active ? 'text-white' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]',
       )}
     >
       {children}

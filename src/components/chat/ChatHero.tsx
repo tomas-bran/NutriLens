@@ -1,10 +1,15 @@
+'use client';
+
 /**
  * <ChatHero> — empty state inicial del chat (Pencil M11 `B6Bjce` + `bGlGb`).
  *
- * Muestra un encabezado motivacional + 3-4 sugerencias clickeables (spec §9.5).
- * Las sugerencias salen de `CHAT_SUGGESTIONS` para que sean una sola fuente
- * de verdad entre UI y tests.
+ * Muestra un encabezado motivacional + sugerencias clickeables en 2 columnas
+ * (spec §9.5). Las sugerencias arrancan estáticas (`CHAT_SUGGESTIONS`) y, al
+ * montar, se reemplazan por unas autogeneradas por IA según el catálogo
+ * (`GET /api/chat/suggestions`, NL-503). Si la generación falla, quedan las
+ * estáticas — nunca se rompe el empty state.
  */
+import { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { SuggestionRow } from '@/components/chat/SuggestionRow';
 import { CHAT_SUGGESTIONS } from '@/components/chat/types';
@@ -14,6 +19,27 @@ interface ChatHeroProps {
 }
 
 export function ChatHero({ onPick }: ChatHeroProps) {
+  const [suggestions, setSuggestions] = useState<readonly string[]>(CHAT_SUGGESTIONS);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/chat/suggestions');
+        if (!res.ok) return;
+        const data: { suggestions?: string[] | null } = await res.json();
+        if (active && Array.isArray(data.suggestions) && data.suggestions.length >= 2) {
+          setSuggestions(data.suggestions);
+        }
+      } catch {
+        // Fail-open: quedan las estáticas.
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <div className="flex w-full flex-col items-center gap-6 py-4" data-testid="chat-hero">
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
@@ -34,8 +60,11 @@ export function ChatHero({ onPick }: ChatHeroProps) {
         >
           Sugerencias
         </p>
-        <ul className="flex w-full flex-col gap-2" aria-label="Sugerencias de preguntas">
-          {CHAT_SUGGESTIONS.map((s) => (
+        <ul
+          className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2"
+          aria-label="Sugerencias de preguntas"
+        >
+          {suggestions.map((s) => (
             <li key={s}>
               <SuggestionRow text={s} onPick={onPick} />
             </li>

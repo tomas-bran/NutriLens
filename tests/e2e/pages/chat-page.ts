@@ -9,7 +9,6 @@ import { expect } from '@playwright/test';
  * basados en `data-testid` agregados en los componentes de chat.
  */
 export class ChatPage {
-  private readonly header: Locator;
   private readonly hero: Locator;
   private readonly thinking: Locator;
   private readonly input: Locator;
@@ -23,7 +22,6 @@ export class ChatPage {
   private readonly productChips: Locator;
 
   constructor(private readonly page: Page) {
-    this.header = page.getByRole('heading', { level: 1, name: 'Chat NutriLens' });
     this.hero = page.getByTestId('chat-hero');
     this.thinking = page.getByTestId('chat-thinking');
     this.input = page.getByTestId('chat-input');
@@ -39,7 +37,8 @@ export class ChatPage {
 
   async goto() {
     await this.page.goto('/chat');
-    await expect(this.header).toBeVisible();
+    // Sin header: anclamos en el input, que está presente en todos los estados.
+    await expect(this.input).toBeVisible();
   }
 
   async askQuestion(text: string) {
@@ -130,16 +129,13 @@ export class ChatPage {
   }
 
   async expectNewConversationDisabled() {
-    await expect(this.newConversationButton).toBeDisabled();
+    // Sin header: el botón "Nueva conversación" no se renderiza hasta que hay
+    // mensajes (antes existía siempre, disabled). En el empty state no está.
+    await expect(this.newConversationButton).toHaveCount(0);
   }
 
   async expectNewConversationEnabled() {
     await expect(this.newConversationButton).toBeEnabled();
-  }
-
-  async expectHeaderProductsCount(n: number) {
-    const label = n === 1 ? `${n} producto en el catálogo` : `${n} productos en el catálogo`;
-    await expect(this.page.getByText(label)).toBeVisible();
   }
 
   /**

@@ -31,7 +31,6 @@ test.describe('US-31 §1 — ambos productos en catálogo', () => {
   test('comparame X con Y → tabla markdown + chips para ambos', async ({ page }) => {
     const chat = new ChatPage(page);
     await chat.goto();
-    await chat.expectHeaderProductsCount(2);
 
     await chat.askQuestion('comparame Galletitas X con Galletitas Y');
 
@@ -60,7 +59,6 @@ test.describe('US-31 §2 — un producto falta en el catálogo', () => {
   }) => {
     const chat = new ChatPage(page);
     await chat.goto();
-    await chat.expectHeaderProductsCount(1);
 
     await chat.askQuestion('comparame Galletitas X con Cereales Fantasma');
 
