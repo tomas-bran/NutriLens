@@ -5,7 +5,8 @@
  * posterior (ver requirements §"Must be").
  *
  * `zone` = dónde está físicamente en el mundo (no siempre coincide con
- * `category`: una galletita NO apta vive en la góndola de Snacks).
+ * `category`: p.ej. una galletita vegana vive en la góndola Vegano, y la leche
+ * de almendras —categoría bebidas— vive en la góndola Sin lactosa).
  * `position` = [x, y, z] sobre el estante de su zona.
  */
 import type { ZoneId } from './zones';
@@ -147,7 +148,7 @@ export const PRODUCTS: NutriProduct[] = [
   {
     id: 'prod_choco_crunch',
     name: 'Choco Crunch',
-    category: 'galletitas',
+    category: 'snacks',
     zone: 'snacks',
     risk: 'alto',
     aptoCeliaco: false,

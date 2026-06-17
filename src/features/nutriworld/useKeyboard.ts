@@ -21,6 +21,15 @@ const KEY_MAP: Record<string, MoveAction> = {
   shift: 'run',
 };
 
+/** ¿El foco está en un campo de texto? Entonces el teclado es para escribir,
+ * no para mover al personaje (si no, tipear "WASD" en el input lo movía). */
+function isTypingTarget(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  if (!el || typeof el.tagName !== 'string') return false;
+  const tag = el.tagName.toUpperCase();
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
+}
+
 export function useKeyboard(onInteract?: () => void): React.RefObject<Set<MoveAction>> {
   const keys = useRef<Set<MoveAction>>(new Set());
   const interactRef = useRef(onInteract);
@@ -28,6 +37,8 @@ export function useKeyboard(onInteract?: () => void): React.RefObject<Set<MoveAc
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      // Mientras se escribe en un input/textarea, ignoramos el teclado de juego.
+      if (isTypingTarget(e.target)) return;
       const key = e.key.toLowerCase();
       if (key === 'e') {
         interactRef.current?.();

@@ -50,6 +50,12 @@ export function Player() {
   const camTarget = useMemo(() => new Vector3(), []);
   // Acumulador para throttlear el push de posición al store (minimapa).
   const posAccum = useRef(0);
+  // Ciclo de caminata: fase + pivotes de brazos/piernas.
+  const walkPhase = useRef(0);
+  const leftArm = useRef<Group>(null);
+  const rightArm = useRef<Group>(null);
+  const leftLeg = useRef<Group>(null);
+  const rightLeg = useRef<Group>(null);
 
   useFrame((_, delta) => {
     const g = ref.current;
@@ -75,6 +81,18 @@ export function Player() {
       if (!hitsShelf(g.position.x, nz)) g.position.z = nz;
       g.rotation.y = Math.atan2(dx, dz);
     }
+
+    // Ciclo de caminata: brazos y piernas oscilan (fase opuesta) al moverse y
+    // vuelven al reposo suavemente al frenar.
+    const moving = len > 0;
+    if (moving) walkPhase.current += delta * (k.has('run') ? 13 : 8.5);
+    const amp = moving ? (k.has('run') ? 0.8 : 0.55) : 0;
+    const s = Math.sin(walkPhase.current) * amp;
+    const ease = Math.min(1, delta * 12);
+    if (leftArm.current) leftArm.current.rotation.x += (s - leftArm.current.rotation.x) * ease;
+    if (rightArm.current) rightArm.current.rotation.x += (-s - rightArm.current.rotation.x) * ease;
+    if (leftLeg.current) leftLeg.current.rotation.x += (-s - leftLeg.current.rotation.x) * ease;
+    if (rightLeg.current) rightLeg.current.rotation.x += (s - rightLeg.current.rotation.x) * ease;
 
     // Cámara en tercera persona: offset fijo detrás/arriba, lerp frame-rate-safe.
     camTarget.set(g.position.x, g.position.y + 7, g.position.z + 11);
@@ -107,30 +125,40 @@ export function Player() {
 
   return (
     <group ref={ref} position={[0, 0, 6]}>
-      {/* Figura humana estilizada: piernas + torso + brazos + cabeza, mirando +Z. */}
-      {/* Piernas (pantalón) */}
-      <mesh castShadow position={[-0.13, 0.35, 0]}>
-        <cylinderGeometry args={[0.11, 0.09, 0.72, 12]} />
-        <meshStandardMaterial color="#334155" roughness={0.75} />
-      </mesh>
-      <mesh castShadow position={[0.13, 0.35, 0]}>
-        <cylinderGeometry args={[0.11, 0.09, 0.72, 12]} />
-        <meshStandardMaterial color="#334155" roughness={0.75} />
-      </mesh>
+      {/* Figura humana estilizada: piernas + torso + brazos + cabeza, mirando +Z.
+          Brazos/piernas viven en grupos-pivote (hombro/cadera) que rotan en X
+          para el ciclo de caminata. */}
+      {/* Piernas (pantalón) — pivote en la cadera */}
+      <group ref={leftLeg} position={[-0.13, 0.72, 0]}>
+        <mesh castShadow position={[0, -0.36, 0]}>
+          <cylinderGeometry args={[0.11, 0.09, 0.72, 12]} />
+          <meshStandardMaterial color="#334155" roughness={0.75} />
+        </mesh>
+      </group>
+      <group ref={rightLeg} position={[0.13, 0.72, 0]}>
+        <mesh castShadow position={[0, -0.36, 0]}>
+          <cylinderGeometry args={[0.11, 0.09, 0.72, 12]} />
+          <meshStandardMaterial color="#334155" roughness={0.75} />
+        </mesh>
+      </group>
       {/* Torso (remera) */}
       <mesh castShadow position={[0, 1.02, 0]}>
         <capsuleGeometry args={[0.26, 0.42, 8, 16]} />
         <meshStandardMaterial color="#2563eb" roughness={0.55} />
       </mesh>
-      {/* Brazos */}
-      <mesh castShadow position={[-0.34, 1.0, 0]} rotation={[0, 0, 0.12]}>
-        <capsuleGeometry args={[0.08, 0.46, 6, 12]} />
-        <meshStandardMaterial color="#1d4ed8" roughness={0.6} />
-      </mesh>
-      <mesh castShadow position={[0.34, 1.0, 0]} rotation={[0, 0, -0.12]}>
-        <capsuleGeometry args={[0.08, 0.46, 6, 12]} />
-        <meshStandardMaterial color="#1d4ed8" roughness={0.6} />
-      </mesh>
+      {/* Brazos — pivote en el hombro */}
+      <group ref={leftArm} position={[-0.34, 1.22, 0]}>
+        <mesh castShadow position={[0, -0.23, 0]}>
+          <capsuleGeometry args={[0.08, 0.46, 6, 12]} />
+          <meshStandardMaterial color="#1d4ed8" roughness={0.6} />
+        </mesh>
+      </group>
+      <group ref={rightArm} position={[0.34, 1.22, 0]}>
+        <mesh castShadow position={[0, -0.23, 0]}>
+          <capsuleGeometry args={[0.08, 0.46, 6, 12]} />
+          <meshStandardMaterial color="#1d4ed8" roughness={0.6} />
+        </mesh>
+      </group>
       {/* Cabeza + pelo */}
       <mesh castShadow position={[0, 1.62, 0]}>
         <sphereGeometry args={[0.2, 20, 20]} />

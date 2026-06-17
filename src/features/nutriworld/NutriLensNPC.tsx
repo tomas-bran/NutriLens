@@ -8,19 +8,24 @@
  */
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Billboard, Html, Text } from '@react-three/drei';
+import { Billboard, Html, Text, useTexture } from '@react-three/drei';
 import { Vector3, type Group, type Mesh } from 'three';
 import { ZONES } from './data/zones';
+import { NUTRIMARK_TEXTURE_URL } from './nutrimarkTexture';
 import { npcArrived, useNutriWorld, type NpcState } from './store/useNutriWorldStore';
 
 const SPEED = 3.4;
 const ARRIVE_DIST = 0.5;
 
+// Paleta de marca (sin grises): el cuerpo es verde NutriLens; los acentos de
+// estado viran amarillo (pensando) / lima (llegó).
+const BODY_GREEN = '#16a34a';
+const BODY_GREEN_DARK = '#15803d';
 const STATE_COLOR: Record<NpcState, string> = {
-  idle: '#94a3b8',
+  idle: '#22c55e',
   thinking: '#f59e0b',
   guiding: '#16a34a',
-  arrived: '#22c55e',
+  arrived: '#a3e635',
 };
 const STATE_LABEL: Record<NpcState, string> = {
   idle: '',
@@ -38,9 +43,13 @@ export function NutriLensNPC() {
   const message = useNutriWorld((s) => s.assistantMessage);
   const target = useMemo(() => new Vector3(), []);
   const dir = useMemo(() => new Vector3(), []);
+  // Logo de marca (NutriMark) para pecho y espalda.
+  const logo = useTexture(NUTRIMARK_TEXTURE_URL);
   // Animación de llegada (one-shot): detecta el flanco a 'arrived'.
   const prevState = useRef<NpcState>(npcState);
   const arriveStart = useRef<number | null>(null);
+  // Animación de entrada (one-shot al aparecer): cae desde arriba + escala.
+  const spawnStart = useRef<number | null>(null);
 
   useFrame((three, delta) => {
     const g = root.current;
@@ -84,12 +93,30 @@ export function NutriLensNPC() {
       }
     }
 
-    // Flotación distinta por estado (+ hop de llegada).
+    // One-shot de entrada: el robot aterriza desde arriba escalando + girando.
+    if (spawnStart.current === null) spawnStart.current = t;
+    let entryY = 0;
+    let entryScale = 1;
+    let entrySpin = 0;
+    {
+      const e = t - spawnStart.current;
+      const DUR = 1.4;
+      if (e < DUR) {
+        const k = e / DUR;
+        const ease = 1 - Math.pow(1 - k, 3); // easeOutCubic
+        entryY = (1 - ease) * 7;
+        entryScale = 0.15 + ease * 0.85;
+        entrySpin = (1 - ease) * Math.PI * 4;
+      }
+    }
+
+    // Flotación distinta por estado (+ hop de llegada + entrada).
     if (body.current) {
       const amp = npcState === 'guiding' ? 0.18 : npcState === 'thinking' ? 0.13 : 0.06;
       const freq = npcState === 'guiding' ? 9 : npcState === 'thinking' ? 6 : 2.5;
-      body.current.position.y = 0.35 + Math.sin(t * freq) * amp + hop;
-      body.current.rotation.y = spin;
+      body.current.position.y = 0.35 + Math.sin(t * freq) * amp + hop + entryY;
+      body.current.rotation.y = spin + entrySpin;
+      body.current.scale.setScalar(entryScale);
     }
     if (orb.current) {
       const s = 1 + Math.sin(t * 5) * 0.15;
@@ -103,57 +130,62 @@ export function NutriLensNPC() {
   return (
     <group ref={root} position={[2.5, 0, 4]}>
       <group ref={body}>
-        {/* Núcleo / torso metálico (flota, sin piernas) */}
+        {/* Núcleo / torso (verde de marca, acabado satinado, flota sin piernas) */}
         <mesh castShadow position={[0, 1.0, 0]}>
           <capsuleGeometry args={[0.4, 0.5, 12, 24]} />
-          <meshStandardMaterial color="#dbe4ec" metalness={0.85} roughness={0.25} />
+          <meshStandardMaterial color={BODY_GREEN} metalness={0.55} roughness={0.35} />
         </mesh>
-        {/* Panel de pecho luminoso */}
-        <mesh position={[0, 1.02, 0.37]}>
-          <boxGeometry args={[0.3, 0.34, 0.05]} />
-          <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.6} />
+        {/* Logo NutriLens en el pecho (frente) */}
+        <mesh position={[0, 1.02, 0.41]}>
+          <circleGeometry args={[0.2, 32]} />
+          <meshBasicMaterial map={logo} transparent toneMapped={false} depthWrite={false} />
         </mesh>
-        {/* Cabeza-pantalla metálica */}
+        {/* Logo NutriLens en la espalda (gira 180°) */}
+        <mesh position={[0, 1.02, -0.41]} rotation={[0, Math.PI, 0]}>
+          <circleGeometry args={[0.2, 32]} />
+          <meshBasicMaterial map={logo} transparent toneMapped={false} depthWrite={false} />
+        </mesh>
+        {/* Cabeza-pantalla (verde oscuro de marca) */}
         <mesh castShadow position={[0, 1.82, 0]}>
           <boxGeometry args={[0.62, 0.5, 0.5]} />
-          <meshStandardMaterial color="#e2e8f0" metalness={0.8} roughness={0.3} />
+          <meshStandardMaterial color={BODY_GREEN_DARK} metalness={0.5} roughness={0.4} />
         </mesh>
         {/* Visor (pantalla oscura) */}
         <mesh position={[0, 1.84, 0.27]}>
           <boxGeometry args={[0.5, 0.3, 0.04]} />
-          <meshStandardMaterial color="#0f172a" roughness={0.2} />
+          <meshStandardMaterial color="#06281a" roughness={0.15} metalness={0.2} />
         </mesh>
-        {/* Ojos digitales emisivos */}
+        {/* Ojos digitales emisivos (lima de marca) */}
         <mesh position={[-0.12, 1.86, 0.3]}>
           <sphereGeometry args={[0.05, 12, 12]} />
-          <meshStandardMaterial color="#67e8f9" emissive="#22d3ee" emissiveIntensity={1.4} />
+          <meshStandardMaterial color="#bef264" emissive="#a3e635" emissiveIntensity={1.6} />
         </mesh>
         <mesh position={[0.12, 1.86, 0.3]}>
           <sphereGeometry args={[0.05, 12, 12]} />
-          <meshStandardMaterial color="#67e8f9" emissive="#22d3ee" emissiveIntensity={1.4} />
+          <meshStandardMaterial color="#bef264" emissive="#a3e635" emissiveIntensity={1.6} />
         </mesh>
-        {/* Brazos flotantes (esferas a los lados) */}
+        {/* Brazos flotantes (esferas verdes a los lados) */}
         <mesh position={[-0.52, 1.0, 0]}>
           <sphereGeometry args={[0.12, 16, 16]} />
-          <meshStandardMaterial color="#cbd5e1" metalness={0.8} roughness={0.3} />
+          <meshStandardMaterial color={BODY_GREEN_DARK} metalness={0.5} roughness={0.4} />
         </mesh>
         <mesh position={[0.52, 1.0, 0]}>
           <sphereGeometry args={[0.12, 16, 16]} />
-          <meshStandardMaterial color="#cbd5e1" metalness={0.8} roughness={0.3} />
+          <meshStandardMaterial color={BODY_GREEN_DARK} metalness={0.5} roughness={0.4} />
         </mesh>
-        {/* Base anti-grav (cono + anillo luminoso) en vez de piernas */}
+        {/* Base anti-grav (cono verde + anillo lima luminoso) en vez de piernas */}
         <mesh position={[0, 0.58, 0]}>
           <coneGeometry args={[0.34, 0.42, 18]} />
-          <meshStandardMaterial color="#94a3b8" metalness={0.7} roughness={0.4} />
+          <meshStandardMaterial color={BODY_GREEN_DARK} metalness={0.5} roughness={0.4} />
         </mesh>
         <mesh position={[0, 0.34, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[0.22, 0.04, 8, 24]} />
-          <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.7} />
+          <meshStandardMaterial color="#a3e635" emissive="#a3e635" emissiveIntensity={0.8} />
         </mesh>
         {/* Antena */}
         <mesh position={[0, 2.18, 0]}>
           <cylinderGeometry args={[0.02, 0.02, 0.24, 8]} />
-          <meshStandardMaterial color="#94a3b8" metalness={0.9} roughness={0.2} />
+          <meshStandardMaterial color={BODY_GREEN_DARK} metalness={0.6} roughness={0.3} />
         </mesh>
         {/* Orbe de estado en la punta de la antena */}
         <mesh ref={orb} position={[0, 2.38, 0]}>

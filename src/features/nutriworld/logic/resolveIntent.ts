@@ -35,6 +35,26 @@ function dominantZone(products: NutriProduct[]): ZoneId {
   return best;
 }
 
+/**
+ * Góndola objetivo. Si el pedido tiene un filtro de aptitud principal,
+ * priorizamos la góndola temática que le corresponde (vegano → Vegano, etc.)
+ * SIEMPRE que tenga productos del resultado — así "mostrame veganos" guía a la
+ * góndola Vegano y no a otra donde casualmente haya más matches. Si no aplica,
+ * caemos a la góndola con más productos (dominante).
+ */
+function targetZoneFor(intent: ParsedIntent, found: NutriProduct[]): ZoneId {
+  const f = intent.filters;
+  const preferred: ZoneId | null = f.apto_vegano
+    ? 'vegano'
+    : f.apto_celiaco
+      ? 'sin_tacc'
+      : f.apto_sin_lactosa
+        ? 'sin_lactosa'
+        : null;
+  if (preferred && found.some((p) => p.zone === preferred)) return preferred;
+  return dominantZone(found);
+}
+
 /** "2 galletitas aptas para celíacos" — descripción legible del pedido. */
 function describe(intent: ParsedIntent, n: number): string {
   const noun = intent.category ?? (n === 1 ? 'opción' : 'opciones');
@@ -76,7 +96,7 @@ export function resolveIntent(intent: ParsedIntent, products: NutriProduct[]): A
     };
   }
 
-  const targetZone = dominantZone(found);
+  const targetZone = targetZoneFor(intent, found);
   return {
     ...base,
     message: `Encontré ${describe(intent, found.length)}. Acompañame a la góndola ${zoneLabel(targetZone)}.`,

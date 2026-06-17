@@ -32,6 +32,7 @@ import CHAT_ANSWER_V3 from './chat_answer-v3.md?raw';
 import CHAT_SMALLTALK_V1 from './chat_smalltalk-v1.md?raw';
 import CHAT_SMALLTALK_V2 from './chat_smalltalk-v2.md?raw';
 import CHAT_TITLE_V1 from './chat_title-v1.md?raw';
+import NUTRIWORLD_NPC_V1 from './nutriworld_npc-v1.md?raw';
 
 export type PromptVersion =
   | 'extract_product-v1'
@@ -48,7 +49,8 @@ export type PromptVersion =
   | 'chat_answer-v3'
   | 'chat_smalltalk-v1'
   | 'chat_smalltalk-v2'
-  | 'chat_title-v1';
+  | 'chat_title-v1'
+  | 'nutriworld_npc-v1';
 
 const PROMPTS: Record<PromptVersion, string> = {
   'extract_product-v1': EXTRACT_PRODUCT_V1,
@@ -66,6 +68,7 @@ const PROMPTS: Record<PromptVersion, string> = {
   'chat_smalltalk-v1': CHAT_SMALLTALK_V1,
   'chat_smalltalk-v2': CHAT_SMALLTALK_V2,
   'chat_title-v1': CHAT_TITLE_V1,
+  'nutriworld_npc-v1': NUTRIWORLD_NPC_V1,
 };
 
 export function loadPrompt(version: PromptVersion): string {

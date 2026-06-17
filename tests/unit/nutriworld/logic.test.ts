@@ -94,6 +94,21 @@ describe('resolveIntent', () => {
     expect(r.message).toMatch(/Sin TACC/);
   });
 
+  it('prioriza la góndola del filtro principal: veganos → góndola Vegano', () => {
+    // Los productos veganos están repartidos (sin_tacc/vegano/sin_lactosa/snacks);
+    // antes la "dominante" podía caer en otra zona. Ahora prioriza Vegano.
+    const r = resolveIntent(parseQuery('Mostrame productos veganos'), PRODUCTS);
+    expect(r.status).toBe('guiding');
+    expect(r.targetZone).toBe('vegano');
+    expect(r.message).toMatch(/Vegano/);
+  });
+
+  it('prioriza Sin lactosa cuando el pedido es sin lactosa', () => {
+    const r = resolveIntent(parseQuery('Quiero algo sin lactosa'), PRODUCTS);
+    expect(r.status).toBe('guiding');
+    expect(r.targetZone).toBe('sin_lactosa');
+  });
+
   it('caso sin resultados → no_results, no se mueve', () => {
     const r = resolveIntent(
       {
