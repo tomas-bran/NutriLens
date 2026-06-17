@@ -100,6 +100,27 @@ export class HistoryPage {
     await this.selectRadixOption('catalogo-filter-apto', value, /apto=/);
   }
 
+  /**
+   * Switch de alcance "Todos / Analizados por vos". Vive fuera del bottomsheet
+   * (siempre visible), así que no hace falta abrir el panel de filtros.
+   */
+  async showAnalizadosPorVos() {
+    await this.page.getByTestId('catalogo-scope-mios').click();
+    await this.page.waitForURL(/filtro=mios/);
+  }
+
+  async showTodos() {
+    await this.page.getByTestId('catalogo-scope-todos').click();
+    await this.page.waitForURL((url) => !url.search.includes('filtro=mios'));
+  }
+
+  async expectScopeMiosActive() {
+    await expect(this.page.getByTestId('catalogo-scope-mios')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  }
+
   async expectActiveChip(key: string) {
     await expect(this.page.getByTestId(`filter-chip-${key}`)).toBeVisible();
   }

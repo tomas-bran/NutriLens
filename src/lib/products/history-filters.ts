@@ -21,6 +21,9 @@ export interface HistoryFilters {
   alergeno?: Alergeno;
   apto?: Apto;
   q?: string;
+  /** "Analizados por vos": cuando es true, el listado se limita a los productos
+   * que el usuario logueado analizó (vínculo ProductAnalysis). URL: `?filtro=mios`. */
+  mios?: boolean;
   page: number;
 }
 
@@ -38,6 +41,7 @@ export function parseHistoryFilters(raw: RawSearchParams): HistoryFilters {
     alergeno: pickEnum(raw.alergeno, ALERGENOS),
     apto: pickEnum(raw.apto, APTO_VALUES),
     q: pickString(raw.q),
+    mios: pickString(raw.filtro) === 'mios' ? true : undefined,
     page: pickPage(raw.page),
   };
 }
@@ -54,6 +58,7 @@ export function buildHistoryUrl(filters: HistoryFilters, basePath = '/catalogo')
   if (filters.alergeno) params.set('alergeno', filters.alergeno);
   if (filters.apto) params.set('apto', filters.apto);
   if (filters.q) params.set('q', filters.q);
+  if (filters.mios) params.set('filtro', 'mios');
   if (filters.page > 1) params.set('page', String(filters.page));
   const qs = params.toString();
   return qs ? `${basePath}?${qs}` : basePath;
@@ -90,7 +95,12 @@ export function setFilter<K extends ActiveFilterKey>(
 /** Returns true when any user-facing filter is active (excludes `page`). */
 export function hasActiveFilters(filters: HistoryFilters): boolean {
   return Boolean(
-    filters.categoria || filters.riesgo || filters.alergeno || filters.apto || filters.q,
+    filters.categoria ||
+    filters.riesgo ||
+    filters.alergeno ||
+    filters.apto ||
+    filters.q ||
+    filters.mios,
   );
 }
 
