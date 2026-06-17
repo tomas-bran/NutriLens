@@ -24,8 +24,31 @@ import { enrich_with_off } from '@/lib/pipeline/steps/enrich-with-off';
 import { extract_with_ia } from '@/lib/pipeline/steps/extract-with-ia';
 import { generate_explanation } from '@/lib/pipeline/steps/generate-explanation';
 import { persist } from '@/lib/pipeline/steps/persist';
-import { validate_file } from '@/lib/pipeline/steps/validate-file';
+import { validate_file, MAX_FILE_BYTES } from '@/lib/pipeline/steps/validate-file';
 import { validate_schema } from '@/lib/pipeline/steps/validate-schema';
+import type { AnalysisFile } from '@/lib/pipeline/context';
+
+/** Mimes aceptados para la imagen dedicada del código de barras (NL-601). */
+const BARCODE_IMAGE_MIMES = ['image/jpeg', 'image/png'];
+
+/**
+ * Lee la imagen opcional del código de barras del multipart (campo
+ * `barcodeImage`). Best-effort: si falta, no es imagen o excede el límite,
+ * devuelve `undefined` y el análisis sigue con la foto principal.
+ */
+async function readOptionalBarcodeImage(formData: FormData): Promise<AnalysisFile | undefined> {
+  const field = formData.get('barcodeImage');
+  if (!field || typeof field === 'string' || field.size === 0) return undefined;
+  if (!BARCODE_IMAGE_MIMES.includes(field.type) || field.size > MAX_FILE_BYTES) return undefined;
+  const buffer = Buffer.from(await field.arrayBuffer());
+  return {
+    name: field.name,
+    mime: field.type,
+    sizeBytes: buffer.length,
+    hash: createHash('sha256').update(buffer).digest('hex'),
+    buffer,
+  };
+}
 
 // Force the Node.js runtime — pdf-parse uses Node APIs and the multipart
 // body parsing also benefits from the larger Node defaults.
@@ -86,6 +109,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       fileHash,
     });
 
+    const barcodeImage = await readOptionalBarcodeImage(formData);
+
     const initialCtx: AnalysisContext = {
       requestId,
       startedAt: new Date().toISOString(),
@@ -96,6 +121,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         hash: fileHash,
         buffer,
       },
+      ...(barcodeImage ? { barcodeImage } : {}),
       steps: [],
     };
 

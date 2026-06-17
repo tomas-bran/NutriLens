@@ -83,11 +83,45 @@ describe('enrich_with_off — resolución del barcode (NL-601)', () => {
     expect(byNameMock).toHaveBeenCalledWith('Galletitas Test', undefined);
   });
 
-  it('registra barcodeSource=decoded en el trace', async () => {
+  it('registra barcodeSource=photo cuando el código sale de la foto principal', async () => {
     decodeMock.mockResolvedValue('7790001112223');
     const out = await enrich_with_off(mkCtx(mkProduct()));
     const trace = out.steps.find((s) => s.name === 'enrich_with_off');
-    expect(trace?.details?.barcodeSource).toBe('decoded');
+    expect(trace?.details?.barcodeSource).toBe('photo');
+  });
+
+  it('prioriza la imagen dedicada del código de barras sobre la foto y el LLM', async () => {
+    decodeMock.mockResolvedValue('7790001112223');
+    const ctx = mkCtx(mkProduct({ barcode: '0000000000000' }));
+    ctx.barcodeImage = {
+      name: 'bc.jpg',
+      mime: 'image/jpeg',
+      sizeBytes: 5,
+      hash: 'h2',
+      buffer: Buffer.from('bc'),
+    };
+    const out = await enrich_with_off(ctx);
+    expect(byBarcodeMock).toHaveBeenCalledWith('7790001112223');
+    expect(byNameMock).not.toHaveBeenCalled();
+    const trace = out.steps.find((s) => s.name === 'enrich_with_off');
+    expect(trace?.details?.barcodeSource).toBe('barcode-image');
+  });
+
+  it('si la imagen dedicada no tiene código, cae a la foto principal', async () => {
+    decodeMock.mockResolvedValueOnce(null).mockResolvedValueOnce('7790001112223');
+    const ctx = mkCtx(mkProduct());
+    ctx.barcodeImage = {
+      name: 'bc.jpg',
+      mime: 'image/jpeg',
+      sizeBytes: 5,
+      hash: 'h2',
+      buffer: Buffer.from('bc'),
+    };
+    const out = await enrich_with_off(ctx);
+    expect(decodeMock).toHaveBeenCalledTimes(2);
+    expect(byBarcodeMock).toHaveBeenCalledWith('7790001112223');
+    const trace = out.steps.find((s) => s.name === 'enrich_with_off');
+    expect(trace?.details?.barcodeSource).toBe('photo');
   });
 
   it('con OFF_ENABLED=false ni siquiera decodifica', async () => {

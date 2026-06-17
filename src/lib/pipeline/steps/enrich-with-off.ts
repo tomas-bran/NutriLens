@@ -42,13 +42,32 @@ export async function enrich_with_off(ctx: AnalysisContext): Promise<AnalysisCon
   try {
     const { product } = ctx;
 
-    // Resolución del código de barras, de más a menos confiable:
-    //   1. decodificado de la imagen con zxing (NL-601) — exacto,
-    //   2. el que "leyó" el LLM (suele venir mal),
-    //   3. sin código → búsqueda por nombre.
-    const decodedBarcode = await decodeBarcode(ctx.file.buffer, ctx.file.mime);
-    const barcode = decodedBarcode ?? product.barcode ?? null;
-    const barcodeSource = decodedBarcode ? 'decoded' : product.barcode ? 'extracted' : 'none';
+    // Resolución del código de barras, de más a menos confiable (NL-601):
+    //   1. imagen dedicada del código (si el usuario la subió) — decodificada,
+    //   2. la foto principal del producto — decodificada con zxing,
+    //   3. el que "leyó" el LLM (suele venir mal),
+    //   4. sin código → búsqueda por nombre.
+    let barcode: string | null = null;
+    let barcodeSource: 'barcode-image' | 'photo' | 'extracted' | 'none' = 'none';
+
+    if (ctx.barcodeImage) {
+      const fromImage = await decodeBarcode(ctx.barcodeImage.buffer, ctx.barcodeImage.mime);
+      if (fromImage) {
+        barcode = fromImage;
+        barcodeSource = 'barcode-image';
+      }
+    }
+    if (!barcode) {
+      const fromPhoto = await decodeBarcode(ctx.file.buffer, ctx.file.mime);
+      if (fromPhoto) {
+        barcode = fromPhoto;
+        barcodeSource = 'photo';
+      }
+    }
+    if (!barcode && product.barcode) {
+      barcode = product.barcode;
+      barcodeSource = 'extracted';
+    }
 
     // Prefer barcode lookup (faster, more accurate); fall back to name search.
     const offProduct = barcode

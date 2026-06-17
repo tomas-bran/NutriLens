@@ -27,6 +27,12 @@ export interface AnalysisContext {
   requestId: string;
   startedAt: string;
   file: AnalysisFile;
+  /**
+   * Imagen dedicada del código de barras (NL-601, opcional). Si está, el step
+   * `enrich_with_off` la decodifica con prioridad sobre la foto principal para
+   * un lookup más preciso en Open Food Facts.
+   */
+  barcodeImage?: AnalysisFile;
   steps: StepTrace[];
   /** Filled by detect_label_kind. Absent when that step was skipped or not yet run. */
   labelKind?: DetectedLabelKind;
