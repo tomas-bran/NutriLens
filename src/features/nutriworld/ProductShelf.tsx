@@ -21,10 +21,38 @@ export function ProductShelf({ zone }: { zone: Zone }) {
         <meshStandardMaterial color={zone.color} roughness={0.7} />
       </mesh>
 
+      {/* Header del estante (franja blanca arriba del panel). */}
+      <mesh position={[x, 2.25, z - 0.66]}>
+        <boxGeometry args={[5.2, 0.42, 0.06]} />
+        <meshStandardMaterial color="#ffffff" roughness={0.6} />
+      </mesh>
+
+      {/* Postes verticales metálicos a los lados. */}
+      <mesh position={[x - 2.55, 1.3, z - 0.78]} castShadow>
+        <boxGeometry args={[0.14, 2.6, 0.14]} />
+        <meshStandardMaterial color="#64748b" metalness={0.6} roughness={0.45} />
+      </mesh>
+      <mesh position={[x + 2.55, 1.3, z - 0.78]} castShadow>
+        <boxGeometry args={[0.14, 2.6, 0.14]} />
+        <meshStandardMaterial color="#64748b" metalness={0.6} roughness={0.45} />
+      </mesh>
+
+      {/* Estante intermedio (plancha vacía detrás de los productos). */}
+      <mesh position={[x, 1.4, z - 0.55]} receiveShadow>
+        <boxGeometry args={[5.0, 0.08, 0.5]} />
+        <meshStandardMaterial color="#cbd5e1" roughness={0.7} metalness={0.3} />
+      </mesh>
+
       {/* Base / estante donde apoyan las cajas. */}
       <mesh position={[x, 0.25, z]} receiveShadow>
         <boxGeometry args={[5.2, 0.5, 1.8]} />
         <meshStandardMaterial color="#94a3b8" roughness={0.8} />
+      </mesh>
+
+      {/* Lip frontal de color (borde del estante). */}
+      <mesh position={[x, 0.46, z + 0.9]}>
+        <boxGeometry args={[5.2, 0.12, 0.06]} />
+        <meshStandardMaterial color={zone.color} roughness={0.6} />
       </mesh>
 
       {/* Cartel de zona, siempre de cara a la cámara. */}

@@ -38,11 +38,20 @@ export function NutriLensNPC() {
   const message = useNutriWorld((s) => s.assistantMessage);
   const target = useMemo(() => new Vector3(), []);
   const dir = useMemo(() => new Vector3(), []);
+  // Animación de llegada (one-shot): detecta el flanco a 'arrived'.
+  const prevState = useRef<NpcState>(npcState);
+  const arriveStart = useRef<number | null>(null);
 
   useFrame((three, delta) => {
     const g = root.current;
     if (!g) return;
     const t = three.clock.elapsedTime;
+
+    // Flanco de subida a 'arrived' → arranca el festejo.
+    if (npcState === 'arrived' && prevState.current !== 'arrived') {
+      arriveStart.current = t;
+    }
+    prevState.current = npcState;
 
     // Caminar hacia la góndola objetivo.
     if (npcState === 'guiding' && targetZone) {
@@ -60,11 +69,27 @@ export function NutriLensNPC() {
       }
     }
 
-    // Flotación distinta por estado.
+    // One-shot de llegada: salto + giro completo.
+    let hop = 0;
+    let spin = 0;
+    if (arriveStart.current !== null) {
+      const e = t - arriveStart.current;
+      const DUR = 1.2;
+      if (e < DUR) {
+        const k = e / DUR; // 0..1
+        hop = Math.sin(k * Math.PI) * 0.55;
+        spin = k * Math.PI * 2; // un giro completo
+      } else {
+        arriveStart.current = null;
+      }
+    }
+
+    // Flotación distinta por estado (+ hop de llegada).
     if (body.current) {
       const amp = npcState === 'guiding' ? 0.18 : npcState === 'thinking' ? 0.13 : 0.06;
       const freq = npcState === 'guiding' ? 9 : npcState === 'thinking' ? 6 : 2.5;
-      body.current.position.y = Math.sin(t * freq) * amp;
+      body.current.position.y = 0.35 + Math.sin(t * freq) * amp + hop;
+      body.current.rotation.y = spin;
     }
     if (orb.current) {
       const s = 1 + Math.sin(t * 5) * 0.15;
@@ -73,37 +98,71 @@ export function NutriLensNPC() {
   });
 
   const stateLabel = STATE_LABEL[npcState];
+  const accent = STATE_COLOR[npcState];
 
   return (
     <group ref={root} position={[2.5, 0, 4]}>
       <group ref={body}>
-        {/* Cuerpo */}
-        <mesh castShadow position={[0, 0.85, 0]}>
-          <capsuleGeometry args={[0.42, 0.9, 8, 16]} />
-          <meshStandardMaterial color="#16a34a" roughness={0.35} metalness={0.1} />
+        {/* Núcleo / torso metálico (flota, sin piernas) */}
+        <mesh castShadow position={[0, 1.0, 0]}>
+          <capsuleGeometry args={[0.4, 0.5, 12, 24]} />
+          <meshStandardMaterial color="#dbe4ec" metalness={0.85} roughness={0.25} />
         </mesh>
-        {/* Cabeza */}
-        <mesh castShadow position={[0, 1.7, 0]}>
-          <sphereGeometry args={[0.34, 24, 24]} />
-          <meshStandardMaterial color="#22c55e" roughness={0.3} />
+        {/* Panel de pecho luminoso */}
+        <mesh position={[0, 1.02, 0.37]}>
+          <boxGeometry args={[0.3, 0.34, 0.05]} />
+          <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.6} />
         </mesh>
-        {/* "Lente" (ojo cámara) */}
-        <mesh position={[0, 1.72, 0.3]}>
-          <circleGeometry args={[0.13, 24]} />
-          <meshStandardMaterial color="#0f172a" />
+        {/* Cabeza-pantalla metálica */}
+        <mesh castShadow position={[0, 1.82, 0]}>
+          <boxGeometry args={[0.62, 0.5, 0.5]} />
+          <meshStandardMaterial color="#e2e8f0" metalness={0.8} roughness={0.3} />
         </mesh>
-        {/* Orbe de estado */}
-        <mesh ref={orb} position={[0, 2.3, 0]}>
+        {/* Visor (pantalla oscura) */}
+        <mesh position={[0, 1.84, 0.27]}>
+          <boxGeometry args={[0.5, 0.3, 0.04]} />
+          <meshStandardMaterial color="#0f172a" roughness={0.2} />
+        </mesh>
+        {/* Ojos digitales emisivos */}
+        <mesh position={[-0.12, 1.86, 0.3]}>
+          <sphereGeometry args={[0.05, 12, 12]} />
+          <meshStandardMaterial color="#67e8f9" emissive="#22d3ee" emissiveIntensity={1.4} />
+        </mesh>
+        <mesh position={[0.12, 1.86, 0.3]}>
+          <sphereGeometry args={[0.05, 12, 12]} />
+          <meshStandardMaterial color="#67e8f9" emissive="#22d3ee" emissiveIntensity={1.4} />
+        </mesh>
+        {/* Brazos flotantes (esferas a los lados) */}
+        <mesh position={[-0.52, 1.0, 0]}>
           <sphereGeometry args={[0.12, 16, 16]} />
-          <meshStandardMaterial
-            color={STATE_COLOR[npcState]}
-            emissive={STATE_COLOR[npcState]}
-            emissiveIntensity={0.8}
-          />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.8} roughness={0.3} />
+        </mesh>
+        <mesh position={[0.52, 1.0, 0]}>
+          <sphereGeometry args={[0.12, 16, 16]} />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.8} roughness={0.3} />
+        </mesh>
+        {/* Base anti-grav (cono + anillo luminoso) en vez de piernas */}
+        <mesh position={[0, 0.58, 0]}>
+          <coneGeometry args={[0.34, 0.42, 18]} />
+          <meshStandardMaterial color="#94a3b8" metalness={0.7} roughness={0.4} />
+        </mesh>
+        <mesh position={[0, 0.34, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.22, 0.04, 8, 24]} />
+          <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.7} />
+        </mesh>
+        {/* Antena */}
+        <mesh position={[0, 2.18, 0]}>
+          <cylinderGeometry args={[0.02, 0.02, 0.24, 8]} />
+          <meshStandardMaterial color="#94a3b8" metalness={0.9} roughness={0.2} />
+        </mesh>
+        {/* Orbe de estado en la punta de la antena */}
+        <mesh ref={orb} position={[0, 2.38, 0]}>
+          <sphereGeometry args={[0.1, 16, 16]} />
+          <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.9} />
         </mesh>
       </group>
 
-      <Billboard position={[0, 2.75, 0]}>
+      <Billboard position={[0, 2.95, 0]}>
         <Text
           fontSize={0.3}
           color="#15803d"

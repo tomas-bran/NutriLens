@@ -15,6 +15,7 @@ import {
   getNearProductId,
   selectProduct,
   setNearProduct,
+  setPlayerPos,
 } from './store/useNutriWorldStore';
 import { ZONE_LIST } from './data/zones';
 import { useKeyboard } from './useKeyboard';
@@ -47,6 +48,8 @@ export function Player() {
   });
   const tmp = useMemo(() => new Vector3(), []);
   const camTarget = useMemo(() => new Vector3(), []);
+  // Acumulador para throttlear el push de posición al store (minimapa).
+  const posAccum = useRef(0);
 
   useFrame((_, delta) => {
     const g = ref.current;
@@ -93,17 +96,49 @@ export function Player() {
       }
     }
     setNearProduct(nearest);
+
+    // Posición → store (throttle ~12 Hz) para el minimapa.
+    posAccum.current += delta;
+    if (posAccum.current >= 0.08) {
+      posAccum.current = 0;
+      setPlayerPos(g.position.x, g.position.z);
+    }
   });
 
   return (
     <group ref={ref} position={[0, 0, 6]}>
-      <mesh castShadow position={[0, 0.9, 0]}>
-        <capsuleGeometry args={[0.4, 1, 8, 16]} />
-        <meshStandardMaterial color="#2563eb" roughness={0.4} />
+      {/* Figura humana estilizada: piernas + torso + brazos + cabeza, mirando +Z. */}
+      {/* Piernas (pantalón) */}
+      <mesh castShadow position={[-0.13, 0.35, 0]}>
+        <cylinderGeometry args={[0.11, 0.09, 0.72, 12]} />
+        <meshStandardMaterial color="#334155" roughness={0.75} />
       </mesh>
-      <mesh position={[0, 0.95, 0.42]}>
-        <sphereGeometry args={[0.12, 12, 12]} />
-        <meshStandardMaterial color="#ffffff" />
+      <mesh castShadow position={[0.13, 0.35, 0]}>
+        <cylinderGeometry args={[0.11, 0.09, 0.72, 12]} />
+        <meshStandardMaterial color="#334155" roughness={0.75} />
+      </mesh>
+      {/* Torso (remera) */}
+      <mesh castShadow position={[0, 1.02, 0]}>
+        <capsuleGeometry args={[0.26, 0.42, 8, 16]} />
+        <meshStandardMaterial color="#2563eb" roughness={0.55} />
+      </mesh>
+      {/* Brazos */}
+      <mesh castShadow position={[-0.34, 1.0, 0]} rotation={[0, 0, 0.12]}>
+        <capsuleGeometry args={[0.08, 0.46, 6, 12]} />
+        <meshStandardMaterial color="#1d4ed8" roughness={0.6} />
+      </mesh>
+      <mesh castShadow position={[0.34, 1.0, 0]} rotation={[0, 0, -0.12]}>
+        <capsuleGeometry args={[0.08, 0.46, 6, 12]} />
+        <meshStandardMaterial color="#1d4ed8" roughness={0.6} />
+      </mesh>
+      {/* Cabeza + pelo */}
+      <mesh castShadow position={[0, 1.62, 0]}>
+        <sphereGeometry args={[0.2, 20, 20]} />
+        <meshStandardMaterial color="#f1c27d" roughness={0.65} />
+      </mesh>
+      <mesh position={[0, 1.71, -0.02]} scale={[1, 0.8, 1]}>
+        <sphereGeometry args={[0.205, 18, 18, 0, Math.PI * 2, 0, Math.PI * 0.62]} />
+        <meshStandardMaterial color="#3b2a1a" roughness={0.85} />
       </mesh>
       <Billboard position={[0, 2.2, 0]}>
         <Text

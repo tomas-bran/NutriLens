@@ -32,6 +32,8 @@ interface State {
   /** Voz (Web Speech API): silenciado por el usuario / hablando ahora. */
   muted: boolean;
   speaking: boolean;
+  /** Posición del jugador en el plano (para el minimapa). */
+  playerPos: { x: number; z: number };
 }
 
 const initialState: State = {
@@ -46,6 +48,7 @@ const initialState: State = {
   source: null,
   muted: false,
   speaking: false,
+  playerPos: { x: 0, z: 6 },
 };
 
 let state: State = initialState;
@@ -138,6 +141,11 @@ export function npcArrived(): void {
 
 export function setNearProduct(id: string | null): void {
   if (state.nearProductId !== id) setState({ nearProductId: id });
+}
+
+/** Actualiza la posición del jugador (throttleada por el caller) para el minimapa. */
+export function setPlayerPos(x: number, z: number): void {
+  setState({ playerPos: { x, z } });
 }
 
 // Lecturas no-reactivas para `useFrame` / handlers de teclado (evitan suscribir

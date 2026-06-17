@@ -12,6 +12,7 @@ import { ZONE_LIST } from './data/zones';
 import { NutriLensNPC } from './NutriLensNPC';
 import { Player } from './Player';
 import { ProductShelf } from './ProductShelf';
+import { StoreWalls } from './StoreWalls';
 import { ZoneBeacon } from './ZoneBeacon';
 
 export function NutriWorldScene() {
@@ -44,6 +45,8 @@ export function NutriWorldScene() {
           infiniteGrid={false}
         />
         <ContactShadows position={[0, 0.02, 0]} scale={50} far={12} blur={2.4} opacity={0.35} />
+
+        <StoreWalls />
 
         {ZONE_LIST.map((zone) => (
           <ProductShelf key={zone.id} zone={zone} />
