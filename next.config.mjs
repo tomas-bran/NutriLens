@@ -4,6 +4,11 @@ import { fileURLToPath } from 'node:url';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // NL-201: el avatar de Google (`session.user.image`) se sirve desde
+  // lh3.googleusercontent.com; hay que permitir el host para `next/image`.
+  images: {
+    remotePatterns: [{ protocol: 'https', hostname: 'lh3.googleusercontent.com' }],
+  },
   // Pin the tracing root to this repo: stray lockfiles in parent dirs would
   // otherwise make Next.js infer the wrong workspace root (warns on every
   // build and can mis-trace files in the standalone output).

@@ -11,7 +11,6 @@
 'use client';
 
 import { useCallback, useReducer, useRef, useState } from 'react';
-import { AppShell } from '@/components/layout/AppShell';
 import { ChatErrorBanner } from '@/components/chat/ChatErrorBanner';
 import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatHero } from '@/components/chat/ChatHero';
@@ -29,7 +28,6 @@ import type { ConversationSummary } from '@/lib/conversations/types';
 
 interface ChatPageClientProps {
   productsInBase: number;
-  historialCount: number;
   /** Pre-loaded conversation list (SSR) for the initial empty state. */
   initialConversations?: ConversationSummary[];
   /** Inyectable para tests (streaming SSE). */
@@ -141,7 +139,6 @@ const INITIAL_STATE: State = {
 
 export function ChatPageClient({
   productsInBase,
-  historialCount,
   initialConversations = [],
   fetchStreamImpl = fetchChatStream,
 }: ChatPageClientProps) {
@@ -277,62 +274,59 @@ export function ChatPageClient({
   const showPills = hasMessages && state.status === 'IDLE';
 
   return (
-    <AppShell active="chat" historialCount={historialCount}>
-      {/* Altura acotada: el hilo scrollea internamente, el input queda fijo. */}
-      <div className="flex h-[calc(100dvh-1.5rem)] min-h-0 flex-col gap-4 md:h-[calc(100vh-3rem)]">
-        <ChatHeader
-          productsInBase={productsInBase}
-          hasMessages={hasMessages}
-          onReset={handleReset}
-        />
+    // AppShell lo renderiza el server `ChatPage` (envuelve esto como children):
+    // meter <SidebarUser> (async server component) dentro de un árbol cliente
+    // daría "uncached promise" / loop infinito. Altura acotada: el hilo scrollea
+    // internamente y el input queda fijo (NL-305).
+    <div className="flex h-[calc(100dvh-1.5rem)] min-h-0 flex-col gap-4 md:h-[calc(100vh-3rem)]">
+      <ChatHeader productsInBase={productsInBase} hasMessages={hasMessages} onReset={handleReset} />
 
-        <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto pb-2">
-          {!hasMessages && state.status === 'IDLE' ? (
-            <div className="flex flex-col gap-6">
-              <ChatHero onPick={handleSubmit} />
-              {initialConversations.length > 0 && (
-                <ConversationList
-                  conversations={initialConversations}
-                  onOpen={handleLoadConversation}
-                  onDelete={handleReset}
-                />
-              )}
-            </div>
-          ) : (
-            <ChatThread
-              messages={state.messages}
-              status={state.status}
-              onAskFollowUp={handleAskFollowUp}
-            />
-          )}
-        </div>
-
-        {state.error && state.status === 'ERROR' && (
-          <ChatErrorBanner
-            message={state.error}
-            onRetry={handleRetry}
-            canRetry={state.lastUserQuestion !== null}
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto pb-2">
+        {!hasMessages && state.status === 'IDLE' ? (
+          <div className="flex flex-col gap-6">
+            <ChatHero onPick={handleSubmit} />
+            {initialConversations.length > 0 && (
+              <ConversationList
+                conversations={initialConversations}
+                onOpen={handleLoadConversation}
+                onDelete={handleReset}
+              />
+            )}
+          </div>
+        ) : (
+          <ChatThread
+            messages={state.messages}
+            status={state.status}
+            onAskFollowUp={handleAskFollowUp}
           />
         )}
-
-        <div className="shrink-0 bg-[var(--color-bg)] pt-1">
-          {showPills && (
-            <SuggestionPills
-              onPick={handleSubmit}
-              suggestions={state.suggestions}
-              lastQuestion={state.lastUserQuestion}
-              className="mb-2"
-            />
-          )}
-          <ChatInput
-            key={inputKey}
-            onSubmit={handleSubmit}
-            disabled={inputDisabled}
-            initialValue={inputPrefill}
-          />
-        </div>
       </div>
-    </AppShell>
+
+      {state.error && state.status === 'ERROR' && (
+        <ChatErrorBanner
+          message={state.error}
+          onRetry={handleRetry}
+          canRetry={state.lastUserQuestion !== null}
+        />
+      )}
+
+      <div className="shrink-0 bg-[var(--color-bg)] pt-1">
+        {showPills && (
+          <SuggestionPills
+            onPick={handleSubmit}
+            suggestions={state.suggestions}
+            lastQuestion={state.lastUserQuestion}
+            className="mb-2"
+          />
+        )}
+        <ChatInput
+          key={inputKey}
+          onSubmit={handleSubmit}
+          disabled={inputDisabled}
+          initialValue={inputPrefill}
+        />
+      </div>
+    </div>
   );
 }
 

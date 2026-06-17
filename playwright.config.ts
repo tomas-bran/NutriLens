@@ -56,6 +56,16 @@ export default defineConfig({
       // `expectRiskLevel('bajo')`. Lo desactivamos — su feature tiene
       // cobertura propia en unit + integration tests.
       OFF_ENABLED: 'false',
+      // NL-202: el middleware exige login con Google, que no se puede
+      // automatizar en CI. Este flag (solo honrado fuera de producción) deja
+      // pasar al middleware como un usuario de test fijo, para que los E2E
+      // corran sin OAuth real. El login tiene cobertura manual + unit del helper.
+      E2E_AUTH_BYPASS: 'true',
+      // Auth.js v5 resuelve la sesión en el wrapper del middleware aunque el
+      // bypass devuelva next() temprano; sin host de confianza + secret, el
+      // build de prod del webServer tira UntrustedHost / MissingSecret.
+      AUTH_TRUST_HOST: 'true',
+      AUTH_SECRET: 'e2e-secret-not-used-real-auth-is-bypassed',
     },
   },
 });

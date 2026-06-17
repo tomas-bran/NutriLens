@@ -76,9 +76,7 @@ describe('<ChatPageClient> — flujo happy (US-27 §1 + NL-304 streaming)', () =
       answerEvents({ text: 'Tenés 1 galletita guardada.', products: [CHIP] }),
     );
 
-    render(
-      <ChatPageClient productsInBase={5} historialCount={5} fetchStreamImpl={fetchStreamImpl} />,
-    );
+    render(<ChatPageClient productsInBase={5} fetchStreamImpl={fetchStreamImpl} />);
 
     expect(screen.getByTestId('chat-hero')).toBeInTheDocument();
     await user.type(screen.getByTestId('chat-input'), 'mostrame galletitas{Enter}');
@@ -102,9 +100,7 @@ describe('<ChatPageClient> — flujo happy (US-27 §1 + NL-304 streaming)', () =
       { type: 'done', answer: 'Hola mundo', tokensUsed: { in: 1, out: 2 } },
     ]);
 
-    render(
-      <ChatPageClient productsInBase={5} historialCount={5} fetchStreamImpl={fetchStreamImpl} />,
-    );
+    render(<ChatPageClient productsInBase={5} fetchStreamImpl={fetchStreamImpl} />);
     await user.type(screen.getByTestId('chat-input'), 'hola{Enter}');
 
     await waitFor(() =>
@@ -123,9 +119,7 @@ describe('<ChatPageClient> — flujo happy (US-27 §1 + NL-304 streaming)', () =
         for (const e of answerEvents({ text: 'Segunda respuesta.' })) onEvent(e);
       }) as unknown as typeof fetchChatStream;
 
-    render(
-      <ChatPageClient productsInBase={5} historialCount={5} fetchStreamImpl={fetchStreamImpl} />,
-    );
+    render(<ChatPageClient productsInBase={5} fetchStreamImpl={fetchStreamImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'primera{Enter}');
     await waitFor(() =>
@@ -146,9 +140,7 @@ describe('<ChatPageClient> — reset (US-27 §3)', () => {
   it('"Nueva conversación" limpia el thread y vuelve al hero', async () => {
     const user = userEvent.setup();
     const fetchStreamImpl = streamMock(answerEvents({ text: 'respuesta', products: [CHIP] }));
-    render(
-      <ChatPageClient productsInBase={5} historialCount={5} fetchStreamImpl={fetchStreamImpl} />,
-    );
+    render(<ChatPageClient productsInBase={5} fetchStreamImpl={fetchStreamImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'pregunta 1{Enter}');
     await waitFor(() => expect(screen.getByTestId('chat-assistant-bubble')).toBeInTheDocument());
@@ -165,9 +157,7 @@ describe('<ChatPageClient> — sugerencias (spec §9.5)', () => {
   it('clickear una sugerencia dispara el flujo de envío', async () => {
     const user = userEvent.setup();
     const fetchStreamImpl = streamMock(answerEvents({ text: 'respuesta', products: [CHIP] }));
-    render(
-      <ChatPageClient productsInBase={5} historialCount={5} fetchStreamImpl={fetchStreamImpl} />,
-    );
+    render(<ChatPageClient productsInBase={5} fetchStreamImpl={fetchStreamImpl} />);
 
     await user.click(screen.getAllByTestId('chat-suggestion')[0]!);
 
@@ -190,9 +180,7 @@ describe('<ChatPageClient> — fallback no_context (US-30 §1+§2)', () => {
       }),
     );
 
-    render(
-      <ChatPageClient productsInBase={0} historialCount={0} fetchStreamImpl={fetchStreamImpl} />,
-    );
+    render(<ChatPageClient productsInBase={0} fetchStreamImpl={fetchStreamImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'mostrame snacks{Enter}');
 
@@ -223,9 +211,7 @@ describe('<ChatPageClient> — estado ERROR (spec §9.4)', () => {
         for (const e of answerEvents({ text: 'Listo ahora.', products: [CHIP] })) onEvent(e);
       }) as unknown as typeof fetchChatStream;
 
-    render(
-      <ChatPageClient productsInBase={3} historialCount={3} fetchStreamImpl={fetchStreamImpl} />,
-    );
+    render(<ChatPageClient productsInBase={3} fetchStreamImpl={fetchStreamImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'mostrame galletitas{Enter}');
     await waitFor(() => expect(screen.getByTestId('chat-error')).toBeInTheDocument());
@@ -244,9 +230,7 @@ describe('<ChatPageClient> — estado ERROR (spec §9.4)', () => {
       .fn()
       .mockRejectedValue(new Error('network')) as unknown as typeof fetchChatStream;
 
-    render(
-      <ChatPageClient productsInBase={3} historialCount={3} fetchStreamImpl={fetchStreamImpl} />,
-    );
+    render(<ChatPageClient productsInBase={3} fetchStreamImpl={fetchStreamImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'algo{Enter}');
     await waitFor(() => expect(screen.getByTestId('chat-error')).toBeInTheDocument());
@@ -270,9 +254,7 @@ describe('<ChatPageClient> — input bloqueado mientras responde', () => {
         }),
     ) as unknown as typeof fetchChatStream;
 
-    render(
-      <ChatPageClient productsInBase={3} historialCount={3} fetchStreamImpl={fetchStreamImpl} />,
-    );
+    render(<ChatPageClient productsInBase={3} fetchStreamImpl={fetchStreamImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'q{Enter}');
 

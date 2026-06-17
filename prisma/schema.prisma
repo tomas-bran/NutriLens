@@ -75,8 +75,12 @@ model Conversation {
   id        String   @id @default(uuid())
   title     String
   messages  String   @db.Text  // JSON.stringify(StoredMessage[])
+  /// NL-203: dueño de la conversación (Google `sub` del usuario logueado).
+  /// El historial de chats es por-usuario; los productos siguen siendo una
+  /// base de conocimiento compartida (no llevan userId).
+  userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([updatedAt])
+  @@index([userId, updatedAt])
 }
