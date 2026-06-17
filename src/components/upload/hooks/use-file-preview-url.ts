@@ -7,10 +7,10 @@ import { useEffect, useState } from 'react';
  * Skips PDFs (no inline preview). Always revokes the URL on cleanup so we
  * don't leak across re-uploads.
  */
-export function useFilePreviewUrl(file: File): string | null {
+export function useFilePreviewUrl(file: File | null): string | null {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
-    if (!file.type.startsWith('image/')) {
+    if (!file || !file.type.startsWith('image/')) {
       setUrl(null);
       return;
     }

@@ -39,9 +39,11 @@ describe('<UploadFlow> — IDLE', () => {
 
   it('renders the upload CTAs (Cámara / Galería)', () => {
     render(<UploadFlow />);
-    expect(screen.getByTestId('upload-cta-group')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Cámara/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Galería/ })).toBeInTheDocument();
+    // Scoped al grupo del producto: el slot opcional del código de barras (NL-601)
+    // también tiene Cámara/Galería, así que sin acotar habría matches duplicados.
+    const ctas = within(screen.getByTestId('upload-cta-group'));
+    expect(ctas.getByRole('button', { name: /Cámara/ })).toBeInTheDocument();
+    expect(ctas.getByRole('button', { name: /Galería/ })).toBeInTheDocument();
   });
 
   it('exposes 3 distinct file inputs with the right accept semantics', () => {
@@ -78,6 +80,55 @@ describe('<UploadFlow> — selecting a valid file', () => {
 
     expect(screen.queryByText('Archivo cargado')).not.toBeInTheDocument();
     expect(screen.getByText(/Arrastrá una foto/i)).toBeInTheDocument();
+  });
+});
+
+// NL-601: slot opcional de la foto del código de barras.
+describe('<UploadFlow> — código de barras (NL-601)', () => {
+  it('renderiza el slot opcional con sus propios CTAs', () => {
+    render(<UploadFlow />);
+    expect(screen.getByTestId('barcode-slot')).toBeInTheDocument();
+    expect(screen.getByText('opcional')).toBeInTheDocument();
+    expect(screen.getByLabelText('Tomar foto del código de barras')).toBeInTheDocument();
+    expect(screen.getByLabelText('Subir foto del código de barras')).toBeInTheDocument();
+  });
+
+  it('al elegir una foto del código la muestra con botón para quitarla', async () => {
+    const user = userEvent.setup();
+    render(<UploadFlow />);
+    const input = screen.getByLabelText('Subir foto del código de barras') as HTMLInputElement;
+    await user.upload(input, mkFile('codigo.jpg', 'image/jpeg'));
+
+    expect(screen.getByTestId('barcode-selected')).toBeInTheDocument();
+    expect(screen.getByText('codigo.jpg')).toBeInTheDocument();
+
+    await user.click(screen.getByTestId('barcode-clear'));
+    expect(screen.queryByTestId('barcode-selected')).not.toBeInTheDocument();
+  });
+
+  it('muestra el aviso "menos preciso" cuando hay producto pero NO código de barras', async () => {
+    const user = userEvent.setup();
+    render(<UploadFlow />);
+    await user.upload(
+      screen.getByLabelText('Subir foto o PDF') as HTMLInputElement,
+      mkFile('producto.jpg', 'image/jpeg'),
+    );
+    expect(screen.getByTestId('barcode-missing-note')).toBeInTheDocument();
+  });
+
+  it('oculta el aviso cuando también se cargó el código de barras', async () => {
+    const user = userEvent.setup();
+    render(<UploadFlow />);
+    await user.upload(
+      screen.getByLabelText('Subir foto del código de barras') as HTMLInputElement,
+      mkFile('codigo.jpg', 'image/jpeg'),
+    );
+    await user.upload(
+      screen.getByLabelText('Subir foto o PDF') as HTMLInputElement,
+      mkFile('producto.jpg', 'image/jpeg'),
+    );
+    expect(screen.getByTestId('selected-file')).toBeInTheDocument();
+    expect(screen.queryByTestId('barcode-missing-note')).not.toBeInTheDocument();
   });
 });
 
