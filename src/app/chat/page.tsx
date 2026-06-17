@@ -52,7 +52,7 @@ export default async function ChatPage() {
   // que <SidebarUser> (async server component) no quede dentro de un árbol
   // cliente — eso causaba "uncached promise"/loop infinito.
   return (
-    <AppShell active="chat" catalogoCount={catalogoCount}>
+    <AppShell active="chat" catalogoCount={catalogoCount} fluid>
       <ChatPageClient initialConversations={initialConversations} />
     </AppShell>
   );
