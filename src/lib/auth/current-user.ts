@@ -35,8 +35,7 @@ export async function getCurrentUser(): Promise<MobileAuthUser | null> {
       image: null,
     };
   }
-  const h = await headers();
-  const mobileUser = await getMobileUserFromAuthorization(h.get('authorization'));
+  const mobileUser = await getMobileUserFromAuthorization(await getAuthorizationHeader());
   if (mobileUser) return mobileUser;
 
   const session = await auth();
@@ -47,6 +46,15 @@ export async function getCurrentUser(): Promise<MobileAuthUser | null> {
     name: session.user.name ?? 'Mi cuenta',
     image: session.user.image ?? null,
   };
+}
+
+async function getAuthorizationHeader(): Promise<string | null> {
+  try {
+    const h = await headers();
+    return h.get('authorization');
+  } catch {
+    return null;
+  }
 }
 
 export async function getUserId(): Promise<string | null> {
