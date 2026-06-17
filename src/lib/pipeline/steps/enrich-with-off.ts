@@ -6,7 +6,7 @@
  */
 import { logger } from '@/lib/logger';
 import { fetchByBarcode, fetchByName } from '@/lib/off/client';
-import { buildEnrichment } from '@/lib/off/enrich';
+import { buildEnrichment, parseOffIngredients } from '@/lib/off/enrich';
 import { decodeBarcode } from '@/lib/off/decode-barcode';
 import { makeTrace } from '../trace';
 import type { AnalysisContext } from '../context';
@@ -93,13 +93,35 @@ export async function enrich_with_off(ctx: AnalysisContext): Promise<AnalysisCon
       discrepanciesCount: enrichment.discrepancies.length,
     });
 
-    // Apply confidence delta from enrichment
-    const updatedProduct = enrichment.matched
-      ? {
-          ...product,
-          confidence: Math.max(0, Math.min(1, product.confidence + enrichment.confidenceDelta)),
-        }
-      : product;
+    // MERGE (NL-601): OFF es fuente autoritativa, no un cross-check. En vez de
+    // mostrar discrepancias, incorporamos su data al producto y dejamos que
+    // apply_rules/compute_risk/explicación trabajen sobre el resultado mergeado.
+    const usedBarcode = barcode !== null;
+    let updatedProduct = product;
+    if (enrichment.matched && offProduct) {
+      // Alérgenos: unión (nunca perdemos los del label; sumamos los de OFF).
+      // Es seguro: solo agrega flags. apply_rules deriva las aptitudes de acá.
+      const mergedAllergens = [...new Set([...product.alergenos, ...enrichment.missingAllergens])];
+
+      // Ingredientes: con barcode (autoritativo) preferimos OFF; por nombre,
+      // solo si la IA no detectó ninguno (evita inyectar los de un mal match).
+      const offIngredients = parseOffIngredients(offProduct.ingredients_text);
+      const mergedIngredients =
+        offIngredients.length > 0 && (usedBarcode || product.ingredientes_detectados.length === 0)
+          ? offIngredients
+          : product.ingredientes_detectados;
+
+      // Confianza: match por barcode = dato autoritativo → piso alto; por
+      // nombre → bump moderado. Nunca baja por debajo de la confianza del modelo.
+      const mergedConfidence = Math.max(product.confidence, usedBarcode ? 0.9 : 0.8);
+
+      updatedProduct = {
+        ...product,
+        alergenos: mergedAllergens,
+        ingredientes_detectados: mergedIngredients,
+        confidence: mergedConfidence,
+      };
+    }
 
     return {
       ...ctx,

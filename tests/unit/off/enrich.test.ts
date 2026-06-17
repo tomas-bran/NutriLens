@@ -2,8 +2,27 @@
  * Tests for the Open Food Facts enrichment logic (NL-601).
  */
 import { describe, expect, it } from 'vitest';
-import { buildEnrichment } from '@/lib/off/enrich';
+import { buildEnrichment, parseOffIngredients } from '@/lib/off/enrich';
 import type { OFFProduct } from '@/lib/off/client';
+
+describe('parseOffIngredients (NL-601)', () => {
+  it('separa por comas, recorta y saca los guiones bajos de alérgenos', () => {
+    expect(parseOffIngredients('Harina, _leche_, azúcar, sal')).toEqual([
+      'Harina',
+      'leche',
+      'azúcar',
+      'sal',
+    ]);
+  });
+
+  it('devuelve [] con texto vacío', () => {
+    expect(parseOffIngredients('')).toEqual([]);
+  });
+
+  it('descarta tokens vacíos / de 1 char', () => {
+    expect(parseOffIngredients('Maíz, , a, Sal')).toEqual(['Maíz', 'Sal']);
+  });
+});
 
 function makeOff(overrides: Partial<OFFProduct> = {}): OFFProduct {
   return {

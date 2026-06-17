@@ -45,6 +45,21 @@ const OFF_ALLERGEN_MAP: Record<string, Alergeno> = {
   sesame: 'sésamo',
 };
 
+/**
+ * Parsea el `ingredients_text` de OFF en una lista de ingredientes (NL-601).
+ * OFF marca alérgenos con guiones bajos (`_leche_`) — los sacamos. Best-effort:
+ * separa por comas, recorta y descarta ruido.
+ */
+export function parseOffIngredients(text: string): string[] {
+  if (!text) return [];
+  return text
+    .replace(/_/g, '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 1 && s.length <= 80)
+    .slice(0, 50);
+}
+
 function extractAllergenFromTag(tag: string): Alergeno | null {
   // Tags look like "en:gluten" or "en:milk"
   const key = tag.replace(/^[a-z]{2}:/, '').toLowerCase();

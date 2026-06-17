@@ -13,7 +13,7 @@ import { logger } from '@/lib/logger';
 import type { AnalysisContext } from '@/lib/pipeline/context';
 import { makeTrace } from '@/lib/pipeline/trace';
 
-export const EXPLAIN_PROMPT_VERSION = 'explain_product-v1' as const;
+export const EXPLAIN_PROMPT_VERSION = 'explain_product-v2' as const;
 export const EXPLAIN_TIMEOUT_MS = 10_000;
 export const EXPLAIN_CACHE_TTL_SECONDS = 60 * 60 * 24;
 const MODEL_NAME = 'Phi-4-mini-instruct';

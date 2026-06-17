@@ -48,8 +48,6 @@ export function ResultView({ product, back, contextLabel }: ResultViewProps) {
 
       {showLowConfidence && <LowConfidenceBanner />}
 
-      {product.offEnrichment?.matched && <OFFBadge enrichment={product.offEnrichment} />}
-
       <div className="grid grid-cols-1 gap-6 md:grid-cols-[1fr_1.6fr]">
         <ProductImageCard product={product} />
 
@@ -72,6 +70,7 @@ export function ResultView({ product, back, contextLabel }: ResultViewProps) {
       <PipelineTrace trace={product.pipelineTrace} />
 
       <footer className="mt-2 flex flex-col gap-4">
+        {product.offEnrichment?.matched && <OFFBadge enrichment={product.offEnrichment} />}
         <Disclaimer />
       </footer>
     </div>

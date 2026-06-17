@@ -10,12 +10,27 @@ vi.mock('@/lib/off/client', () => ({ fetchByBarcode: vi.fn(), fetchByName: vi.fn
 import { enrich_with_off } from '@/lib/pipeline/steps/enrich-with-off';
 import { decodeBarcode } from '@/lib/off/decode-barcode';
 import { fetchByBarcode, fetchByName } from '@/lib/off/client';
+import type { OFFProduct } from '@/lib/off/client';
 import type { AnalysisContext } from '@/lib/pipeline/context';
 import type { ProductExtraction } from '@schemas/product';
 
 const decodeMock = vi.mocked(decodeBarcode);
 const byBarcodeMock = vi.mocked(fetchByBarcode);
 const byNameMock = vi.mocked(fetchByName);
+
+function mkOff(over: Partial<OFFProduct> = {}): OFFProduct {
+  return {
+    barcode: '7790001112223',
+    product_name: 'Galletitas Test',
+    brands: 'Marca',
+    ingredients_text: 'Harina, _leche_, azúcar, sal',
+    allergens_tags: ['en:milk'],
+    labels_tags: [],
+    nutriments: {},
+    url: 'https://world.openfoodfacts.org/product/7790001112223',
+    ...over,
+  };
+}
 
 function mkProduct(over: Partial<ProductExtraction> = {}): ProductExtraction {
   return {
@@ -129,5 +144,43 @@ describe('enrich_with_off — resolución del barcode (NL-601)', () => {
     await enrich_with_off(mkCtx(mkProduct()));
     expect(decodeMock).not.toHaveBeenCalled();
     expect(byBarcodeMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('enrich_with_off — merge de datos de OFF (NL-601)', () => {
+  it('unifica los alérgenos de OFF con los del producto', async () => {
+    decodeMock.mockResolvedValue('7790001112223');
+    byBarcodeMock.mockResolvedValue(mkOff({ allergens_tags: ['en:milk'] }));
+    const out = await enrich_with_off(mkCtx(mkProduct({ alergenos: [] })));
+    expect(out.product?.alergenos).toContain('leche');
+  });
+
+  it('toma los ingredientes de OFF cuando hay match por barcode', async () => {
+    decodeMock.mockResolvedValue('7790001112223');
+    byBarcodeMock.mockResolvedValue(mkOff({ ingredients_text: 'Harina, leche, azúcar' }));
+    const out = await enrich_with_off(mkCtx(mkProduct({ ingredientes_detectados: [] })));
+    expect(out.product?.ingredientes_detectados).toEqual(['Harina', 'leche', 'azúcar']);
+  });
+
+  it('sube la confianza a ≥0.9 con match por código de barras', async () => {
+    decodeMock.mockResolvedValue('7790001112223');
+    byBarcodeMock.mockResolvedValue(mkOff());
+    const out = await enrich_with_off(mkCtx(mkProduct({ confidence: 0.3 })));
+    expect(out.product?.confidence).toBeGreaterThanOrEqual(0.9);
+  });
+
+  it('match por nombre → confianza ≥0.8 (sin pisar si ya era mayor)', async () => {
+    decodeMock.mockResolvedValue(null);
+    byNameMock.mockResolvedValue(mkOff());
+    const out = await enrich_with_off(mkCtx(mkProduct({ barcode: undefined, confidence: 0.3 })));
+    expect(out.product?.confidence).toBeGreaterThanOrEqual(0.8);
+  });
+
+  it('sin match no toca el producto', async () => {
+    decodeMock.mockResolvedValue(null);
+    byNameMock.mockResolvedValue(null);
+    const out = await enrich_with_off(mkCtx(mkProduct({ confidence: 0.3, alergenos: [] })));
+    expect(out.product?.confidence).toBe(0.3);
+    expect(out.product?.alergenos).toEqual([]);
   });
 });

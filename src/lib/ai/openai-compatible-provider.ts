@@ -125,6 +125,7 @@ export class OpenAICompatibleProvider implements IaProvider {
     const systemPrompt = renderPrompt(opts.promptVersion as never, {
       producto: product.producto,
       categoria: product.categoria,
+      ingredientes: product.ingredientes_detectados.join(', ') || 'no listados',
       alergenos: product.alergenos.join(', ') || 'ninguno',
       sellos: product.sellos.join(', ') || 'ninguno',
       apto_vegano: String(product.apto_vegano),
