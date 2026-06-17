@@ -25,7 +25,7 @@
  */
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { FilterSelect } from '@/components/ui/FilterSelect';
 import { cn } from '@/lib/cn';
@@ -134,6 +134,11 @@ export function HistoryFilters({ value }: HistoryFiltersProps) {
     e.preventDefault();
     go(setFilter(value, 'q', qDraft.trim() || undefined));
   }
+  // "Analizados por vos" es un switch de vista (no un filtro-valor más), así que
+  // construimos la URL directo y reseteamos a page 1, preservando el resto.
+  function onToggleMios(next: boolean) {
+    go({ ...value, mios: next || undefined, page: 1 });
+  }
 
   const activeCount = [value.categoria, value.riesgo, value.alergeno, value.apto].filter(
     Boolean,
@@ -148,6 +153,30 @@ export function HistoryFilters({ value }: HistoryFiltersProps) {
       <h2 id="catalogo-filters-title" className="sr-only">
         Filtros del catálogo
       </h2>
+
+      {/* Switch de vista "Todos / Analizados por vos" — control primario,
+          siempre visible (no se esconde en el bottomsheet de filtros). */}
+      <div
+        role="group"
+        aria-label="Alcance del catálogo"
+        data-testid="catalogo-scope"
+        className="inline-flex w-full max-w-md self-start rounded-full border border-[var(--color-border)] bg-white p-1"
+      >
+        <ScopeButton
+          active={!value.mios}
+          onClick={() => onToggleMios(false)}
+          testId="catalogo-scope-todos"
+        >
+          Todos
+        </ScopeButton>
+        <ScopeButton
+          active={!!value.mios}
+          onClick={() => onToggleMios(true)}
+          testId="catalogo-scope-mios"
+        >
+          Analizados por vos
+        </ScopeButton>
+      </div>
 
       <div className="flex items-center gap-2">
         <form
@@ -174,6 +203,7 @@ export function HistoryFilters({ value }: HistoryFiltersProps) {
           {value.riesgo && <input type="hidden" name="riesgo" value={value.riesgo} />}
           {value.alergeno && <input type="hidden" name="alergeno" value={value.alergeno} />}
           {value.apto && <input type="hidden" name="apto" value={value.apto} />}
+          {value.mios && <input type="hidden" name="filtro" value="mios" />}
         </form>
 
         {/* Disparador del bottomsheet — solo mobile. */}
@@ -273,5 +303,34 @@ export function HistoryFilters({ value }: HistoryFiltersProps) {
         />
       </div>
     </section>
+  );
+}
+
+function ScopeButton({
+  active,
+  onClick,
+  testId,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  testId: string;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      data-testid={testId}
+      aria-pressed={active}
+      className={cn(
+        'flex-1 rounded-full px-4 py-2 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1',
+        active
+          ? 'bg-[var(--color-primary)] text-white shadow-[0_2px_8px_0_rgba(22,163,74,0.25)]'
+          : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]',
+      )}
+    >
+      {children}
+    </button>
   );
 }

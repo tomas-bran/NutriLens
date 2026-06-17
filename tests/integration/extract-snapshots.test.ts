@@ -17,6 +17,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+
+// getUserId (→ @/lib/auth → next-auth) no resuelve bajo vitest; lo mockeamos a
+// null porque estos tests no ejercitan el vínculo usuario↔producto.
+vi.mock('@/lib/auth/current-user', () => ({
+  getUserId: vi.fn().mockResolvedValue(null),
+}));
+
 import { POST } from '@/app/api/analyze/route';
 import { MockIaProvider, _resetIaProvider, getIaProvider } from '@/lib/ai';
 import { cache } from '@/lib/cache';
