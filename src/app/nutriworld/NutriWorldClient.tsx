@@ -6,14 +6,16 @@
  * component: `next/dynamic` con `ssr: false` no se permite desde server.
  */
 import nextDynamic from 'next/dynamic';
+import { NutriWorldLoadingScreen } from '@/features/nutriworld/NutriWorldLoadingScreen';
 
 const NutriWorldExperience = nextDynamic(
   () => import('@/features/nutriworld/NutriWorldExperience').then((m) => m.NutriWorldExperience),
   {
     ssr: false,
+    // Fase de descarga del chunk 3D: mismo logo, barra indeterminada.
     loading: () => (
-      <div className="flex h-[100dvh] w-full items-center justify-center bg-[#eef3ef] text-sm text-[var(--color-text-muted)]">
-        Cargando NutriWorld…
+      <div className="relative h-[100dvh] w-full">
+        <NutriWorldLoadingScreen indeterminate />
       </div>
     ),
   },

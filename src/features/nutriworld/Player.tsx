@@ -16,12 +16,27 @@ import {
   selectProduct,
   setNearProduct,
 } from './store/useNutriWorldStore';
+import { ZONE_LIST } from './data/zones';
 import { useKeyboard } from './useKeyboard';
 
 const WALK_SPEED = 4;
 const RUN_SPEED = 7.5;
 const BOUND = 18;
 const NEAR_RANGE = 2.4;
+// Footprint de góndola (medio ancho/profundidad) + radio del jugador: lo
+// suficientemente chico para que el jugador pueda acercarse a interactuar
+// (NEAR_RANGE) pero sin atravesar el estante.
+const BLOCK_X = 2.65;
+const BLOCK_Z = 1.55;
+
+const clamp = (v: number) => Math.max(-BOUND, Math.min(BOUND, v));
+
+/** ¿(x,z) cae dentro del footprint de alguna góndola? */
+function hitsShelf(x: number, z: number): boolean {
+  return ZONE_LIST.some(
+    (zone) => Math.abs(x - zone.position[0]) < BLOCK_X && Math.abs(z - zone.position[2]) < BLOCK_Z,
+  );
+}
 
 export function Player() {
   const ref = useRef<Group>(null);
@@ -50,8 +65,11 @@ export function Player() {
       dx /= len;
       dz /= len;
       const speed = (k.has('run') ? RUN_SPEED : WALK_SPEED) * delta;
-      g.position.x = Math.max(-BOUND, Math.min(BOUND, g.position.x + dx * speed));
-      g.position.z = Math.max(-BOUND, Math.min(BOUND, g.position.z + dz * speed));
+      // Colisión por eje (permite "deslizar" a lo largo de una góndola).
+      const nx = clamp(g.position.x + dx * speed);
+      if (!hitsShelf(nx, g.position.z)) g.position.x = nx;
+      const nz = clamp(g.position.z + dz * speed);
+      if (!hitsShelf(g.position.x, nz)) g.position.z = nz;
       g.rotation.y = Math.atan2(dx, dz);
     }
 

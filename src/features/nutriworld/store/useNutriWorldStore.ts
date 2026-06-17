@@ -14,6 +14,7 @@ import type { ZoneId } from '../data/zones';
 import { parseQuery } from '../logic/parseQuery';
 import { resolveIntent } from '../logic/resolveIntent';
 import type { AgentResponse } from '../logic/types';
+import { cancelSpeech, speak } from '../speak';
 
 export type NpcState = 'idle' | 'thinking' | 'guiding' | 'arrived';
 
@@ -28,6 +29,9 @@ interface State {
   nearProductId: string | null;
   loading: boolean;
   source: 'ai' | 'rules' | null;
+  /** Voz (Web Speech API): silenciado por el usuario / hablando ahora. */
+  muted: boolean;
+  speaking: boolean;
 }
 
 const initialState: State = {
@@ -40,6 +44,8 @@ const initialState: State = {
   nearProductId: null,
   loading: false,
   source: null,
+  muted: false,
+  speaking: false,
 };
 
 let state: State = initialState;
@@ -90,6 +96,13 @@ function applyResponse(res: AgentResponse) {
     loading: false,
     source: res.source,
   });
+  // NutriLens "habla" la respuesta (Web Speech API), salvo silenciado.
+  if (!state.muted && res.message) {
+    speak(res.message, {
+      onStart: () => setState({ speaking: true }),
+      onEnd: () => setState({ speaking: false }),
+    });
+  }
 }
 
 export async function submitQuery(query: string): Promise<void> {
@@ -142,6 +155,14 @@ export function selectProduct(id: string | null): void {
 
 export function setQuery(query: string): void {
   setState({ query });
+}
+
+export function setMuted(muted: boolean): void {
+  setState({ muted });
+  if (muted) {
+    cancelSpeech();
+    setState({ speaking: false });
+  }
 }
 
 export function resetWorld(): void {

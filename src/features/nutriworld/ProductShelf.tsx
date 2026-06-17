@@ -17,13 +17,13 @@ export function ProductShelf({ zone }: { zone: Zone }) {
     <group>
       {/* Panel de fondo detrás de los productos (mirando al pasillo, +z). */}
       <mesh position={[x, 1.2, z - 0.8]} castShadow receiveShadow>
-        <boxGeometry args={[4.4, 2.4, 0.25]} />
+        <boxGeometry args={[5.2, 2.4, 0.25]} />
         <meshStandardMaterial color={zone.color} roughness={0.7} />
       </mesh>
 
       {/* Base / estante donde apoyan las cajas. */}
       <mesh position={[x, 0.25, z]} receiveShadow>
-        <boxGeometry args={[4.4, 0.5, 1.8]} />
+        <boxGeometry args={[5.2, 0.5, 1.8]} />
         <meshStandardMaterial color="#94a3b8" roughness={0.8} />
       </mesh>
 
@@ -44,8 +44,8 @@ export function ProductShelf({ zone }: { zone: Zone }) {
         </Text>
       </Billboard>
 
-      {items.map((product) => (
-        <ProductItem key={product.id} product={product} />
+      {items.map((product, i) => (
+        <ProductItem key={product.id} product={product} index={i} />
       ))}
     </group>
   );

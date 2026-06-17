@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { AssistantOverlay } from './AssistantOverlay';
 import { HudControls } from './HudControls';
+import { NutriWorldLoader } from './NutriWorldLoader';
 import { NutriWorldScene } from './NutriWorldScene';
 import { ProductDetailPanel } from './ProductDetailPanel';
 
@@ -35,6 +36,9 @@ export function NutriWorldExperience() {
         <AssistantOverlay />
         <ProductDetailPanel />
       </div>
+
+      {/* Loader por encima de todo; hace fade-out al terminar. */}
+      <NutriWorldLoader />
     </div>
   );
 }

@@ -9,7 +9,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/cn';
-import { submitQuery, useNutriWorld, type NpcState } from './store/useNutriWorldStore';
+import { setMuted, submitQuery, useNutriWorld, type NpcState } from './store/useNutriWorldStore';
 
 const EXAMPLES = [
   'Mostrame galletitas aptas para celíacos',
@@ -25,12 +25,16 @@ const STATE_TEXT: Record<NpcState, string> = {
   arrived: 'Llegamos a la góndola',
 };
 
+const WELCOME = '¡Hola! Soy NutriLens. Preguntame qué buscás y te llevo a la góndola.';
+
 export function AssistantOverlay() {
   const [text, setText] = useState('');
   const message = useNutriWorld((s) => s.assistantMessage);
   const npcState = useNutriWorld((s) => s.npcState);
   const loading = useNutriWorld((s) => s.loading);
   const source = useNutriWorld((s) => s.source);
+  const muted = useNutriWorld((s) => s.muted);
+  const speaking = useNutriWorld((s) => s.speaking);
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -43,30 +47,47 @@ export function AssistantOverlay() {
 
   return (
     <>
-      {/* Mensaje del asistente (arriba, centrado). */}
-      {(message || loading) && (
-        <div className="pointer-events-none absolute left-1/2 top-4 w-[min(92vw,560px)] -translate-x-1/2">
-          <div className="pointer-events-auto rounded-2xl border border-[var(--color-border)] bg-white/95 p-4 shadow-lg backdrop-blur">
-            <div className="mb-1 flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
-                <Icon name="sparkles" className="h-4 w-4" />
-              </span>
-              <span className="text-sm font-bold text-[var(--color-text)]">NutriLens</span>
-              <span className="text-xs text-[var(--color-text-muted)]">
-                · {STATE_TEXT[npcState]}
-              </span>
+      {/* Panel del asistente (arriba, centrado). Siempre visible: saluda al
+          entrar y se actualiza con cada respuesta. */}
+      <div className="pointer-events-none absolute left-1/2 top-4 w-[min(92vw,560px)] -translate-x-1/2">
+        <div className="pointer-events-auto rounded-2xl border border-[var(--color-border)] bg-white/95 p-4 shadow-lg backdrop-blur">
+          <div className="mb-1 flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+              <Icon name="sparkles" className="h-4 w-4" />
+            </span>
+            <span className="text-sm font-bold text-[var(--color-text)]">NutriLens</span>
+            <span className="text-xs text-[var(--color-text-muted)]">
+              · {speaking && !muted ? 'Hablando…' : STATE_TEXT[npcState]}
+            </span>
+            <div className="ml-auto flex items-center gap-2">
               {source === 'ai' && !loading && (
-                <span className="ml-auto rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-primary)]">
+                <span className="rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-primary)]">
                   IA
                 </span>
               )}
+              <button
+                type="button"
+                onClick={() => setMuted(!muted)}
+                aria-label={muted ? 'Activar voz de NutriLens' : 'Silenciar voz de NutriLens'}
+                title={muted ? 'Activar voz' : 'Silenciar'}
+                data-testid="nutriworld-mute"
+                className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
+              >
+                <Icon
+                  name={muted ? 'volume-off' : 'volume'}
+                  className={cn(
+                    'h-4 w-4',
+                    speaking && !muted && 'animate-pulse text-[var(--color-primary)]',
+                  )}
+                />
+              </button>
             </div>
-            <p className="text-[13.5px] leading-relaxed text-[var(--color-text)]">
-              {loading ? 'Déjame buscar en las góndolas…' : message}
-            </p>
           </div>
+          <p className="text-[13.5px] leading-relaxed text-[var(--color-text)]">
+            {loading ? 'Déjame buscar en las góndolas…' : (message ?? WELCOME)}
+          </p>
         </div>
-      )}
+      </div>
 
       {/* Input + ejemplos (abajo). */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 p-4">

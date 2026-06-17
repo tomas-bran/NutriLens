@@ -49,7 +49,7 @@ export const PRODUCTS: NutriProduct[] = [
       'chips de chocolate',
     ],
     explanation: 'Buena opción dentro de galletitas: sin gluten detectado y riesgo bajo.',
-    position: [6.6, 1, -4],
+    position: [6.1, 1, -4],
   },
   {
     id: 'prod_rice_cookies',
@@ -79,7 +79,7 @@ export const PRODUCTS: NutriProduct[] = [
     seals: ['exceso en sodio'],
     ingredients: ['arroz integral', 'sal', 'aceite de girasol'],
     explanation: 'Apta para celíacos, pero tiene un sello de exceso en sodio: riesgo medio.',
-    position: [9.4, 1, -4],
+    position: [9.9, 1, -4],
   },
   // ── Góndola Vegano ────────────────────────────────────────────────────
   {
@@ -157,7 +157,7 @@ export const PRODUCTS: NutriProduct[] = [
     seals: ['exceso en azúcares', 'exceso en grasas saturadas'],
     ingredients: ['harina de trigo', 'azúcar', 'leche en polvo', 'cacao'],
     explanation: 'No recomendable para personas celíacas o con intolerancia a la lactosa.',
-    position: [-6, 1, -2],
+    position: [-6.1, 1, -2],
   },
   {
     id: 'prod_mix_frutos',
@@ -172,7 +172,7 @@ export const PRODUCTS: NutriProduct[] = [
     seals: [],
     ingredients: ['almendras', 'nueces', 'castañas de cajú', 'pasas'],
     explanation: 'Snack de riesgo bajo, apto celíaco y vegano. Contiene frutos secos.',
-    position: [-7.3, 1, -2],
+    position: [-8.1, 1, -2],
   },
   {
     id: 'prod_papas_onduladas',
@@ -187,7 +187,7 @@ export const PRODUCTS: NutriProduct[] = [
     seals: ['exceso en sodio', 'exceso en grasas saturadas'],
     ingredients: ['papa', 'aceite vegetal', 'sal'],
     explanation: 'Sin gluten ni lactosa, pero riesgo alto por sellos de sodio y grasas.',
-    position: [-4.7, 1, -2],
+    position: [-3.9, 1, -2],
   },
 ];
 

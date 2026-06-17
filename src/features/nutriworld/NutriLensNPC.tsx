@@ -8,7 +8,7 @@
  */
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Billboard, Text } from '@react-three/drei';
+import { Billboard, Html, Text } from '@react-three/drei';
 import { Vector3, type Group, type Mesh } from 'three';
 import { ZONES } from './data/zones';
 import { npcArrived, useNutriWorld, type NpcState } from './store/useNutriWorldStore';
@@ -35,6 +35,7 @@ export function NutriLensNPC() {
   const orb = useRef<Mesh>(null);
   const npcState = useNutriWorld((s) => s.npcState);
   const targetZone = useNutriWorld((s) => s.npcTargetZone);
+  const message = useNutriWorld((s) => s.assistantMessage);
   const target = useMemo(() => new Vector3(), []);
   const dir = useMemo(() => new Vector3(), []);
 
@@ -125,6 +126,15 @@ export function NutriLensNPC() {
           </Text>
         )}
       </Billboard>
+
+      {/* Burbuja de diálogo (DOM 3D, sigue al NPC). Solo cuando "habla". */}
+      {message && npcState !== 'idle' && (
+        <Html position={[0, 3.5, 0]} center distanceFactor={11} zIndexRange={[20, 0]}>
+          <div className="pointer-events-none w-56 -translate-y-2 rounded-2xl rounded-bl-sm border border-[var(--color-border)] bg-white/95 px-3 py-2 text-center text-[13px] leading-snug text-[var(--color-text)] shadow-xl">
+            {message.length > 110 ? `${message.slice(0, 110)}…` : message}
+          </div>
+        </Html>
+      )}
     </group>
   );
 }

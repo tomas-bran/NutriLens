@@ -18,10 +18,14 @@ const RISK_LABEL: Record<NutriProduct['risk'], string> = {
   alto: 'Riesgo alto',
 };
 
-export function ProductItem({ product }: { product: NutriProduct }) {
+export function ProductItem({ product, index = 0 }: { product: NutriProduct; index?: number }) {
   const meshRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const highlighted = useNutriWorld((s) => s.highlightedProductIds.includes(product.id));
+  const nearById = useNutriWorld((s) => s.nearProductId === product.id);
+  // Etiquetas escalonadas en altura (par/impar) para que las de productos
+  // vecinos no se enciman. La cercana/hover sube al frente.
+  const labelY = 1.7 + (index % 2 === 0 ? 0 : 0.7);
 
   useFrame((stateThree) => {
     const mesh = meshRef.current;
@@ -70,26 +74,34 @@ export function ProductItem({ product }: { product: NutriProduct }) {
       </mesh>
 
       {highlighted && (
-        <Billboard position={[0, 1.5, 0]}>
+        <Billboard position={[0, nearById ? labelY + 0.5 : labelY, 0]}>
+          {/* Nombre (solo). El riesgo/aptitud va en la ficha (E). Wrap + outline
+              blanco para que se lea sobre cualquier fondo sin encimarse. */}
           <Text
-            fontSize={0.26}
+            fontSize={0.22}
             color="#0f172a"
             anchorX="center"
             anchorY="middle"
-            outlineWidth={0.012}
+            maxWidth={2.2}
+            textAlign="center"
+            outlineWidth={0.02}
             outlineColor="#ffffff"
           >
             {product.name}
           </Text>
-          <Text
-            position={[0, -0.32, 0]}
-            fontSize={0.18}
-            color="#16a34a"
-            anchorX="center"
-            anchorY="middle"
-          >
-            {`${RISK_LABEL[product.risk]}${apto ? ` · ${apto}` : ''}`}
-          </Text>
+          {nearById && (
+            <Text
+              position={[0, -0.42, 0]}
+              fontSize={0.16}
+              color="#16a34a"
+              anchorX="center"
+              anchorY="middle"
+              outlineWidth={0.014}
+              outlineColor="#ffffff"
+            >
+              {`${RISK_LABEL[product.risk]}${apto ? ` · ${apto}` : ''}`}
+            </Text>
+          )}
         </Billboard>
       )}
     </group>
