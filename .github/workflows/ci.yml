@@ -85,7 +85,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16-alpine
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: nutrilens
           POSTGRES_PASSWORD: nutrilens
@@ -150,7 +150,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16-alpine
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: nutrilens
           POSTGRES_PASSWORD: nutrilens

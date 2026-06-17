@@ -23,6 +23,8 @@ import { renderPrompt } from './prompts';
 import type {
   AnalyzeOpts,
   AnswerOpts,
+  EmbedOpts,
+  EmbedResult,
   ExplainOpts,
   IaCallResult,
   IaProvider,
@@ -39,6 +41,8 @@ export interface OpenAIProviderConfig {
   multimodalModel: string;
   /** Modelo para calls text-only (explain + chat + intent). */
   miniModel: string;
+  /** Modelo de embeddings (NL-401). Default: text-embedding-3-small. */
+  embeddingModel?: string;
 }
 
 const DEFAULT_TIMEOUT_MS = 25_000;
@@ -57,6 +61,11 @@ const ANSWER_MAX_TOKENS = 800;
 const ANSWER_TEMPERATURE = 0.2;
 const ANSWER_TOP_K = 5;
 
+// NL-401: el embed es una llamada corta; si no respondió en 8s, mejor
+// fail-open en el caller que bloquear el pipeline.
+const EMBED_TIMEOUT_MS = 8_000;
+const DEFAULT_EMBEDDING_MODEL = 'text-embedding-3-small';
+
 // Defaults (extract / classify / explain): mantienen el comportamiento de
 // pre-refactor (temperature 0.1, max_tokens 1500).
 const DEFAULT_TEMPERATURE = 0.1;
@@ -66,13 +75,36 @@ export class OpenAICompatibleProvider implements IaProvider {
   protected readonly client: OpenAI;
   protected readonly multimodalModel: string;
   protected readonly miniModel: string;
+  protected readonly embeddingModel: string;
   protected readonly name: string;
 
   constructor(config: OpenAIProviderConfig) {
     this.client = config.client;
     this.multimodalModel = config.multimodalModel;
     this.miniModel = config.miniModel;
+    this.embeddingModel = config.embeddingModel ?? DEFAULT_EMBEDDING_MODEL;
     this.name = config.name;
+  }
+
+  async embed(text: string, opts: EmbedOpts = {}): Promise<EmbedResult> {
+    const start = Date.now();
+    try {
+      const r = await this.client.embeddings.create(
+        { model: this.embeddingModel, input: text },
+        { timeout: opts.timeoutMs ?? EMBED_TIMEOUT_MS },
+      );
+      const vector = r.data[0]?.embedding ?? [];
+      if (vector.length === 0) {
+        throw new ApiError('model_error', 'El proveedor devolvió un embedding vacío.', 502);
+      }
+      return {
+        vector,
+        usage: { in: r.usage?.prompt_tokens ?? 0, out: 0 },
+        latencyMs: Date.now() - start,
+      };
+    } catch (err) {
+      throw mapProviderError(err);
+    }
   }
 
   async analyzeLabel(file: Buffer, mime: string, opts: AnalyzeOpts): Promise<IaCallResult> {
