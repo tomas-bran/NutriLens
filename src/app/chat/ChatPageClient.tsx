@@ -12,11 +12,11 @@
 
 import { useCallback, useReducer, useRef, useState } from 'react';
 import { ChatErrorBanner } from '@/components/chat/ChatErrorBanner';
-import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatHero } from '@/components/chat/ChatHero';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatThread } from '@/components/chat/ChatThread';
 import { ConversationList } from '@/components/chat/ConversationList';
+import { Icon } from '@/components/ui/Icon';
 import { SuggestionPills } from '@/components/chat/SuggestionPills';
 import { useStickyAutoscroll } from '@/components/chat/use-sticky-autoscroll';
 import type { ChatMessage, ChatStatus } from '@/components/chat/types';
@@ -27,7 +27,11 @@ import { createConversation, updateConversation } from '@/lib/conversations/clie
 import type { ConversationSummary } from '@/lib/conversations/types';
 
 interface ChatPageClientProps {
-  productsInBase: number;
+  /**
+   * @deprecated Ya no se muestra el header con el contador; se mantiene en el
+   * tipo por compatibilidad con los callers/tests existentes.
+   */
+  productsInBase?: number;
   /** Pre-loaded conversation list (SSR) for the initial empty state. */
   initialConversations?: ConversationSummary[];
   /** Inyectable para tests (streaming SSE). */
@@ -138,7 +142,6 @@ const INITIAL_STATE: State = {
 };
 
 export function ChatPageClient({
-  productsInBase,
   initialConversations = [],
   fetchStreamImpl = fetchChatStream,
 }: ChatPageClientProps) {
@@ -278,12 +281,27 @@ export function ChatPageClient({
     // meter <SidebarUser> (async server component) dentro de un árbol cliente
     // daría "uncached promise" / loop infinito. Altura acotada: el hilo scrollea
     // internamente y el input queda fijo (NL-305).
-    <div className="flex h-[calc(100dvh-1.5rem)] min-h-0 flex-col gap-4 md:h-[calc(100vh-3rem)]">
-      <ChatHeader productsInBase={productsInBase} hasMessages={hasMessages} onReset={handleReset} />
+    <div className="flex h-[calc(100dvh-1.5rem)] min-h-0 flex-col gap-3 md:h-[calc(100vh-3rem)]">
+      {/* Sin header: el hilo ocupa todo el alto. Solo dejamos un botón discreto
+          de "Nueva conversación" cuando ya hay mensajes (NL-301 §3). */}
+      {hasMessages && (
+        <div className="flex shrink-0 justify-end">
+          <button
+            type="button"
+            onClick={handleReset}
+            data-testid="chat-new-conversation"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--color-text)] transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+          >
+            <Icon name="close" className="h-3.5 w-3.5" aria-hidden="true" />
+            Nueva conversación
+          </button>
+        </div>
+      )}
 
       <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto pb-2">
         {!hasMessages && state.status === 'IDLE' ? (
-          <div className="flex flex-col gap-6">
+          // Empty state centrado verticalmente en el espacio disponible.
+          <div className="flex min-h-full flex-col justify-center gap-6">
             <ChatHero onPick={handleSubmit} />
             {initialConversations.length > 0 && (
               <ConversationList

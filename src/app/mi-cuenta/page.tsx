@@ -24,12 +24,16 @@ export default async function MiCuentaPage() {
   // local el id de lectura y escritura divergen y las prefs "no persisten".
   const userId = (await getUserId()) ?? session.user.id;
 
+  // Las stats del perfil son PER-USUARIO: cuentan lo que ESTE usuario analizó
+  // (vínculo ProductAnalysis), no el catálogo compartido entero. Mismo criterio
+  // que el filtro "Analizados por vos". Con solo el seed (sin vínculos) → 0.
+  const mine = { analyses: { some: { userId } } };
   const [catalogoCount, analizados, riesgoAlto, conAlergenos, initialPrefs] = await Promise.all([
     getCatalogoCount(),
-    prisma.product.count(),
-    prisma.product.count({ where: { riesgo: 'alto' } }),
+    prisma.product.count({ where: mine }),
+    prisma.product.count({ where: { ...mine, riesgo: 'alto' } }),
     // "sin alérgenos" = los que tienen el array vacío serializado como "[]".
-    prisma.product.count({ where: { alergenos: '[]' } }),
+    prisma.product.count({ where: { ...mine, alergenos: '[]' } }),
     getUserPrefs(userId),
   ]);
 

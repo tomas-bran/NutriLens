@@ -10,6 +10,7 @@
  */
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
+import { cn } from '@/lib/cn';
 import { ProductChip } from '@/components/chat/ProductChip';
 import { MarkdownMessage } from '@/components/chat/MarkdownMessage';
 import type { ChatProductRef } from '@/lib/chat/response';
@@ -19,12 +20,27 @@ interface AssistantBubbleProps {
   text: string;
   products: ChatProductRef[];
   fallback: ChatFallback | null;
+  /**
+   * NL-304: este mensaje todavía se está streameando. Mientras tanto mostramos
+   * solo el texto en vivo (con puntos de "escribiendo" si aún está vacío) y
+   * diferimos los extras (lista de productos, CTA, follow-up) hasta `done` —
+   * así las cards no aparecen a medio escribir.
+   */
+  streaming?: boolean;
   /** NL-702: fires when user clicks "Preguntar sobre esta comparación". */
   onAskFollowUp?: (prefill: string) => void;
 }
 
-export function AssistantBubble({ text, products, fallback, onAskFollowUp }: AssistantBubbleProps) {
+export function AssistantBubble({
+  text,
+  products,
+  fallback,
+  streaming = false,
+  onAskFollowUp,
+}: AssistantBubbleProps) {
   const isMarkdown = hasMarkdownTable(text);
+  const showExtras = !streaming;
+  const isTyping = streaming && text.length === 0;
 
   return (
     <div className="flex w-full justify-start gap-2.5">
@@ -38,12 +54,17 @@ export function AssistantBubble({ text, products, fallback, onAskFollowUp }: Ass
       <div className="flex max-w-[85%] flex-1 flex-col gap-3 md:max-w-[80%]">
         <div
           data-testid="chat-assistant-bubble"
-          className="rounded-3xl rounded-bl-md border border-[var(--color-border)] bg-white px-4 py-3 text-sm leading-relaxed text-[var(--color-text)] shadow-sm md:px-5 md:py-4 md:text-base"
+          className={cn(
+            'rounded-3xl rounded-bl-md border border-[var(--color-border)] bg-white px-4 py-3 text-sm leading-relaxed text-[var(--color-text)] shadow-sm md:px-5 md:py-4 md:text-base',
+            // Mientras solo hay puntos de "escribiendo", la burbuja se achica al
+            // contenido en vez de estirarse a todo el ancho (NL-304).
+            isTyping && 'w-fit',
+          )}
         >
-          <MarkdownMessage text={text} />
+          {isTyping ? <TypingDots /> : <MarkdownMessage text={text} />}
         </div>
 
-        {products.length > 0 && (
+        {showExtras && products.length > 0 && (
           <ul
             data-testid="chat-products-list"
             className="flex flex-col gap-2"
@@ -57,7 +78,7 @@ export function AssistantBubble({ text, products, fallback, onAskFollowUp }: Ass
           </ul>
         )}
 
-        {isMarkdown && onAskFollowUp && (
+        {showExtras && isMarkdown && onAskFollowUp && (
           <button
             type="button"
             data-testid="chat-ask-follow-up"
@@ -69,7 +90,7 @@ export function AssistantBubble({ text, products, fallback, onAskFollowUp }: Ass
           </button>
         )}
 
-        {fallback?.showAnalyzeCta && (
+        {showExtras && fallback?.showAnalyzeCta && (
           <Link
             href="/analizar"
             data-testid="chat-analyze-cta"
@@ -81,6 +102,31 @@ export function AssistantBubble({ text, products, fallback, onAskFollowUp }: Ass
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * Puntos de "escribiendo" dentro de la burbuja, mientras llega el primer token
+ * del stream (NL-304). Evita la burbuja en blanco que se veía antes.
+ */
+function TypingDots() {
+  return (
+    <span
+      className="inline-flex items-center gap-1.5"
+      role="status"
+      aria-label="Escribiendo…"
+      data-testid="chat-typing"
+    >
+      <span className="sr-only">Escribiendo…</span>
+      {[0, 120, 240].map((delay) => (
+        <span
+          key={delay}
+          aria-hidden="true"
+          className="h-2 w-2 animate-bounce rounded-full bg-[var(--color-primary)]"
+          style={{ animationDelay: `${delay}ms` }}
+        />
+      ))}
+    </span>
   );
 }
 

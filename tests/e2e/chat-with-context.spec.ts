@@ -23,7 +23,6 @@ test('pregunta con contexto → respuesta + chips → click en chip → detalle 
 }) => {
   const chat = new ChatPage(page);
   await chat.goto();
-  await chat.expectHeaderProductsCount(3);
 
   await chat.askQuestion('mostrame galletitas aptas para celíacos');
 

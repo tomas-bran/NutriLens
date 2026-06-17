@@ -135,7 +135,7 @@ export class MockIaProvider implements IaProvider {
     const names = products.map((p) => p.nombre).join(', ') || 'ninguno';
     // User-facing string kept in Spanish on purpose: it's the product output.
     return {
-      raw: `Mock answer sobre productos: ${names}. Basado en productos analizados por vos. NutriLens es un asistente informativo.`,
+      raw: `Mock answer sobre productos: ${names}. Basado en productos del catálogo. NutriLens es un asistente informativo.`,
       usage: { in: 0, out: 0 },
       latencyMs: 3,
     };
@@ -210,7 +210,7 @@ function buildMockCompareAnswer(products: SavedProductLite[]): string {
     '',
     `Te recomiendo ${a.nombre} (mock).`,
     '',
-    'Basado en productos analizados por vos. NutriLens es un asistente informativo.',
+    'Basado en productos del catálogo. NutriLens es un asistente informativo.',
   ].join('\n');
 }
 
