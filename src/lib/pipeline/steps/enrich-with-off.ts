@@ -7,6 +7,7 @@
 import { logger } from '@/lib/logger';
 import { fetchByBarcode, fetchByName } from '@/lib/off/client';
 import { buildEnrichment } from '@/lib/off/enrich';
+import { decodeBarcode } from '@/lib/off/decode-barcode';
 import { makeTrace } from '../trace';
 import type { AnalysisContext } from '../context';
 
@@ -41,9 +42,17 @@ export async function enrich_with_off(ctx: AnalysisContext): Promise<AnalysisCon
   try {
     const { product } = ctx;
 
+    // Resolución del código de barras, de más a menos confiable:
+    //   1. decodificado de la imagen con zxing (NL-601) — exacto,
+    //   2. el que "leyó" el LLM (suele venir mal),
+    //   3. sin código → búsqueda por nombre.
+    const decodedBarcode = await decodeBarcode(ctx.file.buffer, ctx.file.mime);
+    const barcode = decodedBarcode ?? product.barcode ?? null;
+    const barcodeSource = decodedBarcode ? 'decoded' : product.barcode ? 'extracted' : 'none';
+
     // Prefer barcode lookup (faster, more accurate); fall back to name search.
-    const offProduct = product.barcode
-      ? await fetchByBarcode(product.barcode)
+    const offProduct = barcode
+      ? await fetchByBarcode(barcode)
       : await fetchByName(product.producto, undefined);
 
     const enrichment = buildEnrichment(
@@ -59,6 +68,7 @@ export async function enrich_with_off(ctx: AnalysisContext): Promise<AnalysisCon
     logger.info('enrich_with_off', {
       requestId: ctx.requestId,
       matched: enrichment.matched,
+      barcodeSource,
       durationMs: Date.now() - startedAt.getTime(),
       confirmedFields: enrichment.confirmedFields,
       discrepanciesCount: enrichment.discrepancies.length,
@@ -80,6 +90,7 @@ export async function enrich_with_off(ctx: AnalysisContext): Promise<AnalysisCon
         ...ctx.steps,
         makeTrace('enrich_with_off', 'ok', startedAt, {
           matched: enrichment.matched,
+          barcodeSource,
           confirmedFields: enrichment.confirmedFields,
         }),
       ],

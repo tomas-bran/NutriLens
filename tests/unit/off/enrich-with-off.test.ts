@@ -1,0 +1,99 @@
+/**
+ * Tests del step enrich_with_off (NL-601) — foco en la resolución del código
+ * de barras: decodificado de la imagen > leído por el LLM > búsqueda por nombre.
+ */
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/lib/off/decode-barcode', () => ({ decodeBarcode: vi.fn() }));
+vi.mock('@/lib/off/client', () => ({ fetchByBarcode: vi.fn(), fetchByName: vi.fn() }));
+
+import { enrich_with_off } from '@/lib/pipeline/steps/enrich-with-off';
+import { decodeBarcode } from '@/lib/off/decode-barcode';
+import { fetchByBarcode, fetchByName } from '@/lib/off/client';
+import type { AnalysisContext } from '@/lib/pipeline/context';
+import type { ProductExtraction } from '@schemas/product';
+
+const decodeMock = vi.mocked(decodeBarcode);
+const byBarcodeMock = vi.mocked(fetchByBarcode);
+const byNameMock = vi.mocked(fetchByName);
+
+function mkProduct(over: Partial<ProductExtraction> = {}): ProductExtraction {
+  return {
+    producto: 'Galletitas Test',
+    categoria: 'galletitas',
+    ingredientes_detectados: [],
+    alergenos: [],
+    sellos: [],
+    apto_vegano: false,
+    apto_celiaco: false,
+    apto_sin_lactosa: false,
+    riesgo: 'bajo',
+    confidence: 0.8,
+    ...over,
+  } as ProductExtraction;
+}
+
+function mkCtx(product?: ProductExtraction): AnalysisContext {
+  return {
+    requestId: 'req-1',
+    startedAt: new Date().toISOString(),
+    file: {
+      name: 'x.jpg',
+      mime: 'image/jpeg',
+      sizeBytes: 10,
+      hash: 'h',
+      buffer: Buffer.from('img'),
+    },
+    steps: [],
+    product,
+  };
+}
+
+const ORIG = process.env.OFF_ENABLED;
+beforeEach(() => {
+  vi.clearAllMocks();
+  delete process.env.OFF_ENABLED;
+  byNameMock.mockResolvedValue(null);
+  byBarcodeMock.mockResolvedValue(null);
+});
+afterEach(() => {
+  if (ORIG === undefined) delete process.env.OFF_ENABLED;
+  else process.env.OFF_ENABLED = ORIG;
+});
+
+describe('enrich_with_off — resolución del barcode (NL-601)', () => {
+  it('prefiere el barcode decodificado de la imagen sobre el del LLM', async () => {
+    decodeMock.mockResolvedValue('7790001112223');
+    await enrich_with_off(mkCtx(mkProduct({ barcode: '0000000000000' })));
+    expect(byBarcodeMock).toHaveBeenCalledWith('7790001112223');
+    expect(byNameMock).not.toHaveBeenCalled();
+  });
+
+  it('usa el barcode del LLM si no se pudo decodificar', async () => {
+    decodeMock.mockResolvedValue(null);
+    await enrich_with_off(mkCtx(mkProduct({ barcode: '7790009998887' })));
+    expect(byBarcodeMock).toHaveBeenCalledWith('7790009998887');
+    expect(byNameMock).not.toHaveBeenCalled();
+  });
+
+  it('cae a búsqueda por nombre si no hay barcode (ni decodificado ni del LLM)', async () => {
+    decodeMock.mockResolvedValue(null);
+    await enrich_with_off(mkCtx(mkProduct({ barcode: undefined })));
+    expect(byBarcodeMock).not.toHaveBeenCalled();
+    expect(byNameMock).toHaveBeenCalledWith('Galletitas Test', undefined);
+  });
+
+  it('registra barcodeSource=decoded en el trace', async () => {
+    decodeMock.mockResolvedValue('7790001112223');
+    const out = await enrich_with_off(mkCtx(mkProduct()));
+    const trace = out.steps.find((s) => s.name === 'enrich_with_off');
+    expect(trace?.details?.barcodeSource).toBe('decoded');
+  });
+
+  it('con OFF_ENABLED=false ni siquiera decodifica', async () => {
+    process.env.OFF_ENABLED = 'false';
+    await enrich_with_off(mkCtx(mkProduct()));
+    expect(decodeMock).not.toHaveBeenCalled();
+    expect(byBarcodeMock).not.toHaveBeenCalled();
+  });
+});
