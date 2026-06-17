@@ -13,10 +13,19 @@ export function IngredientList({ ingredients }: { ingredients: ReadonlyArray<str
       <Card padding="md">
         <ul
           data-testid="ingredient-list"
-          className="flex list-inside list-disc flex-col gap-1 text-[13px] text-[var(--color-text)] marker:text-[var(--color-primary)]"
+          className="grid grid-cols-1 gap-x-8 gap-y-1.5 sm:grid-cols-2"
         >
           {ingredients.map((i) => (
-            <li key={i}>{i}</li>
+            <li
+              key={i}
+              className="flex items-center gap-2.5 text-[13px] capitalize text-[var(--color-text)]"
+            >
+              <span
+                aria-hidden="true"
+                className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--color-primary)]"
+              />
+              <span className="min-w-0 truncate">{i}</span>
+            </li>
           ))}
         </ul>
       </Card>

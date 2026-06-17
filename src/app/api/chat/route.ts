@@ -1,5 +1,5 @@
 /**
- * POST /api/chat — endpoint del chat RAG sobre el historial.
+ * POST /api/chat — endpoint del chat RAG sobre el catálogo.
  *
  * Pipeline (delegado a `handleChat`, ver `src/lib/chat/handle-chat.ts`):
  *   parse_intent (Phi-mini) → retrieve_products (SQL) →
@@ -13,8 +13,10 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import { ApiError } from '@schemas/errors';
 import { getIaProvider } from '@/lib/ai';
+import { getUserId } from '@/lib/auth/current-user';
 import { apiErrorResponse } from '@/lib/api/error-response';
 import { handleChat } from '@/lib/chat/handle-chat';
+import { describePrefs, getUserPrefs } from '@/lib/prefs/server';
 import { toChatProductRef, type ChatApiResponse } from '@/lib/chat/response';
 
 export const runtime = 'nodejs';
@@ -31,9 +33,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         ? (body as { question: unknown }).question
         : undefined;
 
+    // NL-208: resolvemos las prefs del usuario acá (transport) y se las
+    // pasamos al orquestador, que queda libre de imports de auth.
+    const userId = await getUserId();
+    const userPrefs = userId ? describePrefs(await getUserPrefs(userId)) : '';
+
     const result = await handleChat(question as string, {
       ia: getIaProvider(),
       requestId,
+      userPrefs,
     });
 
     const payload: ChatApiResponse = {

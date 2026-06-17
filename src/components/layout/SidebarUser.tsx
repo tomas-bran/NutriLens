@@ -23,11 +23,11 @@ export async function SidebarUser() {
 
 function TeamCard() {
   return (
-    <div className="mt-auto flex items-center gap-2.5 rounded-[10px] bg-[var(--color-bg)] p-2.5">
+    <div className="rail-center mt-auto flex items-center gap-2.5 rounded-[10px] bg-[var(--color-bg)] p-2.5">
       <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-xs font-bold text-[var(--color-primary-strong)]">
         N
       </span>
-      <div className="flex min-w-0 flex-col leading-tight">
+      <div className="rail-hide flex min-w-0 flex-col leading-tight">
         <span className="truncate text-[11px] font-bold text-[var(--color-text)]">NutriLens</span>
         <span className="truncate text-[10px] text-[var(--color-text-muted)]">UNLaM</span>
       </div>

@@ -8,18 +8,14 @@
  * backend state. The current implementation matches the spec E06 §9 mid-
  * range timings so the UX feels right with the mock provider.
  *
- * Target durations (total ~8.6s):
- *   1. Validación de etiqueta         ~0.8s
- *   2. OCR + extracción multimodal    ~4.2s
- *   3. Clasificando alérgenos         ~1.5s
- *   4. Cálculo de riesgo              ~0.5s
- *   5. Generar explicación + guardar  ~1.6s
+ * Target durations (total ~9.4s) — 8 pasos (ver pipeline-steps.ts). La
+ * extracción/lectura es el tramo largo; el resto son cortos.
  */
 import { useEffect, useRef, useState } from 'react';
 
 export type AnalyzingStage = 'UPLOADING' | 'PROCESSING';
 
-const TIMELINE_MS: ReadonlyArray<number> = [800, 5000, 6500, 7000, 8600];
+const TIMELINE_MS: ReadonlyArray<number> = [700, 1400, 5200, 6200, 7000, 7800, 8600, 9400];
 const TICK_INTERVAL_MS = 120;
 
 export function useSimulatedPipelineStep(stage: AnalyzingStage): number {

@@ -24,7 +24,7 @@ describe('<ProductChip>', () => {
   it('linkea al detalle del producto (US-32 §2)', () => {
     render(<ProductChip product={baseProduct} />);
     const link = screen.getByTestId('chat-product-chip');
-    expect(link.getAttribute('href')).toBe('/historial/p-123');
+    expect(link.getAttribute('href')).toBe('/catalogo/p-123');
   });
 
   it('aria-label combina nombre + riesgo + acción', () => {

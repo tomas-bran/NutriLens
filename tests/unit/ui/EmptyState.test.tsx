@@ -5,8 +5,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 
 describe('EmptyState', () => {
   it('renders the title', () => {
-    render(<EmptyState title="Tu historial está vacío" />);
-    expect(screen.getByText('Tu historial está vacío')).toBeInTheDocument();
+    render(<EmptyState title="Tu catálogo está vacío" />);
+    expect(screen.getByText('Tu catálogo está vacío')).toBeInTheDocument();
   });
 
   it('renders description when provided', () => {

@@ -16,6 +16,14 @@
  */
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PrismaClient, type Prisma } from '@prisma/client';
+
+// La route resuelve las prefs del usuario vía getUserId (→ @/lib/auth →
+// next-auth → next/server, que el env de test no resuelve). Sin sesión en
+// integración, mockeamos getUserId a null (sin prefs); el resto es real.
+vi.mock('@/lib/auth/current-user', () => ({
+  getUserId: vi.fn().mockResolvedValue(null),
+}));
+
 import { POST } from '@/app/api/chat/route';
 
 const prisma = new PrismaClient();

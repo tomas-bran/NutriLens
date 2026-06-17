@@ -25,6 +25,12 @@ export interface HandleChatDeps {
   requestId: string;
   /** Inyectable para tests de integración con DB en memoria. */
   retrieve?: typeof retrieveProducts;
+  /**
+   * NL-208: resumen de las preferencias de dieta del usuario, resuelto por la
+   * route (transport). Vacío => sin preferencias. Mantener la resolución de
+   * identidad fuera del orquestador lo deja testeable sin auth/next-server.
+   */
+  userPrefs?: string;
 }
 
 export interface HandleChatResult {
@@ -44,7 +50,7 @@ export interface HandleChatResult {
 
 export async function handleChat(
   rawQuestion: string,
-  { ia, requestId, retrieve }: HandleChatDeps,
+  { ia, requestId, retrieve, userPrefs = '' }: HandleChatDeps,
 ): Promise<HandleChatResult> {
   const plan = await planChatResponse(rawQuestion, { ia, requestId, retrieve });
   const { question, intent, truncated, parseTokens } = plan;
@@ -84,8 +90,12 @@ export async function handleChat(
     };
   }
 
+  // El compare con ≥1 producto faltante ya se resuelve como fallback dentro de
+  // `planChatResponse` (kind === 'fallback', manejado arriba). Acá solo queda el
+  // camino con productos: generamos la respuesta. NL-208: pasamos las
+  // preferencias del usuario como contexto para priorizar lo que le importa.
   const { products } = plan;
-  const ans = await generateChatAnswer(question, products, intent, { ia });
+  const ans = await generateChatAnswer(question, products, intent, { ia, userPrefs });
   logger.info('chat.answered', {
     requestId,
     tokensIn: parseTokens.in + ans.tokensIn,

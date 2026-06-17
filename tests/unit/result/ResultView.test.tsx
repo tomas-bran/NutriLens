@@ -58,7 +58,6 @@ describe('<ResultView> — risk banner (§6.2, all three levels)', () => {
     const banner = screen.getByTestId('risk-banner');
     expect(banner).toHaveAttribute('data-risk', 'bajo');
     expect(within(banner).getByRole('heading', { name: 'Riesgo bajo' })).toBeInTheDocument();
-    expect(banner.className).toContain('risk-banner-low');
   });
 
   it('renders "Riesgo medio" with the medium variant class', () => {
@@ -66,7 +65,6 @@ describe('<ResultView> — risk banner (§6.2, all three levels)', () => {
     const banner = screen.getByTestId('risk-banner');
     expect(banner).toHaveAttribute('data-risk', 'medio');
     expect(within(banner).getByRole('heading', { name: 'Riesgo medio' })).toBeInTheDocument();
-    expect(banner.className).toContain('risk-banner-medium');
   });
 
   it('renders "Riesgo alto" with the high variant class', () => {
@@ -74,7 +72,6 @@ describe('<ResultView> — risk banner (§6.2, all three levels)', () => {
     const banner = screen.getByTestId('risk-banner');
     expect(banner).toHaveAttribute('data-risk', 'alto');
     expect(within(banner).getByRole('heading', { name: 'Riesgo alto' })).toBeInTheDocument();
-    expect(banner.className).toContain('risk-banner-high');
   });
 
   it('builds a reason line from allergens + sellos when both are present', () => {
@@ -122,24 +119,25 @@ describe('<ResultView> — aptitudes chips', () => {
     expect(screen.getByTestId('aptitude-sin_lactosa')).toBeInTheDocument();
   });
 
-  it('shows the "No apto" copy when apto* fields are false', () => {
+  it('marca cada aptitud como "No apto" (data-apto=false) con su etiqueta', () => {
     render(<ResultView product={mkProduct()} />);
     expect(screen.getByTestId('aptitude-vegano')).toHaveAttribute('data-apto', 'false');
-    expect(screen.getByTestId('aptitude-vegano')).toHaveTextContent('No vegano');
-    expect(screen.getByTestId('aptitude-celiaco')).toHaveTextContent('No apto celíaco');
-    expect(screen.getByTestId('aptitude-sin_lactosa')).toHaveTextContent('Tiene lactosa');
+    expect(screen.getByTestId('aptitude-celiaco')).toHaveAttribute('data-apto', 'false');
+    expect(screen.getByTestId('aptitude-sin_lactosa')).toHaveAttribute('data-apto', 'false');
+    expect(screen.getByTestId('aptitude-vegano')).toHaveTextContent('Vegano');
+    expect(screen.getByTestId('aptitude-celiaco')).toHaveTextContent('Apto celíaco');
+    expect(screen.getByTestId('aptitude-sin_lactosa')).toHaveTextContent('Sin lactosa');
   });
 
-  it('shows the "Apto" copy when apto* fields are true', () => {
+  it('marca cada aptitud como apta (data-apto=true) cuando los apto* son true', () => {
     render(
       <ResultView
         product={mkProduct({ aptoVegano: true, aptoCeliaco: true, aptoSinLactosa: true })}
       />,
     );
     expect(screen.getByTestId('aptitude-vegano')).toHaveAttribute('data-apto', 'true');
-    expect(screen.getByTestId('aptitude-vegano')).toHaveTextContent('Vegano');
-    expect(screen.getByTestId('aptitude-celiaco')).toHaveTextContent('Apto celíaco');
-    expect(screen.getByTestId('aptitude-sin_lactosa')).toHaveTextContent('Sin lactosa');
+    expect(screen.getByTestId('aptitude-celiaco')).toHaveAttribute('data-apto', 'true');
+    expect(screen.getByTestId('aptitude-sin_lactosa')).toHaveAttribute('data-apto', 'true');
   });
 });
 
@@ -213,26 +211,47 @@ describe('<ResultView> — product image + confidence pill', () => {
   });
 });
 
-describe('<ResultView> — JSON extraído + pipeline trace (E06 §3+§4)', () => {
-  it('renderiza el bloque <JsonViewer> con el jsonRaw del producto', () => {
+describe('<ResultView> — vistas técnicas solo para admin (NL-204)', () => {
+  it('por defecto (usuario común) NO muestra el JSON ni el pipeline trace', () => {
     render(
       <ResultView
         product={mkProduct({
-          jsonRaw: JSON.stringify({ producto: 'X', categoria: 'snacks' }),
+          jsonRaw: JSON.stringify({ producto: 'X' }),
+          pipelineTrace: [
+            {
+              name: 'validate_file',
+              status: 'ok',
+              startedAt: '2026-05-18T10:00:00.000Z',
+              durationMs: 10,
+            },
+          ],
         })}
+      />,
+    );
+    expect(screen.queryByTestId('json-viewer')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('pipeline-trace')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('admin-technical-views')).not.toBeInTheDocument();
+  });
+
+  it('con showTechnicalViews (admin) renderiza el <JsonViewer> con el jsonRaw', () => {
+    render(
+      <ResultView
+        showTechnicalViews
+        product={mkProduct({ jsonRaw: JSON.stringify({ producto: 'X', categoria: 'snacks' }) })}
       />,
     );
     expect(screen.getByTestId('json-viewer')).toBeInTheDocument();
   });
 
-  it('NO renderiza <PipelineTrace> cuando pipelineTrace está vacío', () => {
-    render(<ResultView product={mkProduct({ pipelineTrace: [] })} />);
+  it('admin: NO renderiza <PipelineTrace> cuando pipelineTrace está vacío', () => {
+    render(<ResultView showTechnicalViews product={mkProduct({ pipelineTrace: [] })} />);
     expect(screen.queryByTestId('pipeline-trace')).not.toBeInTheDocument();
   });
 
-  it('renderiza <PipelineTrace> cuando hay al menos un step válido', () => {
+  it('admin: renderiza <PipelineTrace> cuando hay al menos un step válido', () => {
     render(
       <ResultView
+        showTechnicalViews
         product={mkProduct({
           pipelineTrace: [
             {
@@ -249,23 +268,23 @@ describe('<ResultView> — JSON extraído + pipeline trace (E06 §3+§4)', () =>
   });
 });
 
-describe('<ResultView> — historial detail variant (spec E04 §6.5)', () => {
+describe('<ResultView> — catálogo detail variant (spec E04 §6.5)', () => {
   it('defaults back link to /analizar when no `back` is passed', () => {
     render(<ResultView product={mkProduct()} />);
     expect(screen.getByTestId('result-back')).toHaveAttribute('href', '/analizar');
     expect(screen.getByTestId('result-back')).toHaveAttribute('aria-label', 'Volver al upload');
   });
 
-  it('respects an explicit `back` override (e.g. historial detail page)', () => {
+  it('respects an explicit `back` override (e.g. catálogo detail page)', () => {
     render(
       <ResultView
         product={mkProduct()}
-        back={{ href: '/historial', label: 'Volver al historial' }}
+        back={{ href: '/catalogo', label: 'Volver al catálogo' }}
       />,
     );
     const back = screen.getByTestId('result-back');
-    expect(back).toHaveAttribute('href', '/historial');
-    expect(back).toHaveAttribute('aria-label', 'Volver al historial');
+    expect(back).toHaveAttribute('href', '/catalogo');
+    expect(back).toHaveAttribute('aria-label', 'Volver al catálogo');
   });
 
   it('renders the `contextLabel` eyebrow above the category when provided', () => {

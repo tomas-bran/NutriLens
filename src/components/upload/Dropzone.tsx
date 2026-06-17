@@ -55,14 +55,21 @@ export function Dropzone({
         const f = e.dataTransfer.files?.[0];
         if (f) onFileSelected(f);
       }}
-      style={{ minHeight: 420 }}
+      style={
+        isDragging
+          ? undefined
+          : { background: 'linear-gradient(160deg, var(--color-primary-soft), #e7faee)' }
+      }
       className={cn(
-        'flex flex-col items-center justify-center gap-5 rounded-[24px] border-2 p-10 text-center transition-colors',
+        // Alto: chico en mobile; en desktop estira para igualar el alto del
+        // "Pipeline observable" de al lado (grid lg:items-stretch + h-full).
+        'relative flex min-h-[300px] flex-col items-center justify-center gap-5 overflow-hidden rounded-[24px] border-2 border-dashed p-10 text-center transition-colors lg:h-full lg:min-h-0',
         isDragging
           ? 'border-[var(--color-primary-strong)] bg-[var(--color-risk-low-bg)]'
-          : 'border-[var(--color-primary-border)] bg-[var(--color-primary-soft)]',
+          : 'border-[var(--color-primary-border)]',
       )}
     >
+      <DropzoneSparkles />
       {!showsImagePreview && <CloudUploadBadge />}
 
       {selected ? (
@@ -71,7 +78,6 @@ export function Dropzone({
         <IdleControls
           onCamera={() => cameraInputRef.current?.click()}
           onGallery={() => galleryInputRef.current?.click()}
-          onPdf={() => pdfInputRef.current?.click()}
         />
       )}
 
@@ -86,31 +92,71 @@ export function Dropzone({
 }
 
 function CloudUploadBadge() {
-  // Pencil `kx3k0` — 88x88 white circle, drop shadow rgba(22,163,74,0.2) blur 12 y 4.
+  // Círculo blanco que "levita" (home-float, respeta reduced-motion).
   return (
     <div
-      className="flex h-[88px] w-[88px] items-center justify-center rounded-full bg-white"
-      style={{ boxShadow: '0 4px 12px 0 rgba(22, 163, 74, 0.2)' }}
+      className="home-float relative flex h-[104px] w-[104px] items-center justify-center rounded-full bg-white"
+      style={{ boxShadow: '0 10px 26px 0 rgba(22, 163, 74, 0.18)' }}
     >
-      <Icon name="cloud-upload" strokeWidth={2} className="h-10 w-10 text-[var(--color-primary)]" />
+      <Icon name="upload" strokeWidth={1.9} className="h-14 w-14 text-[var(--color-primary)]" />
     </div>
   );
 }
 
-function IdleControls({
-  onCamera,
-  onGallery,
-  onPdf,
-}: {
-  onCamera: () => void;
-  onGallery: () => void;
-  onPdf: () => void;
-}) {
+/** PRNG sembrado: estrellitas en posiciones aleatorias (estables entre renders)
+ * por toda el área de drag-and-drop. */
+function mulberry32(seed: number): () => number {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const DZ_SPARKLES = (() => {
+  const rand = mulberry32(0x5eed);
+  return Array.from({ length: 7 }, () => ({
+    top: `${Math.round(rand() * 100)}%`,
+    left: `${Math.round(rand() * 100)}%`,
+    size: Math.round(8 + rand() * 9),
+    delay: `${(rand() * 2.6).toFixed(2)}s`,
+    duration: `${(2.4 + rand() * 1.8).toFixed(2)}s`,
+  }));
+})();
+
+function DropzoneSparkles() {
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+      {DZ_SPARKLES.map((s, i) => (
+        <span
+          key={i}
+          className="nl-twinkle absolute text-[var(--color-primary)]"
+          style={{
+            top: s.top,
+            left: s.left,
+            animationDelay: s.delay,
+            animationDuration: s.duration,
+          }}
+        >
+          <Icon
+            name="sparkles"
+            strokeWidth={0}
+            fill="currentColor"
+            style={{ width: s.size, height: s.size }}
+          />
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function IdleControls({ onCamera, onGallery }: { onCamera: () => void; onGallery: () => void }) {
   return (
     <>
       <div className="flex flex-col gap-1">
         <h2 className="text-lg font-bold text-[var(--color-text)] md:text-xl">
-          Arrastrá una foto o PDF acá
+          Arrastrá una foto acá
         </h2>
         <p className="text-[13px] text-[var(--color-text-muted)]">
           O elegí cómo cargar la etiqueta
@@ -129,24 +175,17 @@ function IdleControls({
           <Icon name="image" strokeWidth={2.25} className="h-4 w-4" />
           Galería
         </Button>
-        <Button variant="ghost" onClick={onPdf}>
-          <Icon name="file-text" strokeWidth={2.25} className="h-4 w-4" />
-          PDF
-        </Button>
       </div>
 
       <p
-        className="hidden text-[12px] text-[var(--color-text-muted)] md:block"
+        className="hidden items-center justify-center gap-1.5 text-[12px] text-[var(--color-text-muted)] md:flex"
         data-testid="paste-hint"
       >
-        o pegá con{' '}
-        <kbd className="rounded bg-[var(--color-primary-soft)] px-1 py-0.5 font-mono text-[11px]">
+        También podés pegar una imagen con
+        <kbd className="rounded bg-[var(--color-primary-soft)] px-1.5 py-0.5 font-mono text-[11px]">
           Ctrl+V
         </kbd>
-        {' / '}
-        <kbd className="rounded bg-[var(--color-primary-soft)] px-1 py-0.5 font-mono text-[11px]">
-          ⌘V
-        </kbd>
+        <span className="text-[var(--color-text-muted)]/70">(⌘V en Mac)</span>
       </p>
     </>
   );

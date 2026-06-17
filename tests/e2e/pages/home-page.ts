@@ -23,7 +23,7 @@ export class HomePage {
     this.heroCta = page.getByTestId('hero-cta');
     this.howItWorksHeading = page.getByRole('heading', { level: 2, name: 'Cómo funciona' });
     this.examplesHeading = page.getByRole('heading', { level: 2, name: 'Ejemplos válidos' });
-    this.historyCta = page.getByTestId('history-cta');
+    this.historyCta = page.getByTestId('catalogo-cta');
     this.sidebar = page.getByTestId('app-sidebar');
     this.disclaimer = page.getByRole('note');
   }
@@ -41,10 +41,10 @@ export class HomePage {
 
   async expectHowItWorksSection() {
     await expect(this.howItWorksHeading).toBeVisible();
-    // 3 step labels — every one must be present
-    await expect(this.page.getByText('Paso 1')).toBeVisible();
-    await expect(this.page.getByText('Paso 2')).toBeVisible();
-    await expect(this.page.getByText('Paso 3')).toBeVisible();
+    // 3 step cards (rediseño: títulos + numeración 01/02/03) — todos presentes
+    await expect(this.page.getByText('Sacá una foto')).toBeVisible();
+    await expect(this.page.getByText('Esperá unos segundos')).toBeVisible();
+    await expect(this.page.getByText('Mirá el análisis')).toBeVisible();
   }
 
   async expectExamplesSection() {

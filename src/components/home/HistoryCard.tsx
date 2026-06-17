@@ -1,6 +1,6 @@
 /**
- * "Tu historial" card — rendered only when the user already has products
- * analyzed (US-07 escenario 2). Links to `/historial`.
+ * "Catálogo" card — CTA al catálogo (universal, compartido entre usuarios).
+ * Se renderiza cuando hay al menos un producto en el catálogo. Links to `/catalogo`.
  */
 import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
@@ -23,16 +23,16 @@ export function HistoryCard({ count }: HistoryCardProps) {
           <Icon name="history" className="h-5 w-5" />
         </span>
         <div className="flex flex-col gap-0.5">
-          <h3 className="text-[14px] font-bold text-[var(--color-text)]">Tu historial</h3>
+          <h3 className="text-[14px] font-bold text-[var(--color-text)]">Catálogo</h3>
           <p className="text-[12px] text-[var(--color-text-muted)]">{subtitle}</p>
         </div>
       </div>
       <Link
-        href="/historial"
-        data-testid="history-cta"
+        href="/catalogo"
+        data-testid="catalogo-cta"
         className="inline-flex items-center justify-center gap-1.5 self-start rounded-full border border-[var(--color-border)] bg-white px-4 py-2 text-[13px] font-bold text-[var(--color-text)] transition-colors hover:bg-[var(--color-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 md:self-auto"
       >
-        Ver historial
+        Ver catálogo
         <Icon name="arrow-right" className="h-4 w-4" />
       </Link>
     </Card>
@@ -40,6 +40,6 @@ export function HistoryCard({ count }: HistoryCardProps) {
 }
 
 function formatSubtitle(count: number): string {
-  if (count === 1) return 'Ya analizaste 1 producto.';
-  return `Ya analizaste ${count} productos.`;
+  if (count === 1) return '1 producto en el catálogo.';
+  return `${count} productos en el catálogo.`;
 }

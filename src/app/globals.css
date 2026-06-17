@@ -31,6 +31,41 @@
   scrollbar-width: none;
 }
 
+/* ---------------------------------------------------------------------------
+ * Scrollbars custom: finas, redondeadas, en verde de marca, sobre track
+ * transparente. Reemplazan a las nativas en toda la app. `.scrollbar-hide`
+ * (arriba) gana por especificidad donde queremos ocultarlas del todo.
+ * ------------------------------------------------------------------------- */
+html {
+  scroll-behavior: smooth;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-primary) 35%, transparent) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--color-primary) 32%, transparent);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
+  background-clip: padding-box;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 /* Scanning-line animation used by the analyzing-preview panel
  * (wireframe D02-Loading). Travels top→bottom→top on a 2s loop.
  */
@@ -184,16 +219,149 @@
   will-change: opacity, transform;
 }
 
+/* ---------------------------------------------------------------------------
+ * Login decor (redesign) — estrellitas que titilan + lente que escanea.
+ * ------------------------------------------------------------------------- */
+@keyframes nl-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1);
+  }
+}
+
+/* Línea de escaneo que baja y sube dentro del scan-frame. */
+@keyframes nl-scan-sweep {
+  0%,
+  100% {
+    top: 12%;
+  }
+  50% {
+    top: 82%;
+  }
+}
+
+/* Pulso tipo "ping" que emana del lente: arranca en el borde del lente
+ * (scale 1) y viaja hacia afuera como una ola hasta desvanecerse. Arrancar en
+ * scale 1 evita que el anillo quede tapado por el círculo blanco del lente. */
+@keyframes nl-pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.nl-twinkle {
+  animation: nl-twinkle 3.2s ease-in-out infinite;
+}
+.nl-scan-sweep {
+  animation: nl-scan-sweep 2.6s ease-in-out infinite;
+}
+.nl-pulse-ring {
+  animation: nl-pulse-ring 2.4s ease-out infinite;
+  will-change: transform, opacity;
+}
+
+/* ---------------------------------------------------------------------------
+ * Sidebar colapsable (rail de íconos). El toggle (SidebarToggle) flipea
+ * `data-sidebar="collapsed"` en <html>; acá hacemos el colapso solo en desktop.
+ * `.rail-hide` desaparece, `.rail-center` centra los íconos, y el botón-círculo
+ * sigue el borde del sidebar.
+ * ------------------------------------------------------------------------- */
+/* El círculo del toggle sigue el borde del sidebar (expandido = 15rem) y se
+ * traslada CON el sidebar (misma duración) para no quedar en el aire unos ms. */
+.sidebar-toggle {
+  left: calc(15rem - 13px);
+  transition: left 0.28s ease;
+}
+
+@media (min-width: 768px) {
+  /* Transición suave del colapso (no se cierra de golpe). */
+  [data-testid='app-shell'] {
+    transition: grid-template-columns 0.28s ease;
+  }
+  [data-testid='app-sidebar'] {
+    transition:
+      width 0.28s ease,
+      padding 0.28s ease;
+  }
+  html[data-sidebar='collapsed'] [data-testid='app-shell'] {
+    grid-template-columns: 4.5rem 1fr;
+  }
+  html[data-sidebar='collapsed'] [data-testid='app-sidebar'] {
+    width: 4.5rem;
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
+  }
+  html[data-sidebar='collapsed'] .rail-hide {
+    display: none !important;
+  }
+  html[data-sidebar='collapsed'] .rail-center {
+    justify-content: center;
+  }
+  html[data-sidebar='collapsed'] .sidebar-toggle {
+    left: calc(4.5rem - 13px);
+  }
+  html[data-sidebar='collapsed'] .sidebar-toggle-icon {
+    transform: rotate(180deg);
+  }
+}
+
+/* Popup del menú de cuenta: crece desde la card (origin abajo) con fade. */
+@keyframes nl-menu-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.nl-menu-pop {
+  animation: nl-menu-pop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: bottom center;
+}
+
+/* Aguja del medidor de riesgo (RiskGauge): barre del centro al ángulo. */
+.nl-gauge-needle {
+  transition: transform 1.2s cubic-bezier(0.34, 1.4, 0.5, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nl-gauge-needle {
+    transition: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-float,
   .home-rise-in,
   .home-gradient,
-  .home-glow {
+  .home-glow,
+  .nl-twinkle,
+  .nl-scan-sweep,
+  .nl-pulse-ring,
+  .nl-menu-pop {
     animation: none;
+  }
+  /* Sin movimiento, dejamos los pulsos invisibles para no apilar bordes. */
+  .nl-pulse-ring {
+    opacity: 0;
   }
   /* La entrada deja los elementos visibles aunque no anime. */
   .home-rise-in {
     opacity: 1;
     transform: none;
+  }
+  .nl-twinkle {
+    opacity: 0.6;
   }
 }

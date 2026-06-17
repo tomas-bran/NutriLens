@@ -10,12 +10,12 @@ import { ChatHeader } from '@/components/chat/ChatHeader';
 describe('<ChatHeader>', () => {
   it('renderea el contador de productos en plural', () => {
     render(<ChatHeader productsInBase={24} hasMessages={false} onReset={vi.fn()} />);
-    expect(screen.getByText(/24 productos en tu base/)).toBeInTheDocument();
+    expect(screen.getByText(/24 productos en el catálogo/)).toBeInTheDocument();
   });
 
   it('renderea el contador en singular cuando hay 1 producto', () => {
     render(<ChatHeader productsInBase={1} hasMessages={false} onReset={vi.fn()} />);
-    expect(screen.getByText(/1 producto en tu base/)).toBeInTheDocument();
+    expect(screen.getByText(/1 producto en el catálogo/)).toBeInTheDocument();
   });
 
   it('botón "Nueva conversación" disabled cuando no hay mensajes', () => {

@@ -4,7 +4,7 @@
  * (con `callbackUrl`) y las APIs responden 401.
  *
  * Públicas: /login, /api/auth/* (el flujo OAuth), y los estáticos (excluidos
- * por el matcher). El analyzer/historial/chat y sus APIs quedan protegidos.
+ * por el matcher). El analyzer/catalogo/chat y sus APIs quedan protegidos.
  */
 import { auth } from '@/lib/auth';
 import { NextResponse } from 'next/server';
@@ -12,8 +12,12 @@ import { NextResponse } from 'next/server';
 const PUBLIC_PATHS = ['/login'];
 
 /**
- * Bypass de auth para E2E (NL-202): solo fuera de producción y con el flag
- * explícito que setea la config de Playwright. Nunca afecta a prod.
+ * Bypass de auth para E2E (NL-202): se activa con el flag explícito
+ * `E2E_AUTH_BYPASS` y NUNCA en un deploy real. `WEBSITE_HOSTNAME` lo setea
+ * siempre Azure App Service, así que aunque el flag se filtrara a las App
+ * Settings de prod, el bypass queda desactivado. (No usamos `NODE_ENV` porque
+ * el webServer de Playwright corre `next build && next start` → NODE_ENV=production,
+ * y eso desactivaba el bypass → E2E roto.)
  */
 // Bypass de auth para E2E: se activa con el flag explícito y NUNCA en un deploy
 // real. `WEBSITE_HOSTNAME` lo setea siempre Azure App Service, así que aunque el

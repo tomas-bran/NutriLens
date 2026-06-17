@@ -13,19 +13,18 @@ describe('<PipelineStepper>', () => {
   it('marks the current step as "active" and the rest as pending when index=0', () => {
     render(<PipelineStepper currentStepIndex={0} />);
     expect(screen.getByTestId('pipeline-step-validate')).toHaveAttribute('data-status', 'active');
+    expect(screen.getByTestId('pipeline-step-detect')).toHaveAttribute('data-status', 'pending');
     expect(screen.getByTestId('pipeline-step-extract')).toHaveAttribute('data-status', 'pending');
-    expect(screen.getByTestId('pipeline-step-allergens')).toHaveAttribute('data-status', 'pending');
-    expect(screen.getByTestId('pipeline-step-risk')).toHaveAttribute('data-status', 'pending');
-    expect(screen.getByTestId('pipeline-step-explain')).toHaveAttribute('data-status', 'pending');
+    expect(screen.getByTestId('pipeline-step-persist')).toHaveAttribute('data-status', 'pending');
   });
 
   it('marks previous steps as "done" and the current as "active" when index=2', () => {
     render(<PipelineStepper currentStepIndex={2} />);
     expect(screen.getByTestId('pipeline-step-validate')).toHaveAttribute('data-status', 'done');
-    expect(screen.getByTestId('pipeline-step-extract')).toHaveAttribute('data-status', 'done');
-    expect(screen.getByTestId('pipeline-step-allergens')).toHaveAttribute('data-status', 'active');
-    expect(screen.getByTestId('pipeline-step-risk')).toHaveAttribute('data-status', 'pending');
-    expect(screen.getByTestId('pipeline-step-explain')).toHaveAttribute('data-status', 'pending');
+    expect(screen.getByTestId('pipeline-step-detect')).toHaveAttribute('data-status', 'done');
+    expect(screen.getByTestId('pipeline-step-extract')).toHaveAttribute('data-status', 'active');
+    expect(screen.getByTestId('pipeline-step-schema')).toHaveAttribute('data-status', 'pending');
+    expect(screen.getByTestId('pipeline-step-persist')).toHaveAttribute('data-status', 'pending');
   });
 
   it('marks every step as "done" when index >= total steps', () => {
@@ -43,9 +42,9 @@ describe('<PipelineStepper>', () => {
   it('lists the canonical step titles from the spec/Pencil', () => {
     render(<PipelineStepper currentStepIndex={0} />);
     expect(screen.getByText('Validación de etiqueta')).toBeInTheDocument();
-    expect(screen.getByText('OCR + extracción multimodal')).toBeInTheDocument();
-    expect(screen.getByText('Clasificando alérgenos…')).toBeInTheDocument();
+    expect(screen.getByText('¿Es una etiqueta?')).toBeInTheDocument();
+    expect(screen.getByText('Lectura de la etiqueta')).toBeInTheDocument();
     expect(screen.getByText('Cálculo de riesgo')).toBeInTheDocument();
-    expect(screen.getByText('Generar explicación + guardar')).toBeInTheDocument();
+    expect(screen.getByText('Guardar en tu catálogo')).toBeInTheDocument();
   });
 });

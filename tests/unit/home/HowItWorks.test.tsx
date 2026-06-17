@@ -14,11 +14,11 @@ describe('<HowItWorks>', () => {
     expect(steps).toHaveLength(3);
   });
 
-  it('each step has a "Paso N" label', () => {
+  it('each step shows its zero-padded number (01/02/03)', () => {
     render(<HowItWorks />);
-    expect(screen.getByText('Paso 1')).toBeInTheDocument();
-    expect(screen.getByText('Paso 2')).toBeInTheDocument();
-    expect(screen.getByText('Paso 3')).toBeInTheDocument();
+    expect(screen.getByText('01')).toBeInTheDocument();
+    expect(screen.getByText('02')).toBeInTheDocument();
+    expect(screen.getByText('03')).toBeInTheDocument();
   });
 
   it('lists the canonical step titles', () => {

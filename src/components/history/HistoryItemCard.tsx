@@ -1,13 +1,17 @@
 /**
- * Single product card in the `/historial` grid (spec E04 §6.1).
- * Mobile: full-width row. Desktop: grid cell. Whole card is a link to detail.
+ * Single product card in the `/catalogo` grid (spec E04 §6.1).
+ *
+ * Layout (Claude Design `DeskProductCard`): tarjeta vertical con la foto del
+ * producto arriba (full-width), badge de riesgo flotante sobre la imagen, y
+ * debajo el nombre + categoría·fecha + chips de alérgenos. Toda la tarjeta es
+ * un link al detalle. En el grid (`md:grid-cols-2 xl:grid-cols-3`) quedan como
+ * una galería de productos analizados.
  */
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
-import { cn } from '@/lib/cn';
 import type { ProductListItem } from '@/lib/products/serializers';
 
 const RISK_BADGE_VARIANT = {
@@ -25,54 +29,63 @@ const RISK_LABEL = {
 export function HistoryItemCard({ item }: { item: ProductListItem }) {
   return (
     <Link
-      href={`/historial/${item.id}`}
-      data-testid={`history-item-${item.id}`}
+      href={`/catalogo/${item.id}`}
+      data-testid={`catalogo-item-${item.id}`}
       // `h-full` makes every card stretch to the tallest neighbor in the grid
-      // row — items without allergens render at the same size as those with
+      // row — items without allergens render at the same height as those with
       // a stack of chips.
       className="group block h-full focus-visible:outline-none"
     >
       <Card
-        padding="md"
-        className="flex h-full items-start gap-3 transition-shadow group-hover:shadow-md group-focus-visible:ring-2 group-focus-visible:ring-[var(--color-primary)] group-focus-visible:ring-offset-2"
+        padding="none"
+        rounded="xl"
+        className="flex h-full flex-col overflow-hidden transition-shadow group-hover:shadow-md group-focus-visible:ring-2 group-focus-visible:ring-[var(--color-primary)] group-focus-visible:ring-offset-2"
       >
-        <ProductThumb item={item} />
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="truncate text-[15px] font-bold text-[var(--color-text)]">
-              {item.nombre}
-            </h3>
-            <Badge variant={RISK_BADGE_VARIANT[item.riesgo]}>{RISK_LABEL[item.riesgo]}</Badge>
-          </div>
-          <p className="truncate text-[12px] text-[var(--color-text-muted)]">
+        {/* Visual superior + badge de riesgo flotante (top:20/right:20 = p-3 + 8) */}
+        <div className="relative p-3">
+          <ProductThumb item={item} />
+          <Badge
+            variant={RISK_BADGE_VARIANT[item.riesgo]}
+            className="absolute right-5 top-5 shadow-sm"
+          >
+            {RISK_LABEL[item.riesgo]}
+          </Badge>
+        </div>
+
+        {/* Cuerpo */}
+        <div className="flex flex-1 flex-col gap-1 px-4 pb-4 pt-1">
+          <h3 className="truncate text-[15.5px] font-bold text-[var(--color-text)]">
+            {item.nombre}
+          </h3>
+          <p className="truncate text-[12.5px] text-[var(--color-text-muted)]">
             <span className="capitalize">{item.categoria}</span> ·{' '}
             {formatRelativeDate(item.createdAt)}
           </p>
-          {item.alergenos.length > 0 && (
+          {item.alergenos.length > 0 ? (
             <ul
               role="list"
               aria-label="Alérgenos"
-              className="mt-1 flex flex-wrap gap-1.5"
-              data-testid="history-item-allergens"
+              className="mt-2 flex flex-wrap gap-1.5"
+              data-testid="catalogo-item-allergens"
             >
               {item.alergenos.map((a) => (
                 <li
                   key={a}
-                  className="inline-flex items-center gap-1 rounded-full bg-[var(--color-danger-bg)] px-2 py-0.5 text-[10px] font-bold text-[var(--color-risk-high)]"
+                  className="inline-flex items-center rounded-full bg-[var(--color-danger-bg)] px-2 py-0.5 text-[11px] font-semibold capitalize text-[var(--color-risk-high)]"
                 >
-                  {capitalize(a)}
+                  {a}
                 </li>
               ))}
             </ul>
+          ) : (
+            <span
+              data-testid="catalogo-item-no-allergens"
+              className="mt-2 inline-flex w-fit items-center rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-[11px] font-semibold text-[var(--color-primary-strong)]"
+            >
+              sin alérgenos
+            </span>
           )}
         </div>
-        <Icon
-          name="arrow-right"
-          className={cn(
-            'mt-1.5 h-4 w-4 flex-shrink-0 text-[var(--color-text-muted)]',
-            'transition-transform group-hover:translate-x-0.5',
-          )}
-        />
       </Card>
     </Link>
   );
@@ -81,25 +94,23 @@ export function HistoryItemCard({ item }: { item: ProductListItem }) {
 function ProductThumb({ item }: { item: ProductListItem }) {
   if (item.imagenUrl) {
     return (
-      <Image
-        src={item.imagenUrl}
-        alt={`Foto de ${item.nombre}`}
-        width={64}
-        height={64}
-        unoptimized
-        className="h-16 w-16 flex-shrink-0 rounded-[10px] object-cover"
-      />
+      <div className="relative h-[140px] w-full overflow-hidden rounded-[14px] bg-[var(--color-surface)]">
+        <Image
+          src={item.imagenUrl}
+          alt={`Foto de ${item.nombre}`}
+          fill
+          unoptimized
+          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+          className="object-cover"
+        />
+      </div>
     );
   }
   return (
-    <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-[10px] bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
-      <Icon name="scan-eye" className="h-7 w-7" />
+    <div className="flex h-[140px] w-full items-center justify-center rounded-[14px] bg-gradient-to-br from-[var(--color-primary-soft)] to-[var(--color-surface)] text-[var(--color-primary)]">
+      <Icon name="scan-eye" className="h-10 w-10" />
     </div>
   );
-}
-
-function capitalize(s: string): string {
-  return s.length === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 /**

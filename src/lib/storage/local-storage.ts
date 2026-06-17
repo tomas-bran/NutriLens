@@ -5,7 +5,7 @@
  * Por qué `public/uploads/analyzed/` y no `./uploads/` (como antes):
  * Next.js sólo sirve estáticos desde `public/`. Escribir fuera de ahí
  * funcionaba en disco pero la URL devuelta daba 404 al renderizar la
- * imagen en `/historial/[id]` o `/analizar/[id]`. La carpeta `analyzed/`
+ * imagen en `/catalogo/[id]` o `/analizar/[id]`. La carpeta `analyzed/`
  * sigue gitignored (ver `.gitignore`), sólo el sub-folder `seed/` se
  * commitea como dataset estable.
  *

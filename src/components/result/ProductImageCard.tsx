@@ -1,7 +1,7 @@
-import Image from 'next/image';
 import { Card } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
 import type { ProductDetail } from '@/lib/products/serializers';
+import { ImageLightbox } from './ImageLightbox';
 
 export function ProductImageCard({ product }: { product: ProductDetail }) {
   const confidence = Math.round(product.confidence * 100);
@@ -11,16 +11,9 @@ export function ProductImageCard({ product }: { product: ProductDetail }) {
       className="flex flex-col items-center gap-4"
       data-testid="product-image-card"
     >
-      <div className="flex h-44 w-44 items-center justify-center rounded-[16px] bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+      <div className="flex h-44 w-44 items-center justify-center overflow-hidden rounded-[16px] bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
         {product.imagenUrl ? (
-          <Image
-            src={product.imagenUrl}
-            alt={`Foto de ${product.nombre}`}
-            width={176}
-            height={176}
-            unoptimized
-            className="h-44 w-44 rounded-[16px] object-cover"
-          />
+          <ImageLightbox src={product.imagenUrl} alt={`Foto de ${product.nombre}`} />
         ) : (
           <Icon name="scan-eye" className="h-16 w-16" />
         )}

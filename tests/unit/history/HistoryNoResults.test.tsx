@@ -26,12 +26,12 @@ import { HistoryNoResults } from '@/components/history/HistoryNoResults';
 describe('<HistoryNoResults>', () => {
   it('renders the empty-with-filters message', () => {
     render(<HistoryNoResults />);
-    expect(screen.getByTestId('history-no-results')).toBeInTheDocument();
+    expect(screen.getByTestId('catalogo-no-results')).toBeInTheDocument();
     expect(screen.getByText(/No encontramos productos con esos filtros/)).toBeInTheDocument();
   });
 
-  it('exposes a Limpiar CTA pointing at /historial', () => {
+  it('exposes a Limpiar CTA pointing at /catalogo', () => {
     render(<HistoryNoResults />);
-    expect(screen.getByTestId('history-no-results-clear')).toHaveAttribute('href', '/historial');
+    expect(screen.getByTestId('catalogo-no-results-clear')).toHaveAttribute('href', '/catalogo');
   });
 });

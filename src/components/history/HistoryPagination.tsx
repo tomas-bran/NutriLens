@@ -1,5 +1,5 @@
 /**
- * Server-rendered prev / next pagination for `/historial`.
+ * Server-rendered prev / next pagination for `/catalogo`.
  * Preserves active filters in each page link so navigating doesn't reset them.
  */
 import Link from 'next/link';
@@ -20,8 +20,8 @@ export function HistoryPagination({ page, totalPages, filters }: HistoryPaginati
 
   return (
     <nav
-      data-testid="history-pagination"
-      aria-label="Paginación del historial"
+      data-testid="catalogo-pagination"
+      aria-label="Paginación del catálogo"
       className="flex items-center justify-between border-t border-[var(--color-border)] pt-4"
     >
       <p className="text-[12px] text-[var(--color-text-muted)]">
@@ -56,7 +56,7 @@ function PageLink({
 
   if (!enabled) {
     return (
-      <span aria-disabled="true" className={className} data-testid={`history-page-${direction}`}>
+      <span aria-disabled="true" className={className} data-testid={`catalogo-page-${direction}`}>
         {direction === 'prev' && <Icon name="arrow-right" className="h-3.5 w-3.5 rotate-180" />}
         {label}
         {direction === 'next' && <Icon name="arrow-right" className="h-3.5 w-3.5" />}
@@ -67,7 +67,7 @@ function PageLink({
     <Link
       href={buildHistoryUrl({ ...filters, page })}
       className={className}
-      data-testid={`history-page-${direction}`}
+      data-testid={`catalogo-page-${direction}`}
       scroll={false}
     >
       {direction === 'prev' && <Icon name="arrow-right" className="h-3.5 w-3.5 rotate-180" />}

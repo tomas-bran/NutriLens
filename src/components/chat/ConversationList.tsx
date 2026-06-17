@@ -2,7 +2,7 @@
 
 /**
  * <ConversationList> — lista de conversaciones guardadas en el empty state del chat.
- * NL-301: muestra historial de chats con fecha legible.
+ * NL-301: muestra catálogo de chats con fecha legible.
  * NL-302: permite renombrar (inline) y eliminar con confirmación.
  */
 import { useRef, useState } from 'react';
@@ -134,7 +134,7 @@ export function ConversationList({ conversations, onOpen, onDelete }: Conversati
                       data-testid={`conv-rename-${conv.id}`}
                       className="flex-shrink-0 rounded-lg p-1 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
                     >
-                      <Icon name="filter" className="h-3.5 w-3.5" aria-hidden="true" />
+                      <Icon name="pencil" className="h-3.5 w-3.5" aria-hidden="true" />
                     </button>
                     <button
                       type="button"

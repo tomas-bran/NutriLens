@@ -1,5 +1,5 @@
 /**
- * Helpers to encode/decode `/historial` filter state ↔ URLSearchParams.
+ * Helpers to encode/decode `/catalogo` filter state ↔ URLSearchParams.
  *
  * Spec: `docs/specs/E04-persistencia-e-historial.md §6.4` (US-24).
  * Filters live in the URL so back/forward navigation works without state.
@@ -43,11 +43,11 @@ export function parseHistoryFilters(raw: RawSearchParams): HistoryFilters {
 }
 
 /**
- * Build the URL search string ("/historial?categoria=...&page=N") for a
+ * Build the URL search string ("/catalogo?categoria=...&page=N") for a
  * filters object. Empty fields are omitted; page=1 is omitted too because
  * it's the default and keeps URLs tidy.
  */
-export function buildHistoryUrl(filters: HistoryFilters, basePath = '/historial'): string {
+export function buildHistoryUrl(filters: HistoryFilters, basePath = '/catalogo'): string {
   const params = new URLSearchParams();
   if (filters.categoria) params.set('categoria', filters.categoria);
   if (filters.riesgo) params.set('riesgo', filters.riesgo);

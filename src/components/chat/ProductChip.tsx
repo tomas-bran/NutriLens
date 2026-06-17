@@ -37,7 +37,7 @@ export function ProductChip({ product, rank }: ProductChipProps) {
   const variant = RISK_VARIANT[product.riesgo];
   return (
     <Link
-      href={`/historial/${product.id}`}
+      href={`/catalogo/${product.id}`}
       data-testid="chat-product-chip"
       aria-label={`${product.nombre} — ${RISK_LABEL[product.riesgo]}. Ver detalle del producto.`}
       className="group flex items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-white px-3 py-3 transition-colors hover:border-[var(--color-primary)] hover:bg-[var(--color-bg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"

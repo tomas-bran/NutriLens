@@ -36,5 +36,5 @@ test('pregunta con contexto → respuesta + chips → click en chip → detalle 
 
   // Click en el primer chip navega al detalle del producto (US-32 §2).
   await chat.clickProductChip(0);
-  await expect(page).toHaveURL(/\/historial\/[0-9a-f-]+/);
+  await expect(page).toHaveURL(/\/catalogo\/[0-9a-f-]+/);
 });

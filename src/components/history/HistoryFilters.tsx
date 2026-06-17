@@ -1,14 +1,14 @@
 'use client';
 
 /**
- * <HistoryFilters> — toolbar de filtros del historial (US-24, spec E04 §6.4).
+ * <HistoryFilters> — toolbar de filtros del catálogo (US-24, spec E04 §6.4).
  *
  * Client Component porque maneja inputs interactivos. Cada cambio dispara
  * `router.push(buildHistoryUrl(nextFilters))` con `scroll: false` para que
  * back/forward del navegador funcione naturalmente. Page se resetea a 1 en
  * cualquier cambio (lo hace `setFilter` por nosotros).
  *
- * Responsive (NL-502 / diseño W13 "Filtrar historial"):
+ * Responsive (NL-502 / diseño W13 "Filtrar catálogo"):
  *   - Desktop (`≥md`): los selects van inline, en una fila bajo el buscador.
  *   - Mobile (`<md`): los selects se esconden detrás de un botón "Filtros" que
  *     abre un BOTTOMSHEET (panel que sube desde abajo). Los selects se
@@ -141,18 +141,18 @@ export function HistoryFilters({ value }: HistoryFiltersProps) {
 
   return (
     <section
-      aria-labelledby="history-filters-title"
-      data-testid="history-filters"
+      aria-labelledby="catalogo-filters-title"
+      data-testid="catalogo-filters"
       className="flex flex-col gap-3"
     >
-      <h2 id="history-filters-title" className="sr-only">
-        Filtros del historial
+      <h2 id="catalogo-filters-title" className="sr-only">
+        Filtros del catálogo
       </h2>
 
       <div className="flex items-center gap-2">
         <form
           role="search"
-          action="/historial"
+          action="/catalogo"
           method="get"
           onSubmit={onSubmitSearch}
           className="flex flex-1 items-center gap-2 rounded-full border border-[var(--color-border)] bg-white px-4 py-2"
@@ -165,7 +165,7 @@ export function HistoryFilters({ value }: HistoryFiltersProps) {
             onChange={(e) => setQDraft(e.target.value)}
             placeholder="Buscar producto…"
             aria-label="Buscar producto"
-            data-testid="history-search-input"
+            data-testid="catalogo-search-input"
             className="flex-1 bg-transparent text-[14px] placeholder:text-[var(--color-text-muted)] focus:outline-none"
           />
           {/* Preserve the rest of the filters as hidden inputs so submitting
@@ -180,7 +180,7 @@ export function HistoryFilters({ value }: HistoryFiltersProps) {
         <button
           type="button"
           onClick={() => setSheetOpen(true)}
-          data-testid="history-filter-open"
+          data-testid="catalogo-filter-open"
           aria-haspopup="dialog"
           aria-expanded={sheetOpen}
           className="relative inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-white px-4 py-2 text-[13px] font-medium text-[var(--color-text)] md:hidden"
@@ -189,7 +189,7 @@ export function HistoryFilters({ value }: HistoryFiltersProps) {
           Filtros
           {activeCount > 0 && (
             <span
-              data-testid="history-filter-count"
+              data-testid="catalogo-filter-count"
               className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-[10px] font-bold text-white"
             >
               {activeCount}
@@ -204,7 +204,7 @@ export function HistoryFilters({ value }: HistoryFiltersProps) {
           type="button"
           aria-label="Cerrar filtros"
           onClick={() => setSheetOpen(false)}
-          data-testid="history-filter-backdrop"
+          data-testid="catalogo-filter-backdrop"
           className="fixed inset-0 z-40 bg-black/40 md:hidden"
         />
       )}
@@ -214,7 +214,7 @@ export function HistoryFilters({ value }: HistoryFiltersProps) {
             - mobile abierto  → panel bottomsheet (fixed bottom)
             - desktop (`md`)  → toolbar inline (las clases `md:` ganan) */}
       <div
-        data-testid="history-filter-toolbar"
+        data-testid="catalogo-filter-toolbar"
         aria-label="Filtros"
         className={cn(
           sheetOpen
@@ -230,11 +230,11 @@ export function HistoryFilters({ value }: HistoryFiltersProps) {
             aria-hidden="true"
           />
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-[var(--color-text)]">Filtrar historial</h3>
+            <h3 className="text-base font-bold text-[var(--color-text)]">Filtrar catálogo</h3>
             <button
               type="button"
               onClick={() => setSheetOpen(false)}
-              data-testid="history-filter-close"
+              data-testid="catalogo-filter-close"
               aria-label="Cerrar"
               className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--color-text-muted)] hover:bg-[var(--color-surface)]"
             >
@@ -247,28 +247,28 @@ export function HistoryFilters({ value }: HistoryFiltersProps) {
           label="Categoría"
           value={value.categoria ?? ''}
           onValueChange={onSelectCategoria}
-          testId="history-filter-categoria"
+          testId="catalogo-filter-categoria"
           options={CATEGORIAS.map((c) => ({ value: c, label: c }))}
         />
         <FilterSelect
           label="Riesgo"
           value={value.riesgo ?? ''}
           onValueChange={onSelectRiesgo}
-          testId="history-filter-riesgo"
+          testId="catalogo-filter-riesgo"
           options={RIESGO_OPTIONS}
         />
         <FilterSelect
           label="Alérgeno"
           value={value.alergeno ?? ''}
           onValueChange={onSelectAlergeno}
-          testId="history-filter-alergeno"
+          testId="catalogo-filter-alergeno"
           options={ALERGENOS.map((a) => ({ value: a, label: a }))}
         />
         <FilterSelect
           label="Aptitud"
           value={value.apto ?? ''}
           onValueChange={onSelectApto}
-          testId="history-filter-apto"
+          testId="catalogo-filter-apto"
           options={APTO_OPTIONS}
         />
       </div>

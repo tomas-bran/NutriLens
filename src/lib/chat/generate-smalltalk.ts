@@ -6,7 +6,7 @@
  * al LLM con el prompt `chat_smalltalk-v2`, que lo mantiene en el dominio
  * de NutriLens: responde preguntas nutricionales generales con markdown
  * liviano y guía hacia las funciones de la app todo lo que sí requiera el
- * historial.
+ * catálogo.
  *
  * Reusa `IaProvider.answerWithContext` con `products=[]` — el prompt no
  * lee `products_json`, así que pasar el array vacío no afecta. Esto evita

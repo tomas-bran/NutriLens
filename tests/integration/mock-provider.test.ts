@@ -98,4 +98,19 @@ describe('MockIaProvider — answerWithContext', () => {
     const r = await provider.answerWithContext('pregunta', [], opts);
     expect(r.raw).toContain('ninguno');
   });
+
+  it('chat_title-v1: deriva un título de la primera línea del usuario', async () => {
+    const transcript = 'Usuario: ¿Qué galletitas sin gluten tengo?\nNutriLens: Tenés 2.';
+    const r = await provider.answerWithContext(transcript, [], {
+      promptVersion: 'chat_title-v1',
+    });
+    expect(r.raw).toBe('¿Qué galletitas sin gluten tengo?');
+  });
+
+  it('chat_title-v1: cae a "Consulta general" si no hay línea de usuario', async () => {
+    const r = await provider.answerWithContext('NutriLens: hola', [], {
+      promptVersion: 'chat_title-v1',
+    });
+    expect(r.raw).toBe('Consulta general');
+  });
 });

@@ -18,10 +18,10 @@ import { NAV_ITEMS, type ActiveNavItem } from './nav-config';
 
 export interface MobileBottomNavProps {
   active?: ActiveNavItem;
-  historialCount?: number;
+  catalogoCount?: number;
 }
 
-export function MobileBottomNav({ active, historialCount }: MobileBottomNavProps) {
+export function MobileBottomNav({ active, catalogoCount }: MobileBottomNavProps) {
   return (
     <nav
       data-testid="app-bottom-nav"
@@ -30,7 +30,7 @@ export function MobileBottomNav({ active, historialCount }: MobileBottomNavProps
     >
       {NAV_ITEMS.map((item) => {
         const isActive = active === item.id;
-        const badge = item.id === 'historial' ? historialCount : undefined;
+        const badge = item.id === 'catalogo' ? catalogoCount : undefined;
         const hasBadge = typeof badge === 'number' && badge > 0;
         return (
           <Link

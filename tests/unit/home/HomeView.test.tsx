@@ -1,7 +1,7 @@
 /**
  * Unit tests for <HomeView> — covers the two key US-07 escenarios:
  * AC1 (informative landing — hero/cómo funciona/ejemplos visible)
- * AC2 (historial CTA appears only when there are analyzed products).
+ * AC2 (catálogo CTA appears only when there are analyzed products).
  */
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -19,7 +19,7 @@ describe('<HomeView> — common sections (US-07 §AC1)', () => {
   it('renders the "Cómo funciona" section with 3 steps', () => {
     render(<HomeView historyCount={0} />);
     expect(screen.getByRole('heading', { level: 2, name: 'Cómo funciona' })).toBeInTheDocument();
-    expect(screen.getAllByText(/Paso \d/)).toHaveLength(3);
+    expect(screen.getAllByText(/^0\d$/)).toHaveLength(3);
   });
 
   it('renders the "Ejemplos válidos" section with 3 thumbnails', () => {
@@ -49,31 +49,29 @@ describe('<HomeView> — common sections (US-07 §AC1)', () => {
 });
 
 describe('<HomeView> — empty history (US-07 §AC2, no products yet)', () => {
-  it('does NOT render the "Tu historial" card when count is 0', () => {
+  it('does NOT render the "Catálogo" card when count is 0', () => {
     render(<HomeView historyCount={0} />);
-    expect(
-      screen.queryByRole('heading', { level: 3, name: 'Tu historial' }),
-    ).not.toBeInTheDocument();
-    expect(screen.queryByTestId('history-cta')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 3, name: 'Catálogo' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('catalogo-cta')).not.toBeInTheDocument();
   });
 });
 
 describe('<HomeView> — with history (US-07 §AC2, productos previos)', () => {
-  it('renders the "Tu historial" card with the count and a link to /historial', () => {
+  it('renders the "Catálogo" card with the count and a link to /catalogo', () => {
     render(<HomeView historyCount={5} />);
-    expect(screen.getByRole('heading', { level: 3, name: 'Tu historial' })).toBeInTheDocument();
-    expect(screen.getByText('Ya analizaste 5 productos.')).toBeInTheDocument();
-    expect(screen.getByTestId('history-cta')).toHaveAttribute('href', '/historial');
+    expect(screen.getByRole('heading', { level: 3, name: 'Catálogo' })).toBeInTheDocument();
+    expect(screen.getByText('5 productos en el catálogo.')).toBeInTheDocument();
+    expect(screen.getByTestId('catalogo-cta')).toHaveAttribute('href', '/catalogo');
   });
 
-  it('shows the badge count next to the Historial nav item', () => {
+  it('shows the badge count next to the Catálogo nav item', () => {
     render(<HomeView historyCount={12} />);
-    const navItem = screen.getByTestId('nav-historial');
+    const navItem = screen.getByTestId('nav-catalogo');
     expect(navItem).toHaveTextContent('12');
   });
 
   it('singular copy when count is exactly 1', () => {
     render(<HomeView historyCount={1} />);
-    expect(screen.getByText('Ya analizaste 1 producto.')).toBeInTheDocument();
+    expect(screen.getByText('1 producto en el catálogo.')).toBeInTheDocument();
   });
 });

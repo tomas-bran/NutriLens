@@ -7,9 +7,9 @@
  *   - Right: <PipelineStepper>
  */
 import Image from 'next/image';
-import { cn } from '@/lib/cn';
 import { formatFileSize } from '@/lib/format-file-size';
 import { PipelineStepper } from './PipelineStepper';
+import { PIPELINE_STEPS_COUNT } from './pipeline-steps';
 import { useFilePreviewUrl } from './hooks/use-file-preview-url';
 import { useSimulatedPipelineStep } from './hooks/use-simulated-pipeline-step';
 
@@ -39,16 +39,55 @@ export function AnalyzingPanel({ file, progress, stage }: AnalyzingPanelProps) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_1fr]">
-        <PreviewCanvas
-          file={file}
-          previewUrl={previewUrl}
-          isImage={isImage}
-          stage={stage}
-          percent={percent}
-        />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_1fr] lg:items-start">
+        <div className="flex flex-col gap-3">
+          <PreviewCanvas file={file} previewUrl={previewUrl} isImage={isImage} />
+          <ScanProgress
+            stage={stage}
+            percent={percent}
+            step={currentStepIndex}
+            fileName={file.name}
+          />
+        </div>
         <PipelineStepper currentStepIndex={currentStepIndex} />
       </div>
+    </div>
+  );
+}
+
+function ScanProgress({
+  stage,
+  percent,
+  step,
+  fileName,
+}: {
+  stage: 'UPLOADING' | 'PROCESSING';
+  percent: number;
+  step: number;
+  fileName: string;
+}) {
+  const stepNum = Math.min(step + 1, PIPELINE_STEPS_COUNT);
+  const pct = stage === 'UPLOADING' ? percent : Math.round((stepNum / PIPELINE_STEPS_COUNT) * 100);
+  const caption =
+    stage === 'UPLOADING'
+      ? `Subiendo archivo · ${percent}%`
+      : `${fileName} · escaneando ${stepNum}/${PIPELINE_STEPS_COUNT}`;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div
+        className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-surface)]"
+        role="progressbar"
+        aria-label="Progreso del análisis"
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent-lime)] transition-[width] duration-500"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="truncate font-mono text-[11.5px] text-[var(--color-text-muted)]">{caption}</p>
     </div>
   );
 }
@@ -57,11 +96,9 @@ interface PreviewCanvasProps {
   file: File;
   previewUrl: string | null;
   isImage: boolean;
-  stage: 'UPLOADING' | 'PROCESSING';
-  percent: number;
 }
 
-function PreviewCanvas({ file, previewUrl, isImage, stage, percent }: PreviewCanvasProps) {
+function PreviewCanvas({ file, previewUrl, isImage }: PreviewCanvasProps) {
   return (
     <div
       className="relative flex min-h-[360px] items-center justify-center overflow-hidden rounded-[20px] bg-[var(--color-ink-900)] p-6 md:p-8"
@@ -86,32 +123,6 @@ function PreviewCanvas({ file, previewUrl, isImage, stage, percent }: PreviewCan
       )}
 
       <div className="animate-scanline pointer-events-none absolute inset-x-10 top-1/2 h-[3px] origin-center rounded-full bg-[var(--color-accent-lime)] shadow-[0_0_12px_rgba(163,230,53,0.6)]" />
-
-      {stage === 'UPLOADING' && <UploadProgressOverlay percent={percent} />}
-    </div>
-  );
-}
-
-function UploadProgressOverlay({ percent }: { percent: number }) {
-  return (
-    <div className="absolute inset-x-6 bottom-6 flex flex-col gap-2">
-      <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-white/80">
-        <span>Subiendo archivo</span>
-        <span>{percent}%</span>
-      </div>
-      <div
-        className="h-1.5 w-full overflow-hidden rounded-full bg-white/20"
-        role="progressbar"
-        aria-label="Progreso del upload"
-        aria-valuenow={percent}
-        aria-valuemin={0}
-        aria-valuemax={100}
-      >
-        <div
-          className={cn('h-full bg-white transition-[width] duration-300')}
-          style={{ width: `${percent}%` }}
-        />
-      </div>
     </div>
   );
 }

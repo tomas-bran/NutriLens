@@ -7,7 +7,7 @@ import { CHAT_SUGGESTIONS } from '@/components/chat/types';
 describe('<ChatHero> — sugerencias iniciales (spec §9.5)', () => {
   it('muestra el copy del hero', () => {
     render(<ChatHero onPick={vi.fn()} />);
-    expect(screen.getByText('Preguntame sobre tus productos')).toBeInTheDocument();
+    expect(screen.getByText('Preguntame sobre el catálogo')).toBeInTheDocument();
     expect(screen.getByText(/Respondo usando los productos/)).toBeInTheDocument();
   });
 

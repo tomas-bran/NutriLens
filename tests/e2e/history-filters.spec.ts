@@ -1,5 +1,5 @@
 /**
- * E2E — Filtros del historial (US-24).
+ * E2E — Filtros del catálogo (US-24).
  *
  * Cubre los 3 escenarios pedidos:
  *  - aplicar `categoria=galletitas` → la lista se filtra.
@@ -13,7 +13,7 @@ import { test, expect } from '@playwright/test';
 import { clearHistory, disconnect, seedFilterFixture } from './helpers/seed-history';
 import { HistoryPage } from './pages/history-page';
 
-test.describe('Filtros del historial (US-24)', () => {
+test.describe('Filtros del catálogo (US-24)', () => {
   test.beforeEach(async () => {
     await clearHistory();
     await seedFilterFixture();
@@ -68,7 +68,7 @@ test.describe('Filtros del historial (US-24)', () => {
     await history.clickClearNoResults();
 
     // Volvimos al listado sin filtros, todos los seeds visibles.
-    await page.waitForURL(/\/historial$/);
+    await page.waitForURL(/\/catalogo$/);
     await history.expectGridVisible();
     await history.expectAtLeastNItems(5);
     await history.expectNoActiveChips();
@@ -81,7 +81,7 @@ test.describe('Filtros del historial (US-24)', () => {
     await history.expectExactlyNItems(2);
 
     await history.clickActiveChip('categoria');
-    await page.waitForURL(/\/historial$/);
+    await page.waitForURL(/\/catalogo$/);
     await history.expectAtLeastNItems(5);
   });
 });

@@ -29,7 +29,7 @@ export class UploadPage {
     this.chooseOtherFileButton = page.getByRole('button', { name: 'Elegir otro archivo' });
     this.uploadingState = page.getByTestId('uploading-state');
     this.processingState = page.getByTestId('processing-state');
-    this.progressBar = page.getByRole('progressbar', { name: 'Progreso del upload' });
+    this.progressBar = page.getByRole('progressbar', { name: 'Progreso del análisis' });
   }
 
   async goto() {
@@ -58,12 +58,19 @@ export class UploadPage {
   }
 
   /**
-   * Waits until either the UPLOADING or PROCESSING state is visible.
-   * On fast networks the UPLOADING phase is too brief to assert, so we
-   * accept either as proof that the submit kicked off.
+   * Waits until the analysis kicked off. Con el mock + build de producción el
+   * flujo puede pasar UPLOADING→PROCESSING→COMPLETED→redirect en milisegundos,
+   * así que aceptamos cualquier etapa observable del trayecto (in-progress, el
+   * skeleton del estado COMPLETED, o ya el resultado). La aserción estricta de
+   * que terminó en el resultado la hace `expectRedirectToResult`.
    */
   async expectUploadInProgress() {
-    await expect(this.uploadingState.or(this.processingState)).toBeVisible();
+    await expect(
+      this.uploadingState
+        .or(this.processingState)
+        .or(this.page.getByTestId('completed-state'))
+        .or(this.page.getByTestId('result-view')),
+    ).toBeVisible();
   }
 
   async expectProcessingState() {

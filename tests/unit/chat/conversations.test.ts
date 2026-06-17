@@ -1,5 +1,5 @@
 /**
- * Tests para el historial de chats (NL-301/302).
+ * Tests para el catálogo de chats (NL-301/302).
  * Cubre generateTitle + tipos básicos.
  */
 import { describe, expect, it } from 'vitest';
