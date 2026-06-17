@@ -45,7 +45,8 @@ const LENS_CHIPS: ReadonlyArray<ChipDef> = [
 
 export function HeroDecor() {
   return (
-    <div className="flex items-center justify-center">
+    // Solo desktop: en mobile el lente + chips quedaban apretados/desbordados.
+    <div className="hidden items-center justify-center md:flex">
       {/* `pointer-events-none` en el decorado del lente; los chips lo reactivan
           (`pointer-events-auto`) para poder arrastrarlos. */}
       <div className="pointer-events-none relative h-44 w-44">
