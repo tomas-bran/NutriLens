@@ -93,12 +93,11 @@ export class MockIaProvider implements IaProvider {
         latencyMs: 2,
       };
     }
-    // US-31: cuando el caller pide `chat_answer-v2` (o pasa intent_kind=compare
-    // en opts.extra), emulamos la tabla markdown que produciría el LLM real
-    // para que los E2E del compare puedan verificar el render de la tabla
-    // sin tocar Foundry. El formato es el documentado en el prompt v2.
-    const isCompareTemplate =
-      opts.promptVersion === 'chat_answer-v2' || opts.extra?.intent_kind === 'compare';
+    // US-31/NL-702: cuando el intent es compare, emulamos la tabla markdown
+    // que produciría el LLM real para que los E2E verifiquen el render sin
+    // tocar el provider real. El formato es el documentado en chat_answer-v3
+    // (sección COMPARACIONES).
+    const isCompareTemplate = opts.extra?.intent_kind === 'compare';
     if (isCompareTemplate && products.length >= 2) {
       return {
         raw: buildMockCompareAnswer(products),
