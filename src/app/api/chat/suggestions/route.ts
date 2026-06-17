@@ -15,19 +15,23 @@ import { logger } from '@/lib/logger';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-/** Muestra del catálogo que alimenta el prompt (los más recientes). */
+/** Tamaño de la muestra que alimenta el prompt. */
 const SAMPLE_SIZE = 12;
+/** Pool del que muestreamos: tomamos los más recientes y barajamos, así cada
+ *  "Generar otras" puede arrojar sugerencias distintas (variedad por click). */
+const POOL_SIZE = 40;
 
 export async function GET(): Promise<NextResponse> {
   try {
-    const products = await prisma.product.findMany({
+    const pool = await prisma.product.findMany({
       orderBy: { createdAt: 'desc' },
-      take: SAMPLE_SIZE,
+      take: POOL_SIZE,
     });
-    if (products.length === 0) return NextResponse.json({ suggestions: null });
+    if (pool.length === 0) return NextResponse.json({ suggestions: null });
 
+    const sample = shuffle(pool).slice(0, SAMPLE_SIZE);
     const ia = getIaProvider();
-    const suggestions = await generateStarterSuggestions(products.map(toSavedProductLite), { ia });
+    const suggestions = await generateStarterSuggestions(sample.map(toSavedProductLite), { ia });
     return NextResponse.json({ suggestions });
   } catch (err) {
     logger.warn('chat.starter_suggestions_failed', {
@@ -35,4 +39,14 @@ export async function GET(): Promise<NextResponse> {
     });
     return NextResponse.json({ suggestions: null });
   }
+}
+
+/** Fisher–Yates, sin mutar el array original. */
+function shuffle<T>(arr: readonly T[]): T[] {
+  const out = [...arr];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j]!, out[i]!];
+  }
+  return out;
 }
