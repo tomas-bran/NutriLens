@@ -38,7 +38,7 @@ export type AnswerOpts = {
   timeoutMs?: number;
   /**
    * Free-form context interpolated into the answer prompt. US-31 lo usa para
-   * pasar `intent_kind` al prompt `chat_answer-v2` y disparar el formato de
+   * pasar `intent_kind` al prompt de answer y disparar el formato de
    * tabla markdown cuando es una comparación.
    */
   extra?: Record<string, string>;
@@ -47,6 +47,17 @@ export type AnswerOpts = {
 export type ParseIntentOpts = {
   promptVersion: string;
   timeoutMs?: number;
+};
+
+export type EmbedOpts = {
+  timeoutMs?: number;
+};
+
+export type EmbedResult = {
+  /** Vector normalizado del modelo de embeddings (1536 dims). */
+  vector: number[];
+  usage: TokenUsage;
+  latencyMs: number;
 };
 
 export type SavedProductLite = {
@@ -84,4 +95,9 @@ export interface IaProvider {
     products: SavedProductLite[],
     opts: AnswerOpts,
   ): AsyncIterable<string>;
+  /**
+   * Embedding de un texto (NL-401). Usado por persist (al guardar un
+   * producto) y por el retrieve semántico del chat (NL-402).
+   */
+  embed(text: string, opts?: EmbedOpts): Promise<EmbedResult>;
 }

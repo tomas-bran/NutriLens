@@ -1,0 +1,76 @@
+{
+  "$comment": "NL-404 (AB#74) — BORRADOR generado por Claude sobre los nombres reales del seed (50 productos), pendiente de revisión de Federico. Formato: pregunta del usuario → nombres exactos de productos del seed que el retrieve debería traer (orden no exigido).",
+  "version": "draft-1",
+  "pairs": [
+    {
+      "pregunta": "¿Qué galletitas son aptas para celíacos?",
+      "productos_esperados": ["Galletitas Sin TACC Choco", "Galletitas Arroz Inflado"]
+    },
+    {
+      "pregunta": "Mostrame galletitas de bajo riesgo",
+      "productos_esperados": ["Galletitas Avena Integral", "Galletitas Arroz Inflado"]
+    },
+    {
+      "pregunta": "¿Qué productos contienen leche?",
+      "productos_esperados": [
+        "Leche Entera Larga Vida",
+        "Yogur Bebible Sabor Frutilla",
+        "Queso Untable Clásico",
+        "Postre Lácteo Chocolate"
+      ]
+    },
+    {
+      "pregunta": "Quiero snacks sin gluten",
+      "productos_esperados": [
+        "Chips de Batata Horneadas",
+        "Mix de Frutos Secos",
+        "Garbanzos Tostados"
+      ]
+    },
+    {
+      "pregunta": "¿Tengo algo vegano para el desayuno?",
+      "productos_esperados": ["Granola Sin Azúcar", "Avena en Hojuelas", "Leche de Almendras"]
+    },
+    {
+      "pregunta": "Algo dulce para la merienda que no tenga tantos sellos",
+      "productos_esperados": [
+        "Galletitas Avena Integral",
+        "Granola Sin Azúcar",
+        "Vainillas Clásicas"
+      ]
+    },
+    {
+      "pregunta": "Bebidas sin azúcar",
+      "productos_esperados": ["Agua Mineral", "Soda Saborizada Zero", "Yogur Natural Sin Azúcar"]
+    },
+    {
+      "pregunta": "¿Cuál de mis lácteos tiene menos riesgo?",
+      "productos_esperados": ["Yogur Natural Sin Azúcar", "Leche Sin Lactosa"]
+    },
+    {
+      "pregunta": "Productos sin lactosa",
+      "productos_esperados": ["Leche Sin Lactosa", "Leche de Almendras", "Tofu Natural"]
+    },
+    {
+      "pregunta": "¿Qué cereales tienen exceso de azúcares?",
+      "productos_esperados": [
+        "Choco Balls Cereal",
+        "Cereal Frutado Azucarado",
+        "Copos de Maíz Clásicos"
+      ]
+    },
+    {
+      "pregunta": "Compará Choco Crunch Galletitas con Galletitas Avena Integral",
+      "productos_esperados": ["Choco Crunch Galletitas", "Galletitas Avena Integral"]
+    },
+    {
+      "pregunta": "Algo salado para picar con amigos",
+      "productos_esperados": [
+        "Palitos Salados",
+        "Nachos de Maíz Cheddar",
+        "Papas Fritas Saladas",
+        "Crackers Salados"
+      ]
+    }
+  ]
+}

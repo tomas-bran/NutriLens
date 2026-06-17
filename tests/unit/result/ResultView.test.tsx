@@ -28,6 +28,7 @@ function mkProduct(overrides: Partial<ProductDetail> = {}): ProductDetail {
     jsonRaw: '{}',
     pipelineTrace: [],
     promptVersion: 'extract_product-v1',
+    offEnrichment: null,
     ...overrides,
   };
 }

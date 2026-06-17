@@ -36,7 +36,11 @@ model Product {
   explanation     String?
   jsonRaw         String   @db.Text
   pipelineTrace   String   @db.Text  // JSON.stringify(StepTrace[])
+  offEnrichment   String?  @db.Text  // JSON.stringify(OFFEnrichmentResult) — NL-601
   imagenPath      String
+  /// NL-401: embedding del producto (nombre+categoria+ingredientes+alérgenos+sellos).
+  /// Unsupported => Prisma Client lo ignora; se lee/escribe con $queryRaw.
+  embedding       Unsupported("vector(1536)")?
   // Metadata del archivo persistido — sirve para auditar tamaño, filtrar por
   // tipo y migrar a cloud sin re-leer el disco (US-36 audit §3).
   imagenMime      String?

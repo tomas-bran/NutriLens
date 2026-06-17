@@ -10,7 +10,7 @@
  */
 'use client';
 
-import { useCallback, useReducer, useRef } from 'react';
+import { useCallback, useReducer, useRef, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { ChatErrorBanner } from '@/components/chat/ChatErrorBanner';
 import { ChatHeader } from '@/components/chat/ChatHeader';
@@ -146,6 +146,10 @@ export function ChatPageClient({
   fetchStreamImpl = fetchChatStream,
 }: ChatPageClientProps) {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  // NL-702: pre-fill state for "ask about comparison" button
+  const [inputPrefill, setInputPrefill] = useState('');
+  const [inputKey, setInputKey] = useState(0);
+
   const conversationIdRef = useRef<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   useStickyAutoscroll(scrollRef, state.scrollTick);
@@ -247,6 +251,11 @@ export function ChatPageClient({
     dispatch({ type: 'reset' });
   }, []);
 
+  const handleAskFollowUp = useCallback((prefill: string) => {
+    setInputPrefill(prefill);
+    setInputKey((k) => k + 1);
+  }, []);
+
   const handleLoadConversation = useCallback(async (id: string) => {
     const { getConversation } = await import('@/lib/conversations/client');
     const conv = await getConversation(id);
@@ -290,7 +299,11 @@ export function ChatPageClient({
               )}
             </div>
           ) : (
-            <ChatThread messages={state.messages} status={state.status} />
+            <ChatThread
+              messages={state.messages}
+              status={state.status}
+              onAskFollowUp={handleAskFollowUp}
+            />
           )}
         </div>
 
@@ -311,7 +324,12 @@ export function ChatPageClient({
               className="mb-2"
             />
           )}
-          <ChatInput onSubmit={handleSubmit} disabled={inputDisabled} />
+          <ChatInput
+            key={inputKey}
+            onSubmit={handleSubmit}
+            disabled={inputDisabled}
+            initialValue={inputPrefill}
+          />
         </div>
       </div>
     </AppShell>
