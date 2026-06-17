@@ -2,8 +2,31 @@
  * Tests for the Open Food Facts enrichment logic (NL-601).
  */
 import { describe, expect, it } from 'vitest';
-import { buildEnrichment, parseOffIngredients } from '@/lib/off/enrich';
+import { buildEnrichment, parseOffIngredients, productNamesOverlap } from '@/lib/off/enrich';
 import type { OFFProduct } from '@/lib/off/client';
+
+describe('productNamesOverlap (NL-601 — validación soft barcode↔foto)', () => {
+  it('detecta solapamiento por token significativo', () => {
+    expect(productNamesOverlap('Galletitas Chocolinas', 'Chocolinas Bagley')).toBe(true);
+  });
+
+  it('ignora tildes y mayúsculas', () => {
+    expect(productNamesOverlap('Maíz Frito', 'maiz tostado')).toBe(true);
+  });
+
+  it('marca falta de correspondencia cuando no comparten tokens', () => {
+    expect(productNamesOverlap('Coca Cola Original', 'Yogur Entero Natural')).toBe(false);
+  });
+
+  it('ignora stopwords (de/la/con) al comparar', () => {
+    expect(productNamesOverlap('Agua de la Sierra', 'Pan de la Abuela')).toBe(false);
+  });
+
+  it('es indulgente: si algún nombre no tiene tokens evaluables, no marca discrepancia', () => {
+    expect(productNamesOverlap('', 'Cualquier Cosa')).toBe(true);
+    expect(productNamesOverlap('A B', 'Coca Cola')).toBe(true); // tokens < 3 chars
+  });
+});
 
 describe('parseOffIngredients (NL-601)', () => {
   it('separa por comas, recorta y saca los guiones bajos de alérgenos', () => {

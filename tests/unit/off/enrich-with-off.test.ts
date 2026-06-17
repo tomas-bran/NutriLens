@@ -184,3 +184,46 @@ describe('enrich_with_off — merge de datos de OFF (NL-601)', () => {
     expect(out.product?.alergenos).toEqual([]);
   });
 });
+
+describe('enrich_with_off — validación soft barcode↔foto (NL-601)', () => {
+  function withBarcodeImage(ctx: AnalysisContext): AnalysisContext {
+    ctx.barcodeImage = {
+      name: 'bc.jpg',
+      mime: 'image/jpeg',
+      sizeBytes: 5,
+      hash: 'h2',
+      buffer: Buffer.from('bc'),
+    };
+    return ctx;
+  }
+
+  it('marca barcodeUnreadable cuando el usuario subió la imagen pero no decodifica', async () => {
+    decodeMock.mockResolvedValue(null); // ni la imagen del código ni la foto decodifican
+    const out = await enrich_with_off(withBarcodeImage(mkCtx(mkProduct())));
+    expect(out.offEnrichment?.barcodeUnreadable).toBe(true);
+  });
+
+  it('NO marca barcodeUnreadable si no se subió imagen de código', async () => {
+    decodeMock.mockResolvedValue(null);
+    const out = await enrich_with_off(mkCtx(mkProduct()));
+    expect(out.offEnrichment?.barcodeUnreadable).toBeFalsy();
+  });
+
+  it('marca barcodeMismatch cuando el nombre de OFF no se corresponde con la foto', async () => {
+    decodeMock.mockResolvedValue('7790001112223'); // imagen del código decodifica
+    byBarcodeMock.mockResolvedValue(mkOff({ product_name: 'Coca Cola Original' }));
+    const out = await enrich_with_off(
+      withBarcodeImage(mkCtx(mkProduct({ producto: 'Yogur Entero Natural' }))),
+    );
+    expect(out.offEnrichment?.barcodeMismatch).toBe(true);
+  });
+
+  it('NO marca barcodeMismatch cuando los nombres se solapan', async () => {
+    decodeMock.mockResolvedValue('7790001112223');
+    byBarcodeMock.mockResolvedValue(mkOff({ product_name: 'Galletitas Test Chocolate' }));
+    const out = await enrich_with_off(
+      withBarcodeImage(mkCtx(mkProduct({ producto: 'Galletitas Test' }))),
+    );
+    expect(out.offEnrichment?.barcodeMismatch).toBe(false);
+  });
+});
