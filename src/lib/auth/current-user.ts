@@ -6,11 +6,14 @@
  */
 import { auth } from '@/lib/auth';
 
-/** Usuario fijo para el bypass de E2E (ver middleware). Nunca en deploy real. */
+/** Usuario fijo para el bypass de E2E (ver middleware). */
 const E2E_USER_ID = 'e2e-test-user';
+// Se activa con el flag explícito `E2E_AUTH_BYPASS` y NUNCA en un deploy real:
+// `WEBSITE_HOSTNAME` lo setea siempre Azure App Service, así que aunque el flag
+// se filtrara a las App Settings de prod, el bypass queda desactivado. (No
+// usamos NODE_ENV porque el webServer de E2E corre un build de prod `next
+// start` → NODE_ENV=production, y eso desactivaba el bypass → E2E roto.)
 function e2eBypass(): boolean {
-  // Igual que el middleware: flag explícito + nunca en Azure (WEBSITE_HOSTNAME).
-  // No usamos NODE_ENV porque el E2E corre sobre `next build && next start`.
   return process.env.E2E_AUTH_BYPASS === 'true' && !process.env.WEBSITE_HOSTNAME;
 }
 

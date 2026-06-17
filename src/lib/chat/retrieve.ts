@@ -17,9 +17,11 @@
  *   4. `kind = 'unknown'` cortocircuita a `[]` (no hay nada que recuperar).
  */
 import type { Prisma, Product as PrismaProduct } from '@prisma/client';
+import type { IaProvider } from '@/lib/ai/types';
 import { prisma } from '@/lib/db';
 import { mapCategoriaToPrisma } from '@/lib/products/serializers';
 import { rankByRiskAndSellos } from '@/lib/chat/rank';
+import { semanticSearchProducts } from '@/lib/rag/semantic-search';
 import type { ChatIntent } from '@/lib/chat/intent-schema';
 
 export const RETRIEVE_TOP_K = 5;
@@ -29,6 +31,15 @@ export interface RetrieveDeps {
   /** Inyectable para tests (acepta un cliente Prisma stub). */
   db?: Pick<typeof prisma, 'product'>;
   topK?: number;
+  /**
+   * NL-402: retrieval híbrido. Con `ia` + `question`, cuando el filtro
+   * estructurado trae menos de topK resultados, se completa con búsqueda
+   * semántica (cosine sobre pgvector) usando la pregunta original.
+   * Inyectable para tests; sin ia/question el retrieve es el clásico.
+   */
+  ia?: IaProvider;
+  question?: string;
+  semanticSearch?: typeof semanticSearchProducts;
 }
 
 export async function retrieveProducts(
@@ -62,8 +73,20 @@ export async function retrieveProducts(
     take: needsRanking ? RANKING_FETCH_LIMIT : topK,
   });
 
-  if (!needsRanking) return rows;
-  return rankByRiskAndSellos(rows).slice(0, topK);
+  const structured = needsRanking ? rankByRiskAndSellos(rows).slice(0, topK) : rows;
+
+  // NL-402: si lo estructurado no llenó el cupo, completamos con semántica.
+  // Cubre el caso típico: keywords que no matchean texto exacto ("algo dulce
+  // para la merienda") pero sí viven cerca en el espacio de embeddings.
+  if (structured.length >= topK || !deps.ia || !deps.question) return structured;
+
+  const search = deps.semanticSearch ?? semanticSearchProducts;
+  const fill = await search(deps.question, {
+    ia: deps.ia,
+    k: topK - structured.length,
+    excludeIds: structured.map((p) => p.id),
+  });
+  return [...structured, ...fill];
 }
 
 /** Visible para tests; construye el `where` Prisma a partir del intent. */

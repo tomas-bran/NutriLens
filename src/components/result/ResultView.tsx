@@ -14,6 +14,7 @@ import { ExplanationCard } from './ExplanationCard';
 import { IngredientList } from './IngredientList';
 import { JsonViewer } from './JsonViewer';
 import { LowConfidenceBanner } from './LowConfidenceBanner';
+import { OFFBadge } from './OFFBadge';
 import { PipelineTrace } from './PipelineTrace';
 import { ProductImageCard } from './ProductImageCard';
 import { ResultHeader, type ResultHeaderBackAction } from './ResultHeader';
@@ -94,6 +95,7 @@ export function ResultView({
       )}
 
       <footer className="mt-2 flex flex-col gap-4">
+        {product.offEnrichment?.matched && <OFFBadge enrichment={product.offEnrichment} />}
         <Disclaimer />
       </footer>
     </div>

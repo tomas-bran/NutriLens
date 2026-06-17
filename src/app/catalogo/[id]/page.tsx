@@ -11,7 +11,9 @@ import { ResultView } from '@/components/result/ResultView';
 import { isCurrentUserAdmin } from '@/lib/auth/is-admin';
 import { prisma } from '@/lib/db';
 import { getCatalogoCount } from '@/lib/products/count';
-import { toDetail } from '@/lib/products/serializers';
+import { findSimilarProducts } from '@/lib/rag/semantic-search';
+import { SimilarProducts } from '@/components/result/SimilarProducts';
+import { toDetail, toListItem } from '@/lib/products/serializers';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -32,16 +34,24 @@ export default async function CatalogoDetailPage({ params }: PageProps) {
   }
 
   const detail = toDetail(product);
-  const [catalogoCount, isAdmin] = await Promise.all([getCatalogoCount(), isCurrentUserAdmin()]);
+  // NL-405: vecinos por embedding — findSimilarProducts es fail-open ([]).
+  const [catalogoCount, isAdmin, similares] = await Promise.all([
+    getCatalogoCount(),
+    isCurrentUserAdmin(),
+    findSimilarProducts(id, 4),
+  ]);
 
   return (
     <AppShell active="catalogo" catalogoCount={catalogoCount} fluid>
-      <ResultView
-        product={detail}
-        back={{ href: '/catalogo', label: 'Volver al catálogo' }}
-        contextLabel="Producto guardado"
-        showTechnicalViews={isAdmin}
-      />
+      <div className="flex flex-col gap-4">
+        <ResultView
+          product={detail}
+          back={{ href: '/catalogo', label: 'Volver al catálogo' }}
+          contextLabel="Producto guardado"
+          showTechnicalViews={isAdmin}
+        />
+        <SimilarProducts items={similares.map(toListItem)} />
+      </div>
     </AppShell>
   );
 }

@@ -1,109 +1,150 @@
 /**
- * Step `enrich_with_off` — completa campos faltantes de la extracción
- * usando Open Food Facts (búsqueda por nombre).
+ * enrich_with_off — pipeline step (NL-601).
  *
- * Posición: después de `validate_schema`, antes de `apply_rules`. La
- * razón: necesitamos un `ctx.product` válido, y queremos que las reglas
- * locales operen sobre los ingredientes/alérgenos enriquecidos.
- *
- * Opt-out: la env var `OFF_ENABLED=false` desactiva el step (lo dejamos
- * encendido por default; el fallo de red de OFF NO rompe el pipeline,
- * se loguea como `enrich.skipped` y se sigue).
- *
- * Política de merge (ver `merge-off.ts`):
- *   - LLM gana donde ya tiene data.
- *   - OFF rellena ingredientes/alérgenos vacíos.
- *   - apto/riesgo/confidence NO se tocan acá.
+ * Queries Open Food Facts after extraction. Failure is non-blocking:
+ * the analysis continues normally regardless of OFF availability.
  */
 import { logger } from '@/lib/logger';
-import type { AnalysisContext } from '@/lib/pipeline/context';
-import { makeTrace } from '@/lib/pipeline/trace';
-import { searchOpenFoodFacts } from '@/lib/enrichment/off-client';
-import { mergeOffIntoExtraction } from '@/lib/enrichment/merge-off';
+import { fetchByBarcode, fetchByName } from '@/lib/off/client';
+import { buildEnrichment, parseOffIngredients } from '@/lib/off/enrich';
+import { decodeBarcode } from '@/lib/off/decode-barcode';
+import { makeTrace } from '../trace';
+import type { AnalysisContext } from '../context';
 
-export interface EnrichDeps {
-  /** Inyectable para tests — devuelve `null` o un `OffMatch` mockeado. */
-  search?: typeof searchOpenFoodFacts;
-}
-
-export async function enrich_with_off(
-  ctx: AnalysisContext,
-  deps: EnrichDeps = {},
-): Promise<AnalysisContext> {
+export async function enrich_with_off(ctx: AnalysisContext): Promise<AnalysisContext> {
   const startedAt = new Date();
-  if (!ctx.product) {
-    throw new Error('enrich_with_off: ctx.product missing (call validate_schema first)');
-  }
 
+  // Kill-switch: OFF_ENABLED=false apaga el enriquecimiento por completo
+  // (tests de integración y CI no deben depender de la API real de OFF).
+  // Se lee en cada llamada — no a nivel módulo — para que los tests puedan
+  // setearlo en beforeAll sin depender del orden de imports.
   if (process.env.OFF_ENABLED === 'false') {
     return {
       ...ctx,
+      offEnrichment: null,
       steps: [
         ...ctx.steps,
-        makeTrace('enrich_with_off', 'skipped', startedAt, { reason: 'disabled_by_env' }),
+        makeTrace('enrich_with_off', 'skipped', startedAt, { reason: 'disabled' }),
       ],
     };
   }
 
-  const search = deps.search ?? searchOpenFoodFacts;
-
-  // Sólo invocamos OFF cuando la extracción tiene huecos — si el LLM ya
-  // pescó ingredientes y alérgenos, ahorramos la request.
-  const needsEnrichment =
-    ctx.product.ingredientes_detectados.length === 0 || ctx.product.alergenos.length === 0;
-  if (!needsEnrichment) {
+  if (!ctx.product) {
     return {
       ...ctx,
       steps: [
         ...ctx.steps,
-        makeTrace('enrich_with_off', 'skipped', startedAt, {
-          reason: 'extraction_complete',
-        }),
+        makeTrace('enrich_with_off', 'skipped', startedAt, { reason: 'no_product' }),
       ],
     };
   }
 
   try {
-    const off = await search(ctx.product.producto);
-    if (!off) {
-      return {
-        ...ctx,
-        steps: [
-          ...ctx.steps,
-          makeTrace('enrich_with_off', 'skipped', startedAt, { reason: 'no_match' }),
-        ],
+    const { product } = ctx;
+
+    // Resolución del código de barras, de más a menos confiable (NL-601):
+    //   1. imagen dedicada del código (si el usuario la subió) — decodificada,
+    //   2. la foto principal del producto — decodificada con zxing,
+    //   3. el que "leyó" el LLM (suele venir mal),
+    //   4. sin código → búsqueda por nombre.
+    let barcode: string | null = null;
+    let barcodeSource: 'barcode-image' | 'photo' | 'extracted' | 'none' = 'none';
+
+    if (ctx.barcodeImage) {
+      const fromImage = await decodeBarcode(ctx.barcodeImage.buffer, ctx.barcodeImage.mime);
+      if (fromImage) {
+        barcode = fromImage;
+        barcodeSource = 'barcode-image';
+      }
+    }
+    if (!barcode) {
+      const fromPhoto = await decodeBarcode(ctx.file.buffer, ctx.file.mime);
+      if (fromPhoto) {
+        barcode = fromPhoto;
+        barcodeSource = 'photo';
+      }
+    }
+    if (!barcode && product.barcode) {
+      barcode = product.barcode;
+      barcodeSource = 'extracted';
+    }
+
+    // Prefer barcode lookup (faster, more accurate); fall back to name search.
+    const offProduct = barcode
+      ? await fetchByBarcode(barcode)
+      : await fetchByName(product.producto, undefined);
+
+    const enrichment = buildEnrichment(
+      {
+        producto: product.producto,
+        alergenos: product.alergenos,
+        apto_vegano: product.apto_vegano,
+        apto_celiaco: product.apto_celiaco,
+      },
+      offProduct,
+    );
+
+    logger.info('enrich_with_off', {
+      requestId: ctx.requestId,
+      matched: enrichment.matched,
+      barcodeSource,
+      durationMs: Date.now() - startedAt.getTime(),
+      confirmedFields: enrichment.confirmedFields,
+      discrepanciesCount: enrichment.discrepancies.length,
+    });
+
+    // MERGE (NL-601): OFF es fuente autoritativa, no un cross-check. En vez de
+    // mostrar discrepancias, incorporamos su data al producto y dejamos que
+    // apply_rules/compute_risk/explicación trabajen sobre el resultado mergeado.
+    const usedBarcode = barcode !== null;
+    let updatedProduct = product;
+    if (enrichment.matched && offProduct) {
+      // Alérgenos: unión (nunca perdemos los del label; sumamos los de OFF).
+      // Es seguro: solo agrega flags. apply_rules deriva las aptitudes de acá.
+      const mergedAllergens = [...new Set([...product.alergenos, ...enrichment.missingAllergens])];
+
+      // Ingredientes: con barcode (autoritativo) preferimos OFF; por nombre,
+      // solo si la IA no detectó ninguno (evita inyectar los de un mal match).
+      const offIngredients = parseOffIngredients(offProduct.ingredients_text);
+      const mergedIngredients =
+        offIngredients.length > 0 && (usedBarcode || product.ingredientes_detectados.length === 0)
+          ? offIngredients
+          : product.ingredientes_detectados;
+
+      // Confianza: match por barcode = dato autoritativo → piso alto; por
+      // nombre → bump moderado. Nunca baja por debajo de la confianza del modelo.
+      const mergedConfidence = Math.max(product.confidence, usedBarcode ? 0.9 : 0.8);
+
+      updatedProduct = {
+        ...product,
+        alergenos: mergedAllergens,
+        ingredientes_detectados: mergedIngredients,
+        confidence: mergedConfidence,
       };
     }
 
-    const { product, filledFromOff } = mergeOffIntoExtraction(ctx.product, off);
-    logger.info('enrich.applied', {
-      requestId: ctx.requestId,
-      offCode: off.code,
-      filledFromOff,
-    });
-
     return {
       ...ctx,
-      product,
+      product: updatedProduct,
+      offEnrichment: enrichment,
       steps: [
         ...ctx.steps,
         makeTrace('enrich_with_off', 'ok', startedAt, {
-          offCode: off.code,
-          filledFromOff,
+          matched: enrichment.matched,
+          barcodeSource,
+          confirmedFields: enrichment.confirmedFields,
         }),
       ],
     };
   } catch (err) {
-    // OFF caído no debe romper el análisis — logueamos como warn y seguimos.
-    logger.warn('enrich.failed', {
-      requestId: ctx.requestId,
-      message: err instanceof Error ? err.message : 'unknown',
-    });
+    // Non-blocking: log and continue without enrichment
+    logger.warn('enrich_with_off', { requestId: ctx.requestId, error: String(err) });
     return {
       ...ctx,
+      offEnrichment: null,
       steps: [
         ...ctx.steps,
-        makeTrace('enrich_with_off', 'skipped', startedAt, { reason: 'error' }),
+        makeTrace('enrich_with_off', 'skipped', startedAt, { reason: 'off_unavailable' }),
       ],
     };
   }

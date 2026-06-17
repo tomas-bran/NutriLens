@@ -5,12 +5,10 @@
  * contexto (truncados a SavedProductLite para no inflar el prompt), saneamos
  * la salida (`sanitizeChatAnswer`) y devolvemos texto + tokens + latencia.
  *
- * Versionado del prompt:
- *   - `kind = compare` (US-31) → `chat_answer-v2` (tabla markdown).
- *   - cualquier otro kind → `chat_answer-v3` (markdown liviano + permite
- *     responder preguntas nutricionales generales cuando los productos del
- *     contexto no aplican; sucede a `chat_answer-v1`, el "texto plano" previo
- *     a que NL-303 renderizara markdown en el chat).
+ * Versionado del prompt: TODOS los intents usan `chat_answer-v3` (NL-702
+ * unificó el compare ahí: el prompt lee `intent_kind` y activa tabla +
+ * veredicto cuando es "compare"). `chat_answer-v1`/`-v2` quedan en el
+ * registry solo para que los traces históricos sigan legibles.
  *
  * No persistimos la conversación (MVP, ver Non-goals del spec).
  */
@@ -21,11 +19,8 @@ import type { ChatIntent } from '@/lib/chat/intent-schema';
 import { sanitizeChatAnswer } from '@/lib/chat/sanitize-chat-answer';
 
 export const ANSWER_PROMPT_VERSION_DEFAULT = 'chat_answer-v3' as const;
-export const ANSWER_PROMPT_VERSION_COMPARE = 'chat_answer-v2' as const;
 
-export type AnswerPromptVersion =
-  | typeof ANSWER_PROMPT_VERSION_DEFAULT
-  | typeof ANSWER_PROMPT_VERSION_COMPARE;
+export type AnswerPromptVersion = typeof ANSWER_PROMPT_VERSION_DEFAULT;
 
 export interface GenerateAnswerResult {
   text: string;
@@ -49,8 +44,10 @@ export interface GenerateAnswerDeps {
   userPrefs?: string;
 }
 
-export function pickAnswerPromptVersion(intent: ChatIntent): AnswerPromptVersion {
-  return intent.kind === 'compare' ? ANSWER_PROMPT_VERSION_COMPARE : ANSWER_PROMPT_VERSION_DEFAULT;
+export function pickAnswerPromptVersion(_intent: ChatIntent): AnswerPromptVersion {
+  // v3 maneja todos los kinds; el formato compare lo activa `intent_kind`
+  // dentro del propio prompt.
+  return ANSWER_PROMPT_VERSION_DEFAULT;
 }
 
 export async function generateChatAnswer(

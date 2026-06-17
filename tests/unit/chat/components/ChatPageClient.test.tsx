@@ -1,82 +1,86 @@
 /**
  * Tests integration del page client del chat — el reducer + el cableado al
- * `fetchImpl` mockeado. Cubre los AC end-to-end del flujo:
+ * `fetchStreamImpl` (SSE) mockeado. Cubre los AC end-to-end del flujo:
  *
- *   - US-27 §1: input → user → thinking → respuesta.
+ *   - US-27 §1: input → user → streaming → respuesta.
  *   - US-27 §2: mensajes previos siguen visibles tras la 2da pregunta.
  *   - US-27 §3: "Nueva conversación" limpia el thread.
  *   - US-30 §1+§2: fallback no_context muestra CTA "Analizar nuevo producto".
  *   - §9.4: estado ERROR + retry último mensaje.
  *   - §9.5: clickear una sugerencia dispara el flujo completo.
+ *   - NL-304: la respuesta se construye desde eventos `delta` y se finaliza
+ *     con `done` (texto sanitizado autoritativo).
  */
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { ApiError } from '@schemas/errors';
 import { ChatPageClient } from '@/app/chat/ChatPageClient';
-import type { ChatApiResponse } from '@/lib/chat/response';
+import type { ChatProductRef } from '@/lib/chat/response';
+import type { ChatFallback } from '@/lib/chat/empty-response';
+import type { ChatStreamEvent } from '@/lib/chat/stream-events';
+import type { fetchChatStream } from '@/lib/chat/fetch-chat-stream';
 
-const ANSWER_OK: ChatApiResponse = {
-  answer: 'Tenés 1 galletita guardada.',
-  products: [
+const CHIP: ChatProductRef = {
+  id: 'p1',
+  nombre: 'Galletitas Sin TACC X',
+  categoria: 'galletitas',
+  riesgo: 'bajo',
+  imagenUrl: '/uploads/x.jpg',
+};
+
+const INTENT = {
+  kind: 'filter' as const,
+  categoria: 'galletitas' as const,
+  riesgo_max: null,
+  apto: null,
+  alergeno_excluido: null,
+  keywords: [],
+  comparar: [],
+};
+
+/** Construye un mock de fetchChatStream que emite la secuencia dada de eventos. */
+function streamMock(events: ChatStreamEvent[]): typeof fetchChatStream {
+  return vi.fn(async (_q: string, onEvent: (e: ChatStreamEvent) => void) => {
+    for (const e of events) onEvent(e);
+  }) as unknown as typeof fetchChatStream;
+}
+
+/** Secuencia estándar: meta(chips) → delta → suggestions → done. */
+function answerEvents(opts: {
+  text: string;
+  products?: ChatProductRef[];
+  fallback?: ChatFallback | null;
+  suggestions?: string[] | null;
+}): ChatStreamEvent[] {
+  return [
     {
-      id: 'p1',
-      nombre: 'Galletitas Sin TACC X',
-      categoria: 'galletitas',
-      riesgo: 'bajo',
-      imagenUrl: '/uploads/x.jpg',
+      type: 'meta',
+      products: opts.products ?? [],
+      intent: INTENT,
+      fallback: opts.fallback ?? null,
     },
-  ],
-  intent: {
-    kind: 'filter',
-    categoria: 'galletitas',
-    riesgo_max: null,
-    apto: 'celiaco',
-    alergeno_excluido: null,
-    keywords: [],
-    comparar: [],
-  },
-  tokensUsed: { in: 80, out: 22 },
-  fallback: null,
-  suggestions: ['¿Cuál tiene menos azúcar?', 'Compará los dos primeros'],
-};
-
-const ANSWER_EMPTY: ChatApiResponse = {
-  answer: 'No tengo productos guardados que respondan a esa pregunta.',
-  products: [],
-  intent: {
-    kind: 'filter',
-    categoria: 'galletitas',
-    riesgo_max: null,
-    apto: null,
-    alergeno_excluido: null,
-    keywords: [],
-    comparar: [],
-  },
-  tokensUsed: { in: 50, out: 10 },
-  fallback: { answer: 'irrelevant', reason: 'no_context', showAnalyzeCta: true },
-  suggestions: null,
-};
+    { type: 'delta', text: opts.text },
+    { type: 'suggestions', suggestions: opts.suggestions ?? null },
+    { type: 'done', answer: opts.text, tokensUsed: { in: 80, out: 22 } },
+  ];
+}
 
 beforeAll(() => {
   Element.prototype.scrollIntoView = vi.fn();
 });
 
-describe('<ChatPageClient> — flujo happy (US-27 §1 + US-29 §1)', () => {
-  it('envío de pregunta → user bubble → respuesta del asistente con chip', async () => {
+describe('<ChatPageClient> — flujo happy (US-27 §1 + NL-304 streaming)', () => {
+  it('envío → user bubble → respuesta del asistente con chip', async () => {
     const user = userEvent.setup();
-    const fetchImpl = vi.fn().mockResolvedValue(ANSWER_OK);
+    const fetchStreamImpl = streamMock(
+      answerEvents({ text: 'Tenés 1 galletita guardada.', products: [CHIP] }),
+    );
 
-    render(<ChatPageClient productsInBase={5} fetchImpl={fetchImpl} />);
+    render(<ChatPageClient productsInBase={5} fetchStreamImpl={fetchStreamImpl} />);
 
-    // Estado inicial: hero visible, sin thread.
     expect(screen.getByTestId('chat-hero')).toBeInTheDocument();
-
-    // Escribo y envío.
     await user.type(screen.getByTestId('chat-input'), 'mostrame galletitas{Enter}');
 
-    // Llega la respuesta (la transición a THINKING está cubierta en el último
-    // test del suite con un deferred promise; acá solo verificamos el resultado).
     await waitFor(() => {
       expect(screen.getByTestId('chat-assistant-bubble')).toHaveTextContent(
         'Tenés 1 galletita guardada.',
@@ -84,22 +88,38 @@ describe('<ChatPageClient> — flujo happy (US-27 §1 + US-29 §1)', () => {
     });
     expect(screen.getByTestId('chat-user-bubble')).toHaveTextContent('mostrame galletitas');
     expect(screen.queryByTestId('chat-thinking')).not.toBeInTheDocument();
-    // El chip referenciado aparece (US-32 §1).
     expect(screen.getByTestId('chat-product-chip')).toBeInTheDocument();
+  });
+
+  it('construye la respuesta desde múltiples deltas', async () => {
+    const user = userEvent.setup();
+    const fetchStreamImpl = streamMock([
+      { type: 'meta', products: [], intent: INTENT, fallback: null },
+      { type: 'delta', text: 'Hola ' },
+      { type: 'delta', text: 'mundo' },
+      { type: 'done', answer: 'Hola mundo', tokensUsed: { in: 1, out: 2 } },
+    ]);
+
+    render(<ChatPageClient productsInBase={5} fetchStreamImpl={fetchStreamImpl} />);
+    await user.type(screen.getByTestId('chat-input'), 'hola{Enter}');
+
+    await waitFor(() =>
+      expect(screen.getByTestId('chat-assistant-bubble')).toHaveTextContent('Hola mundo'),
+    );
   });
 
   it('mantiene mensajes previos al hacer una 2da pregunta (US-27 §2)', async () => {
     const user = userEvent.setup();
-    const fetchImpl = vi
+    const fetchStreamImpl = vi
       .fn()
-      .mockResolvedValueOnce(ANSWER_OK)
-      .mockResolvedValueOnce({
-        ...ANSWER_OK,
-        answer: 'Segunda respuesta.',
-        products: [],
-      });
+      .mockImplementationOnce(async (_q: string, onEvent: (e: ChatStreamEvent) => void) => {
+        for (const e of answerEvents({ text: 'Tenés 1 galletita.', products: [CHIP] })) onEvent(e);
+      })
+      .mockImplementationOnce(async (_q: string, onEvent: (e: ChatStreamEvent) => void) => {
+        for (const e of answerEvents({ text: 'Segunda respuesta.' })) onEvent(e);
+      }) as unknown as typeof fetchChatStream;
 
-    render(<ChatPageClient productsInBase={5} fetchImpl={fetchImpl} />);
+    render(<ChatPageClient productsInBase={5} fetchStreamImpl={fetchStreamImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'primera{Enter}');
     await waitFor(() =>
@@ -111,19 +131,16 @@ describe('<ChatPageClient> — flujo happy (US-27 §1 + US-29 §1)', () => {
       expect(screen.getByText((c) => c.includes('Segunda respuesta'))).toBeInTheDocument(),
     );
 
-    // Las 2 user bubbles y las 2 respuestas siguen visibles.
-    const userBubbles = screen.getAllByTestId('chat-user-bubble');
-    const botBubbles = screen.getAllByTestId('chat-assistant-bubble');
-    expect(userBubbles).toHaveLength(2);
-    expect(botBubbles).toHaveLength(2);
+    expect(screen.getAllByTestId('chat-user-bubble')).toHaveLength(2);
+    expect(screen.getAllByTestId('chat-assistant-bubble')).toHaveLength(2);
   });
 });
 
 describe('<ChatPageClient> — reset (US-27 §3)', () => {
   it('"Nueva conversación" limpia el thread y vuelve al hero', async () => {
     const user = userEvent.setup();
-    const fetchImpl = vi.fn().mockResolvedValue(ANSWER_OK);
-    render(<ChatPageClient productsInBase={5} fetchImpl={fetchImpl} />);
+    const fetchStreamImpl = streamMock(answerEvents({ text: 'respuesta', products: [CHIP] }));
+    render(<ChatPageClient productsInBase={5} fetchStreamImpl={fetchStreamImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'pregunta 1{Enter}');
     await waitFor(() => expect(screen.getByTestId('chat-assistant-bubble')).toBeInTheDocument());
@@ -139,23 +156,31 @@ describe('<ChatPageClient> — reset (US-27 §3)', () => {
 describe('<ChatPageClient> — sugerencias (spec §9.5)', () => {
   it('clickear una sugerencia dispara el flujo de envío', async () => {
     const user = userEvent.setup();
-    const fetchImpl = vi.fn().mockResolvedValue(ANSWER_OK);
-    render(<ChatPageClient productsInBase={5} fetchImpl={fetchImpl} />);
+    const fetchStreamImpl = streamMock(answerEvents({ text: 'respuesta', products: [CHIP] }));
+    render(<ChatPageClient productsInBase={5} fetchStreamImpl={fetchStreamImpl} />);
 
     await user.click(screen.getAllByTestId('chat-suggestion')[0]!);
 
-    await waitFor(() => expect(fetchImpl).toHaveBeenCalledOnce());
-    expect(fetchImpl).toHaveBeenCalledWith('Mostrame productos aptos para celíacos');
+    await waitFor(() => expect(fetchStreamImpl).toHaveBeenCalledOnce());
+    expect(fetchStreamImpl).toHaveBeenCalledWith(
+      'Mostrame productos aptos para celíacos',
+      expect.any(Function),
+    );
     await waitFor(() => expect(screen.getByTestId('chat-assistant-bubble')).toBeInTheDocument());
   });
 });
 
 describe('<ChatPageClient> — fallback no_context (US-30 §1+§2)', () => {
-  it('muestra mensaje + CTA "Analizar nuevo producto" cuando fallback.showAnalyzeCta=true', async () => {
+  it('muestra mensaje + CTA cuando fallback.showAnalyzeCta=true', async () => {
     const user = userEvent.setup();
-    const fetchImpl = vi.fn().mockResolvedValue(ANSWER_EMPTY);
+    const fetchStreamImpl = streamMock(
+      answerEvents({
+        text: 'No tengo productos guardados que respondan a esa pregunta.',
+        fallback: { answer: 'irrelevant', reason: 'no_context', showAnalyzeCta: true },
+      }),
+    );
 
-    render(<ChatPageClient productsInBase={0} fetchImpl={fetchImpl} />);
+    render(<ChatPageClient productsInBase={0} fetchStreamImpl={fetchStreamImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'mostrame snacks{Enter}');
 
@@ -165,41 +190,47 @@ describe('<ChatPageClient> — fallback no_context (US-30 §1+§2)', () => {
       ),
     );
     const cta = screen.getByTestId('chat-analyze-cta');
-    expect(cta).toBeInTheDocument();
     expect(cta.getAttribute('href')).toBe('/analizar');
-    // Sin chips porque products=[].
     expect(screen.queryByTestId('chat-product-chip')).not.toBeInTheDocument();
   });
 });
 
 describe('<ChatPageClient> — estado ERROR (spec §9.4)', () => {
-  it('error del backend → ChatErrorBanner con retry; retry reenvía la última pregunta', async () => {
+  it('evento error → ChatErrorBanner con retry; retry reenvía la última pregunta', async () => {
     const user = userEvent.setup();
-    const fetchImpl = vi
+    const fetchStreamImpl = vi
       .fn()
-      .mockRejectedValueOnce(new ApiError('model_rate_limited', 'Saturado, probá en un rato.', 429))
-      .mockResolvedValueOnce(ANSWER_OK);
+      .mockImplementationOnce(async (_q: string, onEvent: (e: ChatStreamEvent) => void) => {
+        onEvent({
+          type: 'error',
+          error: 'model_rate_limited',
+          reason: 'Saturado, probá en un rato.',
+        });
+      })
+      .mockImplementationOnce(async (_q: string, onEvent: (e: ChatStreamEvent) => void) => {
+        for (const e of answerEvents({ text: 'Listo ahora.', products: [CHIP] })) onEvent(e);
+      }) as unknown as typeof fetchChatStream;
 
-    render(<ChatPageClient productsInBase={3} fetchImpl={fetchImpl} />);
+    render(<ChatPageClient productsInBase={3} fetchStreamImpl={fetchStreamImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'mostrame galletitas{Enter}');
-
     await waitFor(() => expect(screen.getByTestId('chat-error')).toBeInTheDocument());
     expect(screen.getByTestId('chat-error')).toHaveTextContent('Saturado');
 
     await user.click(screen.getByTestId('chat-retry'));
 
     await waitFor(() => expect(screen.getByTestId('chat-assistant-bubble')).toBeInTheDocument());
-    expect(fetchImpl).toHaveBeenCalledTimes(2);
-    // Segunda call con la misma pregunta.
-    expect(fetchImpl).toHaveBeenNthCalledWith(2, 'mostrame galletitas');
+    expect(fetchStreamImpl).toHaveBeenCalledTimes(2);
+    expect(fetchStreamImpl).toHaveBeenNthCalledWith(2, 'mostrame galletitas', expect.any(Function));
   });
 
-  it('error genérico (no ApiError) → mensaje fallback "Algo salió mal"', async () => {
+  it('rechazo de red (throw) → mensaje fallback "Algo salió mal"', async () => {
     const user = userEvent.setup();
-    const fetchImpl = vi.fn().mockRejectedValue(new Error('boom'));
+    const fetchStreamImpl = vi
+      .fn()
+      .mockRejectedValue(new Error('network')) as unknown as typeof fetchChatStream;
 
-    render(<ChatPageClient productsInBase={3} fetchImpl={fetchImpl} />);
+    render(<ChatPageClient productsInBase={3} fetchStreamImpl={fetchStreamImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'algo{Enter}');
     await waitFor(() => expect(screen.getByTestId('chat-error')).toBeInTheDocument());
@@ -207,26 +238,30 @@ describe('<ChatPageClient> — estado ERROR (spec §9.4)', () => {
   });
 });
 
-describe('<ChatPageClient> — input bloqueado en THINKING', () => {
-  it('mientras la respuesta no llega, el input + send quedan disabled', async () => {
+describe('<ChatPageClient> — input bloqueado mientras responde', () => {
+  it('input + send quedan disabled hasta que cierra el stream', async () => {
     const user = userEvent.setup();
-    let resolveFetch: ((v: ChatApiResponse) => void) | null = null;
-    const fetchImpl = vi.fn().mockImplementation(
-      () =>
-        new Promise<ChatApiResponse>((resolve) => {
-          resolveFetch = resolve;
+    let release: (() => void) | null = null;
+    const fetchStreamImpl = vi.fn(
+      (_q: string, onEvent: (e: ChatStreamEvent) => void) =>
+        new Promise<void>((resolve) => {
+          onEvent({ type: 'meta', products: [], intent: INTENT, fallback: null });
+          onEvent({ type: 'delta', text: 'escribiendo…' });
+          release = () => {
+            onEvent({ type: 'done', answer: 'listo', tokensUsed: { in: 0, out: 0 } });
+            resolve();
+          };
         }),
-    );
+    ) as unknown as typeof fetchChatStream;
 
-    render(<ChatPageClient productsInBase={3} fetchImpl={fetchImpl} />);
+    render(<ChatPageClient productsInBase={3} fetchStreamImpl={fetchStreamImpl} />);
 
     await user.type(screen.getByTestId('chat-input'), 'q{Enter}');
 
-    expect(screen.getByTestId('chat-input')).toBeDisabled();
+    await waitFor(() => expect(screen.getByTestId('chat-input')).toBeDisabled());
     expect(screen.getByTestId('chat-send')).toBeDisabled();
 
-    resolveFetch!(ANSWER_OK);
-    await waitFor(() => expect(screen.queryByTestId('chat-thinking')).not.toBeInTheDocument());
-    expect(screen.getByTestId('chat-input')).not.toBeDisabled();
+    release!();
+    await waitFor(() => expect(screen.getByTestId('chat-input')).not.toBeDisabled());
   });
 });

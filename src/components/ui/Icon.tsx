@@ -54,7 +54,9 @@ export type IconName =
   | 'fish'
   | 'nut'
   | 'shrimp'
-  | 'allergen';
+  | 'allergen'
+  | 'chevron-up'
+  | 'external-link';
 
 interface IconPathDef {
   paths: ReadonlyArray<string>;
@@ -339,6 +341,10 @@ const ICON_PATHS: Record<IconName, IconPathDef> = {
       'M12 17h.01',
       'M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z',
     ],
+  },
+  'chevron-up': { paths: ['M18 15l-6-6-6 6'] },
+  'external-link': {
+    paths: ['M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6', 'M15 3h6v6', 'M10 14 21 3'],
   },
 };
 
