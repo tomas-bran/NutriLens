@@ -53,6 +53,17 @@ describe('fetchByBarcode', () => {
     expect(await fetchByBarcode('0000000000000')).toBeNull();
   });
 
+  it('cae a ingredients_text_es cuando el genérico viene vacío (LatAm)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      mockFetch(200, {
+        product: { ...OFF_PRODUCT, ingredients_text: '', ingredients_text_es: 'Maíz, sal' },
+      }),
+    );
+    const result = await fetchByBarcode('7501059637420');
+    expect(result?.ingredients_text).toBe('Maíz, sal');
+  });
+
   it('returns null on network error', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
     expect(await fetchByBarcode('1234567890')).toBeNull();

@@ -72,11 +72,18 @@ function parseProduct(data: Record<string, unknown>, barcode: string): OFFProduc
   const p = data['product'] as Record<string, unknown> | undefined;
   if (!p || typeof p['product_name'] !== 'string' || !p['product_name']) return null;
 
+  // OFF guarda los ingredientes por idioma; el genérico `ingredients_text`
+  // suele venir vacío para productos LatAm. Caemos a las variantes es/en.
+  const ingredientsText =
+    String(p['ingredients_text'] ?? '').trim() ||
+    String(p['ingredients_text_es'] ?? '').trim() ||
+    String(p['ingredients_text_en'] ?? '').trim();
+
   return {
     barcode,
     product_name: String(p['product_name'] ?? ''),
     brands: String(p['brands'] ?? ''),
-    ingredients_text: String(p['ingredients_text'] ?? ''),
+    ingredients_text: ingredientsText,
     allergens_tags: Array.isArray(p['allergens_tags'])
       ? (p['allergens_tags'] as string[]).map(String)
       : [],
@@ -121,7 +128,8 @@ export async function fetchByName(name: string, brand?: string): Promise<OFFProd
       action: 'process',
       json: 'true',
       page_size: '1',
-      fields: 'code,product_name,brands,ingredients_text,allergens_tags,labels_tags,nutriments',
+      fields:
+        'code,product_name,brands,ingredients_text,ingredients_text_es,ingredients_text_en,allergens_tags,labels_tags,nutriments',
     });
     const res = await fetchWithTimeout(`${OFF_BASE}/cgi/search.pl?${params.toString()}`);
     if (!res.ok) {
