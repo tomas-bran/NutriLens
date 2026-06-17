@@ -98,9 +98,10 @@ export function buildWhere(intent: ChatIntent): Prisma.ProductWhereInput {
     where.categoria = mapCategoriaToPrisma(intent.categoria);
   }
 
-  if (intent.riesgo_max === 'bajo') where.riesgo = 'bajo';
-  else if (intent.riesgo_max === 'medio') where.riesgo = { in: ['bajo', 'medio'] };
-  // 'alto' (o null) → sin filtro de riesgo (todos los niveles son aceptables).
+  // "de riesgo X" filtra EXACTAMENTE ese nivel: pedir "riesgo medio" y que
+  // aparezca uno bajo confunde (y desalinea los chips con el texto de la
+  // respuesta). `bajo` además dispara el ranking de los más sanos (rank.ts).
+  if (intent.riesgo_max) where.riesgo = intent.riesgo_max;
 
   if (intent.apto === 'vegano') where.aptoVegano = true;
   if (intent.apto === 'celiaco') where.aptoCeliaco = true;

@@ -17,7 +17,7 @@ export const REMOVED_MARKER = '[texto removido]';
 export const DISCLAIMER_NEEDLE = 'NutriLens es un asistente informativo';
 export const DISCLAIMER_TAIL = 'Recordá que NutriLens es un asistente informativo.';
 export const CHAT_DISCLAIMER_TAIL =
-  'Basado en productos analizados por vos. NutriLens es un asistente informativo.';
+  'Basado en productos del catálogo. NutriLens es un asistente informativo.';
 
 /** Phrases the model is asked NOT to emit; if it does, we replace them. */
 export const BLOCKED_PHRASES: ReadonlyArray<RegExp> = [

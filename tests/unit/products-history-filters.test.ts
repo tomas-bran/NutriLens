@@ -67,9 +67,39 @@ describe('parseHistoryFilters', () => {
   });
 });
 
+describe('parseHistoryFilters — "Analizados por vos" (filtro=mios)', () => {
+  it('parses filtro=mios into mios:true', () => {
+    expect(parseHistoryFilters({ filtro: 'mios' }).mios).toBe(true);
+  });
+
+  it('ignores any other filtro value (only "mios" turns it on)', () => {
+    expect(parseHistoryFilters({ filtro: 'todos' }).mios).toBeUndefined();
+    expect(parseHistoryFilters({ filtro: '' }).mios).toBeUndefined();
+    expect(parseHistoryFilters({}).mios).toBeUndefined();
+  });
+
+  it('combines with other filters', () => {
+    expect(parseHistoryFilters({ filtro: 'mios', categoria: 'snacks' })).toMatchObject({
+      mios: true,
+      categoria: 'snacks',
+    });
+  });
+});
+
 describe('buildHistoryUrl', () => {
   it('returns the bare path when no filter is active', () => {
     expect(buildHistoryUrl({ page: 1 })).toBe('/catalogo');
+  });
+
+  it('emits filtro=mios when mios is on', () => {
+    expect(buildHistoryUrl({ mios: true, page: 1 })).toBe('/catalogo?filtro=mios');
+  });
+
+  it('keeps mios alongside the other filters', () => {
+    const url = buildHistoryUrl({ mios: true, categoria: 'snacks', page: 2 });
+    expect(url).toContain('filtro=mios');
+    expect(url).toContain('categoria=snacks');
+    expect(url).toContain('page=2');
   });
 
   it('emits all filters as query params and preserves order roughly', () => {
@@ -146,6 +176,10 @@ describe('hasActiveFilters', () => {
     expect(hasActiveFilters({ categoria: 'galletitas', page: 1 })).toBe(true);
     expect(hasActiveFilters({ q: 'choco', page: 1 })).toBe(true);
     expect(hasActiveFilters({ apto: 'vegano', page: 1 })).toBe(true);
+  });
+
+  it('counts the "Analizados por vos" scope as an active filter', () => {
+    expect(hasActiveFilters({ mios: true, page: 1 })).toBe(true);
   });
 });
 

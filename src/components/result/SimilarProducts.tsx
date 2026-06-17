@@ -4,8 +4,8 @@
  * Server component: recibe los items ya serializados; si no hay (producto
  * sin embedding todavía, o historial chico) no renderiza nada.
  */
-import Image from 'next/image';
 import Link from 'next/link';
+import { ProductImage } from '@/components/ui/ProductImage';
 import type { ProductListItem } from '@/lib/products/serializers';
 
 const RIESGO_STYLE: Record<string, string> = {
@@ -27,26 +27,23 @@ export function SimilarProducts({ items }: { items: ProductListItem[] }) {
         id="similar-products-title"
         className="text-sm font-bold text-[var(--color-text)] md:text-base"
       >
-        Productos similares de tu historial
+        Productos similares del catálogo
       </h2>
       <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {items.map((p) => (
           <li key={p.id}>
             <Link
-              href={`/historial/${p.id}`}
+              href={`/catalogo/${p.id}`}
               data-testid="similar-product-card"
               className="flex h-full flex-col gap-2 rounded-xl border border-[var(--color-border)] p-3 transition-colors hover:border-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
             >
-              <div className="relative h-20 w-full overflow-hidden rounded-lg bg-[var(--color-bg)]">
-                <Image
-                  src={p.imagenUrl}
-                  alt=""
-                  fill
-                  unoptimized
-                  sizes="160px"
-                  className="object-cover"
-                />
-              </div>
+              <ProductImage
+                src={p.imagenUrl}
+                alt=""
+                className="h-20 w-full rounded-lg"
+                iconClassName="h-7 w-7"
+                sizes="160px"
+              />
               <span className="line-clamp-2 text-xs font-semibold text-[var(--color-text)]">
                 {p.nombre}
               </span>

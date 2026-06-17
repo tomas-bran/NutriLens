@@ -25,6 +25,7 @@ import EXPLAIN_PRODUCT_V2 from './explain_product-v2.md?raw';
 import CHAT_PARSE_INTENT_V1 from './chat_parse_intent-v1.md?raw';
 import CHAT_PARSE_INTENT_V2 from './chat_parse_intent-v2.md?raw';
 import CHAT_SUGGESTIONS_V1 from './chat_suggestions-v1.md?raw';
+import CHAT_STARTER_SUGGESTIONS_V1 from './chat_starter_suggestions-v1.md?raw';
 import CHAT_ANSWER_V1 from './chat_answer-v1.md?raw';
 import CHAT_ANSWER_V2 from './chat_answer-v2.md?raw';
 import CHAT_ANSWER_V3 from './chat_answer-v3.md?raw';
@@ -41,6 +42,7 @@ export type PromptVersion =
   | 'chat_parse_intent-v1'
   | 'chat_parse_intent-v2'
   | 'chat_suggestions-v1'
+  | 'chat_starter_suggestions-v1'
   | 'chat_answer-v1'
   | 'chat_answer-v2'
   | 'chat_answer-v3'
@@ -57,6 +59,7 @@ const PROMPTS: Record<PromptVersion, string> = {
   'chat_parse_intent-v1': CHAT_PARSE_INTENT_V1,
   'chat_parse_intent-v2': CHAT_PARSE_INTENT_V2,
   'chat_suggestions-v1': CHAT_SUGGESTIONS_V1,
+  'chat_starter_suggestions-v1': CHAT_STARTER_SUGGESTIONS_V1,
   'chat_answer-v1': CHAT_ANSWER_V1,
   'chat_answer-v2': CHAT_ANSWER_V2,
   'chat_answer-v3': CHAT_ANSWER_V3,

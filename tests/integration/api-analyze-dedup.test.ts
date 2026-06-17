@@ -11,6 +11,13 @@ import { PrismaClient } from '@prisma/client';
 import { existsSync, rmSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
+
+// getUserId (→ @/lib/auth → next-auth) no resuelve bajo vitest; lo mockeamos a
+// null porque estos tests no ejercitan el vínculo usuario↔producto.
+vi.mock('@/lib/auth/current-user', () => ({
+  getUserId: vi.fn().mockResolvedValue(null),
+}));
+
 import { POST } from '@/app/api/analyze/route';
 import { _resetIaProvider } from '@/lib/ai';
 import { cache } from '@/lib/cache';

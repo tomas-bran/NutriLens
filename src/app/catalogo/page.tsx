@@ -9,6 +9,7 @@
 import type { Prisma } from '@prisma/client';
 import { AppShell } from '@/components/layout/AppShell';
 import { HistoryListView } from '@/components/history/HistoryListView';
+import { getUserId } from '@/lib/auth/current-user';
 import { prisma } from '@/lib/db';
 import { getCatalogoCount } from '@/lib/products/count';
 import { parseHistoryFilters, type RawSearchParams } from '@/lib/products/history-filters';
@@ -31,6 +32,13 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
   const filters = parseHistoryFilters(raw);
 
   const where: Prisma.ProductWhereInput = {};
+  // "Analizados por vos": limita el catálogo a los productos que ESTE usuario
+  // analizó (vínculo ProductAnalysis). Sin sesión, el filtro no matchea nada
+  // (`userId` imposible) → lista vacía, en vez de exponer el catálogo entero.
+  if (filters.mios) {
+    const userId = await getUserId();
+    where.analyses = { some: { userId: userId ?? '\0' } };
+  }
   if (filters.categoria) where.categoria = mapCategoriaToPrisma(filters.categoria);
   if (filters.riesgo) where.riesgo = filters.riesgo;
   if (filters.q) where.nombre = { contains: filters.q, mode: 'insensitive' };

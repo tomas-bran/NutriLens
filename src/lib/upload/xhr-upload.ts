@@ -18,6 +18,13 @@ export interface XhrUploadOptions {
   file: File;
   fileHash: string;
   /**
+   * NL-601: imagen dedicada del código de barras (opcional). Si está, se adjunta
+   * como campo `barcodeImage` del multipart; el backend la decodifica con
+   * prioridad para un lookup más preciso en Open Food Facts. Omitirla deja el
+   * flujo de una sola foto intacto.
+   */
+  barcodeImage?: File;
+  /**
    * Called as the byte stream uploads, with `loaded / total` in [0, 1].
    * Fires while the request body is in flight; once the body finishes
    * uploading we transition into the server's "processing" phase
@@ -39,7 +46,7 @@ const NETWORK_ERROR: { error: ErrorCode; reason: string } = {
 };
 
 export function xhrUpload(opts: XhrUploadOptions): Promise<XhrUploadResult> {
-  const { file, fileHash, onProgress, onUploadDone, xhrFactory } = opts;
+  const { file, fileHash, barcodeImage, onProgress, onUploadDone, xhrFactory } = opts;
 
   return new Promise((resolve) => {
     const xhr = xhrFactory ? xhrFactory() : new XMLHttpRequest();
@@ -129,6 +136,7 @@ export function xhrUpload(opts: XhrUploadOptions): Promise<XhrUploadResult> {
     const fd = new FormData();
     fd.append('file', file);
     fd.append('source', 'upload');
+    if (barcodeImage) fd.append('barcodeImage', barcodeImage);
     xhr.send(fd);
   });
 }

@@ -19,6 +19,14 @@ interface ChatThreadProps {
 }
 
 export function ChatThread({ messages, status, onAskFollowUp }: ChatThreadProps) {
+  // El mensaje que se está streameando es el último del asistente mientras el
+  // estado es STREAMING. Le pasamos `streaming` para diferir sus extras (cards)
+  // y mostrar "escribiendo…" hasta que llegue texto.
+  const streamingId =
+    status === 'STREAMING'
+      ? [...messages].reverse().find((m) => m.role === 'assistant')?.id
+      : undefined;
+
   return (
     <div
       data-testid="chat-thread"
@@ -35,6 +43,7 @@ export function ChatThread({ messages, status, onAskFollowUp }: ChatThreadProps)
             text={msg.text}
             products={msg.products}
             fallback={msg.fallback}
+            streaming={msg.id === streamingId}
             onAskFollowUp={onAskFollowUp}
           />
         ),

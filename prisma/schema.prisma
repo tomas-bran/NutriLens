@@ -47,10 +47,28 @@ model Product {
   imagenBytes     Int?
   promptVersion   String
   createdAt       DateTime @default(now())
+  /// NL-XXX: vínculos por-usuario ("Analizados por vos"). El producto sigue
+  /// siendo compartido; esta relación solo registra quién lo analizó.
+  analyses        ProductAnalysis[]
 
   @@index([categoria])
   @@index([riesgo])
   @@index([createdAt])
+}
+
+// "Analizados por vos": vínculo usuario↔producto. Se registra de ahora en
+// adelante cuando un usuario logueado analiza (o re-analiza) un producto —
+// sin backfill. El catálogo sigue siendo una base compartida; este join solo
+// alimenta el filtro `?filtro=mios`. `userId` = Google `sub` (igual que
+// Conversation/UserPrefs).
+model ProductAnalysis {
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([userId, productId])
+  @@index([userId, createdAt])
 }
 
 enum Categoria {

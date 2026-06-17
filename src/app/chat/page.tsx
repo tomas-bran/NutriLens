@@ -19,8 +19,7 @@ export const dynamic = 'force-dynamic';
 export default async function ChatPage() {
   // NL-203: el empty state lista SOLO las conversaciones del usuario logueado.
   const userId = await getUserId();
-  const [productsInBase, catalogoCount, convRows] = await Promise.all([
-    prisma.product.count(),
+  const [catalogoCount, convRows] = await Promise.all([
     getCatalogoCount(),
     userId
       ? prisma.conversation.findMany({
@@ -53,8 +52,8 @@ export default async function ChatPage() {
   // que <SidebarUser> (async server component) no quede dentro de un árbol
   // cliente — eso causaba "uncached promise"/loop infinito.
   return (
-    <AppShell active="chat" catalogoCount={catalogoCount}>
-      <ChatPageClient productsInBase={productsInBase} initialConversations={initialConversations} />
+    <AppShell active="chat" catalogoCount={catalogoCount} fluid>
+      <ChatPageClient initialConversations={initialConversations} />
     </AppShell>
   );
 }
