@@ -162,11 +162,7 @@ export default function AnalyzeScreen({ navigation }: any) {
     runAnalysisRequest(photoUri, 0, 'new');
   };
 
-  async function runAnalysisRequest(
-    imageUri: string,
-    attempts: number,
-    mode: 'new' | 'retry',
-  ) {
+  async function runAnalysisRequest(imageUri: string, attempts: number, mode: 'new' | 'retry') {
     if (isAnalyzingRef.current) return;
 
     const pending: PendingAnalysisRequest = {
@@ -352,7 +348,9 @@ export default function AnalyzeScreen({ navigation }: any) {
       <CameraView style={styles.camera} ref={cameraRef} facing="back">
         <LinearGradient colors={['rgba(0,0,0,0.7)', 'transparent']} style={styles.cameraHeader}>
           <Text style={styles.headerTitle}>Capturá los ingredientes</Text>
-          <Text style={styles.headerSubtitle}>Intenta que el texto sea legible y este enfocado</Text>
+          <Text style={styles.headerSubtitle}>
+            Intenta que el texto sea legible y este enfocado
+          </Text>
         </LinearGradient>
 
         <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.cameraBottom}>

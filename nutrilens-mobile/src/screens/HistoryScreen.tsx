@@ -186,11 +186,7 @@ export default function HistoryScreen({ navigation }: any) {
     openCatalogDetail(item.id, 0, 'new');
   };
 
-  const openCatalogDetail = async (
-    productId: string,
-    attempts: number,
-    mode: 'new' | 'retry',
-  ) => {
+  const openCatalogDetail = async (productId: string, attempts: number, mode: 'new' | 'retry') => {
     if (openingIdRef.current) return;
 
     const pending: PendingCatalogDetail = {
