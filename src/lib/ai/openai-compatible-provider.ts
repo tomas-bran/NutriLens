@@ -23,6 +23,7 @@ import { renderPrompt } from './prompts';
 import type {
   AnalyzeOpts,
   AnswerOpts,
+  BarcodeOcrOpts,
   EmbedOpts,
   EmbedResult,
   ExplainOpts,
@@ -51,6 +52,13 @@ const EXPLAIN_DEFAULT_TIMEOUT_MS = 10_000;
 
 // E05 §4.3 / §6.3
 const PARSE_INTENT_TIMEOUT_MS = 8_000;
+// NL-601: el OCR del código de barras es un fallback corto y determinista.
+const BARCODE_OCR_TIMEOUT_MS = 10_000;
+const BARCODE_OCR_MAX_TOKENS = 40;
+const BARCODE_OCR_SYSTEM =
+  'Sos un lector de códigos de barras. Mirá el número impreso (EAN/UPC) debajo de ' +
+  'las barras y respondé SOLO con esos dígitos, sin espacios ni texto. Si no podés ' +
+  'leerlos con seguridad, respondé exactamente NONE.';
 const PARSE_INTENT_MAX_TOKENS = 200;
 const PARSE_INTENT_TEMPERATURE = 0;
 const ANSWER_TIMEOUT_MS = 10_000;
@@ -123,6 +131,30 @@ export class OpenAICompatibleProvider implements IaProvider {
       opts,
       'Clasificá la imagen y devolvé SOLO el JSON pedido.',
     );
+  }
+
+  async readBarcodeDigits(
+    file: Buffer,
+    mime: string,
+    opts: BarcodeOcrOpts = {},
+  ): Promise<IaCallResult> {
+    const dataUrl = `data:${mime};base64,${file.toString('base64')}`;
+    return this.callChat({
+      model: this.multimodalModel,
+      messages: [
+        { role: 'system', content: BARCODE_OCR_SYSTEM },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Leé los dígitos del código de barras de esta imagen.' },
+            { type: 'image_url', image_url: { url: dataUrl } },
+          ],
+        },
+      ],
+      timeoutMs: opts.timeoutMs ?? BARCODE_OCR_TIMEOUT_MS,
+      temperature: 0,
+      maxTokens: BARCODE_OCR_MAX_TOKENS,
+    });
   }
 
   private callMultimodal(

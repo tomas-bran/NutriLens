@@ -4,14 +4,18 @@
  * Queries Open Food Facts after extraction. Failure is non-blocking:
  * the analysis continues normally regardless of OFF availability.
  */
+import type { IaProvider } from '@/lib/ai/types';
 import { logger } from '@/lib/logger';
 import { fetchByBarcode, fetchByName } from '@/lib/off/client';
 import { buildEnrichment, parseOffIngredients, productNamesOverlap } from '@/lib/off/enrich';
-import { decodeBarcode } from '@/lib/off/decode-barcode';
+import { decodeBarcode, extractValidBarcode } from '@/lib/off/decode-barcode';
 import { makeTrace } from '../trace';
 import type { AnalysisContext } from '../context';
 
-export async function enrich_with_off(ctx: AnalysisContext): Promise<AnalysisContext> {
+export async function enrich_with_off(
+  ctx: AnalysisContext,
+  ia?: IaProvider,
+): Promise<AnalysisContext> {
   const startedAt = new Date();
 
   // Kill-switch: OFF_ENABLED=false apaga el enriquecimiento por completo
@@ -44,11 +48,14 @@ export async function enrich_with_off(ctx: AnalysisContext): Promise<AnalysisCon
 
     // Resolución del código de barras, de más a menos confiable (NL-601):
     //   1. imagen dedicada del código (si el usuario la subió) — decodificada,
+    //   1b. fallback OCR: si zxing no pudo con las barras (foto borrosa), leemos
+    //       los dígitos impresos con el modelo de visión y validamos el checksum,
     //   2. la foto principal del producto — decodificada con zxing,
     //   3. el que "leyó" el LLM (suele venir mal),
     //   4. sin código → búsqueda por nombre.
     let barcode: string | null = null;
-    let barcodeSource: 'barcode-image' | 'photo' | 'extracted' | 'none' = 'none';
+    let barcodeSource: 'barcode-image' | 'barcode-image-ocr' | 'photo' | 'extracted' | 'none' =
+      'none';
     let barcodeImageDecoded = false;
 
     if (ctx.barcodeImage) {
@@ -57,6 +64,24 @@ export async function enrich_with_off(ctx: AnalysisContext): Promise<AnalysisCon
         barcode = fromImage;
         barcodeSource = 'barcode-image';
         barcodeImageDecoded = true;
+      }
+    }
+    // 1b. Fallback OCR sobre la imagen dedicada cuando zxing falló (NL-601).
+    if (!barcode && ctx.barcodeImage && ia?.readBarcodeDigits) {
+      try {
+        const ocr = await ia.readBarcodeDigits(ctx.barcodeImage.buffer, ctx.barcodeImage.mime);
+        const fromOcr = extractValidBarcode(ocr.raw);
+        if (fromOcr) {
+          barcode = fromOcr;
+          barcodeSource = 'barcode-image-ocr';
+          barcodeImageDecoded = true;
+        }
+      } catch (err) {
+        // Best-effort: si el OCR falla, seguimos con la foto/nombre.
+        logger.warn('enrich_with_off.barcode_ocr_failed', {
+          requestId: ctx.requestId,
+          message: err instanceof Error ? err.message : String(err),
+        });
       }
     }
     if (!barcode) {
@@ -93,7 +118,9 @@ export async function enrich_with_off(ctx: AnalysisContext): Promise<AnalysisCon
     if (ctx.barcodeImage && !barcodeImageDecoded) {
       enrichment.barcodeUnreadable = true;
     }
-    if (barcodeSource === 'barcode-image' && offProduct) {
+    const fromBarcodeImage =
+      barcodeSource === 'barcode-image' || barcodeSource === 'barcode-image-ocr';
+    if (fromBarcodeImage && offProduct) {
       enrichment.barcodeMismatch = !productNamesOverlap(offProduct.product_name, product.producto);
     }
 

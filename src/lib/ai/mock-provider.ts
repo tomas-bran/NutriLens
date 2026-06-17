@@ -6,6 +6,7 @@
 import type {
   AnalyzeOpts,
   AnswerOpts,
+  BarcodeOcrOpts,
   ExplainOpts,
   IaCallResult,
   IaProvider,
@@ -44,6 +45,16 @@ export class MockIaProvider implements IaProvider {
       usage: { in: 0, out: 0 },
       latencyMs: 3,
     };
+  }
+
+  // NL-601: el mock no "ve" la imagen, así que nunca aporta dígitos (NONE). Los
+  // tests que ejercitan el fallback OCR espían/mokean este método.
+  async readBarcodeDigits(
+    _file: Buffer,
+    _mime: string,
+    _opts: BarcodeOcrOpts = {},
+  ): Promise<IaCallResult> {
+    return { raw: 'NONE', usage: { in: 0, out: 0 }, latencyMs: 1 };
   }
 
   async generateExplanation(product: ProductExtraction, _opts: ExplainOpts): Promise<IaCallResult> {

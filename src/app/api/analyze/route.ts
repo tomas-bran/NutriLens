@@ -135,7 +135,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     ctx = await extract_with_ia(ctx, ia);
     throwIfAborted(controller.signal);
     ctx = await validate_schema(ctx, ia);
-    ctx = await enrich_with_off(ctx);
+    ctx = await enrich_with_off(ctx, ia);
     throwIfAborted(controller.signal);
     ctx = await apply_rules(ctx);
     ctx = await compute_risk(ctx);

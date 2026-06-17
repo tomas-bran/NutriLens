@@ -20,6 +20,33 @@ const PRODUCT_BARCODE_FORMATS = ['EAN-13', 'EAN-8', 'UPC-A', 'UPC-E'] as const;
 const EAN_UPC_RE = /^\d{8,14}$/;
 
 /**
+ * Valida el dígito verificador de un GTIN (EAN-8/UPC-A/EAN-13/GTIN-14): de
+ * derecha a izquierda (sin el check), se multiplica alternando ×3 y ×1. Sirve
+ * para descartar lecturas OCR basura: un número al azar casi nunca cierra el
+ * checksum.
+ */
+export function isValidGtin(code: string): boolean {
+  if (!/^\d{8}$|^\d{12}$|^\d{13}$|^\d{14}$/.test(code)) return false;
+  const digits = code.split('').map(Number);
+  const check = digits.pop()!;
+  let sum = 0;
+  digits.reverse().forEach((d, i) => {
+    sum += d * (i % 2 === 0 ? 3 : 1);
+  });
+  return (10 - (sum % 10)) % 10 === check;
+}
+
+/**
+ * Extrae un código EAN/UPC válido de un texto libre (la respuesta OCR del
+ * modelo). El prompt pide solo los dígitos, así que limpiamos no-dígitos y
+ * validamos el checksum. Devuelve `null` si no cierra (incluye el caso "NONE").
+ */
+export function extractValidBarcode(raw: string): string | null {
+  const digits = raw.replace(/\D/g, '');
+  return EAN_UPC_RE.test(digits) && isValidGtin(digits) ? digits : null;
+}
+
+/**
  * Devuelve el primer código EAN/UPC válido encontrado en la imagen, o `null`.
  * Nunca lanza.
  */
