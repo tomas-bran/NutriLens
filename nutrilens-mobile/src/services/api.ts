@@ -11,6 +11,34 @@ const localApiBaseUrl = `http://${API_HOST}:3000/api`;
 const configuredApiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
 const API_BASE_URL = configuredApiBaseUrl || localApiBaseUrl;
 
+export class ApiError extends Error {
+  code?: string;
+  reason?: string;
+  details?: any;
+  status?: number;
+
+  constructor({
+    message,
+    code,
+    reason,
+    details,
+    status,
+  }: {
+    message: string;
+    code?: string;
+    reason?: string;
+    details?: any;
+    status?: number;
+  }) {
+    super(message);
+    this.name = 'ApiError';
+    this.code = code;
+    this.reason = reason;
+    this.details = details;
+    this.status = status;
+  }
+}
+
 export const analyzeProduct = async (photoUri: string) => {
   const formData = new FormData();
 
@@ -32,13 +60,14 @@ export const analyzeProduct = async (photoUri: string) => {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || 'Error al subir la imagen');
+      throw await parseApiError(response, 'Error al subir la imagen');
     }
 
     return await response.json();
   } catch (error) {
-    console.error('Error in analyzeProduct:', error);
+    if (!(error instanceof ApiError && error.code === 'image_not_supported')) {
+      console.error('Error in analyzeProduct:', error);
+    }
     throw error;
   }
 };
@@ -55,8 +84,7 @@ export const sendChatMessage = async (question: string) => {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || 'Error al comunicarse con el chat');
+      throw await parseApiError(response, 'Error al comunicarse con el chat');
     }
 
     return await response.json();
@@ -87,8 +115,7 @@ export const getHistory = async (filters: HistoryFilters = {}) => {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || 'Error al obtener el historial');
+      throw await parseApiError(response, 'Error al obtener el catálogo');
     }
 
     return await response.json();
@@ -106,8 +133,7 @@ export const getProductDetail = async (id: string) => {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || 'Error al obtener el detalle del producto');
+      throw await parseApiError(response, 'Error al obtener el detalle del producto');
     }
 
     return await response.json();
@@ -116,3 +142,26 @@ export const getProductDetail = async (id: string) => {
     throw error;
   }
 };
+
+async function parseApiError(response: Response, fallbackMessage: string) {
+  const errorText = await response.text();
+  if (!errorText) {
+    return new ApiError({ message: fallbackMessage, status: response.status });
+  }
+
+  try {
+    const payload = JSON.parse(errorText);
+    const reason = typeof payload.reason === 'string' ? payload.reason : undefined;
+    const code = typeof payload.error === 'string' ? payload.error : undefined;
+
+    return new ApiError({
+      code,
+      reason,
+      details: payload.details,
+      status: response.status,
+      message: reason || code || fallbackMessage,
+    });
+  } catch (error) {
+    return new ApiError({ message: errorText || fallbackMessage, status: response.status });
+  }
+}

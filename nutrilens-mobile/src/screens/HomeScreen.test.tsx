@@ -45,9 +45,9 @@ describe('HomeScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('Chat');
   });
 
-  it('navega al "Historial" al tocar la tarjeta inferior', async () => {
+  it('navega al "Catálogo" al tocar la tarjeta inferior', async () => {
     const { getByText } = await render(<HomeScreen />);
-    fireEvent.press(getByText('Ver últimos análisis'));
-    expect(mockNavigate).toHaveBeenCalledWith('Historial');
+    fireEvent.press(getByText('Ver catálogo'));
+    expect(mockNavigate).toHaveBeenCalledWith('Catálogo');
   });
 });

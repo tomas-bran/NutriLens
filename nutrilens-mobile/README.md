@@ -1,6 +1,6 @@
 # NutriLens Mobile
 
-Aplicacion mobile de NutriLens construida con Expo y React Native. Replica el flujo principal de la version web: inicio, captura o seleccion de imagen, analisis con IA, resultado, historial y chat sobre productos guardados.
+Aplicacion mobile de NutriLens construida con Expo y React Native. Replica el flujo principal de la version web: inicio, captura o seleccion de imagen, analisis con IA, resultado, catalogo y chat sobre productos guardados.
 
 ## Requisitos
 
@@ -197,7 +197,7 @@ src/
 
 ## Funcionalidades actuales
 
-- Home mobile con accesos a analizar, historial y chat.
+- Home mobile con accesos a analizar, catalogo y chat.
 - Captura con camara.
 - Seleccion de imagen desde galeria.
 - Envio de imagen a `POST /api/analyze`.
@@ -210,9 +210,9 @@ src/
   - alergenos
   - explicacion
   - disclaimer
-- Historial conectado a `GET /api/products`.
+- Catalogo conectado a `GET /api/products`.
 - Detalle real desde `GET /api/products/:id`.
-- Filtros de historial:
+- Filtros de catalogo:
   - busqueda
   - riesgo
   - aptitud

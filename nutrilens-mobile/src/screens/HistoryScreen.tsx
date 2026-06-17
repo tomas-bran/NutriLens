@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,24 @@ import {
   Alert,
   ScrollView,
   TextInput,
+  AppState,
+  AppStateStatus,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getHistory, getProductDetail } from '../services/api';
 import { colors, typography } from '../theme/tokens';
+
+interface PendingCatalogDetail {
+  productId: string;
+  createdAt: number;
+  attempts: number;
+}
+
+const PENDING_CATALOG_DETAIL_KEY = '@nutrilens/pending-catalog-detail';
+const PENDING_CATALOG_DETAIL_TTL_MS = 15 * 60 * 1000;
+const MAX_PENDING_CATALOG_DETAIL_ATTEMPTS = 3;
 
 const CATEGORY_OPTIONS = [
   'galletitas',
@@ -47,8 +60,14 @@ export default function HistoryScreen({ navigation }: any) {
   const [riesgo, setRiesgo] = useState<string | undefined>();
   const [apto, setApto] = useState<string | undefined>();
   const [alergeno, setAlergeno] = useState<string | undefined>();
+  const openingIdRef = useRef<string | null>(null);
 
   const hasActiveFilters = Boolean(query.trim() || categoria || riesgo || apto || alergeno);
+
+  const setCatalogOpeningId = (value: string | null) => {
+    openingIdRef.current = value;
+    setOpeningId(value);
+  };
 
   const fetchHistory = async () => {
     try {
@@ -73,6 +92,19 @@ export default function HistoryScreen({ navigation }: any) {
       fetchHistory();
     }, [query, categoria, riesgo, apto, alergeno]),
   );
+
+  useEffect(() => {
+    recoverPendingCatalogDetail();
+
+    const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
+      if (nextState === 'active') {
+        fetchHistory();
+        recoverPendingCatalogDetail();
+      }
+    });
+
+    return () => subscription.remove();
+  }, [query, categoria, riesgo, apto, alergeno]);
 
   const clearFilters = () => {
     setQuery('');
@@ -150,18 +182,72 @@ export default function HistoryScreen({ navigation }: any) {
   const capitalize = (s: string) =>
     s && s.length > 0 ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
-  const openDetail = async (item: any) => {
+  const openDetail = (item: any) => {
+    openCatalogDetail(item.id, 0, 'new');
+  };
+
+  const openCatalogDetail = async (
+    productId: string,
+    attempts: number,
+    mode: 'new' | 'retry',
+  ) => {
+    if (openingIdRef.current) return;
+
+    const pending: PendingCatalogDetail = {
+      productId,
+      createdAt: Date.now(),
+      attempts,
+    };
+
     try {
-      setOpeningId(item.id);
-      const detail = await getProductDetail(item.id);
+      await AsyncStorage.setItem(PENDING_CATALOG_DETAIL_KEY, JSON.stringify(pending));
+      setCatalogOpeningId(productId);
+      const detail = await getProductDetail(productId);
+      await AsyncStorage.removeItem(PENDING_CATALOG_DETAIL_KEY);
       navigation.navigate('Result', {
         data: mapDetailToResultData(detail),
         photoUri: detail.imagenUrl || undefined,
       });
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'No se pudo abrir el detalle del producto.');
+      const nextAttempts = attempts + 1;
+      if (nextAttempts >= MAX_PENDING_CATALOG_DETAIL_ATTEMPTS) {
+        await AsyncStorage.removeItem(PENDING_CATALOG_DETAIL_KEY);
+      } else {
+        await AsyncStorage.setItem(
+          PENDING_CATALOG_DETAIL_KEY,
+          JSON.stringify({ ...pending, attempts: nextAttempts }),
+        );
+      }
+
+      if (mode === 'new' || nextAttempts >= MAX_PENDING_CATALOG_DETAIL_ATTEMPTS) {
+        Alert.alert('Error', error?.message || 'No se pudo abrir el detalle del producto.');
+      }
     } finally {
-      setOpeningId(null);
+      setCatalogOpeningId(null);
+    }
+  };
+
+  const recoverPendingCatalogDetail = async () => {
+    if (openingIdRef.current) return;
+
+    const rawPending = await AsyncStorage.getItem(PENDING_CATALOG_DETAIL_KEY);
+    if (!rawPending) return;
+
+    try {
+      const pending = JSON.parse(rawPending) as PendingCatalogDetail;
+      if (!pending.productId || !pending.createdAt) {
+        await AsyncStorage.removeItem(PENDING_CATALOG_DETAIL_KEY);
+        return;
+      }
+
+      if (Date.now() - pending.createdAt > PENDING_CATALOG_DETAIL_TTL_MS) {
+        await AsyncStorage.removeItem(PENDING_CATALOG_DETAIL_KEY);
+        return;
+      }
+
+      openCatalogDetail(pending.productId, pending.attempts || 0, 'retry');
+    } catch (error) {
+      await AsyncStorage.removeItem(PENDING_CATALOG_DETAIL_KEY);
     }
   };
 
@@ -222,7 +308,7 @@ export default function HistoryScreen({ navigation }: any) {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Mi Historial</Text>
+          <Text style={styles.headerTitle}>Mi Catálogo</Text>
         </View>
 
         <View style={styles.filters}>

@@ -41,7 +41,7 @@ function TabNavigator() {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Analizar') {
             iconName = focused ? 'scan' : 'scan-outline';
-          } else if (route.name === 'Historial') {
+          } else if (route.name === 'Catálogo') {
             iconName = focused ? 'time' : 'time-outline';
           } else if (route.name === 'Chat') {
             iconName = focused ? 'chatbubble' : 'chatbubble-outline';
@@ -53,7 +53,7 @@ function TabNavigator() {
     >
       <Tab.Screen name="Inicio" component={HomeScreen} />
       <Tab.Screen name="Analizar" component={AnalyzeScreen} />
-      <Tab.Screen name="Historial" component={HistoryScreen} />
+      <Tab.Screen name="Catálogo" component={HistoryScreen} />
       <Tab.Screen name="Chat" component={ChatScreen} />
     </Tab.Navigator>
   );

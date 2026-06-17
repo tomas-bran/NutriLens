@@ -12,8 +12,12 @@ import {
   SafeAreaView,
   Alert,
   Keyboard,
+  Animated,
+  AppState,
+  AppStateStatus,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, typography } from '../theme/tokens';
 import { getProductDetail, sendChatMessage } from '../services/api';
 
@@ -26,6 +30,17 @@ interface Message {
   fallback?: any;
 }
 
+interface PendingChatRequest {
+  question: string;
+  userMessageId: string;
+  createdAt: number;
+  attempts: number;
+}
+
+const PENDING_CHAT_KEY = '@nutrilens/pending-chat-request';
+const PENDING_CHAT_TTL_MS = 15 * 60 * 1000;
+const MAX_PENDING_CHAT_ATTEMPTS = 3;
+
 export default function ChatScreen({ route, navigation }: any) {
   const productData = route?.params?.productData;
   const initialProduct = productData?.product?.producto || productData?.product?.name;
@@ -35,6 +50,24 @@ export default function ChatScreen({ route, navigation }: any) {
   const [isLoading, setIsLoading] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const flatListRef = useRef<FlatList>(null);
+  const messagesRef = useRef<Message[]>([]);
+  const isLoadingRef = useRef(false);
+  const typingAnim1 = useRef(new Animated.Value(0.35)).current;
+  const typingAnim2 = useRef(new Animated.Value(0.35)).current;
+  const typingAnim3 = useRef(new Animated.Value(0.35)).current;
+
+  const setChatLoading = (value: boolean) => {
+    isLoadingRef.current = value;
+    setIsLoading(value);
+  };
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    isLoadingRef.current = isLoading;
+  }, [isLoading]);
 
   useEffect(() => {
     if (initialProduct) {
@@ -73,6 +106,47 @@ export default function ChatScreen({ route, navigation }: any) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isLoading) {
+      typingAnim1.setValue(0.35);
+      typingAnim2.setValue(0.35);
+      typingAnim3.setValue(0.35);
+      return;
+    }
+
+    const createDotLoop = (anim: Animated.Value, delay: number) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(anim, { toValue: 1, duration: 280, useNativeDriver: true }),
+          Animated.timing(anim, { toValue: 0.35, duration: 280, useNativeDriver: true }),
+        ]),
+      );
+
+    const loops = [
+      createDotLoop(typingAnim1, 0),
+      createDotLoop(typingAnim2, 130),
+      createDotLoop(typingAnim3, 260),
+    ];
+
+    loops.forEach((loop) => loop.start());
+    requestAnimationFrame(() => flatListRef.current?.scrollToEnd({ animated: true }));
+
+    return () => loops.forEach((loop) => loop.stop());
+  }, [isLoading, typingAnim1, typingAnim2, typingAnim3]);
+
+  useEffect(() => {
+    recoverPendingChat();
+
+    const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
+      if (nextState === 'active') {
+        recoverPendingChat();
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
+
   const submitQuestion = async (question: string) => {
     const text = question.trim();
     if (!text || isLoading) return;
@@ -107,7 +181,124 @@ export default function ChatScreen({ route, navigation }: any) {
     }
   };
 
-  const handleSend = () => submitQuestion(inputText);
+  const resilientSubmitQuestion = (question: string) => {
+    const text = question.trim();
+    if (!text || isLoadingRef.current) return;
+
+    const userMessageId = createMessageId();
+    const userMsg: Message = { id: userMessageId, role: 'user', text };
+    setMessages((prev) => appendMessageIfMissing(prev, userMsg));
+    setInputText('');
+    runChatRequest({ question: text, userMessageId, attempts: 0, mode: 'new' });
+  };
+
+  const runChatRequest = async ({
+    question,
+    userMessageId,
+    attempts,
+    mode,
+  }: {
+    question: string;
+    userMessageId: string;
+    attempts: number;
+    mode: 'new' | 'retry';
+  }) => {
+    if (isLoadingRef.current) return;
+
+    const pending: PendingChatRequest = {
+      question,
+      userMessageId,
+      createdAt: Date.now(),
+      attempts,
+    };
+
+    await AsyncStorage.setItem(PENDING_CHAT_KEY, JSON.stringify(pending));
+    setChatLoading(true);
+
+    try {
+      const response = await sendChatMessage(question);
+
+      const botMsg: Message = {
+        id: createMessageId(),
+        role: 'assistant',
+        text: response.answer,
+        products: response.products || [],
+        suggestions: response.suggestions,
+        fallback: response.fallback,
+      };
+
+      setMessages((prev) => appendMessageIfMissing(prev, botMsg));
+      await AsyncStorage.removeItem(PENDING_CHAT_KEY);
+    } catch (error) {
+      const nextAttempts = attempts + 1;
+      if (nextAttempts >= MAX_PENDING_CHAT_ATTEMPTS) {
+        await AsyncStorage.removeItem(PENDING_CHAT_KEY);
+      } else {
+        await AsyncStorage.setItem(
+          PENDING_CHAT_KEY,
+          JSON.stringify({ ...pending, attempts: nextAttempts }),
+        );
+      }
+
+      const errorMsg: Message = {
+        id: createMessageId(),
+        role: 'assistant',
+        text:
+          mode === 'retry' || nextAttempts >= MAX_PENDING_CHAT_ATTEMPTS
+            ? 'No pude completar la respuesta. Revisa tu conexion e intenta de nuevo.'
+            : 'Se interrumpio la conexion. Si volves a la app, intento recuperar la respuesta.',
+      };
+      setMessages((prev) => appendMessageIfMissing(prev, errorMsg));
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const recoverPendingChat = async () => {
+    if (isLoadingRef.current) return;
+
+    const rawPending = await AsyncStorage.getItem(PENDING_CHAT_KEY);
+    if (!rawPending) return;
+
+    try {
+      const pending = JSON.parse(rawPending) as PendingChatRequest;
+      if (!pending.question || !pending.userMessageId || !pending.createdAt) {
+        await AsyncStorage.removeItem(PENDING_CHAT_KEY);
+        return;
+      }
+
+      if (Date.now() - pending.createdAt > PENDING_CHAT_TTL_MS) {
+        await AsyncStorage.removeItem(PENDING_CHAT_KEY);
+        setMessages((prev) =>
+          appendMessageIfMissing(prev, {
+            id: createMessageId(),
+            role: 'assistant',
+            text: 'La consulta anterior quedo demasiado vieja. Mandamela de nuevo y la reviso.',
+          }),
+        );
+        return;
+      }
+
+      setMessages((prev) =>
+        appendMessageIfMissing(prev, {
+          id: pending.userMessageId,
+          role: 'user',
+          text: pending.question,
+        }),
+      );
+
+      runChatRequest({
+        question: pending.question,
+        userMessageId: pending.userMessageId,
+        attempts: pending.attempts || 0,
+        mode: 'retry',
+      });
+    } catch (error) {
+      await AsyncStorage.removeItem(PENDING_CHAT_KEY);
+    }
+  };
+
+  const handleSend = () => resilientSubmitQuestion(inputText);
 
   const openProduct = async (product: any) => {
     if (!navigation) return;
@@ -193,7 +384,7 @@ export default function ChatScreen({ route, navigation }: any) {
                 <TouchableOpacity
                   key={suggestion}
                   style={styles.suggestionPill}
-                  onPress={() => submitQuestion(suggestion)}
+                  onPress={() => resilientSubmitQuestion(suggestion)}
                   disabled={isLoading}
                   activeOpacity={0.75}
                 >
@@ -227,6 +418,21 @@ export default function ChatScreen({ route, navigation }: any) {
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
           onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
         />
+
+        {isLoading && (
+          <View style={styles.typingWrapper} testID="chat-typing-indicator">
+            <View style={styles.avatar}>
+              <Ionicons name="sparkles" size={16} color={colors.primary} />
+            </View>
+            <View
+              style={[styles.messageBubble, styles.messageBubbleAssistant, styles.typingBubble]}
+            >
+              <Animated.View style={[styles.typingDot, { opacity: typingAnim1 }]} />
+              <Animated.View style={[styles.typingDot, { opacity: typingAnim2 }]} />
+              <Animated.View style={[styles.typingDot, { opacity: typingAnim3 }]} />
+            </View>
+          </View>
+        )}
 
         <View
           style={[
@@ -273,6 +479,17 @@ export default function ChatScreen({ route, navigation }: any) {
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
+}
+
+function createMessageId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function appendMessageIfMissing(messages: Message[], message: Message) {
+  if (messages.some((existing) => existing.id === message.id)) {
+    return messages;
+  }
+  return [...messages, message];
 }
 
 function translateRisk(risk?: string) {
@@ -367,7 +584,7 @@ function MarkdownText({ text }: { text: string }) {
 
 function cleanMarkdownLine(line: string) {
   return line
-    .replace(/\[([^\]]+)\]\(\/historial\/[^)]+\)/g, '$1')
+    .replace(/\[([^\]]+)\]\(\/(?:historial|catalogo)\/[^)]+\)/g, '$1')
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
     .replace(/`([^`]+)`/g, '$1');
 }
@@ -497,6 +714,26 @@ const styles = StyleSheet.create({
   productInfo: { flex: 1 },
   productName: { color: colors.text, fontSize: 13, fontWeight: 'bold' },
   productMeta: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
+  typingWrapper: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  typingBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 38,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  typingDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: colors.textMuted,
+  },
   suggestionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
   suggestionPill: {
     backgroundColor: colors.primarySoft,

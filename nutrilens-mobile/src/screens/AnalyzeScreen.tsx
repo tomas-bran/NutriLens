@@ -8,13 +8,53 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  AppState,
+  AppStateStatus,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, typography } from '../theme/tokens';
-import { analyzeProduct } from '../services/api';
+import { ApiError, analyzeProduct } from '../services/api';
+
+interface PendingAnalysisRequest {
+  photoUri: string;
+  createdAt: number;
+  attempts: number;
+}
+
+const PENDING_ANALYSIS_KEY = '@nutrilens/pending-analysis-request';
+const PENDING_ANALYSIS_TTL_MS = 15 * 60 * 1000;
+const MAX_PENDING_ANALYSIS_ATTEMPTS = 3;
+const ANALYSIS_STEPS = [
+  {
+    icon: 'cloud-upload-outline',
+    title: 'Subiendo imagen',
+    detail: 'Preparando la foto para el analisis',
+  },
+  {
+    icon: 'document-text-outline',
+    title: 'Leyendo etiqueta',
+    detail: 'Buscando ingredientes y sellos visibles',
+  },
+  {
+    icon: 'sparkles-outline',
+    title: 'Interpretando con IA',
+    detail: 'Ordenando la informacion detectada',
+  },
+  {
+    icon: 'shield-checkmark-outline',
+    title: 'Aplicando reglas',
+    detail: 'Revisando alergenos, aptitudes y riesgo',
+  },
+  {
+    icon: 'save-outline',
+    title: 'Guardando resultado',
+    detail: 'Dejando el producto listo en tu catalogo',
+  },
+];
 
 export default function AnalyzeScreen({ navigation }: any) {
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
@@ -23,29 +63,184 @@ export default function AnalyzeScreen({ navigation }: any) {
 
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisStepIndex, setAnalysisStepIndex] = useState(0);
   const cameraRef = useRef<CameraView>(null);
-
-  // Animación para el estado "Analizando"
+  const isAnalyzingRef = useRef(false);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (isAnalyzing) {
-      Animated.loop(
+      const pulse = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, { toValue: 1.1, duration: 800, useNativeDriver: true }),
           Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
         ]),
-      ).start();
-    } else {
-      pulseAnim.setValue(1);
+      );
+      pulse.start();
+      return () => pulse.stop();
     }
+
+    pulseAnim.setValue(1);
+  }, [isAnalyzing, pulseAnim]);
+
+  useEffect(() => {
+    isAnalyzingRef.current = isAnalyzing;
   }, [isAnalyzing]);
+
+  useEffect(() => {
+    if (!isAnalyzing) {
+      setAnalysisStepIndex(0);
+      return;
+    }
+
+    setAnalysisStepIndex(0);
+    const stepTimer = setInterval(() => {
+      setAnalysisStepIndex((current) => Math.min(current + 1, ANALYSIS_STEPS.length - 1));
+    }, 2200);
+
+    return () => clearInterval(stepTimer);
+  }, [isAnalyzing]);
+
+  useEffect(() => {
+    recoverPendingAnalysis();
+
+    const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
+      if (nextState === 'active') {
+        recoverPendingAnalysis();
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+  const setAnalysisLoading = (value: boolean) => {
+    isAnalyzingRef.current = value;
+    setIsAnalyzing(value);
+  };
 
   const requestGalleryPermission = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     setGalleryPermission(perm);
     return perm;
   };
+
+  const handleTakePicture = async () => {
+    if (!cameraRef.current) return;
+
+    try {
+      const photo = await cameraRef.current.takePictureAsync({ base64: false });
+      if (photo) setPhotoUri(photo.uri);
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo capturar la foto.');
+    }
+  };
+
+  const handlePickGallery = async () => {
+    const perm = galleryPermission || (await requestGalleryPermission());
+    if (!perm.granted) {
+      Alert.alert('Permiso denegado', 'Se necesita acceso a la galeria.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: 'images',
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  };
+
+  const resetPhoto = () => {
+    setPhotoUri(null);
+  };
+
+  const handleAnalysis = () => {
+    if (!photoUri) return;
+    runAnalysisRequest(photoUri, 0, 'new');
+  };
+
+  async function runAnalysisRequest(
+    imageUri: string,
+    attempts: number,
+    mode: 'new' | 'retry',
+  ) {
+    if (isAnalyzingRef.current) return;
+
+    const pending: PendingAnalysisRequest = {
+      photoUri: imageUri,
+      createdAt: Date.now(),
+      attempts,
+    };
+
+    await AsyncStorage.setItem(PENDING_ANALYSIS_KEY, JSON.stringify(pending));
+    setPhotoUri(imageUri);
+    setAnalysisLoading(true);
+
+    try {
+      const data = await analyzeProduct(imageUri);
+      await AsyncStorage.removeItem(PENDING_ANALYSIS_KEY);
+      setAnalysisLoading(false);
+      navigation.navigate('Result', { data, photoUri: imageUri });
+      resetPhoto();
+    } catch (err: any) {
+      const isUnsupportedImage = err instanceof ApiError && err.code === 'image_not_supported';
+      const nextAttempts = attempts + 1;
+
+      if (isUnsupportedImage || nextAttempts >= MAX_PENDING_ANALYSIS_ATTEMPTS) {
+        await AsyncStorage.removeItem(PENDING_ANALYSIS_KEY);
+      } else {
+        await AsyncStorage.setItem(
+          PENDING_ANALYSIS_KEY,
+          JSON.stringify({ ...pending, attempts: nextAttempts }),
+        );
+      }
+
+      setAnalysisLoading(false);
+
+      if (isUnsupportedImage) {
+        Alert.alert(
+          'No parece una etiqueta alimentaria',
+          'Probá con una foto clara del envase, la tabla nutricional o la lista de ingredientes.',
+        );
+        return;
+      }
+
+      if (mode === 'new' || nextAttempts >= MAX_PENDING_ANALYSIS_ATTEMPTS) {
+        Alert.alert('No pudimos analizar la imagen', formatAnalysisError(err));
+      }
+      console.error(err);
+    }
+  }
+
+  async function recoverPendingAnalysis() {
+    if (isAnalyzingRef.current) return;
+
+    const rawPending = await AsyncStorage.getItem(PENDING_ANALYSIS_KEY);
+    if (!rawPending) return;
+
+    try {
+      const pending = JSON.parse(rawPending) as PendingAnalysisRequest;
+      if (!pending.photoUri || !pending.createdAt) {
+        await AsyncStorage.removeItem(PENDING_ANALYSIS_KEY);
+        return;
+      }
+
+      if (Date.now() - pending.createdAt > PENDING_ANALYSIS_TTL_MS) {
+        await AsyncStorage.removeItem(PENDING_ANALYSIS_KEY);
+        setPhotoUri(pending.photoUri);
+        return;
+      }
+
+      setPhotoUri(pending.photoUri);
+      runAnalysisRequest(pending.photoUri, pending.attempts || 0, 'retry');
+    } catch (error) {
+      await AsyncStorage.removeItem(PENDING_ANALYSIS_KEY);
+    }
+  }
+
   if (!cameraPermission) {
     return (
       <View style={styles.container}>
@@ -74,58 +269,9 @@ export default function AnalyzeScreen({ navigation }: any) {
     );
   }
 
-  const handleTakePicture = async () => {
-    if (cameraRef.current) {
-      try {
-        const photo = await cameraRef.current.takePictureAsync({ base64: false });
-        if (photo) setPhotoUri(photo.uri);
-      } catch (error) {
-        Alert.alert('Error', 'No se pudo capturar la foto.');
-      }
-    }
-  };
-
-  const handlePickGallery = async () => {
-    const perm = galleryPermission || (await requestGalleryPermission());
-    if (!perm.granted) {
-      Alert.alert('Permiso denegado', 'Se necesita acceso a la galería.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: 'images',
-      allowsEditing: true,
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setPhotoUri(result.assets[0].uri);
-    }
-  };
-
-  const resetPhoto = () => {
-    setPhotoUri(null);
-  };
-
-  const handleAnalysis = async () => {
-    setIsAnalyzing(true);
-    try {
-      const data = await analyzeProduct(photoUri!);
-      setIsAnalyzing(false);
-      // Navegamos a ResultScreen pasando la data y opcionalmente la foto
-      navigation.navigate('Result', { data, photoUri });
-      resetPhoto();
-    } catch (err: any) {
-      setIsAnalyzing(false);
-      Alert.alert(
-        'Error',
-        err.message || 'Hubo un problema al analizar el producto. Revisá la conexión.',
-      );
-      console.error(err);
-    }
-  };
-
   if (photoUri) {
+    const activeAnalysisStep = ANALYSIS_STEPS[analysisStepIndex];
+
     return (
       <View style={styles.container}>
         <Image source={{ uri: photoUri }} style={styles.preview} />
@@ -135,13 +281,54 @@ export default function AnalyzeScreen({ navigation }: any) {
             colors={['rgba(31,142,96,0.85)', 'rgba(46,182,125,0.85)']}
             style={styles.overlayCentered}
           >
-            <Animated.View style={{ transform: [{ scale: pulseAnim }], alignItems: 'center' }}>
-              <View style={styles.analyzingIconContainer}>
-                <Ionicons name="sparkles" size={32} color="#fff" />
-              </View>
-              <Text style={styles.analyzingText}>Analizando producto...</Text>
-              <Text style={styles.analyzingSubtext}>La IA está revisando los ingredientes</Text>
+            <Animated.View
+              style={[styles.analyzingIconContainer, { transform: [{ scale: pulseAnim }] }]}
+            >
+              <Ionicons name={activeAnalysisStep.icon as any} size={32} color="#fff" />
             </Animated.View>
+            <Text style={styles.analyzingText}>{activeAnalysisStep.title}</Text>
+            <Text style={styles.analyzingSubtext}>{activeAnalysisStep.detail}</Text>
+
+            <View style={styles.analysisProgressTrack}>
+              <View
+                style={[
+                  styles.analysisProgressFill,
+                  { width: `${((analysisStepIndex + 1) / ANALYSIS_STEPS.length) * 100}%` },
+                ]}
+              />
+            </View>
+
+            <View style={styles.analysisSteps}>
+              {ANALYSIS_STEPS.map((step, index) => {
+                const isActive = index === analysisStepIndex;
+                const isDone = index < analysisStepIndex;
+                return (
+                  <View
+                    key={step.title}
+                    style={[styles.analysisStepRow, isActive && styles.analysisStepRowActive]}
+                  >
+                    <View
+                      style={[
+                        styles.analysisStepDot,
+                        (isActive || isDone) && styles.analysisStepDotActive,
+                      ]}
+                    >
+                      {isDone ? (
+                        <Ionicons name="checkmark" size={12} color={colors.primaryStrong} />
+                      ) : null}
+                    </View>
+                    <Text
+                      style={[
+                        styles.analysisStepText,
+                        (isActive || isDone) && styles.analysisStepTextActive,
+                      ]}
+                    >
+                      {step.title}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
           </LinearGradient>
         ) : (
           <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.bottomControls}>
@@ -165,9 +352,7 @@ export default function AnalyzeScreen({ navigation }: any) {
       <CameraView style={styles.camera} ref={cameraRef} facing="back">
         <LinearGradient colors={['rgba(0,0,0,0.7)', 'transparent']} style={styles.cameraHeader}>
           <Text style={styles.headerTitle}>Capturá los ingredientes</Text>
-          <Text style={styles.headerSubtitle}>
-            Intentá que el texto sea legible y esté enfocado
-          </Text>
+          <Text style={styles.headerSubtitle}>Intenta que el texto sea legible y este enfocado</Text>
         </LinearGradient>
 
         <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.cameraBottom}>
@@ -185,6 +370,14 @@ export default function AnalyzeScreen({ navigation }: any) {
       </CameraView>
     </View>
   );
+}
+
+function formatAnalysisError(error: any) {
+  if (error instanceof ApiError && error.reason) {
+    return error.reason;
+  }
+
+  return error?.message || 'Hubo un problema al analizar el producto. Revisá la conexión.';
 }
 
 const styles = StyleSheet.create({
@@ -287,6 +480,52 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   analyzingSubtext: { color: 'rgba(255,255,255,0.9)', fontSize: 15, textAlign: 'center' },
+  analysisProgressTrack: {
+    width: '82%',
+    height: 6,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    overflow: 'hidden',
+    marginTop: 24,
+    marginBottom: 18,
+  },
+  analysisProgressFill: {
+    height: '100%',
+    borderRadius: 999,
+    backgroundColor: '#fff',
+  },
+  analysisSteps: {
+    width: '82%',
+    gap: 10,
+  },
+  analysisStepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    opacity: 0.58,
+  },
+  analysisStepRowActive: { opacity: 1 },
+  analysisStepDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.65)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  analysisStepDotActive: {
+    backgroundColor: '#fff',
+    borderColor: '#fff',
+  },
+  analysisStepText: {
+    color: 'rgba(255,255,255,0.88)',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  analysisStepTextActive: {
+    color: '#fff',
+  },
   bottomControls: {
     position: 'absolute',
     bottom: 0,

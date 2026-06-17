@@ -15,6 +15,11 @@ jest.mock('@react-navigation/native', () => ({
   }),
 }));
 jest.mock('@expo/vector-icons', () => ({ Ionicons: 'Ionicons' }));
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(() => Promise.resolve(null)),
+  setItem: jest.fn(() => Promise.resolve()),
+  removeItem: jest.fn(() => Promise.resolve()),
+}));
 
 describe('HistoryScreen', () => {
   const mockNavigation = { navigate: jest.fn() };
@@ -23,7 +28,7 @@ describe('HistoryScreen', () => {
     jest.clearAllMocks();
   });
 
-  it('muestra el estado vacío si no hay historial', async () => {
+  it('muestra el estado vacío si no hay catálogo', async () => {
     (getHistory as jest.Mock).mockResolvedValueOnce({ items: [] });
 
     const { getByText, getAllByText } = await render(<HistoryScreen navigation={mockNavigation} />);
@@ -86,7 +91,7 @@ describe('HistoryScreen', () => {
     });
   });
 
-  it('envía filtros al endpoint de historial', async () => {
+  it('envía filtros al endpoint de catálogo', async () => {
     (getHistory as jest.Mock).mockResolvedValue({ items: [] });
 
     const { getByTestId, getByText } = await render(<HistoryScreen navigation={mockNavigation} />);
