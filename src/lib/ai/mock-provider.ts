@@ -114,6 +114,20 @@ export class MockIaProvider implements IaProvider {
     };
   }
 
+  // NL-304: el mock streamea la misma respuesta que `answerWithContext` pero
+  // partida en palabras, para que el flujo SSE se ejercite en tests/E2E sin
+  // LLM real.
+  async *answerWithContextStream(
+    question: string,
+    products: SavedProductLite[],
+    opts: AnswerOpts,
+  ): AsyncGenerator<string> {
+    const { raw } = await this.answerWithContext(question, products, opts);
+    for (const word of raw.split(/(\s+)/)) {
+      if (word) yield word;
+    }
+  }
+
   // NL-401: embedding determinístico (xorshift seedeado por hash del texto),
   // normalizado a norma 1. No captura semántica — garantiza reproducibilidad
   // en tests/CI sin red: mismo texto => mismo vector.

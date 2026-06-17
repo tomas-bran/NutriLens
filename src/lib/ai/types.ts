@@ -86,6 +86,16 @@ export interface IaProvider {
     opts: AnswerOpts,
   ): Promise<IaCallResult>;
   /**
+   * NL-304: igual que `answerWithContext` pero streameando deltas de texto.
+   * El caller acumula y sanitiza al final (la sanitización opera sobre el
+   * texto completo).
+   */
+  answerWithContextStream(
+    question: string,
+    products: SavedProductLite[],
+    opts: AnswerOpts,
+  ): AsyncIterable<string>;
+  /**
    * Embedding de un texto (NL-401). Usado por persist (al guardar un
    * producto) y por el retrieve semántico del chat (NL-402).
    */

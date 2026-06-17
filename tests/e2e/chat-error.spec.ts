@@ -1,9 +1,11 @@
 /**
  * E2E — Estado ERROR + retry (spec §9.4).
  *
- * Mockeamos `POST /api/chat` via `page.route` para forzar primero un 500 y
- * luego un 200 OK. Esto cubre que el botón "Reintentar último mensaje" reusa
- * la última pregunta y que la respuesta exitosa limpia el banner.
+ * El chat usa el endpoint streaming `POST /api/chat/stream` (NL-304): los
+ * errores de negocio llegan como un evento SSE `data: {"type":"error",…}`.
+ * Mockeamos la primera call con ese evento de error y dejamos pasar la segunda
+ * al servidor real (MockIaProvider). Cubre que "Reintentar último mensaje"
+ * reusa la última pregunta y que la respuesta exitosa limpia el banner.
  */
 import { expect, test } from '@playwright/test';
 import { ChatPage } from './pages/chat-page';
@@ -22,19 +24,16 @@ test('error 500 del backend → banner con retry → retry reusa la pregunta y m
 }) => {
   const chat = new ChatPage(page);
 
-  // Interceptamos la primera call al endpoint y le metemos 500; las siguientes
-  // pasan al servidor real (MockIaProvider).
+  // Interceptamos la primera call al stream y emitimos un evento SSE de error;
+  // las siguientes pasan al servidor real (MockIaProvider).
   let firstCall = true;
-  await page.route('**/api/chat', async (route) => {
+  await page.route('**/api/chat/stream', async (route) => {
     if (firstCall) {
       firstCall = false;
       await route.fulfill({
-        status: 500,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          error: 'internal_error',
-          reason: 'Algo se rompió en el servidor.',
-        }),
+        status: 200,
+        contentType: 'text/event-stream',
+        body: 'data: {"type":"error","error":"internal_error","reason":"Algo se rompió en el servidor."}\n\n',
       });
       return;
     }

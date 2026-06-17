@@ -8,7 +8,7 @@
 import type { ChatProductRef } from '@/lib/chat/response';
 import type { ChatFallback } from '@/lib/chat/empty-response';
 
-export type ChatStatus = 'IDLE' | 'THINKING' | 'ERROR';
+export type ChatStatus = 'IDLE' | 'THINKING' | 'STREAMING' | 'ERROR';
 
 export type ChatMessage =
   | { role: 'user'; id: string; text: string }

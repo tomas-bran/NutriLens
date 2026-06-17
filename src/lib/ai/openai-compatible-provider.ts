@@ -225,6 +225,63 @@ export class OpenAICompatibleProvider implements IaProvider {
     });
   }
 
+  /**
+   * NL-304: streaming de la respuesta del chat. Devuelve un async iterator de
+   * deltas de texto. Sin retry (un stream a medias no se puede reintentar de
+   * forma transparente); el primer chunk mapea el error igual que `callChat`.
+   * `stream_options.include_usage` pide el usage en el chunk final cuando el
+   * endpoint lo soporta.
+   */
+  async *answerWithContextStream(
+    question: string,
+    products: SavedProductLite[],
+    opts: AnswerOpts,
+  ): AsyncGenerator<string> {
+    // eslint-disable-next-line testing-library/render-result-naming-convention -- false positive: renderPrompt is a prompt-template renderer, not @testing-library/react
+    const systemPrompt = renderPrompt(opts.promptVersion as never, {
+      question,
+      products_json: JSON.stringify(products),
+      top_k: String(ANSWER_TOP_K),
+      ...(opts.extra ?? {}),
+    });
+    const useCompletionTokens = isNewerOpenAIModel(this.miniModel);
+    const tokenParams = useCompletionTokens
+      ? { max_completion_tokens: ANSWER_MAX_TOKENS }
+      : { max_tokens: ANSWER_MAX_TOKENS };
+
+    let stream;
+    try {
+      stream = await this.client.chat.completions.create(
+        {
+          model: this.miniModel,
+          ...tokenParams,
+          temperature: ANSWER_TEMPERATURE,
+          stream: true,
+          stream_options: { include_usage: true },
+          messages: [
+            { role: 'system', content: systemPrompt },
+            {
+              role: 'user',
+              content: 'Respondé la pregunta del usuario siguiendo las reglas del SISTEMA.',
+            },
+          ],
+        },
+        { timeout: opts.timeoutMs ?? ANSWER_TIMEOUT_MS },
+      );
+    } catch (err) {
+      throw mapProviderError(err);
+    }
+
+    try {
+      for await (const chunk of stream) {
+        const delta = chunk.choices[0]?.delta?.content;
+        if (delta) yield delta;
+      }
+    } catch (err) {
+      throw mapProviderError(err);
+    }
+  }
+
   /** Single retry on 429/5xx; surfaces mapped `ApiError` on terminal failure. */
   protected async callChat(params: {
     model: string;

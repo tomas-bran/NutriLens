@@ -1,12 +1,12 @@
 /**
- * <ChatThread> — lista vertical de mensajes + indicador de "pensando" cuando
- * el estado es THINKING. Auto-scroll al último mensaje cuando llega uno nuevo.
+ * <ChatThread> — lista vertical de mensajes + indicador de "pensando" mientras
+ * se espera el primer token (THINKING). El autoscroll lo maneja el contenedor
+ * scrollable del page (`useStickyAutoscroll`, NL-305), no este componente.
  *
  * No persistimos el thread en DB (spec §9.3). El page lo mantiene en memoria.
  */
 'use client';
 
-import { useEffect, useRef } from 'react';
 import { AssistantBubble } from '@/components/chat/AssistantBubble';
 import { ThinkingDots } from '@/components/chat/ThinkingDots';
 import { UserBubble } from '@/components/chat/UserBubble';
@@ -19,12 +19,6 @@ interface ChatThreadProps {
 }
 
 export function ChatThread({ messages, status, onAskFollowUp }: ChatThreadProps) {
-  const bottomRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messages.length, status]);
-
   return (
     <div
       data-testid="chat-thread"
@@ -46,7 +40,6 @@ export function ChatThread({ messages, status, onAskFollowUp }: ChatThreadProps)
         ),
       )}
       {status === 'THINKING' && <ThinkingDots />}
-      <div ref={bottomRef} aria-hidden="true" />
     </div>
   );
 }
