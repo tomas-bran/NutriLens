@@ -15,7 +15,9 @@ import { createHash, randomUUID } from 'node:crypto';
 import { ApiError } from '@schemas/errors';
 import { getIaProvider } from '@/lib/ai';
 import { apiErrorResponse } from '@/lib/api/error-response';
+import { getUserId } from '@/lib/auth/current-user';
 import { logger } from '@/lib/logger';
+import { recordUserAnalysis } from '@/lib/products/record-analysis';
 import type { AnalysisContext } from '@/lib/pipeline/context';
 import { apply_rules } from '@/lib/pipeline/steps/apply-rules';
 import { compute_risk } from '@/lib/pipeline/steps/compute-risk';
@@ -145,6 +147,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (!ctx.saved) {
       throw new Error('analyze: persist step did not produce a saved product');
     }
+
+    // "Analizados por vos": vinculamos el producto al usuario logueado (de ahora
+    // en adelante; sin backfill). Corre también en el camino de dedup —
+    // re-analizar un producto ya existente igual lo agrega a tu filtro `mios`.
+    // Fail-open dentro del helper: nunca tira abajo un análisis ya computado.
+    const userId = await getUserId();
+    if (userId) await recordUserAnalysis(userId, ctx.saved.id);
 
     // Shape per spec E01 §4.2 + the rules/explanation/disclaimer additions
     // from E03. `id` and `savedAt` come from the persisted row (so re-uploads

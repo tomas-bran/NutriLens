@@ -52,6 +52,32 @@ describe('<HistoryFilters>', () => {
     vi.useRealTimers();
   });
 
+  describe('switch "Todos / Analizados por vos"', () => {
+    it('marca "Todos" como activo por defecto (sin mios)', () => {
+      render(<HistoryFilters value={{ page: 1 }} />);
+      expect(screen.getByTestId('catalogo-scope-todos')).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByTestId('catalogo-scope-mios')).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('marca "Analizados por vos" como activo cuando mios=true', () => {
+      render(<HistoryFilters value={{ mios: true, page: 1 }} />);
+      expect(screen.getByTestId('catalogo-scope-mios')).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByTestId('catalogo-scope-todos')).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('activa el filtro mios pusheando ?filtro=mios y reseteando page', () => {
+      render(<HistoryFilters value={{ page: 4 }} />);
+      fireEvent.click(screen.getByTestId('catalogo-scope-mios'));
+      expect(push).toHaveBeenCalledWith('/catalogo?filtro=mios', { scroll: false });
+    });
+
+    it('vuelve a "Todos" quitando el filtro mios (preserva el resto)', () => {
+      render(<HistoryFilters value={{ mios: true, categoria: 'snacks', page: 2 }} />);
+      fireEvent.click(screen.getByTestId('catalogo-scope-todos'));
+      expect(push).toHaveBeenCalledWith('/catalogo?categoria=snacks', { scroll: false });
+    });
+  });
+
   it('renders one select for each filter dimension', () => {
     render(<HistoryFilters value={{ page: 1 }} />);
     expect(screen.getByTestId('catalogo-filter-categoria')).toBeInTheDocument();
