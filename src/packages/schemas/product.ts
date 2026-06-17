@@ -56,6 +56,8 @@ export type Riesgo = (typeof RIESGOS)[number];
  */
 export const ProductExtractionSchema = z.object({
   producto: z.string().min(1).max(200),
+  /** Barcode visible on the label (EAN-13 / UPC-A etc.). Used by NL-601 to lookup OFF. */
+  barcode: z.string().optional(),
   categoria: z.enum(CATEGORIAS),
   ingredientes_detectados: z.array(z.string().min(1)).default([]),
   alergenos: z.array(z.enum(ALERGENOS)).default([]),

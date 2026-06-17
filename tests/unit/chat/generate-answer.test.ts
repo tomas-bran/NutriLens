@@ -50,6 +50,7 @@ function row(overrides: Partial<PrismaProduct> = {}): PrismaProduct {
     imagenMime: 'image/jpeg',
     imagenBytes: 1024,
     promptVersion: 'extract_product-v1',
+    offEnrichment: null,
     createdAt: new Date(),
   };
 }
