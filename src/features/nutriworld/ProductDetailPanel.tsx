@@ -52,7 +52,7 @@ export function ProductDetailPanel() {
   return (
     <div
       data-testid="nutriworld-detail"
-      className="bg-white/97 pointer-events-auto absolute bottom-24 right-4 top-4 flex w-[min(92vw,360px)] flex-col gap-4 overflow-y-auto rounded-3xl border border-[var(--color-border)] p-5 shadow-2xl backdrop-blur"
+      className="pointer-events-auto absolute bottom-24 right-4 top-4 flex w-[min(92vw,360px)] flex-col gap-4 overflow-y-auto rounded-3xl border border-[var(--color-border)] bg-white p-5 shadow-2xl"
       role="dialog"
       aria-label={`Ficha de ${product.name}`}
     >

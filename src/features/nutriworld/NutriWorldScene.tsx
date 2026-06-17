@@ -7,8 +7,9 @@
  */
 import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { ContactShadows, Grid } from '@react-three/drei';
+import { ContactShadows } from '@react-three/drei';
 import { ZONE_LIST } from './data/zones';
+import { Floor } from './Floor';
 import { NutriLensNPC } from './NutriLensNPC';
 import { Player } from './Player';
 import { ProductShelf } from './ProductShelf';
@@ -44,24 +45,8 @@ export function NutriWorldScene() {
         {/* Tiras de luz cenital (fixtures de supermercado) + halos cálidos. */}
         <CeilingLights />
 
-        {/* Piso pulido tipo local + grilla = juntas de baldosa + contacto suave. */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-          <planeGeometry args={[46, 46]} />
-          <meshStandardMaterial color="#eef2ee" roughness={0.55} metalness={0.05} />
-        </mesh>
-        <Grid
-          position={[0, 0.01, 0]}
-          args={[46, 46]}
-          cellSize={1}
-          cellThickness={0.5}
-          cellColor="#d2dbd3"
-          sectionSize={5}
-          sectionThickness={1}
-          sectionColor="#b7c3b8"
-          fadeDistance={46}
-          fadeStrength={1.5}
-          infiniteGrid={false}
-        />
+        {/* Piso de baldosas pulidas + contacto suave. */}
+        <Floor />
         <ContactShadows position={[0, 0.02, 0]} scale={50} far={12} blur={2.6} opacity={0.3} />
 
         <StoreWalls />
