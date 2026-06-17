@@ -10,7 +10,9 @@ import { AppShell } from '@/components/layout/AppShell';
 import { ResultView } from '@/components/result/ResultView';
 import { prisma } from '@/lib/db';
 import { getHistorialCount } from '@/lib/products/count';
-import { toDetail } from '@/lib/products/serializers';
+import { findSimilarProducts } from '@/lib/rag/semantic-search';
+import { SimilarProducts } from '@/components/result/SimilarProducts';
+import { toDetail, toListItem } from '@/lib/products/serializers';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -31,15 +33,22 @@ export default async function HistorialDetailPage({ params }: PageProps) {
   }
 
   const detail = toDetail(product);
-  const historialCount = await getHistorialCount();
+  // NL-405: vecinos por embedding — findSimilarProducts es fail-open ([]).
+  const [historialCount, similares] = await Promise.all([
+    getHistorialCount(),
+    findSimilarProducts(id, 4),
+  ]);
 
   return (
     <AppShell active="historial" historialCount={historialCount}>
-      <ResultView
-        product={detail}
-        back={{ href: '/historial', label: 'Volver al historial' }}
-        contextLabel="Producto guardado"
-      />
+      <div className="flex flex-col gap-4">
+        <ResultView
+          product={detail}
+          back={{ href: '/historial', label: 'Volver al historial' }}
+          contextLabel="Producto guardado"
+        />
+        <SimilarProducts items={similares.map(toListItem)} />
+      </div>
     </AppShell>
   );
 }

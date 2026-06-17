@@ -26,7 +26,12 @@ const nextConfig = {
   // package means Next.js leaves it alone and `require()`s it at runtime
   // from node_modules, which is fine because it only runs in the Node
   // runtime of `/api/analyze` anyway.
-  serverExternalPackages: ['pdf-parse'],
+  // `zxing-wasm` (NL-601: decode del código de barras) carga su `.wasm` en
+  // runtime; bundlearlo con webpack rompe la resolución del wasm.
+  // `@napi-rs/canvas` es un binario nativo (.node): el decode lo importa de
+  // forma estática (antes solo lo cargaba pdf-parse en dinámico), así que sin
+  // externalizarlo webpack intenta bundlear el .node y el build falla.
+  serverExternalPackages: ['pdf-parse', 'zxing-wasm', '@napi-rs/canvas'],
   // pdfjs-dist (vía pdf-parse) carga @napi-rs/canvas dinámicamente, así que
   // el file tracing del standalone no lo detecta y /api/analyze muere en
   // Linux con "DOMMatrix is not defined". Se incluye explícito. Nota: el
@@ -34,7 +39,10 @@ const nextConfig = {
   // igual necesita inyectar canvas-linux-x64-gnu (ver docs/deploy-azure.md);
   // en CI (ubuntu) sale completo.
   outputFileTracingIncludes: {
-    '/api/analyze': ['./node_modules/@napi-rs/canvas/**'],
+    '/api/analyze': [
+      './node_modules/@napi-rs/canvas/**',
+      './node_modules/zxing-wasm/dist/reader/**',
+    ],
   },
   // KI-01 fix: los prompts (`src/lib/ai/prompts/*.md`) se importan como
   // strings vía `import x from './foo.md?raw'`. Esta regla le dice a

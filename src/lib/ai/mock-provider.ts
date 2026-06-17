@@ -11,6 +11,8 @@ import type {
   IaProvider,
   ParseIntentOpts,
   SavedProductLite,
+  EmbedOpts,
+  EmbedResult,
 } from './types';
 import type { ProductExtraction } from '@schemas/product';
 
@@ -91,12 +93,11 @@ export class MockIaProvider implements IaProvider {
         latencyMs: 2,
       };
     }
-    // US-31: cuando el caller pide `chat_answer-v2` (o pasa intent_kind=compare
-    // en opts.extra), emulamos la tabla markdown que produciría el LLM real
-    // para que los E2E del compare puedan verificar el render de la tabla
-    // sin tocar Foundry. El formato es el documentado en el prompt v2.
-    const isCompareTemplate =
-      opts.promptVersion === 'chat_answer-v2' || opts.extra?.intent_kind === 'compare';
+    // US-31/NL-702: cuando el intent es compare, emulamos la tabla markdown
+    // que produciría el LLM real para que los E2E verifiquen el render sin
+    // tocar el provider real. El formato es el documentado en chat_answer-v3
+    // (sección COMPARACIONES).
+    const isCompareTemplate = opts.extra?.intent_kind === 'compare';
     if (isCompareTemplate && products.length >= 2) {
       return {
         raw: buildMockCompareAnswer(products),
@@ -112,6 +113,53 @@ export class MockIaProvider implements IaProvider {
       latencyMs: 3,
     };
   }
+
+  // NL-304: el mock streamea la misma respuesta que `answerWithContext` pero
+  // partida en palabras, para que el flujo SSE se ejercite en tests/E2E sin
+  // LLM real.
+  async *answerWithContextStream(
+    question: string,
+    products: SavedProductLite[],
+    opts: AnswerOpts,
+  ): AsyncGenerator<string> {
+    const { raw } = await this.answerWithContext(question, products, opts);
+    for (const word of raw.split(/(\s+)/)) {
+      if (word) yield word;
+    }
+  }
+
+  // NL-401: embedding determinístico (xorshift seedeado por hash del texto),
+  // normalizado a norma 1. No captura semántica — garantiza reproducibilidad
+  // en tests/CI sin red: mismo texto => mismo vector.
+  async embed(text: string, _opts: EmbedOpts = {}): Promise<EmbedResult> {
+    return {
+      vector: pseudoEmbedding(text, 1536),
+      usage: { in: 0, out: 0 },
+      latencyMs: 1,
+    };
+  }
+}
+
+function pseudoEmbedding(text: string, dims: number): number[] {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  let x = h >>> 0 || 1;
+  const v = new Array<number>(dims);
+  let normSq = 0;
+  for (let i = 0; i < dims; i++) {
+    x ^= x << 13;
+    x ^= x >>> 17;
+    x ^= x << 5;
+    const val = (x >>> 0) / 0xffffffff - 0.5;
+    v[i] = val;
+    normSq += val * val;
+  }
+  const norm = Math.sqrt(normSq) || 1;
+  for (let i = 0; i < dims; i++) v[i] = v[i]! / norm;
+  return v;
 }
 
 /**

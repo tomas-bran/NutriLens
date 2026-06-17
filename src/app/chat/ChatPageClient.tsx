@@ -1,35 +1,37 @@
 /**
  * `<ChatPageClient>` — client component que orquesta la pantalla `/chat`.
  *
- * NL-301: las conversaciones se persisten en DB via /api/conversations.
- * Cada vez que el asistente responde, la conversación se guarda/actualiza.
- * Al resetear se crea una nueva conversación vacía en memoria.
- *
- * NL-302: renombrar y eliminar desde el panel de historial de chats.
+ * NL-304: la respuesta del asistente llega por streaming (SSE). Se muestra un
+ * mensaje que se va completando en vivo; al cerrar se reemplaza por el texto
+ * sanitizado autoritativo. `fetchStreamImpl` es inyectable para tests.
+ * NL-305: el input queda fijo abajo, solo el hilo scrollea, y el autoscroll
+ * sigue la respuesta sin robar el scroll si el usuario subió.
+ * NL-301/302: las conversaciones se persisten y se pueden retomar/renombrar.
  */
 'use client';
 
-import { useCallback, useRef, useReducer } from 'react';
-import { ApiError } from '@schemas/errors';
+import { useCallback, useReducer, useRef, useState } from 'react';
 import { ChatErrorBanner } from '@/components/chat/ChatErrorBanner';
 import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatHero } from '@/components/chat/ChatHero';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatThread } from '@/components/chat/ChatThread';
+import { ConversationList } from '@/components/chat/ConversationList';
 import { SuggestionPills } from '@/components/chat/SuggestionPills';
+import { useStickyAutoscroll } from '@/components/chat/use-sticky-autoscroll';
 import type { ChatMessage, ChatStatus } from '@/components/chat/types';
-import { fetchChat } from '@/lib/chat/fetch-chat';
-import type { ChatApiResponse } from '@/lib/chat/response';
+import { fetchChatStream } from '@/lib/chat/fetch-chat-stream';
+import type { ChatProductRef } from '@/lib/chat/response';
+import type { ChatFallback } from '@/lib/chat/empty-response';
 import { createConversation, updateConversation } from '@/lib/conversations/client';
 import type { ConversationSummary } from '@/lib/conversations/types';
-import { ConversationList } from '@/components/chat/ConversationList';
 
 interface ChatPageClientProps {
   productsInBase: number;
   /** Pre-loaded conversation list (SSR) for the initial empty state. */
   initialConversations?: ConversationSummary[];
-  /** Inyectable para tests. */
-  fetchImpl?: typeof fetchChat;
+  /** Inyectable para tests (streaming SSE). */
+  fetchStreamImpl?: typeof fetchChatStream;
 }
 
 interface State {
@@ -37,16 +39,32 @@ interface State {
   status: ChatStatus;
   error: string | null;
   lastUserQuestion: string | null;
-  /** Pills contextuales del último response (NL-503); null => set estático. */
   suggestions: string[] | null;
+  /** Cambia con cada delta/transición → dispara el autoscroll pegajoso. */
+  scrollTick: number;
 }
 
 type Action =
   | { type: 'submit'; userMessage: ChatMessage; question: string }
-  | { type: 'success'; assistant: ChatMessage; suggestions: string[] | null }
+  | {
+      type: 'stream_meta';
+      assistantId: string;
+      products: ChatProductRef[];
+      fallback: ChatFallback | null;
+    }
+  | { type: 'stream_delta'; assistantId: string; text: string }
+  | { type: 'stream_done'; assistantId: string; answer: string; suggestions: string[] | null }
   | { type: 'error'; message: string }
   | { type: 'reset' }
   | { type: 'load'; messages: ChatMessage[] };
+
+function patchAssistant(
+  messages: ChatMessage[],
+  id: string,
+  patch: (m: Extract<ChatMessage, { role: 'assistant' }>) => ChatMessage,
+): ChatMessage[] {
+  return messages.map((m) => (m.role === 'assistant' && m.id === id ? patch(m) : m));
+}
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -57,36 +75,53 @@ function reducer(state: State, action: Action): State {
         status: 'THINKING',
         error: null,
         lastUserQuestion: action.question,
+        scrollTick: state.scrollTick + 1,
       };
-    case 'success':
+    case 'stream_meta':
       return {
         ...state,
-        messages: [...state.messages, action.assistant],
+        status: 'STREAMING',
+        messages: [
+          ...state.messages,
+          {
+            role: 'assistant',
+            id: action.assistantId,
+            text: '',
+            products: action.products,
+            fallback: action.fallback,
+          },
+        ],
+        scrollTick: state.scrollTick + 1,
+      };
+    case 'stream_delta':
+      return {
+        ...state,
+        messages: patchAssistant(state.messages, action.assistantId, (m) => ({
+          ...m,
+          text: m.text + action.text,
+        })),
+        scrollTick: state.scrollTick + 1,
+      };
+    case 'stream_done':
+      return {
+        ...state,
         status: 'IDLE',
-        error: null,
-        // Si este response no trajo sugerencias, conservamos las anteriores
-        // (mejor contexto viejo que volver al set estático a mitad de charla).
+        messages: patchAssistant(state.messages, action.assistantId, (m) => ({
+          ...m,
+          text: action.answer,
+        })),
         suggestions: action.suggestions ?? state.suggestions,
+        scrollTick: state.scrollTick + 1,
       };
     case 'error':
-      return { ...state, status: 'ERROR', error: action.message };
+      return { ...state, status: 'ERROR', error: action.message, scrollTick: state.scrollTick + 1 };
     case 'reset':
-      return {
-        messages: [],
-        status: 'IDLE',
-        error: null,
-        lastUserQuestion: null,
-        suggestions: null,
-      };
+      return { ...INITIAL_STATE };
     case 'load':
-      // Conversación recuperada de la DB: sin sugerencias previas (se
-      // regeneran con la próxima respuesta).
       return {
+        ...INITIAL_STATE,
         messages: action.messages,
-        status: 'IDLE',
-        error: null,
-        lastUserQuestion: null,
-        suggestions: null,
+        scrollTick: state.scrollTick + 1,
       };
     default:
       return state;
@@ -99,15 +134,22 @@ const INITIAL_STATE: State = {
   error: null,
   lastUserQuestion: null,
   suggestions: null,
+  scrollTick: 0,
 };
 
 export function ChatPageClient({
   productsInBase,
   initialConversations = [],
-  fetchImpl = fetchChat,
+  fetchStreamImpl = fetchChatStream,
 }: ChatPageClientProps) {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  // NL-702: pre-fill state for "ask about comparison" button
+  const [inputPrefill, setInputPrefill] = useState('');
+  const [inputKey, setInputKey] = useState(0);
+
   const conversationIdRef = useRef<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  useStickyAutoscroll(scrollRef, state.scrollTick);
 
   const persistMessages = useCallback(async (messages: ChatMessage[]) => {
     try {
@@ -121,7 +163,6 @@ export function ChatPageClient({
               fallback: m.fallback,
             },
       );
-
       if (!conversationIdRef.current) {
         const created = await createConversation(stored);
         if (created) conversationIdRef.current = created.id;
@@ -129,44 +170,73 @@ export function ChatPageClient({
         await updateConversation(conversationIdRef.current, { messages: stored });
       }
     } catch {
-      // Persistence is best-effort; never block the UI
+      // Persistencia best-effort; nunca bloquea la UI.
     }
   }, []);
 
   const handleSubmit = useCallback(
     async (question: string) => {
-      const userMessage: ChatMessage = {
-        role: 'user',
-        id: makeId(),
-        text: question,
-      };
+      const userMessage: ChatMessage = { role: 'user', id: makeId(), text: question };
+      const assistantId = makeId();
       dispatch({ type: 'submit', userMessage, question });
 
-      try {
-        const res: ChatApiResponse = await fetchImpl(question);
-        const assistantMessage: ChatMessage = {
-          role: 'assistant',
-          id: makeId(),
-          text: res.answer,
-          products: res.products,
-          fallback: res.fallback,
-        };
-        dispatch({
-          type: 'success',
-          assistant: assistantMessage,
-          suggestions: res.suggestions ?? null,
-        });
+      let answer = '';
+      let products: ChatProductRef[] = [];
+      let fallback: ChatFallback | null = null;
+      let suggestions: string[] | null = null;
+      let streamError: string | null = null;
 
-        // NL-301: persist after each full exchange
-        const allMessages = [...state.messages, userMessage, assistantMessage];
-        void persistMessages(allMessages);
-      } catch (err) {
-        const reason =
-          err instanceof ApiError ? err.reason : 'Algo salió mal. Probá de nuevo en unos segundos.';
-        dispatch({ type: 'error', message: reason });
+      try {
+        await fetchStreamImpl(question, (event) => {
+          switch (event.type) {
+            case 'meta':
+              products = event.products;
+              fallback = event.fallback;
+              dispatch({ type: 'stream_meta', assistantId, products, fallback });
+              break;
+            case 'delta':
+              answer += event.text;
+              dispatch({ type: 'stream_delta', assistantId, text: event.text });
+              break;
+            case 'suggestions':
+              suggestions = event.suggestions;
+              break;
+            case 'done':
+              answer = event.answer;
+              dispatch({ type: 'stream_done', assistantId, answer, suggestions });
+              break;
+            case 'error':
+              streamError = event.reason;
+              break;
+          }
+        });
+      } catch {
+        streamError = streamError ?? 'Algo salió mal. Probá de nuevo en unos segundos.';
       }
+
+      if (streamError) {
+        dispatch({ type: 'error', message: streamError });
+        return;
+      }
+
+      // NL-301: persistir el intercambio completo una vez cerrado el stream.
+      const assistantMessage: ChatMessage = {
+        role: 'assistant',
+        id: assistantId,
+        text: answer,
+        products,
+        fallback,
+      };
+      void persistMessages([...stateMessagesRef.current, userMessage, assistantMessage]);
     },
-    [fetchImpl, state.messages, persistMessages],
+    [fetchStreamImpl, persistMessages],
+  );
+
+  // Ref con los mensajes previos al envío, para componer el array a persistir
+  // sin meter `state.messages` en las deps de handleSubmit (evita recrearlo).
+  const stateMessagesRef = useRef<ChatMessage[]>([]);
+  stateMessagesRef.current = state.messages.filter(
+    (m) => m.role !== 'assistant' || m.text.length > 0,
   );
 
   const handleRetry = useCallback(() => {
@@ -176,6 +246,11 @@ export function ChatPageClient({
   const handleReset = useCallback(() => {
     conversationIdRef.current = null;
     dispatch({ type: 'reset' });
+  }, []);
+
+  const handleAskFollowUp = useCallback((prefill: string) => {
+    setInputPrefill(prefill);
+    setInputKey((k) => k + 1);
   }, []);
 
   const handleLoadConversation = useCallback(async (id: string) => {
@@ -195,52 +270,61 @@ export function ChatPageClient({
   }, []);
 
   const hasMessages = state.messages.length > 0;
-  const inputDisabled = state.status === 'THINKING';
+  const inputDisabled = state.status === 'THINKING' || state.status === 'STREAMING';
+  const showPills = hasMessages && state.status === 'IDLE';
 
   return (
-    // AppShell lo renderiza el server `ChatPage` (envuelve esto como children).
-    // Si lo renderizáramos acá (cliente) meteríamos a <SidebarUser> (async server
-    // component) dentro de un árbol cliente → "uncached promise" / loop infinito.
-    <div className="flex h-full flex-col gap-4 md:min-h-[calc(100vh-2rem)]">
+    // AppShell lo renderiza el server `ChatPage` (envuelve esto como children):
+    // meter <SidebarUser> (async server component) dentro de un árbol cliente
+    // daría "uncached promise" / loop infinito. Altura acotada: el hilo scrollea
+    // internamente y el input queda fijo (NL-305).
+    <div className="flex h-[calc(100dvh-1.5rem)] min-h-0 flex-col gap-4 md:h-[calc(100vh-3rem)]">
       <ChatHeader productsInBase={productsInBase} hasMessages={hasMessages} onReset={handleReset} />
 
-      <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-        <div className="flex-1 overflow-y-auto pb-2">
-          {!hasMessages && state.status !== 'THINKING' ? (
-            <div className="flex flex-col gap-6">
-              <ChatHero onPick={handleSubmit} />
-              {initialConversations.length > 0 && (
-                <ConversationList
-                  conversations={initialConversations}
-                  onOpen={handleLoadConversation}
-                  onDelete={handleReset}
-                />
-              )}
-            </div>
-          ) : (
-            <ChatThread messages={state.messages} status={state.status} />
-          )}
-        </div>
-
-        {state.error && state.status === 'ERROR' && (
-          <ChatErrorBanner
-            message={state.error}
-            onRetry={handleRetry}
-            canRetry={state.lastUserQuestion !== null}
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto pb-2">
+        {!hasMessages && state.status === 'IDLE' ? (
+          <div className="flex flex-col gap-6">
+            <ChatHero onPick={handleSubmit} />
+            {initialConversations.length > 0 && (
+              <ConversationList
+                conversations={initialConversations}
+                onOpen={handleLoadConversation}
+                onDelete={handleReset}
+              />
+            )}
+          </div>
+        ) : (
+          <ChatThread
+            messages={state.messages}
+            status={state.status}
+            onAskFollowUp={handleAskFollowUp}
           />
         )}
+      </div>
 
-        <div className="sticky bottom-0 bg-[var(--color-bg)] pt-2">
-          {hasMessages && state.status === 'IDLE' && (
-            <SuggestionPills
-              onPick={handleSubmit}
-              suggestions={state.suggestions}
-              lastQuestion={state.lastUserQuestion}
-              className="mb-2"
-            />
-          )}
-          <ChatInput onSubmit={handleSubmit} disabled={inputDisabled} />
-        </div>
+      {state.error && state.status === 'ERROR' && (
+        <ChatErrorBanner
+          message={state.error}
+          onRetry={handleRetry}
+          canRetry={state.lastUserQuestion !== null}
+        />
+      )}
+
+      <div className="shrink-0 bg-[var(--color-bg)] pt-1">
+        {showPills && (
+          <SuggestionPills
+            onPick={handleSubmit}
+            suggestions={state.suggestions}
+            lastQuestion={state.lastUserQuestion}
+            className="mb-2"
+          />
+        )}
+        <ChatInput
+          key={inputKey}
+          onSubmit={handleSubmit}
+          disabled={inputDisabled}
+          initialValue={inputPrefill}
+        />
       </div>
     </div>
   );

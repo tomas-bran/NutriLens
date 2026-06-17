@@ -48,6 +48,7 @@ function makeRow(overrides: Partial<PrismaProduct> = {}): PrismaProduct {
     imagenMime: overrides.imagenMime ?? 'image/jpeg',
     imagenBytes: overrides.imagenBytes ?? 1024,
     promptVersion: overrides.promptVersion ?? 'extract_product-v1',
+    offEnrichment: overrides.offEnrichment ?? null,
     createdAt: overrides.createdAt ?? now,
   };
 }
