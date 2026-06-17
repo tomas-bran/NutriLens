@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Obtenemos automaticamente la IP de la PC que esta corriendo Expo
 const debuggerHost = Constants.expoConfig?.hostUri;
@@ -10,6 +11,7 @@ const API_HOST = autoIP || (Platform.OS === 'android' ? '10.0.2.2' : 'localhost'
 const localApiBaseUrl = `http://${API_HOST}:3000/api`;
 const configuredApiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
 const API_BASE_URL = configuredApiBaseUrl || localApiBaseUrl;
+const AUTH_TOKEN_KEY = '@nutrilens/auth-token';
 
 export class ApiError extends Error {
   code?: string;
@@ -39,6 +41,97 @@ export class ApiError extends Error {
   }
 }
 
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  image: string | null;
+}
+
+export interface DietPrefs {
+  vegano: boolean;
+  celiaco: boolean;
+  lactosa: boolean;
+  avisos: boolean;
+}
+
+export interface ProfilePayload {
+  user: AuthUser;
+  prefs: DietPrefs;
+  stats: { analizados: number; riesgoAlto: number; sinAlergenos: number };
+}
+
+export interface StoredChatMessage {
+  role: 'user' | 'assistant';
+  text: string;
+  products?: any[];
+  fallback?: any;
+}
+
+export interface ConversationSummary {
+  id: string;
+  title: string;
+  messageCount: number;
+  lastMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ConversationDetail extends ConversationSummary {
+  messages: StoredChatMessage[];
+}
+
+export const saveAuthToken = async (token: string) => {
+  await AsyncStorage.setItem(AUTH_TOKEN_KEY, token);
+};
+
+export const getAuthToken = () => AsyncStorage.getItem(AUTH_TOKEN_KEY);
+
+export const clearAuthToken = async () => {
+  await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
+};
+
+export const loginWithGoogleIdToken = async (idToken: string) => {
+  const response = await fetch(`${API_BASE_URL}/mobile/auth/google`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ idToken }),
+  });
+
+  if (!response.ok) {
+    throw await parseApiError(response, 'No se pudo iniciar sesión con Google');
+  }
+
+  return (await response.json()) as { token: string; user: AuthUser };
+};
+
+export const getProfile = async () => {
+  const response = await fetch(`${API_BASE_URL}/me`, {
+    method: 'GET',
+    headers: await authHeaders(),
+  });
+
+  if (!response.ok) {
+    throw await parseApiError(response, 'Error al obtener el perfil');
+  }
+
+  return (await response.json()) as ProfilePayload;
+};
+
+export const updatePrefs = async (prefs: DietPrefs) => {
+  const response = await fetch(`${API_BASE_URL}/me/prefs`, {
+    method: 'PATCH',
+    headers: await authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(prefs),
+  });
+
+  if (!response.ok) {
+    throw await parseApiError(response, 'Error al guardar preferencias');
+  }
+
+  return (await response.json()) as DietPrefs;
+};
+
 export const analyzeProduct = async (photoUri: string) => {
   const formData = new FormData();
 
@@ -56,7 +149,7 @@ export const analyzeProduct = async (photoUri: string) => {
     const response = await fetch(`${API_BASE_URL}/analyze`, {
       method: 'POST',
       body: formData,
-      headers: { Accept: 'application/json' },
+      headers: await authHeaders(),
     });
 
     if (!response.ok) {
@@ -76,10 +169,7 @@ export const sendChatMessage = async (question: string) => {
   try {
     const response = await fetch(`${API_BASE_URL}/chat`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
+      headers: await authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ question }),
     });
 
@@ -111,7 +201,7 @@ export const getHistory = async (filters: HistoryFilters = {}) => {
     const query = params.toString();
     const response = await fetch(`${API_BASE_URL}/products${query ? `?${query}` : ''}`, {
       method: 'GET',
-      headers: { Accept: 'application/json' },
+      headers: await authHeaders(),
     });
 
     if (!response.ok) {
@@ -129,7 +219,7 @@ export const getProductDetail = async (id: string) => {
   try {
     const response = await fetch(`${API_BASE_URL}/products/${id}`, {
       method: 'GET',
-      headers: { Accept: 'application/json' },
+      headers: await authHeaders(),
     });
 
     if (!response.ok) {
@@ -142,6 +232,82 @@ export const getProductDetail = async (id: string) => {
     throw error;
   }
 };
+
+export const listConversations = async () => {
+  const response = await fetch(`${API_BASE_URL}/conversations`, {
+    method: 'GET',
+    headers: await authHeaders(),
+  });
+
+  if (!response.ok) {
+    throw await parseApiError(response, 'Error al obtener conversaciones');
+  }
+
+  return (await response.json()) as ConversationSummary[];
+};
+
+export const createConversation = async (messages: StoredChatMessage[]) => {
+  const response = await fetch(`${API_BASE_URL}/conversations`, {
+    method: 'POST',
+    headers: await authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ messages }),
+  });
+
+  if (!response.ok) {
+    throw await parseApiError(response, 'Error al crear la conversación');
+  }
+
+  return (await response.json()) as { id: string; title: string };
+};
+
+export const getConversation = async (id: string) => {
+  const response = await fetch(`${API_BASE_URL}/conversations/${id}`, {
+    method: 'GET',
+    headers: await authHeaders(),
+  });
+
+  if (!response.ok) {
+    throw await parseApiError(response, 'Error al abrir la conversación');
+  }
+
+  return (await response.json()) as ConversationDetail;
+};
+
+export const updateConversation = async (id: string, messages: StoredChatMessage[]) => {
+  const response = await fetch(`${API_BASE_URL}/conversations/${id}`, {
+    method: 'PATCH',
+    headers: await authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ messages }),
+  });
+
+  if (!response.ok) {
+    throw await parseApiError(response, 'Error al guardar la conversación');
+  }
+
+  return (await response.json()) as { id: string; title: string };
+};
+
+export const deleteConversation = async (id: string) => {
+  const response = await fetch(`${API_BASE_URL}/conversations/${id}`, {
+    method: 'DELETE',
+    headers: await authHeaders(),
+  });
+
+  if (!response.ok && response.status !== 204) {
+    throw await parseApiError(response, 'Error al eliminar la conversación');
+  }
+
+  return true;
+};
+
+async function authHeaders(extra: Record<string, string> = {}) {
+  const token = await getAuthToken();
+  return {
+    Accept: 'application/json',
+    ...extra,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
 
 async function parseApiError(response: Response, fallbackMessage: string) {
   const errorText = await response.text();

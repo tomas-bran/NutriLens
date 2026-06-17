@@ -7,6 +7,12 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   setItem: jest.fn(() => Promise.resolve()),
   removeItem: jest.fn(() => Promise.resolve()),
 }));
+jest.mock('./src/services/AuthContext', () => ({
+  useAuth: () => ({
+    isAuthenticated: true,
+    isLoading: false,
+  }),
+}));
 
 describe('<AppNavigator />', () => {
   it('debería renderizar la estructura base de navegación sin crashear', async () => {

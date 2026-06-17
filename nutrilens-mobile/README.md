@@ -8,6 +8,7 @@ Aplicacion mobile de NutriLens construida con Expo y React Native. Replica el fl
 - npm
 - Expo Go en el telefono, o un simulador iOS/Android
 - Backend web de NutriLens levantado en `http://localhost:3000`
+- Client IDs de Google para Expo/mobile si se quiere probar login real
 
 ## Levantar el backend
 
@@ -86,6 +87,31 @@ Fallbacks:
 
 Si se prueba en un celular fisico, la PC y el telefono tienen que estar en la misma red Wi-Fi. Si la app no conecta, revisar firewall, Docker y que `localhost:3000` este accesible desde la PC.
 
+## Login con Google
+
+La app mobile usa Google Sign-In con Expo y luego intercambia el `id_token` por un token mobile firmado por el backend. Para habilitarlo:
+
+```powershell
+$env:EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID="..."
+$env:EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID="..."
+$env:EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID="..."
+```
+
+En el backend, permitir esos clientes:
+
+```bash
+MOBILE_GOOGLE_CLIENT_IDS="ios-client-id,android-client-id,web-client-id"
+AUTH_SECRET="un-secreto-largo"
+```
+
+Si no se configuran los client IDs, la pantalla de login se muestra pero deshabilita el boton de Google con un aviso.
+
+Para desarrollo local sin Google OAuth, se puede usar el bypass junto al backend con `E2E_AUTH_BYPASS=true`:
+
+```powershell
+$env:EXPO_PUBLIC_AUTH_DEV_BYPASS="true"
+```
+
 ## Compartir una prueba local con otras personas
 
 Para que otras personas prueben la app sin estar en tu Wi-Fi, se puede exponer el backend local con ngrok y correr Expo en modo tunnel.
@@ -133,8 +159,17 @@ O cerrar la terminal y abrir una nueva.
 La app mobile usa los mismos endpoints del backend web:
 
 ```txt
+POST /api/mobile/auth/google
+GET  /api/me
+GET  /api/me/prefs
+PATCH /api/me/prefs
 POST /api/analyze
 POST /api/chat
+GET  /api/conversations
+POST /api/conversations
+GET  /api/conversations/:id
+PATCH /api/conversations/:id
+DELETE /api/conversations/:id
 GET  /api/products
 GET  /api/products/:id
 ```

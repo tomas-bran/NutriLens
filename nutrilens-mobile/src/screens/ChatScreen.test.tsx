@@ -15,6 +15,11 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   setItem: jest.fn(() => Promise.resolve()),
   removeItem: jest.fn(() => Promise.resolve()),
 }));
+jest.mock('../../src/services/AuthContext', () => ({
+  useAuth: () => ({
+    isAuthenticated: false,
+  }),
+}));
 
 describe('ChatScreen', () => {
   beforeEach(() => {

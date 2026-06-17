@@ -4,7 +4,9 @@
  * para que el caller responda 401. El middleware ya bloquea el acceso, pero
  * esto es la segunda línea (defensa en profundidad) y de paso tipa el id.
  */
+import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
+import { getMobileUserFromAuthorization, type MobileAuthUser } from '@/lib/auth/mobile-token';
 
 /** Usuario fijo para el bypass de E2E (ver middleware). */
 const E2E_USER_ID = 'e2e-test-user';
@@ -24,10 +26,32 @@ export class Unauthorized extends Error {
   }
 }
 
-export async function getUserId(): Promise<string | null> {
-  if (e2eBypass()) return E2E_USER_ID;
+export async function getCurrentUser(): Promise<MobileAuthUser | null> {
+  if (e2eBypass()) {
+    return {
+      id: E2E_USER_ID,
+      email: 'e2e@nutrilens.local',
+      name: 'Usuario E2E',
+      image: null,
+    };
+  }
+  const h = await headers();
+  const mobileUser = await getMobileUserFromAuthorization(h.get('authorization'));
+  if (mobileUser) return mobileUser;
+
   const session = await auth();
-  return session?.user?.id ?? null;
+  if (!session?.user?.id) return null;
+  return {
+    id: session.user.id,
+    email: session.user.email ?? '',
+    name: session.user.name ?? 'Mi cuenta',
+    image: session.user.image ?? null,
+  };
+}
+
+export async function getUserId(): Promise<string | null> {
+  const user = await getCurrentUser();
+  return user?.id ?? null;
 }
 
 export async function requireUserId(): Promise<string> {

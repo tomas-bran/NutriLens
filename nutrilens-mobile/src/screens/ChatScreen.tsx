@@ -19,7 +19,18 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, typography } from '../theme/tokens';
-import { getProductDetail, sendChatMessage } from '../services/api';
+import {
+  createConversation,
+  deleteConversation,
+  getConversation,
+  getProductDetail,
+  listConversations,
+  sendChatMessage,
+  updateConversation,
+  type ConversationSummary,
+  type StoredChatMessage,
+} from '../services/api';
+import { useAuth } from '../services/AuthContext';
 
 interface Message {
   id: string;
@@ -42,10 +53,13 @@ const PENDING_CHAT_TTL_MS = 15 * 60 * 1000;
 const MAX_PENDING_CHAT_ATTEMPTS = 3;
 
 export default function ChatScreen({ route, navigation }: any) {
+  const { isAuthenticated } = useAuth();
   const productData = route?.params?.productData;
   const initialProduct = productData?.product?.producto || productData?.product?.name;
 
   const [messages, setMessages] = useState<Message[]>([]);
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
@@ -88,6 +102,11 @@ export default function ChatScreen({ route, navigation }: any) {
       ]);
     }
   }, [initialProduct]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    refreshConversations();
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
@@ -227,7 +246,10 @@ export default function ChatScreen({ route, navigation }: any) {
         fallback: response.fallback,
       };
 
-      setMessages((prev) => appendMessageIfMissing(prev, botMsg));
+      const nextMessages = appendMessageIfMissing(messagesRef.current, botMsg);
+      messagesRef.current = nextMessages;
+      setMessages(nextMessages);
+      await persistConversation(nextMessages);
       await AsyncStorage.removeItem(PENDING_CHAT_KEY);
     } catch (error) {
       const nextAttempts = attempts + 1;
@@ -299,6 +321,86 @@ export default function ChatScreen({ route, navigation }: any) {
   };
 
   const handleSend = () => resilientSubmitQuestion(inputText);
+
+  const refreshConversations = async () => {
+    try {
+      setConversations(await listConversations());
+    } catch {
+      setConversations([]);
+    }
+  };
+
+  const persistConversation = async (nextMessages: Message[]) => {
+    if (!isAuthenticated) return;
+    const stored = nextMessages
+      .filter((message) => message.role === 'user' || message.role === 'assistant')
+      .map(toStoredMessage);
+    if (stored.filter((message) => message.role === 'user').length === 0) return;
+
+    try {
+      if (activeConversationId) {
+        await updateConversation(activeConversationId, stored);
+      } else {
+        const created = await createConversation(stored);
+        setActiveConversationId(created.id);
+      }
+      await refreshConversations();
+    } catch (error) {
+      console.error('Error saving conversation:', error);
+    }
+  };
+
+  const openConversation = async (id: string) => {
+    try {
+      const conversation = await getConversation(id);
+      setActiveConversationId(id);
+      const restored = conversation.messages.map((message, index) => ({
+        id: `${conversation.id}-${index}`,
+        role: message.role,
+        text: message.text,
+        products: message.products,
+        fallback: message.fallback,
+      }));
+      messagesRef.current = restored;
+      setMessages(restored);
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'No se pudo abrir la conversación.');
+    }
+  };
+
+  const removeConversation = async (id: string) => {
+    try {
+      await deleteConversation(id);
+      if (activeConversationId === id) {
+        setActiveConversationId(null);
+        resetInitialMessages();
+      }
+      await refreshConversations();
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'No se pudo eliminar la conversación.');
+    }
+  };
+
+  const startNewConversation = () => {
+    setActiveConversationId(null);
+    resetInitialMessages();
+  };
+
+  const resetInitialMessages = () => {
+    const initial = initialProduct
+      ? {
+          id: createMessageId(),
+          role: 'assistant' as const,
+          text: `¡Hola! Veo que acabás de analizar **${initialProduct}**. ¿Qué te gustaría saber sobre este u otros productos?`,
+        }
+      : {
+          id: createMessageId(),
+          role: 'assistant' as const,
+          text: '¡Hola! Soy tu asistente nutricional. Preguntame sobre tus productos, por ejemplo: "¿Qué galletitas tengo con menos azúcar?".',
+        };
+    messagesRef.current = [initial];
+    setMessages([initial]);
+  };
 
   const openProduct = async (product: any) => {
     if (!navigation) return;
@@ -406,7 +508,42 @@ export default function ChatScreen({ route, navigation }: any) {
       >
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Asistente IA</Text>
+          <TouchableOpacity style={styles.newChatButton} onPress={startNewConversation}>
+            <Ionicons name="add" size={18} color={colors.primaryStrong} />
+          </TouchableOpacity>
         </View>
+
+        {conversations.length > 0 && (
+          <View style={styles.conversationRail}>
+            <FlatList
+              horizontal
+              data={conversations}
+              keyExtractor={(item) => item.id}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.conversationRailContent}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.conversationChip,
+                    activeConversationId === item.id && styles.conversationChipActive,
+                  ]}
+                  onPress={() => openConversation(item.id)}
+                  onLongPress={() => removeConversation(item.id)}
+                >
+                  <Text
+                    style={[
+                      styles.conversationChipText,
+                      activeConversationId === item.id && styles.conversationChipTextActive,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {item.title}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        )}
 
         <FlatList
           ref={flatListRef}
@@ -490,6 +627,15 @@ function appendMessageIfMissing(messages: Message[], message: Message) {
     return messages;
   }
   return [...messages, message];
+}
+
+function toStoredMessage(message: Message): StoredChatMessage {
+  return {
+    role: message.role,
+    text: message.text,
+    products: message.products,
+    fallback: message.fallback,
+  };
 }
 
 function translateRisk(risk?: string) {
@@ -617,8 +763,44 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: { fontSize: typography.fontSize.xl, fontWeight: 'bold', color: colors.text },
+  newChatButton: {
+    position: 'absolute',
+    right: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  conversationRail: {
+    backgroundColor: colors.bg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  conversationRailContent: { paddingHorizontal: 14, paddingVertical: 10, gap: 8 },
+  conversationChip: {
+    maxWidth: 180,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  conversationChipActive: {
+    backgroundColor: colors.primarySoft,
+    borderColor: colors.primaryBorder,
+  },
+  conversationChipText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  conversationChipTextActive: { color: colors.primaryStrong },
   chatContainer: { padding: 16, paddingBottom: 24 },
   messageWrapper: { flexDirection: 'row', marginBottom: 16, alignItems: 'flex-start' },
   messageWrapperUser: { justifyContent: 'flex-end' },
