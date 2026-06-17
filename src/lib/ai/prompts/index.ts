@@ -21,6 +21,7 @@ import EXTRACT_PRODUCT_V1 from './extract_product-v1.md?raw';
 import EXTRACT_PRODUCT_V1_CORRECTIVE from './extract_product-v1-corrective.md?raw';
 import DETECT_LABEL_KIND_V1 from './detect_label_kind-v1.md?raw';
 import EXPLAIN_PRODUCT_V1 from './explain_product-v1.md?raw';
+import EXPLAIN_PRODUCT_V2 from './explain_product-v2.md?raw';
 import CHAT_PARSE_INTENT_V1 from './chat_parse_intent-v1.md?raw';
 import CHAT_PARSE_INTENT_V2 from './chat_parse_intent-v2.md?raw';
 import CHAT_SUGGESTIONS_V1 from './chat_suggestions-v1.md?raw';
@@ -35,6 +36,7 @@ export type PromptVersion =
   | 'extract_product-v1-corrective'
   | 'detect_label_kind-v1'
   | 'explain_product-v1'
+  | 'explain_product-v2'
   | 'chat_parse_intent-v1'
   | 'chat_parse_intent-v2'
   | 'chat_suggestions-v1'
@@ -49,6 +51,7 @@ const PROMPTS: Record<PromptVersion, string> = {
   'extract_product-v1-corrective': EXTRACT_PRODUCT_V1_CORRECTIVE,
   'detect_label_kind-v1': DETECT_LABEL_KIND_V1,
   'explain_product-v1': EXPLAIN_PRODUCT_V1,
+  'explain_product-v2': EXPLAIN_PRODUCT_V2,
   'chat_parse_intent-v1': CHAT_PARSE_INTENT_V1,
   'chat_parse_intent-v2': CHAT_PARSE_INTENT_V2,
   'chat_suggestions-v1': CHAT_SUGGESTIONS_V1,
