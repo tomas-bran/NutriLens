@@ -43,6 +43,8 @@ export type IconName =
   | 'salad'
   | 'scan-qr-code'
   | 'more-vertical'
+  | 'volume'
+  | 'volume-off'
   // Allergens — hand-rolled glyphs (no lucide equivalents).
   | 'wheat'
   | 'wheat-off'
@@ -70,6 +72,23 @@ interface IconPathDef {
 }
 
 const ICON_PATHS: Record<IconName, IconPathDef> = {
+  // lucide volume-2 / volume-x (cuerpo del parlante + ondas / X de mute).
+  volume: {
+    paths: [
+      'M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z',
+      'M16 9a5 5 0 0 1 0 6',
+      'M19.364 18.364a9 9 0 0 0 0-12.728',
+    ],
+  },
+  'volume-off': {
+    paths: [
+      'M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z',
+    ],
+    lines: [
+      [22, 9, 16, 15],
+      [16, 9, 22, 15],
+    ],
+  },
   home: {
     paths: ['M3 11l9-8 9 8', 'M5 10v10h14V10', 'M10 20v-6h4v6'],
   },

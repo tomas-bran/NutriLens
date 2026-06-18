@@ -172,7 +172,7 @@ describe('xhrUpload — error responses', () => {
           status: 422,
           responseText: JSON.stringify({
             error: 'image_not_supported',
-            reason: 'La imagen no parece corresponder a una etiqueta alimentaria.',
+            reason: 'La imagen no parece corresponder a un producto alimentario.',
           }),
           trigger: 'load',
         }),

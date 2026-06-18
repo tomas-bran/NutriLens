@@ -35,7 +35,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
     const q = parsed.data;
 
-    const where: Prisma.ProductWhereInput = {};
+    const where: Prisma.ProductWhereInput = { deletedAt: null };
     if (q.categoria) where.categoria = mapCategoriaToPrisma(q.categoria);
     if (q.riesgo) where.riesgo = q.riesgo;
     if (q.q) where.nombre = { contains: q.q, mode: 'insensitive' };

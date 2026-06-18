@@ -80,7 +80,7 @@ async function nearestByVector(
     Prisma.sql`
       SELECT "id", ("embedding" <=> ${literal}::vector)::float8 AS distance
       FROM "Product"
-      WHERE "embedding" IS NOT NULL ${exclusion}
+      WHERE "embedding" IS NOT NULL AND "deletedAt" IS NULL ${exclusion}
       ORDER BY distance ASC
       LIMIT ${k}
     `,
@@ -89,7 +89,9 @@ async function nearestByVector(
   const relevant = hits.filter((h) => h.distance <= MAX_DISTANCE);
   if (relevant.length === 0) return [];
 
-  const rows = await prisma.product.findMany({ where: { id: { in: relevant.map((h) => h.id) } } });
+  const rows = await prisma.product.findMany({
+    where: { id: { in: relevant.map((h) => h.id) }, deletedAt: null },
+  });
   const byId = new Map(rows.map((r) => [r.id, r]));
   return relevant.map((h) => byId.get(h.id)).filter((r): r is PrismaProduct => Boolean(r));
 }

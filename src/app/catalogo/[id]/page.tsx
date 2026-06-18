@@ -6,6 +6,7 @@
  * contextual "Producto guardado".
  */
 import { notFound } from 'next/navigation';
+import { AdminProductControls } from '@/components/result/AdminProductControls';
 import { AppShell } from '@/components/layout/AppShell';
 import { ResultView } from '@/components/result/ResultView';
 import { isCurrentUserAdmin } from '@/lib/auth/is-admin';
@@ -28,7 +29,9 @@ export const dynamic = 'force-dynamic';
 export default async function CatalogoDetailPage({ params }: PageProps) {
   const { id } = await params;
 
-  const product = await prisma.product.findUnique({ where: { id } }).catch(() => null);
+  const product = await prisma.product
+    .findFirst({ where: { id, deletedAt: null } })
+    .catch(() => null);
   if (!product) {
     notFound();
   }
@@ -50,6 +53,7 @@ export default async function CatalogoDetailPage({ params }: PageProps) {
           contextLabel="Producto guardado"
           showTechnicalViews={isAdmin}
         />
+        {isAdmin && <AdminProductControls productId={detail.id} currentName={detail.nombre} />}
         <SimilarProducts items={similares.map(toListItem)} />
       </div>
     </AppShell>

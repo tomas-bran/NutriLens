@@ -365,3 +365,22 @@ html {
     opacity: 0.6;
   }
 }
+
+/* NutriWorld — barra de carga indeterminada (segmento que viaja). */
+@keyframes nutriworld-loader-slide {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(420%);
+  }
+}
+.nutriworld-loader-indeterminate {
+  animation: nutriworld-loader-slide 1.1s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nutriworld-loader-indeterminate {
+    animation: none;
+    width: 100%;
+  }
+}

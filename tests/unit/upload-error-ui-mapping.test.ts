@@ -12,7 +12,7 @@ describe('mapErrorCodeToUi — title per error code (spec §9)', () => {
     file_too_large: 'Archivo muy grande',
     empty_file: 'Archivo vacío',
     pdf_unreadable: 'PDF ilegible',
-    image_not_supported: 'No parece una etiqueta',
+    image_not_supported: 'No parece un producto',
     model_timeout: 'Tardamos demasiado',
     model_rate_limited: 'Demasiadas solicitudes',
     model_error: 'Algo salió mal',
@@ -32,8 +32,8 @@ describe('mapErrorCodeToUi — description (canned vs use reason)', () => {
     expect(mapErrorCodeToUi('unsupported_file_type').description).toBeNull();
   });
 
-  it('image_not_supported uses API reason (description=null)', () => {
-    expect(mapErrorCodeToUi('image_not_supported').description).toBeNull();
+  it('image_not_supported has canned description mentioning producto', () => {
+    expect(mapErrorCodeToUi('image_not_supported').description).toContain('producto');
   });
 
   it('file_too_large has canned description mentioning 10 MB', () => {
@@ -151,13 +151,13 @@ describe('resolveErrorDescription — picks canned vs reason', () => {
     );
   });
 
-  it('uses API reason for image_not_supported', () => {
+  it('uses canned description for image_not_supported, ignoring server reason', () => {
     expect(
       resolveErrorDescription(
         'image_not_supported',
-        'La imagen no parece corresponder a una etiqueta alimentaria.',
+        'La imagen no parece corresponder a un producto alimentario.',
       ),
-    ).toBe('La imagen no parece corresponder a una etiqueta alimentaria.');
+    ).toBe('La imagen no parece ser de un producto alimentario. Probá con la foto del envase.');
   });
 
   it('uses canned description for file_too_large, ignoring server reason', () => {

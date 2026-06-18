@@ -20,7 +20,7 @@ const FAQS = [
     a: 'Con reglas propias y transparentes sobre los datos detectados en la etiqueta: alérgenos presentes y sellos de advertencia.',
   },
   {
-    q: '¿Es un consejo médico?',
+    q: '¿Es un consejero médico?',
     a: 'No. NutriLens es un asistente informativo: no reemplaza a un profesional de la salud ni la lectura del etiquetado oficial del producto.',
   },
   {

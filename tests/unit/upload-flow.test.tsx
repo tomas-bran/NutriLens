@@ -130,6 +130,18 @@ describe('<UploadFlow> — código de barras (NL-601)', () => {
     expect(screen.getByTestId('selected-file')).toBeInTheDocument();
     expect(screen.queryByTestId('barcode-missing-note')).not.toBeInTheDocument();
   });
+
+  it('avisa que falta la foto del producto cuando solo se cargó el código de barras', async () => {
+    const user = userEvent.setup();
+    render(<UploadFlow />);
+    // Sin nada cargado no debería estar el aviso.
+    expect(screen.queryByTestId('product-required-note')).not.toBeInTheDocument();
+    await user.upload(
+      screen.getByLabelText('Subir foto del código de barras') as HTMLInputElement,
+      mkFile('codigo.jpg', 'image/jpeg'),
+    );
+    expect(screen.getByTestId('product-required-note')).toBeInTheDocument();
+  });
 });
 
 /**

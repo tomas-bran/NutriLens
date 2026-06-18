@@ -7,7 +7,13 @@
 import type { IaProvider } from '@/lib/ai/types';
 import { logger } from '@/lib/logger';
 import { fetchByBarcode, fetchByName } from '@/lib/off/client';
-import { buildEnrichment, parseOffIngredients, productNamesOverlap } from '@/lib/off/enrich';
+import {
+  buildEnrichment,
+  isGenericProductName,
+  mapOffCategory,
+  parseOffIngredients,
+  productNamesOverlap,
+} from '@/lib/off/enrich';
 import { decodeBarcode, extractValidBarcode } from '@/lib/off/decode-barcode';
 import { makeTrace } from '../trace';
 import type { AnalysisContext } from '../context';
@@ -121,7 +127,11 @@ export async function enrich_with_off(
     const fromBarcodeImage =
       barcodeSource === 'barcode-image' || barcodeSource === 'barcode-image-ocr';
     if (fromBarcodeImage && offProduct) {
-      enrichment.barcodeMismatch = !productNamesOverlap(offProduct.product_name, product.producto);
+      // Solo tiene sentido comparar nombres si la IA pudo nombrar la foto. Si el
+      // nombre es genérico ("otros"), no hay con qué juzgar → no marcamos mismatch.
+      enrichment.barcodeMismatch =
+        !isGenericProductName(product.producto) &&
+        !productNamesOverlap(offProduct.product_name, product.producto);
     }
 
     logger.info('enrich_with_off', {
@@ -157,8 +167,22 @@ export async function enrich_with_off(
       // nombre → bump moderado. Nunca baja por debajo de la confianza del modelo.
       const mergedConfidence = Math.max(product.confidence, usedBarcode ? 0.9 : 0.8);
 
+      // Identidad (nombre + categoría): con barcode OFF es autoritativo; sin
+      // barcode, solo completamos si la IA no pudo nombrar/categorizar la foto
+      // (genérico/"otros"). No pisamos cuando el código parece de otro producto.
+      const offName = offProduct.product_name.trim();
+      const useOffIdentity =
+        enrichment.barcodeMismatch !== true &&
+        (usedBarcode || isGenericProductName(product.producto));
+      const mergedName = useOffIdentity && offName ? offName.slice(0, 200) : product.producto;
+      const mappedCategoria = mapOffCategory(offProduct.categories_tags);
+      const mergedCategoria =
+        useOffIdentity && mappedCategoria ? mappedCategoria : product.categoria;
+
       updatedProduct = {
         ...product,
+        producto: mergedName,
+        categoria: mergedCategoria,
         alergenos: mergedAllergens,
         ingredientes_detectados: mergedIngredients,
         confidence: mergedConfidence,
