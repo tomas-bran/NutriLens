@@ -41,6 +41,7 @@ export function NutriLensNPC() {
   const npcState = useNutriWorld((s) => s.npcState);
   const targetZone = useNutriWorld((s) => s.npcTargetZone);
   const message = useNutriWorld((s) => s.assistantMessage);
+  const worldReady = useNutriWorld((s) => s.worldReady);
   const target = useMemo(() => new Vector3(), []);
   const dir = useMemo(() => new Vector3(), []);
   // Logo de marca (NutriMark) para pecho y espalda.
@@ -94,11 +95,13 @@ export function NutriLensNPC() {
     }
 
     // One-shot de entrada: el robot aterriza desde arriba escalando + girando.
-    if (spawnStart.current === null) spawnStart.current = t;
+    // Arranca recién cuando el loader terminó (worldReady), si no la animación
+    // corría tapada por la pantalla de carga y no se veía.
+    if (worldReady && spawnStart.current === null) spawnStart.current = t;
     let entryY = 0;
-    let entryScale = 1;
+    let entryScale = worldReady ? 1 : 0; // antes del loader, oculto
     let entrySpin = 0;
-    {
+    if (spawnStart.current !== null) {
       const e = t - spawnStart.current;
       const DUR = 1.4;
       if (e < DUR) {
@@ -107,6 +110,8 @@ export function NutriLensNPC() {
         entryY = (1 - ease) * 7;
         entryScale = 0.15 + ease * 0.85;
         entrySpin = (1 - ease) * Math.PI * 4;
+      } else {
+        entryScale = 1;
       }
     }
 

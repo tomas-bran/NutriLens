@@ -34,6 +34,9 @@ interface State {
   speaking: boolean;
   /** Posición del jugador en el plano (para el minimapa). */
   playerPos: { x: number; z: number };
+  /** El loader inicial terminó y el mundo es visible (dispara la animación de
+   * entrada del NPC, que si no corría tapada por el loader). */
+  worldReady: boolean;
 }
 
 const initialState: State = {
@@ -49,6 +52,7 @@ const initialState: State = {
   muted: false,
   speaking: false,
   playerPos: { x: 0, z: 6 },
+  worldReady: false,
 };
 
 let state: State = initialState;
@@ -146,6 +150,11 @@ export function setNearProduct(id: string | null): void {
 /** Actualiza la posición del jugador (throttleada por el caller) para el minimapa. */
 export function setPlayerPos(x: number, z: number): void {
   setState({ playerPos: { x, z } });
+}
+
+/** El loader inicial terminó → el mundo es visible (dispara la entrada del NPC). */
+export function setWorldReady(): void {
+  if (!state.worldReady) setState({ worldReady: true });
 }
 
 // Lecturas no-reactivas para `useFrame` / handlers de teclado (evitan suscribir

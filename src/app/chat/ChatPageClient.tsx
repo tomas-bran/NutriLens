@@ -181,6 +181,11 @@ export function ChatPageClient({
     async (question: string) => {
       const userMessage: ChatMessage = { role: 'user', id: makeId(), text: question };
       const assistantId = makeId();
+      // Capturamos la conversación PREVIA al envío ahora — antes de despachar.
+      // `stateMessagesRef` se reasigna en cada render a `state.messages`, así que
+      // al persistir (tras el stream) ya incluiría este intercambio: componer con
+      // él duplicaba el último mensaje al recargar la conversación.
+      const priorMessages = stateMessagesRef.current;
       dispatch({ type: 'submit', userMessage, question });
 
       let answer = '';
@@ -230,7 +235,7 @@ export function ChatPageClient({
         products,
         fallback,
       };
-      void persistMessages([...stateMessagesRef.current, userMessage, assistantMessage]);
+      void persistMessages([...priorMessages, userMessage, assistantMessage]);
     },
     [fetchStreamImpl, persistMessages],
   );
@@ -269,7 +274,7 @@ export function ChatPageClient({
         ? { products: m.products ?? [], fallback: m.fallback ?? null }
         : {}),
     })) as ChatMessage[];
-    dispatch({ type: 'load', messages });
+    dispatch({ type: 'load', messages: dropDuplicateTail(messages) });
   }, []);
 
   const hasMessages = state.messages.length > 0;
@@ -281,7 +286,7 @@ export function ChatPageClient({
     // meter <SidebarUser> (async server component) dentro de un árbol cliente
     // daría "uncached promise" / loop infinito. Altura acotada: el hilo scrollea
     // internamente y el input queda fijo (NL-305).
-    <div className="flex h-[calc(100dvh-1.5rem)] min-h-0 flex-col gap-3 md:h-[calc(100vh-3rem)]">
+    <div className="flex h-[calc(100dvh-1.5rem)] min-h-0 flex-col gap-3 overflow-hidden md:h-[calc(100vh-3rem)]">
       {/* Sin header: el hilo ocupa todo el alto. Solo dejamos un botón discreto
           de "Nueva conversación" cuando ya hay mensajes (NL-301 §3). */}
       {hasMessages && (
@@ -298,7 +303,7 @@ export function ChatPageClient({
         </div>
       )}
 
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto pb-2">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2">
         {!hasMessages && state.status === 'IDLE' ? (
           // Empty state centrado verticalmente en el espacio disponible.
           <div className="flex min-h-full flex-col justify-center gap-6">
@@ -346,6 +351,23 @@ export function ChatPageClient({
       </div>
     </div>
   );
+}
+
+/**
+ * Limpia conversaciones ya guardadas con el bug viejo de duplicación, que
+ * persistía el último intercambio dos veces: `[…, U, A, U, A]`. Si los dos
+ * últimos mensajes repiten exactamente (rol + texto) a los dos anteriores,
+ * descartamos la cola duplicada. Patrón muy específico → no toca repeticiones
+ * legítimas aisladas.
+ */
+function dropDuplicateTail(msgs: ChatMessage[]): ChatMessage[] {
+  const n = msgs.length;
+  if (n < 4) return msgs;
+  const same = (a: ChatMessage, b: ChatMessage) => a.role === b.role && a.text === b.text;
+  if (same(msgs[n - 1]!, msgs[n - 3]!) && same(msgs[n - 2]!, msgs[n - 4]!)) {
+    return msgs.slice(0, n - 2);
+  }
+  return msgs;
 }
 
 function makeId(): string {

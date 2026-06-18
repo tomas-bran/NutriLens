@@ -41,6 +41,7 @@ function mkOff(over: Partial<OFFProduct> = {}): OFFProduct {
     ingredients_text: 'Harina, _leche_, azúcar, sal',
     allergens_tags: ['en:milk'],
     labels_tags: [],
+    categories_tags: [],
     nutriments: {},
     url: 'https://world.openfoodfacts.org/product/7790001112223',
     ...over,
@@ -197,6 +198,39 @@ describe('enrich_with_off — merge de datos de OFF (NL-601)', () => {
     const out = await enrich_with_off(mkCtx(mkProduct({ confidence: 0.3, alergenos: [] })));
     expect(out.product?.confidence).toBe(0.3);
     expect(out.product?.alergenos).toEqual([]);
+  });
+
+  it('match por barcode con nombre genérico ("otros") → nombre + categoría de OFF', async () => {
+    decodeMock.mockResolvedValue('7790001112223');
+    byBarcodeMock.mockResolvedValue(
+      mkOff({ product_name: 'Fideos Spaghetti', categories_tags: ['en:biscuits'] }),
+    );
+    const out = await enrich_with_off(mkCtx(mkProduct({ producto: 'otros', categoria: 'otros' })));
+    expect(out.product?.producto).toBe('Fideos Spaghetti');
+    expect(out.product?.categoria).toBe('galletitas');
+  });
+
+  it('match por barcode (autoritativo) pisa el nombre de la IA con el de OFF', async () => {
+    decodeMock.mockResolvedValue('7790001112223');
+    byBarcodeMock.mockResolvedValue(mkOff({ product_name: 'Galletitas Reales OFF' }));
+    const out = await enrich_with_off(mkCtx(mkProduct({ producto: 'Galletitas Test' })));
+    expect(out.product?.producto).toBe('Galletitas Reales OFF');
+  });
+
+  it('categoría OFF sin mapeo conocido → conserva la del producto', async () => {
+    decodeMock.mockResolvedValue('7790001112223');
+    byBarcodeMock.mockResolvedValue(mkOff({ categories_tags: ['en:plant-based-foods'] }));
+    const out = await enrich_with_off(mkCtx(mkProduct({ producto: 'otros', categoria: 'otros' })));
+    expect(out.product?.categoria).toBe('otros');
+  });
+
+  it('match por nombre con nombre IA válido → NO pisa el nombre del usuario', async () => {
+    decodeMock.mockResolvedValue(null);
+    byNameMock.mockResolvedValue(mkOff({ product_name: 'Otro Nombre OFF' }));
+    const out = await enrich_with_off(
+      mkCtx(mkProduct({ barcode: undefined, producto: 'Galletitas Test' })),
+    );
+    expect(out.product?.producto).toBe('Galletitas Test');
   });
 });
 

@@ -29,6 +29,8 @@ export interface OFFProduct {
   ingredients_text: string;
   allergens_tags: string[];
   labels_tags: string[];
+  /** Tags de categoría de OFF (p.ej. "en:biscuits"). Se mapean a `Categoria`. */
+  categories_tags: string[];
   nutriments: OFFNutrients;
   url: string;
 }
@@ -88,6 +90,9 @@ function parseProduct(data: Record<string, unknown>, barcode: string): OFFProduc
       ? (p['allergens_tags'] as string[]).map(String)
       : [],
     labels_tags: Array.isArray(p['labels_tags']) ? (p['labels_tags'] as string[]).map(String) : [],
+    categories_tags: Array.isArray(p['categories_tags'])
+      ? (p['categories_tags'] as string[]).map(String)
+      : [],
     nutriments: (p['nutriments'] as OFFNutrients) ?? {},
     url: `https://world.openfoodfacts.org/product/${barcode}`,
   };
@@ -129,7 +134,7 @@ export async function fetchByName(name: string, brand?: string): Promise<OFFProd
       json: 'true',
       page_size: '1',
       fields:
-        'code,product_name,brands,ingredients_text,ingredients_text_es,ingredients_text_en,allergens_tags,labels_tags,nutriments',
+        'code,product_name,brands,ingredients_text,ingredients_text_es,ingredients_text_en,allergens_tags,labels_tags,categories_tags,nutriments',
     });
     const res = await fetchWithTimeout(`${OFF_BASE}/cgi/search.pl?${params.toString()}`);
     if (!res.ok) {

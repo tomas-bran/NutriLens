@@ -5,18 +5,42 @@
  * consulta con ejemplos abajo. `pointer-events-auto` solo en los controles para
  * que el resto de los clicks lleguen al canvas 3D.
  */
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/cn';
 import { setMuted, submitQuery, useNutriWorld, type NpcState } from './store/useNutriWorldStore';
 
-const EXAMPLES = [
+/** Pills de arranque (cuando todavía no se preguntó nada). */
+const STARTER_PILLS = [
   'Mostrame galletitas aptas para celíacos',
   'Quiero algo sin lactosa',
   'Buscá snacks de riesgo bajo',
   'Mostrame productos veganos',
 ];
+
+/**
+ * Pills dinámicas según lo último que se habló: sugiere filtros que NO estaban
+ * en la última consulta para que la conversación avance (en vez de repetir).
+ * Determinístico (sin LLM) → estable para la demo.
+ */
+function dynamicPills(lastQuery: string | null, npcState: NpcState): string[] {
+  if (!lastQuery || npcState === 'idle') return STARTER_PILLS;
+  const q = lastQuery.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const candidates: Array<{ when: boolean; pill: string }> = [
+    { when: !q.includes('vegan'), pill: 'Mostrame productos veganos' },
+    { when: !q.includes('lactosa'), pill: 'Quiero algo sin lactosa' },
+    {
+      when: !q.includes('celiac') && !q.includes('gluten'),
+      pill: 'Mostrame aptos para celíacos',
+    },
+    { when: !q.includes('snack'), pill: 'Buscá snacks de riesgo bajo' },
+    { when: !q.includes('riesgo'), pill: 'Mostrame algo de riesgo bajo' },
+    { when: !q.includes('cereal'), pill: 'Mostrame cereales' },
+  ];
+  const picked = candidates.filter((c) => c.when).map((c) => c.pill);
+  return (picked.length > 0 ? picked : STARTER_PILLS).slice(0, 4);
+}
 
 const STATE_TEXT: Record<NpcState, string> = {
   idle: 'Listo para ayudarte',
@@ -35,6 +59,8 @@ export function AssistantOverlay() {
   const source = useNutriWorld((s) => s.source);
   const muted = useNutriWorld((s) => s.muted);
   const speaking = useNutriWorld((s) => s.speaking);
+  const lastQuery = useNutriWorld((s) => s.query);
+  const pills = useMemo(() => dynamicPills(lastQuery, npcState), [lastQuery, npcState]);
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -92,7 +118,7 @@ export function AssistantOverlay() {
       {/* Input + ejemplos (abajo). */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 p-4">
         <div className="pointer-events-auto flex flex-wrap justify-center gap-2">
-          {EXAMPLES.map((ex) => (
+          {pills.map((ex) => (
             <button
               key={ex}
               type="button"

@@ -103,7 +103,7 @@ function enforceRejection(detected: DetectedLabelKind): void {
   if (!detected.is_food_label && detected.confidence >= NOT_FOOD_REJECT_THRESHOLD) {
     throw new ApiError(
       'image_not_supported',
-      'La imagen no parece corresponder a una etiqueta alimentaria.',
+      'La imagen no parece corresponder a un producto alimentario.',
       422,
       { confidence: detected.confidence },
     );

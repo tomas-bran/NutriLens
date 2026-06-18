@@ -7,7 +7,7 @@
  * - missing fields filled from OFF
  * - confidence delta
  */
-import type { Alergeno } from '@schemas/product';
+import type { Alergeno, Categoria } from '@schemas/product';
 import { ALERGENOS } from '@schemas/product';
 import type { OFFProduct } from './client';
 
@@ -112,6 +112,64 @@ export function productNamesOverlap(a: string, b: string): boolean {
   if (ta.length === 0 || tb.length === 0) return true;
   const setB = new Set(tb);
   return ta.some((t) => setB.has(t));
+}
+
+/**
+ * ¿El nombre extraído por la IA es genérico/inútil? (foto de un código de barras,
+ * etiqueta ilegible, etc. → "otros"). En ese caso preferimos el nombre de OFF.
+ */
+export function isGenericProductName(name: string): boolean {
+  const n = name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+  if (n.length < 3) return true;
+  return [
+    'otros',
+    'otro',
+    'producto',
+    'desconocido',
+    'sin nombre',
+    'unknown',
+    'n/a',
+    'na',
+  ].includes(n);
+}
+
+/**
+ * Mapea los `categories_tags` de OFF (p.ej. "en:biscuits", "es:galletas") a una
+ * `Categoria` de NutriLens. Best-effort por keywords; si no hay match claro
+ * devuelve null (se conserva la categoría que tenía el producto, típicamente
+ * "otros"). El orden define prioridad ante tags que matchean más de una.
+ */
+export function mapOffCategory(categoriesTags: string[]): Categoria | null {
+  const hay = categoriesTags.map((t) => t.toLowerCase().replace(/^[a-z]{2}:/, '')).join(' ');
+  if (!hay) return null;
+  const rules: Array<[readonly string[], Categoria]> = [
+    [
+      ['beverage', 'drink', 'water', 'soda', 'juice', 'jugo', 'bebida', 'tea', 'coffee', 'cafe'],
+      'bebidas',
+    ],
+    [
+      [
+        'dairy',
+        'dairies',
+        'milk',
+        'leche',
+        'yogur',
+        'yoghurt',
+        'cheese',
+        'queso',
+        'crema',
+        'butter',
+      ],
+      'lácteos',
+    ],
+    [['biscuit', 'cookie', 'galleta', 'cracker'], 'galletitas'],
+    [['cereal', 'granola', 'muesli', 'oat', 'avena', 'copos', 'corn-flake'], 'cereales'],
+    [['snack', 'chip', 'crisp', 'papas', 'popcorn', 'pop-corn'], 'snacks'],
+  ];
+  for (const [keys, cat] of rules) {
+    if (keys.some((k) => hay.includes(k))) return cat;
+  }
+  return null;
 }
 
 function extractAllergenFromTag(tag: string): Alergeno | null {

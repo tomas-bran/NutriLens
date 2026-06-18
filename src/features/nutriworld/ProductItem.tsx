@@ -85,7 +85,15 @@ export function ProductItem({ product, index = 0 }: { product: NutriProduct; ind
         ref={groupRef}
         onClick={(e) => {
           e.stopPropagation();
-          if (highlighted) selectProduct(product.id);
+          // Cualquier producto se puede ver, haya o no una consulta activa.
+          selectProduct(product.id);
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = '';
         }}
       >
         {/* Cuerpo del producto (esquinas redondeadas) */}
@@ -124,7 +132,7 @@ export function ProductItem({ product, index = 0 }: { product: NutriProduct; ind
         </mesh>
       </group>
 
-      {highlighted && (
+      {(highlighted || nearById) && (
         <Billboard position={[0, nearById ? labelY + 0.5 : labelY, 0]}>
           {/* Nombre (solo). El riesgo/aptitud va en la ficha (E). Wrap + outline
               blanco para que se lea sobre cualquier fondo sin encimarse. */}

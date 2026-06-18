@@ -31,7 +31,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
   const raw = await searchParams;
   const filters = parseHistoryFilters(raw);
 
-  const where: Prisma.ProductWhereInput = {};
+  const where: Prisma.ProductWhereInput = { deletedAt: null };
   // "Analizados por vos": limita el catálogo a los productos que ESTE usuario
   // analizó (vínculo ProductAnalysis). Sin sesión, el filtro no matchea nada
   // (`userId` imposible) → lista vacía, en vez de exponer el catálogo entero.

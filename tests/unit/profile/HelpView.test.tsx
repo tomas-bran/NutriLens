@@ -15,7 +15,7 @@ describe('<HelpSection> — Ayuda embebida en Mi cuenta', () => {
   it('lista las preguntas frecuentes y el contacto de soporte', () => {
     render(<HelpSection />);
     expect(screen.getByText('¿Qué es NutriLens?')).toBeInTheDocument();
-    expect(screen.getByText('¿Es un consejo médico?')).toBeInTheDocument();
+    expect(screen.getByText('¿Es un consejero médico?')).toBeInTheDocument();
     expect(screen.getByText(/soporte@nutrilens\.app/)).toBeInTheDocument();
   });
 

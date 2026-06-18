@@ -19,6 +19,15 @@ import type { ChatProductRef } from '@/lib/chat/response';
 import type { ChatFallback } from '@/lib/chat/empty-response';
 import type { ChatStreamEvent } from '@/lib/chat/stream-events';
 import type { fetchChatStream } from '@/lib/chat/fetch-chat-stream';
+import { createConversation } from '@/lib/conversations/client';
+
+vi.mock('@/lib/conversations/client', () => ({
+  createConversation: vi.fn().mockResolvedValue({ id: 'conv-1' }),
+  updateConversation: vi.fn().mockResolvedValue(undefined),
+  getConversation: vi.fn().mockResolvedValue(null),
+}));
+
+const createConversationMock = vi.mocked(createConversation);
 
 const CHIP: ChatProductRef = {
   id: 'p1',
@@ -67,6 +76,23 @@ function answerEvents(opts: {
 
 beforeAll(() => {
   Element.prototype.scrollIntoView = vi.fn();
+});
+
+describe('<ChatPageClient> — persistencia sin duplicar (re-entrar a la conversación)', () => {
+  it('persiste el intercambio una sola vez (no [U, A, U, A])', async () => {
+    createConversationMock.mockClear();
+    const user = userEvent.setup();
+    const fetchStreamImpl = streamMock(answerEvents({ text: 'respuesta del asistente' }));
+
+    render(<ChatPageClient productsInBase={3} fetchStreamImpl={fetchStreamImpl} />);
+    await user.type(screen.getByTestId('chat-input'), 'mi pregunta{Enter}');
+
+    await waitFor(() => expect(createConversationMock).toHaveBeenCalledTimes(1));
+    const persisted = createConversationMock.mock.calls[0]![0];
+    expect(persisted).toHaveLength(2);
+    expect(persisted[0]).toMatchObject({ role: 'user', text: 'mi pregunta' });
+    expect(persisted[1]).toMatchObject({ role: 'assistant', text: 'respuesta del asistente' });
+  });
 });
 
 describe('<ChatPageClient> — flujo happy (US-27 §1 + NL-304 streaming)', () => {

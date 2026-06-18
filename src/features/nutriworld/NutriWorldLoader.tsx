@@ -8,6 +8,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { NutriWorldLoadingScreen } from './NutriWorldLoadingScreen';
+import { setWorldReady } from './store/useNutriWorldStore';
 
 const FILL_MS = 1600;
 const HOLD_MS = 250;
@@ -28,7 +29,13 @@ export function NutriWorldLoader() {
       if (linear < 1) {
         raf = requestAnimationFrame(tick);
       } else {
-        timers.push(setTimeout(() => setPhase('fading'), HOLD_MS));
+        timers.push(
+          setTimeout(() => {
+            setPhase('fading');
+            // El mundo ya es visible → arranca la animación de entrada del NPC.
+            setWorldReady();
+          }, HOLD_MS),
+        );
         timers.push(setTimeout(() => setPhase('done'), HOLD_MS + FADE_MS));
       }
     };

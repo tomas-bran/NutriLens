@@ -1,7 +1,7 @@
 /**
- * `/nutriworld` — experiencia 3D beta (NutriWorld). Solo admins: el resto cae
- * en notFound (y en el sidebar el item ya aparece disabled). Pantalla completa,
- * fuera del AppShell (la escena 3D quiere todo el viewport).
+ * `/nutriworld` — experiencia 3D beta (NutriWorld). Solo admins whitelisteados:
+ * el resto cae en notFound y NO ve el item en el sidebar (no aparece). Pantalla
+ * completa, fuera del AppShell (la escena 3D quiere todo el viewport).
  */
 import { notFound } from 'next/navigation';
 import { isCurrentUserAdmin } from '@/lib/auth/is-admin';

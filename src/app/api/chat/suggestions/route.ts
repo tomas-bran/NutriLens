@@ -24,6 +24,7 @@ const POOL_SIZE = 40;
 export async function GET(): Promise<NextResponse> {
   try {
     const pool = await prisma.product.findMany({
+      where: { deletedAt: null },
       orderBy: { createdAt: 'desc' },
       take: POOL_SIZE,
     });

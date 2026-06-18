@@ -29,7 +29,9 @@ export const dynamic = 'force-dynamic';
 export default async function AnalizarResultPage({ params }: PageProps) {
   const { id } = await params;
 
-  const product = await prisma.product.findUnique({ where: { id } }).catch(() => null);
+  const product = await prisma.product
+    .findFirst({ where: { id, deletedAt: null } })
+    .catch(() => null);
   if (!product) {
     notFound();
   }

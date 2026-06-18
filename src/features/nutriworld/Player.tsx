@@ -9,9 +9,8 @@ import { useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Billboard, Text } from '@react-three/drei';
 import { Vector3, type Group } from 'three';
-import { getProductById } from './data/products';
+import { PRODUCTS } from './data/products';
 import {
-  getHighlightedIds,
   getNearProductId,
   selectProduct,
   setNearProduct,
@@ -99,18 +98,16 @@ export function Player() {
     camera.position.lerp(camTarget, 1 - Math.pow(0.0015, delta));
     camera.lookAt(g.position.x, g.position.y + 1, g.position.z);
 
-    // Producto resaltado más cercano dentro del rango → habilita "E".
-    const ids = getHighlightedIds();
+    // Producto más cercano dentro del rango → habilita "E" (cualquier producto,
+    // haya o no una consulta activa).
     let nearest: string | null = null;
     let best = NEAR_RANGE;
-    for (const id of ids) {
-      const p = getProductById(id);
-      if (!p) continue;
+    for (const p of PRODUCTS) {
       tmp.set(p.position[0], g.position.y, p.position[2]);
       const d = tmp.distanceTo(g.position);
       if (d < best) {
         best = d;
-        nearest = id;
+        nearest = p.id;
       }
     }
     setNearProduct(nearest);

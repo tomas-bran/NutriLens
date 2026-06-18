@@ -85,6 +85,7 @@ function makeRow(overrides: Partial<PrismaProduct> = {}): PrismaProduct {
     promptVersion: 'extract_product-v1',
     offEnrichment: null,
     createdAt: new Date('2026-05-16T14:32:11.000Z'),
+    deletedAt: null,
     ...overrides,
   };
 }

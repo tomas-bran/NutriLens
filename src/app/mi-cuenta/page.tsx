@@ -27,7 +27,9 @@ export default async function MiCuentaPage() {
   // Las stats del perfil son PER-USUARIO: cuentan lo que ESTE usuario analizó
   // (vínculo ProductAnalysis), no el catálogo compartido entero. Mismo criterio
   // que el filtro "Analizados por vos". Con solo el seed (sin vínculos) → 0.
-  const mine = { analyses: { some: { userId } } };
+  // Solo productos NO borrados (soft delete): si un admin elimina un producto
+  // que este usuario analizó, deja de contar acá (y desaparece del catálogo).
+  const mine = { analyses: { some: { userId } }, deletedAt: null };
   const [catalogoCount, analizados, riesgoAlto, conAlergenos, initialPrefs] = await Promise.all([
     getCatalogoCount(),
     prisma.product.count({ where: mine }),

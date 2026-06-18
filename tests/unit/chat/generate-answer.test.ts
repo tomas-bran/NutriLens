@@ -52,6 +52,7 @@ function row(overrides: Partial<PrismaProduct> = {}): PrismaProduct {
     promptVersion: 'extract_product-v1',
     offEnrichment: null,
     createdAt: new Date(),
+    deletedAt: null,
   };
 }
 
