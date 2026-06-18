@@ -59,13 +59,13 @@ El usuario puede hacer click/interactuar para ver detalle.
 
 Usar:
 
-* **Next.js + React + TypeScript**
-* **React Three Fiber** para integrar Three.js con React.
-* **@react-three/drei** para helpers: cámara, controles, texto 3D, loaders.
-* **zustand** o estado React simple para estado global.
-* **Tailwind CSS** para overlays 2D.
-* Mock data local para productos al inicio.
-* Endpoint interno opcional para agente IA.
+- **Next.js + React + TypeScript**
+- **React Three Fiber** para integrar Three.js con React.
+- **@react-three/drei** para helpers: cámara, controles, texto 3D, loaders.
+- **zustand** o estado React simple para estado global.
+- **Tailwind CSS** para overlays 2D.
+- Mock data local para productos al inicio.
+- Endpoint interno opcional para agente IA.
 
 **React Three Fiber** permite declarar escenas 3D como componentes React.
 
@@ -79,17 +79,16 @@ Usar:
 
 Una escena pequeña tipo supermercado con:
 
-* Piso.
-* Iluminación.
-* 3 góndolas o zonas.
-* Productos representados como cajas simples.
-* Carteles visibles:
-
-  * “Sin TACC”
-  * “Vegano”
-  * “Sin lactosa”
-  * “Snacks”
-  * “Galletitas”
+- Piso.
+- Iluminación.
+- 3 góndolas o zonas.
+- Productos representados como cajas simples.
+- Carteles visibles:
+  - “Sin TACC”
+  - “Vegano”
+  - “Sin lactosa”
+  - “Snacks”
+  - “Galletitas”
 
 No necesitamos modelos 3D complejos. Se pueden usar cajas, planos, colores y textos.
 
@@ -99,11 +98,11 @@ No necesitamos modelos 3D complejos. Se pueden usar cajas, planos, colores y tex
 
 Un avatar simple controlable con teclado:
 
-* `WASD` o flechas para moverse.
-* Cámara en tercera persona.
-* Movimiento básico sobre plano.
-* No hace falta animación compleja.
-* Puede ser una cápsula, modelo simple o placeholder.
+- `WASD` o flechas para moverse.
+- Cámara en tercera persona.
+- Movimiento básico sobre plano.
+- No hace falta animación compleja.
+- Puede ser una cápsula, modelo simple o placeholder.
 
 Controles esperados:
 
@@ -124,22 +123,21 @@ Un personaje guía controlado por el sistema.
 
 Puede ser:
 
-* Robot simple.
-* Mascota.
-* Cápsula con cara.
-* Modelo GLTF si existe, pero no es obligatorio.
+- Robot simple.
+- Mascota.
+- Cápsula con cara.
+- Modelo GLTF si existe, pero no es obligatorio.
 
 Debe tener:
 
-* Nombre visible: “NutriLens”.
-* Burbuja de diálogo.
-* Capacidad de moverse hacia una zona objetivo.
-* Estado visible:
-
-  * idle
-  * thinking
-  * guiding
-  * arrived
+- Nombre visible: “NutriLens”.
+- Burbuja de diálogo.
+- Capacidad de moverse hacia una zona objetivo.
+- Estado visible:
+  - idle
+  - thinking
+  - guiding
+  - arrived
 
 ---
 
@@ -149,14 +147,13 @@ Overlay 2D sobre la escena.
 
 Debe incluir:
 
-* Campo de texto.
-* Botón “Preguntar”.
-* Ejemplos rápidos:
-
-  * “Mostrame galletitas aptas para celíacos”
-  * “Quiero algo sin lactosa”
-  * “Buscá snacks de riesgo bajo”
-  * “Mostrame productos veganos”
+- Campo de texto.
+- Botón “Preguntar”.
+- Ejemplos rápidos:
+  - “Mostrame galletitas aptas para celíacos”
+  - “Quiero algo sin lactosa”
+  - “Buscá snacks de riesgo bajo”
+  - “Mostrame productos veganos”
 
 Por ahora no hace falta reconocimiento de voz. La voz se puede agregar luego con ElevenLabs.
 
@@ -170,13 +167,13 @@ Ejemplo:
 
 ```ts
 type ParsedIntent = {
-  intent: "find_products";
+  intent: 'find_products';
   category?: string;
   filters: {
     apto_celiaco?: boolean;
     apto_sin_lactosa?: boolean;
     apto_vegano?: boolean;
-    max_riesgo?: "bajo" | "medio" | "alto";
+    max_riesgo?: 'bajo' | 'medio' | 'alto';
   };
   targetZone: string;
 };
@@ -215,9 +212,9 @@ Ejemplo:
 export type Product = {
   id: string;
   name: string;
-  category: "galletitas" | "snacks" | "bebidas" | "cereales";
-  zone: "sin_tacc" | "vegano" | "sin_lactosa" | "snacks";
-  risk: "bajo" | "medio" | "alto";
+  category: 'galletitas' | 'snacks' | 'bebidas' | 'cereales';
+  zone: 'sin_tacc' | 'vegano' | 'sin_lactosa' | 'snacks';
+  risk: 'bajo' | 'medio' | 'alto';
   aptoCeliaco: boolean;
   aptoSinLactosa: boolean;
   aptoVegano: boolean;
@@ -234,50 +231,56 @@ Productos mínimos:
 ```ts
 export const products: Product[] = [
   {
-    id: "prod_avena_sintacc",
-    name: "Avena Crunch Sin TACC",
-    category: "galletitas",
-    zone: "sin_tacc",
-    risk: "bajo",
+    id: 'prod_avena_sintacc',
+    name: 'Avena Crunch Sin TACC',
+    category: 'galletitas',
+    zone: 'sin_tacc',
+    risk: 'bajo',
     aptoCeliaco: true,
     aptoSinLactosa: true,
     aptoVegano: true,
     allergens: [],
     seals: [],
-    ingredients: ["harina de avena sin TACC", "azúcar mascabo", "aceite de girasol", "chips de chocolate"],
-    explanation: "Buena opción dentro de galletitas porque no tiene gluten detectado y posee riesgo bajo.",
-    position: [8, 1, -4]
+    ingredients: [
+      'harina de avena sin TACC',
+      'azúcar mascabo',
+      'aceite de girasol',
+      'chips de chocolate',
+    ],
+    explanation:
+      'Buena opción dentro de galletitas porque no tiene gluten detectado y posee riesgo bajo.',
+    position: [8, 1, -4],
   },
   {
-    id: "prod_rice_cookies",
-    name: "Rice Cookies",
-    category: "galletitas",
-    zone: "sin_tacc",
-    risk: "bajo",
+    id: 'prod_rice_cookies',
+    name: 'Rice Cookies',
+    category: 'galletitas',
+    zone: 'sin_tacc',
+    risk: 'bajo',
     aptoCeliaco: true,
     aptoSinLactosa: true,
     aptoVegano: false,
     allergens: [],
     seals: [],
-    ingredients: ["harina de arroz", "aceite vegetal", "azúcar"],
-    explanation: "Opción apta para celíacos según los datos cargados. Riesgo bajo.",
-    position: [10, 1, -4]
+    ingredients: ['harina de arroz', 'aceite vegetal', 'azúcar'],
+    explanation: 'Opción apta para celíacos según los datos cargados. Riesgo bajo.',
+    position: [10, 1, -4],
   },
   {
-    id: "prod_choco_crunch",
-    name: "Choco Crunch",
-    category: "galletitas",
-    zone: "snacks",
-    risk: "alto",
+    id: 'prod_choco_crunch',
+    name: 'Choco Crunch',
+    category: 'galletitas',
+    zone: 'snacks',
+    risk: 'alto',
     aptoCeliaco: false,
     aptoSinLactosa: false,
     aptoVegano: false,
-    allergens: ["gluten", "leche"],
-    seals: ["exceso en azúcares", "exceso en grasas saturadas"],
-    ingredients: ["harina de trigo", "azúcar", "leche en polvo", "cacao"],
-    explanation: "No recomendable para personas celíacas o con intolerancia a la lactosa.",
-    position: [-6, 1, -2]
-  }
+    allergens: ['gluten', 'leche'],
+    seals: ['exceso en azúcares', 'exceso en grasas saturadas'],
+    ingredients: ['harina de trigo', 'azúcar', 'leche en polvo', 'cacao'],
+    explanation: 'No recomendable para personas celíacas o con intolerancia a la lactosa.',
+    position: [-6, 1, -2],
+  },
 ];
 ```
 
@@ -289,14 +292,14 @@ Implementar función:
 
 ```ts
 function findProducts(intent: ParsedIntent, products: Product[]): Product[] {
-  return products.filter(product => {
+  return products.filter((product) => {
     if (intent.category && product.category !== intent.category) return false;
 
     if (intent.filters.apto_celiaco && !product.aptoCeliaco) return false;
     if (intent.filters.apto_sin_lactosa && !product.aptoSinLactosa) return false;
     if (intent.filters.apto_vegano && !product.aptoVegano) return false;
 
-    if (intent.filters.max_riesgo === "bajo" && product.risk !== "bajo") return false;
+    if (intent.filters.max_riesgo === 'bajo' && product.risk !== 'bajo') return false;
 
     return true;
   });
@@ -311,10 +314,10 @@ Definir zonas fijas:
 
 ```ts
 export const zones = {
-  sin_tacc: { label: "Sin TACC", position: [8, 0, -4] },
-  vegano: { label: "Vegano", position: [-8, 0, 4] },
-  sin_lactosa: { label: "Sin lactosa", position: [4, 0, 8] },
-  snacks: { label: "Snacks", position: [-6, 0, -2] }
+  sin_tacc: { label: 'Sin TACC', position: [8, 0, -4] },
+  vegano: { label: 'Vegano', position: [-8, 0, 4] },
+  sin_lactosa: { label: 'Sin lactosa', position: [4, 0, 8] },
+  snacks: { label: 'Snacks', position: [-6, 0, -2] },
 };
 ```
 
@@ -323,8 +326,8 @@ Cuando el agente devuelva `targetZone`, el NPC debe caminar hacia `zones[targetZ
 Movimiento simple:
 
 ```ts
-direction = target - npc.position
-npc.position += normalized(direction) * speed * delta
+direction = target - npc.position;
+npc.position += normalized(direction) * speed * delta;
 ```
 
 No hace falta pathfinding avanzado. Las góndolas deben ubicarse de forma que el NPC pueda ir en línea recta.
@@ -337,10 +340,10 @@ No hace falta pathfinding avanzado. Las góndolas deben ubicarse de forma que el
 
 Los productos encontrados deben destacarse visualmente:
 
-* Contorno verde.
-* Brillo suave.
-* Animación de pulso.
-* Etiqueta flotante con nombre.
+- Contorno verde.
+- Brillo suave.
+- Animación de pulso.
+- Etiqueta flotante con nombre.
 
 Ejemplo:
 
@@ -358,15 +361,15 @@ Cuando el usuario se acerca a un producto recomendado y presiona `E`, debe abrir
 
 El panel debe mostrar:
 
-* Nombre del producto.
-* Riesgo.
-* Apto celíaco: sí/no.
-* Apto sin lactosa: sí/no.
-* Apto vegano: sí/no.
-* Ingredientes.
-* Alérgenos.
-* Sellos.
-* Explicación.
+- Nombre del producto.
+- Riesgo.
+- Apto celíaco: sí/no.
+- Apto sin lactosa: sí/no.
+- Apto vegano: sí/no.
+- Ingredientes.
+- Alérgenos.
+- Sellos.
+- Explicación.
 
 ---
 
@@ -380,7 +383,7 @@ type NutriWorldState = {
   parsedIntent: ParsedIntent | null;
   recommendedProducts: Product[];
   highlightedProductIds: string[];
-  npcState: "idle" | "thinking" | "guiding" | "arrived";
+  npcState: 'idle' | 'thinking' | 'guiding' | 'arrived';
   npcTargetZone: string | null;
   selectedProductId: string | null;
   assistantMessage: string | null;
@@ -407,10 +410,10 @@ Encontré 2 galletitas aptas para celíacos. Acompañame a la góndola Sin TACC.
 
 Acción:
 
-* NPC cambia a estado `guiding`.
-* NPC camina a zona `sin_tacc`.
-* Productos compatibles se resaltan.
-* Al llegar cambia a `arrived`.
+- NPC cambia a estado `guiding`.
+- NPC camina a zona `sin_tacc`.
+- Productos compatibles se resaltan.
+- Al llegar cambia a `arrived`.
 
 ---
 
@@ -430,8 +433,8 @@ No encontré productos que cumplan exactamente esos criterios. Puedo mostrarte a
 
 Acción:
 
-* NPC no se mueve.
-* UI muestra alternativas si existen.
+- NPC no se mueve.
+- UI muestra alternativas si existen.
 
 ---
 
@@ -451,8 +454,8 @@ Respuesta:
 
 Acción:
 
-* NPC queda en `thinking`.
-* No guía todavía.
+- NPC queda en `thinking`.
+- No guía todavía.
 
 ---
 
@@ -461,7 +464,7 @@ Acción:
 La β puede arrancar con parser por reglas. Luego reemplazar por un endpoint:
 
 ```ts
-POST /api/nutriworld/agent
+POST / api / nutriworld / agent;
 ```
 
 Body:
@@ -504,7 +507,7 @@ Luego agregar voz:
 Endpoint sugerido:
 
 ```ts
-POST /api/voice/speak
+POST / api / voice / speak;
 ```
 
 Body:
@@ -525,9 +528,9 @@ Response:
 
 En la UI agregar:
 
-* Icono de parlante.
-* Estado “NutriLens hablando”.
-* Botón mute/unmute.
+- Icono de parlante.
+- Estado “NutriLens hablando”.
+- Botón mute/unmute.
 
 ---
 
@@ -575,64 +578,64 @@ En la UI agregar:
 
 Responsable de:
 
-* Canvas 3D.
-* Luces.
-* Cámara.
-* Piso.
-* Góndolas.
-* Player.
-* NPC.
-* Productos.
+- Canvas 3D.
+- Luces.
+- Cámara.
+- Piso.
+- Góndolas.
+- Player.
+- NPC.
+- Productos.
 
 ## `Player.tsx`
 
 Responsable de:
 
-* Movimiento del usuario.
-* Input WASD.
-* Posición.
-* Interacción con productos cercanos.
+- Movimiento del usuario.
+- Input WASD.
+- Posición.
+- Interacción con productos cercanos.
 
 ## `NutriLensNPC.tsx`
 
 Responsable de:
 
-* Mostrar el personaje NutriLens.
-* Mostrar nombre y burbuja.
-* Moverse hacia zona objetivo.
-* Cambiar estado visual.
+- Mostrar el personaje NutriLens.
+- Mostrar nombre y burbuja.
+- Moverse hacia zona objetivo.
+- Cambiar estado visual.
 
 ## `ProductShelf.tsx`
 
 Responsable de:
 
-* Renderizar góndola.
-* Cartel de zona.
-* Productos ubicados en esa zona.
+- Renderizar góndola.
+- Cartel de zona.
+- Productos ubicados en esa zona.
 
 ## `ProductItem.tsx`
 
 Responsable de:
 
-* Renderizar producto.
-* Highlight si fue recomendado.
-* Detectar cercanía o click.
-* Abrir detalle.
+- Renderizar producto.
+- Highlight si fue recomendado.
+- Detectar cercanía o click.
+- Abrir detalle.
 
 ## `AssistantOverlay.tsx`
 
 Responsable de:
 
-* Input de consulta.
-* Botón preguntar.
-* Mensaje del asistente.
-* Estado del agente.
+- Input de consulta.
+- Botón preguntar.
+- Mensaje del asistente.
+- Estado del agente.
 
 ## `ProductDetailPanel.tsx`
 
 Responsable de:
 
-* Mostrar ficha del producto seleccionado.
+- Mostrar ficha del producto seleccionado.
 
 ---
 
@@ -640,33 +643,33 @@ Responsable de:
 
 La versión β se considera funcional si:
 
-* El usuario puede entrar a `/nutriworld`.
-* Se renderiza una escena 3D estable.
-* El usuario puede moverse con teclado.
-* Hay un NPC visible llamado NutriLens.
-* El usuario puede escribir una consulta.
-* La consulta “Mostrame galletitas aptas para celíacos” devuelve productos compatibles.
-* El NPC responde con texto.
-* El NPC camina hacia la góndola Sin TACC.
-* Los productos recomendados se resaltan.
-* El usuario puede interactuar con al menos un producto.
-* Se abre una ficha de producto.
-* No hay errores críticos en consola.
-* La experiencia funciona en desktop.
+- El usuario puede entrar a `/nutriworld`.
+- Se renderiza una escena 3D estable.
+- El usuario puede moverse con teclado.
+- Hay un NPC visible llamado NutriLens.
+- El usuario puede escribir una consulta.
+- La consulta “Mostrame galletitas aptas para celíacos” devuelve productos compatibles.
+- El NPC responde con texto.
+- El NPC camina hacia la góndola Sin TACC.
+- Los productos recomendados se resaltan.
+- El usuario puede interactuar con al menos un producto.
+- Se abre una ficha de producto.
+- No hay errores críticos en consola.
+- La experiencia funciona en desktop.
 
 ---
 
 # Reglas de implementación
 
-* Priorizar funcionalidad sobre realismo visual.
-* No implementar mobile todavía.
-* No implementar multijugador.
-* No implementar mundo abierto.
-* No implementar pathfinding avanzado.
-* No depender de modelos 3D pesados.
-* Mantener todo testeable con mock data.
-* Diseñar la lógica para que luego pueda reemplazarse el parser por un agente IA real.
-* Separar lógica de productos de la lógica visual 3D.
+- Priorizar funcionalidad sobre realismo visual.
+- No implementar mobile todavía.
+- No implementar multijugador.
+- No implementar mundo abierto.
+- No implementar pathfinding avanzado.
+- No depender de modelos 3D pesados.
+- Mantener todo testeable con mock data.
+- Diseñar la lógica para que luego pueda reemplazarse el parser por un agente IA real.
+- Separar lógica de productos de la lógica visual 3D.
 
 ---
 
@@ -706,10 +709,10 @@ Filtro sin resultados
 
 ## UI manual
 
-* El NPC llega a la góndola correcta.
-* Los productos correctos se resaltan.
-* La ficha se abre al interactuar.
-* Consulta ambigua no mueve el NPC.
+- El NPC llega a la góndola correcta.
+- Los productos correctos se resaltan.
+- La ficha se abre al interactuar.
+- Consulta ambigua no mueve el NPC.
 
 ---
 
@@ -743,12 +746,12 @@ Demo ideal:
 
 # Must be:
 
-* Integrar agente real con LLM.
-* Agregar animaciones al NPC.
-* Agregar productos reales de la base NutriLens.
-* Agregar RAG real con embeddings.
-* Agregar comparación entre productos dentro del mundo.
-* Agregar minimapa.
+- Integrar agente real con LLM.
+- Agregar animaciones al NPC.
+- Agregar productos reales de la base NutriLens.
+- Agregar RAG real con embeddings.
+- Agregar comparación entre productos dentro del mundo.
+- Agregar minimapa.
 
 ---
 
@@ -756,11 +759,11 @@ Demo ideal:
 
 Después de la beta:
 
-* Integrar ElevenLabs para voz.
-* Agregar speech-to-text para que el usuario hable.
-* Agregar misiones educativas.
-* Agregar tutorial guiado.
-* Agregar modo “aprendizaje”: explicar gluten, lactosa, sellos, vegano y sin TACC.
+- Integrar ElevenLabs para voz.
+- Agregar speech-to-text para que el usuario hable.
+- Agregar misiones educativas.
+- Agregar tutorial guiado.
+- Agregar modo “aprendizaje”: explicar gluten, lactosa, sellos, vegano y sin TACC.
 
 ---
 
