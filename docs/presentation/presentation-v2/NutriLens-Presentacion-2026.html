@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NutriLens — Presentación de marca · IA Aplicada · UNLaM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="deck-stage.js"></script>
+<style>
+  :root{
+    --green:#16A34A; --green-strong:#15803D; --green-soft:#F0FDF4; --green-border:#86EFAC;
+    --lime:#C7F04A; --bg:#FAFBF7; --surface:#F1F5F0; --text:#0F172A; --muted:#64748B;
+    --border:#E2E8F0; --dark:#0B1220;
+    --risk-low-fg:#15803D; --risk-low-bg:#DCFCE7;
+    --risk-mid-fg:#B45309; --risk-mid-bg:#FEF3C7;
+    --risk-hi-fg:#B91C1C;  --risk-hi-bg:#FEE2E2;
+    --pad:120px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  section{
+    width:1920px; height:1080px; position:relative; overflow:hidden;
+    font-family:'Inter',system-ui,sans-serif; color:var(--text); background:var(--bg);
+  }
+  .pad{position:absolute; inset:0; padding:var(--pad); display:flex; flex-direction:column; justify-content:center;}
+
+  /* type */
+  .eyebrow{font-family:'JetBrains Mono',monospace; font-size:16px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--green); display:inline-flex; align-items:center; gap:14px;}
+  .eyebrow::before{content:''; width:34px; height:2px; background:var(--green); border-radius:2px;}
+  .h1{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:104px; line-height:.98; letter-spacing:-.025em;}
+  .h2{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:78px; line-height:1.02; letter-spacing:-.02em;}
+  .h3{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:34px; line-height:1.1;}
+  .lead{font-size:30px; line-height:1.5; color:var(--muted); max-width:62ch;}
+  .em{color:var(--green);} .dark .em{color:var(--lime);}
+  .muted{color:var(--muted);}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .mt-s{margin-top:18px;} .mt{margin-top:40px;} .mt-l{margin-top:64px;}
+
+  /* brand */
+  .brand{display:inline-flex; align-items:center; gap:18px;}
+  .mark{display:flex; align-items:center; justify-content:center; background:var(--green);
+    border-radius:18px; box-shadow:0 16px 40px -12px rgba(22,163,74,.55);}
+  .brand .nm{font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spacing:-.02em;}
+
+  /* components */
+  .chip{display:inline-flex; align-items:center; gap:9px; padding:11px 20px; border-radius:999px;
+    font-size:18px; font-weight:600; background:#fff; border:1.5px solid var(--border);}
+  .dot{width:11px; height:11px; border-radius:999px; background:var(--green);}
+  .card{background:#fff; border:1.5px solid var(--border); border-radius:24px; padding:34px;}
+  .card.soft{background:var(--green-soft); border-color:var(--green-border);}
+  .card h3{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:28px; margin-bottom:10px;}
+  .card p{color:var(--muted); font-size:20px; line-height:1.5;}
+  .icobox{width:62px; height:62px; border-radius:17px; display:flex; align-items:center; justify-content:center;
+    background:var(--green-soft); color:var(--green); margin-bottom:20px;}
+  .icobox svg{width:32px; height:32px;}
+  .badge{display:inline-flex; align-items:center; gap:8px; border-radius:999px; padding:8px 18px;
+    font-size:18px; font-weight:700;}
+  .badge-low{color:var(--risk-low-fg); background:var(--risk-low-bg);}
+  .badge-mid{color:var(--risk-mid-fg); background:var(--risk-mid-bg);}
+  .badge-high{color:var(--risk-hi-fg); background:var(--risk-hi-bg);}
+  .badge-green{color:#fff; background:var(--green);}
+  .grid{display:grid; gap:28px;}
+  .g3{grid-template-columns:repeat(3,1fr);} .g4{grid-template-columns:repeat(4,1fr);} .g2{grid-template-columns:1fr 1fr;}
+  .split{position:absolute; inset:0; display:grid; grid-template-columns:1fr 1fr;}
+  .split .col{padding:var(--pad); display:flex; flex-direction:column; justify-content:center;}
+  .split .panel{background:var(--surface); display:flex; align-items:center; justify-content:center; padding:90px;}
+
+  .sello{display:inline-block; background:#0F172A; color:#fff; font-size:13px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.05em; padding:7px 12px; border-radius:7px; margin:4px;}
+  .pill-list{display:flex; flex-wrap:wrap; gap:14px;}
+
+  /* dark + green slides */
+  .dark{background:var(--dark); color:#fff;}
+  .dark .lead{color:rgba(255,255,255,.72);}
+  .dark .eyebrow{color:var(--lime);} .dark .eyebrow::before{background:var(--lime);}
+  .dark .chip{background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.18); color:#fff;}
+  .green-slide{background:linear-gradient(150deg,var(--green-strong),var(--green) 55%,#1eb257); color:#fff;}
+  .green-slide .lead{color:rgba(255,255,255,.9);}
+  .green-slide .eyebrow{color:#eaffd6;} .green-slide .eyebrow::before{background:var(--lime);}
+  .green-slide .em{color:var(--lime);}
+
+  /* decorative */
+  .dotgrid{position:absolute; inset:0; background-image:radial-gradient(circle,var(--green-border) 1.4px,transparent 1.4px);
+    background-size:38px 38px; opacity:.18; pointer-events:none;}
+  .dark .dotgrid{background-image:radial-gradient(circle,rgba(255,255,255,.5) 1.4px,transparent 1.4px); opacity:.07;}
+  .glow{position:absolute; border-radius:50%; filter:blur(8px); pointer-events:none;
+    background:radial-gradient(circle,rgba(22,163,74,.5) 0%,transparent 70%);}
+  .spark{position:absolute; color:var(--lime); animation:tw 3s ease-in-out infinite;}
+  @keyframes tw{0%,100%{opacity:.3; transform:scale(.8);} 50%{opacity:.95; transform:scale(1.15);}}
+  .pagenum{position:absolute; bottom:54px; right:64px; font-family:'JetBrains Mono',monospace;
+    font-size:18px; color:var(--muted); letter-spacing:.08em;}
+  .dark .pagenum,.green-slide .pagenum{color:rgba(255,255,255,.45);}
+  .kicker{position:absolute; top:62px; left:var(--pad); }
+
+  /* scan motif */
+  .scan{position:absolute; right:300px; top:40%; transform:translateY(-50%);
+    width:460px; height:460px; border-radius:36px; border:2px solid rgba(199,240,74,.25);
+    display:flex; align-items:center; justify-content:center;}
+  .scan .in{width:300px; height:300px; border-radius:24px; border:2px solid rgba(199,240,74,.55);
+    display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;}
+  .scan .line{position:absolute; left:0; right:0; height:3px; background:var(--lime);
+    box-shadow:0 0 18px var(--lime); animation:scan 2.6s ease-in-out infinite;}
+  @keyframes scan{0%,100%{top:8%;} 50%{top:92%;}}
+
+  /* entrance animations — re-trigger each time slide becomes active */
+  [data-anim]{opacity:0;}
+  section[data-deck-active] [data-anim]{animation:rise .75s cubic-bezier(.22,.61,.36,1) both; animation-delay:var(--d,0s);}
+  @keyframes rise{from{opacity:0; transform:translateY(28px);} to{opacity:1; transform:none;}}
+  section[data-deck-active] [data-anim="fade"]{animation:fadein .8s ease both; animation-delay:var(--d,0s);}
+  @keyframes fadein{from{opacity:0;} to{opacity:1;}}
+  section[data-deck-active] [data-anim="grow"]{animation:grow .8s cubic-bezier(.22,.61,.36,1) both; animation-delay:var(--d,0s);}
+  @keyframes grow{from{opacity:0; transform:scale(.92);} to{opacity:1; transform:none;}}
+
+  /* steps */
+  .step .n{width:54px; height:54px; border-radius:999px; background:var(--green); color:#fff;
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px;
+    display:flex; align-items:center; justify-content:center; margin-bottom:22px;}
+  .step h3{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:32px; margin-bottom:12px;}
+  .step p{color:var(--muted); font-size:21px; line-height:1.5;}
+
+  /* persona */
+  .persona .av{width:74px; height:74px; border-radius:20px; background:var(--green-soft);
+    color:var(--green); display:flex; align-items:center; justify-content:center; margin-bottom:20px;}
+  .persona .av svg{width:38px; height:38px;}
+
+  /* brand watermark (inyectado en cada slide) */
+  .brandmark{position:absolute; left:64px; bottom:50px; display:flex; align-items:center; gap:11px; opacity:.6; z-index:2; pointer-events:none;}
+  .brandmark .lf{width:30px; height:30px; border-radius:9px; background:var(--green); display:flex; align-items:center; justify-content:center;}
+  .brandmark span.t{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:18px; color:var(--muted); letter-spacing:-.01em;}
+  .dark .brandmark span.t,.green-slide .brandmark span.t{color:rgba(255,255,255,.75);}
+  .dark .brandmark .lf,.green-slide .brandmark .lf{background:rgba(255,255,255,.16);}
+
+  /* 3D tilt (slide 11) */
+  .tilt{transform:perspective(1700px) rotateY(-15deg) rotateX(5deg); box-shadow:-30px 50px 90px -40px rgba(15,23,42,.55); border-radius:26px;}
+  .tilt.r{transform:perspective(1700px) rotateY(15deg) rotateX(5deg); box-shadow:30px 50px 90px -40px rgba(15,23,42,.55);}
+
+  /* catálogo mock (slide 10) */
+  .catgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+  .prodcard{background:#fff; border:1px solid var(--border); border-radius:18px; padding:16px; box-shadow:0 12px 30px -18px rgba(15,23,42,.28);}
+  .prodcard .ph{height:96px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:42px; margin-bottom:14px;}
+  .prodcard .pn{font-weight:700; font-size:19px; line-height:1.15;}
+  .prodcard .pc{color:var(--muted); font-size:14px; margin-top:3px;}
+
+  /* pipeline step cards (slide 19) */
+  .flow{display:grid; grid-template-columns:repeat(5,1fr); gap:16px;}
+  .flowcard{background:#fff; border:1px solid var(--border); border-radius:18px; padding:20px 18px; box-shadow:0 14px 30px -16px rgba(15,23,42,.25); position:relative;}
+  .flowcard .si{font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--muted); letter-spacing:.04em;}
+  .flowcard .stt{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:21px; margin-top:10px; line-height:1.12;}
+  .flowcard.ia{border-color:#dcef94; box-shadow:0 18px 34px -14px rgba(163,230,53,.55);}
+  .flowcard.rule{border-color:var(--green-border); box-shadow:0 18px 34px -14px rgba(22,163,74,.45);}
+  .flowcard .tagmini{position:absolute; top:14px; right:16px; width:10px; height:10px; border-radius:999px; background:var(--muted);}
+  .flowcard.ia .tagmini{background:var(--lime);} .flowcard.rule .tagmini{background:var(--green-strong);}
+
+  /* cloud arch (slide 18) */
+  .cloudbox{border:1.5px dashed var(--green-border); border-radius:24px; padding:32px 30px; position:relative; background:rgba(240,253,244,.55);}
+  .cloudtag{position:absolute; top:-16px; left:30px; background:var(--green); color:#fff; font-weight:700; font-size:16px; padding:6px 16px; border-radius:999px;}
+  .node{background:#fff; border:1px solid var(--border); border-radius:14px; padding:16px 14px; text-align:center; box-shadow:0 8px 20px -14px rgba(15,23,42,.25);}
+  .node .nt{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:19px;}
+  .node .nd{color:var(--muted); font-size:13.5px; margin-top:3px;}
+
+  /* persona illustrations (slide 4) — ícono a la izquierda + ilustración animada a la derecha */
+  .persona-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;}
+  .persona-top .av{margin-bottom:0;}
+  .pillus{width:108px; height:108px; flex-shrink:0;}
+  .pillus svg{width:100%; height:100%; overflow:visible;}
+  section[data-deck-active] .an-pulse{animation:anPulse 2.4s ease-in-out infinite;}
+  @keyframes anPulse{0%,100%{opacity:.2; transform:scale(.7);}50%{opacity:.95; transform:scale(1);}}
+  section[data-deck-active] .an-bob{animation:anBob 2.6s ease-in-out infinite;}
+  @keyframes anBob{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+  section[data-deck-active] .an-tilt{animation:anTilt 3.2s ease-in-out infinite; transform-origin:50% 90%;}
+  section[data-deck-active] .an-tilt2{animation:anTilt 3.2s ease-in-out infinite reverse; transform-origin:50% 90%;}
+  @keyframes anTilt{0%,100%{transform:rotate(-9deg);}50%{transform:rotate(9deg);}}
+
+  /* sellos octágono + leyendas precautorias (slide 9) */
+  .octo{width:120px; height:120px; background:#0F172A; clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%); display:flex; align-items:center; justify-content:center; padding:3px;}
+  .octo>.w{width:100%; height:100%; background:#fff; clip-path:inherit; display:flex; align-items:center; justify-content:center; padding:4px;}
+  .octo .i{width:100%; height:100%; background:#0F172A; color:#fff; clip-path:inherit; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:2px;}
+  .octo .t1{font-size:10px; font-weight:700; line-height:1;}
+  .octo .t2{font-size:15px; font-weight:800; line-height:1;}
+  .octo .t2s{font-size:11.5px; font-weight:800; line-height:1.05;}
+  .octo .ms{font-size:6.5px; font-weight:600; line-height:1.1; margin-top:4px; opacity:.85;}
+  .leyenda{display:flex; flex-direction:column; align-items:center; background:#0F172A; color:#fff; border-radius:5px; padding:9px 16px; text-align:center;}
+  .leyenda b{font-size:12.5px; font-weight:800; line-height:1.25; letter-spacing:.02em;}
+  .leyenda small{font-size:8px; font-weight:600; opacity:.8; margin-top:3px;}
+
+  /* 3D floating chat cards (slide 11) — efecto perspectiva tipo Aceternity */
+  .scene{perspective:1900px;}
+  .card3d{transform-style:preserve-3d; border-radius:26px; position:relative;}
+  .card3d.l{transform:rotateY(-18deg) rotateX(8deg); box-shadow:-34px 56px 100px -42px rgba(15,23,42,.6);}
+  .card3d.r{transform:rotateY(18deg) rotateX(8deg); box-shadow:34px 56px 100px -42px rgba(15,23,42,.6);}
+  section[data-deck-active] .card3d.l{animation:floatL 7s ease-in-out infinite;}
+  section[data-deck-active] .card3d.r{animation:floatR 7s ease-in-out infinite;}
+  @keyframes floatL{0%,100%{transform:rotateY(-18deg) rotateX(8deg) translateY(0);}50%{transform:rotateY(-13deg) rotateX(5deg) translateY(-22px);}}
+  @keyframes floatR{0%,100%{transform:rotateY(18deg) rotateX(8deg) translateY(0);}50%{transform:rotateY(13deg) rotateX(5deg) translateY(-22px);}}
+  .card3d .pop{transform:translateZ(58px);} .card3d .pop2{transform:translateZ(32px);} .card3d .pop3{transform:translateZ(90px);}
+
+  /* agenda moderna (slide 2) — número fantasma + ícono */
+  .agcard{position:relative; overflow:hidden;}
+  .agcard .icobox,.agcard h3,.agcard p{position:relative; z-index:1;}
+  .agnum{position:absolute; right:18px; top:-10px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:110px; line-height:1; color:var(--green-soft); z-index:0; pointer-events:none;}
+
+  /* pulse rings en los pills (slide 5) — verde claro difuminando al verde del fondo */
+  section[data-deck-active] .pulse-pill{animation:pillPulse 3.6s ease-out infinite;}
+  section[data-deck-active] .pulse-pill:nth-child(2){animation-delay:1.2s;}
+  section[data-deck-active] .pulse-pill:nth-child(3){animation-delay:2.4s;}
+  @keyframes pillPulse{
+    0%{box-shadow:0 0 0 0 rgba(199,240,74,.5);}
+    70%{box-shadow:0 0 0 26px rgba(199,240,74,0);}
+    100%{box-shadow:0 0 0 0 rgba(199,240,74,0);}
+  }
+
+  /* "Continuemos →" del teaser (slide 21) */
+  section[data-deck-active] .cont-arrow{animation:nudge 1.5s ease-in-out infinite;}
+  @keyframes nudge{0%,100%{transform:translateX(0);}50%{transform:translateX(12px);}}
+</style>
+</head>
+<body>
+<deck-stage>
+
+<!-- ░░ 01 · COVER ░░ -->
+<section id="s1" class="dark" data-screen-label="01 Portada">
+  <div class="dotgrid"></div>
+  <div class="glow" style="width:760px; height:760px; top:-160px; right:-120px;"></div>
+  <div class="brand" style="position:absolute; top:80px; left:120px;" data-anim="fade">
+    <span class="mark" style="width:72px; height:72px;">
+      <svg width="44" height="44" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="12.4" stroke="#fff" stroke-width="1.7" opacity=".55"/><path d="M8.6 23.4C8.2 14.6 13.4 8.8 23.4 8.6 23.8 17.4 18.6 23.2 8.6 23.4Z" fill="#fff"/><path d="M11.4 20.6C14.8 16.4 17.8 13.4 20.4 11.6" stroke="#15803d" stroke-width="1.8" stroke-linecap="round"/><circle cx="24.6" cy="7.4" r="2.1" fill="#C7F04A"/></svg>
+    </span>
+    <span style="display:flex; flex-direction:column;">
+      <span class="nm" style="font-size:30px; color:#fff;">NutriLens</span>
+      <span class="mono" style="font-size:14px; color:rgba(255,255,255,.45);">comé con información</span>
+    </span>
+  </div>
+
+  <div style="position:absolute; left:120px; top:50%; transform:translateY(-50%); max-width:1000px;">
+    <div class="eyebrow" data-anim style="--d:.05s; color:var(--lime);">IA Aplicada · UNLaM · 2026</div>
+    <h1 class="h1" data-anim style="--d:.12s; color:#fff; margin-top:26px;">Entendé qué comés<br><span class="em">en segundos.</span></h1>
+    <p class="lead" data-anim style="--d:.24s; margin-top:30px; color:rgba(255,255,255,.66); max-width:720px;">
+      NutriLens lee la etiqueta por vos con IA: ingredientes, alérgenos, sellos y si es
+      <strong style="color:#fff;">apto para tu dieta</strong>. Claro, rápido y sin letra chica.
+    </p>
+  </div>
+
+  <div class="scan" data-anim="grow" style="--d:.3s;">
+    <div class="in">
+      <div class="line"></div>
+      <svg width="120" height="120" viewBox="0 0 32 32" fill="none" opacity=".85"><circle cx="16" cy="16" r="12.4" stroke="#C7F04A" stroke-width="1.4" opacity=".5"/><path d="M8.6 23.4C8.2 14.6 13.4 8.8 23.4 8.6 23.8 17.4 18.6 23.2 8.6 23.4Z" fill="#C7F04A"/><path d="M11.4 20.6C14.8 16.4 17.8 13.4 20.4 11.6" stroke="#0B1220" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+
+  <div style="position:absolute; bottom:64px; left:120px; right:120px; display:flex; justify-content:space-between; align-items:flex-end;" data-anim="fade" style="--d:.4s;">
+    <div class="mono" style="font-size:17px; color:rgba(255,255,255,.55); line-height:1.9;">
+      Mateo, Federico&nbsp;&nbsp;·&nbsp;&nbsp;Pucci, Federico Axel<br>Branchesi, Tomás Agustín&nbsp;&nbsp;·&nbsp;&nbsp;Martucci, Federico Ariel
+    </div>
+    <div class="mono" style="font-size:15px; color:rgba(255,255,255,.4); text-align:right;">
+      Trabajo Práctico Integrador<br>Prof. Ing. Damián Montefiori
+    </div>
+  </div>
+  <span class="spark" style="top:26%; right:9%; font-size:30px;">✦</span>
+  <span class="spark" style="top:68%; right:26%; font-size:20px; animation-delay:.9s;">✦</span>
+</section>
+
+<!-- ░░ 02 · AGENDA ░░ -->
+<section id="s2" data-screen-label="02 Agenda">
+  <div class="pad">
+    <div class="eyebrow" data-anim>La hoja de ruta</div>
+    <h2 class="h2 mt-s" data-anim style="--d:.06s;">Lo que vamos a recorrer.</h2>
+    <div class="grid g3 mt-l">
+      <div class="card agcard" data-anim style="--d:.14s;">
+        <span class="agnum">01</span>
+        <span class="icobox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></span>
+        <h3>El problema</h3><p>Por qué la etiqueta no alcanza en la góndola.</p>
+      </div>
+      <div class="card agcard" data-anim style="--d:.2s;">
+        <span class="agnum">02</span>
+        <span class="icobox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg></span>
+        <h3>El producto</h3><p>De la foto al veredicto: riesgo, aptitudes y explicación.</p>
+      </div>
+      <div class="card agcard" data-anim style="--d:.26s;">
+        <span class="agnum">03</span>
+        <span class="icobox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 17l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg></span>
+        <h3>Las features</h3><p>Catálogo, chat con IA, código de barras y documentación.</p>
+      </div>
+      <div class="card agcard" data-anim style="--d:.32s;">
+        <span class="agnum">04</span>
+        <span class="icobox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H7a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2 2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1M16 3h1a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2 2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-1"/></svg></span>
+        <h3>Cómo lo construimos</h3><p>Desarrollo asistido por IA, arquitectura en Azure y pipeline observable.</p>
+      </div>
+      <div class="card agcard" data-anim style="--d:.38s;">
+        <span class="agnum">05</span>
+        <span class="icobox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 16l4-6 4 3 5-8"/></svg></span>
+        <h3>Resultados</h3><p>Las métricas y los números del proyecto.</p>
+      </div>
+      <div class="card agcard soft" data-anim style="--d:.44s;">
+        <span class="agnum" style="color:#fff;">06</span>
+        <span class="icobox" style="background:#fff;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></span>
+        <h3>Lo que viene</h3><p>Roadmap, una sorpresa y cierre.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ░░ 03 · EL PROBLEMA ░░ -->
+<section id="s3" data-screen-label="03 El Problema">
+  <div class="split">
+    <div class="col">
+      <div class="eyebrow" data-anim>El problema</div>
+      <h2 class="h2 mt-s" data-anim style="--d:.06s; font-size:64px;">La etiqueta lo dice todo.<br><span class="muted">Pero nadie la entiende a tiempo.</span></h2>
+      <div style="display:flex; flex-direction:column; gap:22px; margin-top:42px;">
+        <div class="card" data-anim style="--d:.16s; display:flex; gap:22px; align-items:flex-start; padding:26px 30px;">
+          <span class="icobox" style="margin:0; flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h18M6 4l1.5 14h9L18 4M9 9v5M15 9v5" stroke-linecap="round"/></svg></span>
+          <div><div class="h3" style="font-size:26px;">Ingredientes ocultos</div><p class="muted" style="font-size:19px; margin-top:6px;">Caseína, suero, gluten escondido en aditivos.</p></div>
+        </div>
+        <div class="card" data-anim style="--d:.24s; display:flex; gap:22px; align-items:flex-start; padding:26px 30px;">
+          <span class="icobox" style="margin:0; flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01" stroke-linecap="round"/></svg></span>
+          <div><div class="h3" style="font-size:26px;">Letra chica y técnica</div><p class="muted" style="font-size:19px; margin-top:6px;">Densa, en minúscula, con nombres que no dicen nada.</p></div>
+        </div>
+        <div class="card" data-anim style="--d:.32s; display:flex; gap:22px; align-items:flex-start; padding:26px 30px;">
+          <span class="icobox" style="margin:0; flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/></svg></span>
+          <div><div class="h3" style="font-size:26px;">Sellos sin contexto</div><p class="muted" style="font-size:19px; margin-top:6px;">"Exceso en azúcares"… ¿qué tan grave para lo que busco?</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="card" data-anim="grow" style="--d:.2s; width:560px; box-shadow:0 30px 80px -30px rgba(0,0,0,.25);">
+        <div class="h3" style="font-size:26px;">Galletitas Choco Crunch</div>
+        <div class="muted mono" style="font-size:16px; margin-top:6px;">INGREDIENTES</div>
+        <p style="font-size:18px; line-height:1.7; margin-top:8px;">Harina de trigo, azúcar, grasa vegetal, jarabe de glucosa, cacao, suero de leche en polvo, lecitina de soja, saborizante…</p>
+        <div class="pill-list" style="margin-top:20px;">
+          <span class="sello">Exceso en Azúcares</span><span class="sello">Exceso en Grasas Sat.</span><span class="sello">Exceso en Sodio</span>
+        </div>
+        <div style="margin-top:18px; padding:14px 18px; border-radius:12px; background:var(--risk-hi-bg); color:var(--risk-hi-fg); font-weight:700; text-align:center; font-size:18px;">
+          ¿Tiene gluten? ¿Lactosa? ¿Es apto? 🤔
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ░░ 04 · USUARIOS ░░ -->
+<section id="s4" data-screen-label="04 Usuarios">
+  <div class="pad">
+    <div class="eyebrow" data-anim>Para quién</div>
+    <h2 class="h2 mt-s" data-anim style="--d:.06s;">Tres personas, un mismo gesto.</h2>
+    <div class="grid g3 mt-l">
+      <div class="card persona" data-anim style="--d:.16s;">
+        <div class="persona-top">
+          <span class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M5 21c0-4 3-6 7-6s7 2 7 6" stroke-linecap="round"/></svg></span>
+          <span class="pillus" aria-label="Sin TACC">
+            <svg viewBox="0 0 120 120">
+              <circle cx="60" cy="52" r="40" fill="none" stroke="var(--green)" stroke-width="4"/>
+              <g stroke="var(--green)" stroke-width="3.4" fill="none" stroke-linecap="round">
+                <line x1="60" y1="30" x2="60" y2="74"/>
+                <path d="M60 40 q-9 -3 -13 -10 M60 40 q9 -3 13 -10"/>
+                <path d="M60 50 q-10 -3 -14 -10 M60 50 q10 -3 14 -10"/>
+                <path d="M60 60 q-10 -3 -14 -10 M60 60 q10 -3 14 -10"/>
+              </g>
+              <line x1="28" y1="84" x2="92" y2="20" stroke="var(--risk-hi-fg)" stroke-width="5.5" stroke-linecap="round"/>
+              <text x="60" y="112" text-anchor="middle" font-size="14" font-weight="800" fill="var(--green-strong)" font-family="'Space Grotesk',sans-serif">SIN TACC</text>
+            </svg>
+          </span>
+        </div>
+        <h3>Con restricciones</h3><p>Celíaco o intolerante a la lactosa: necesita confirmar aptitud antes de comprar.</p>
+        <div class="pill-list" style="margin-top:18px;"><span class="badge badge-low">apto / no apto</span></div>
+      </div>
+      <div class="card persona" data-anim style="--d:.24s;">
+        <div class="persona-top">
+          <span class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 4a2.5 2.5 0 0 0-2.5 2.5A2.5 2.5 0 0 0 4.5 9 2.5 2.5 0 0 0 5 13.9 2.5 2.5 0 0 0 7 18a2.5 2.5 0 0 0 5 .5V4.5A2.5 2.5 0 0 0 9.5 4Z"/><path d="M14.5 4A2.5 2.5 0 0 1 17 6.5 2.5 2.5 0 0 1 19.5 9 2.5 2.5 0 0 1 19 13.9 2.5 2.5 0 0 1 17 18a2.5 2.5 0 0 1-5 .5V4.5A2.5 2.5 0 0 1 14.5 4Z"/></svg></span>
+          <span class="pillus" aria-label="Persona atenta / alerta">
+            <svg viewBox="0 0 120 120">
+              <circle cx="46" cy="50" r="16" fill="none" stroke="var(--green)" stroke-width="4"/>
+              <path d="M22 92 q0 -25 24 -25 q24 0 24 25" fill="none" stroke="var(--green)" stroke-width="4" stroke-linecap="round"/>
+              <path class="an-pulse" d="M80 40 q9 11 0 28" fill="none" stroke="var(--green)" stroke-width="3.6" stroke-linecap="round"/>
+              <path class="an-pulse" style="animation-delay:.6s" d="M92 31 q15 19 0 46" fill="none" stroke="var(--green)" stroke-width="3.6" stroke-linecap="round"/>
+              <circle class="an-bob" cx="46" cy="22" r="4" fill="var(--green-strong)"/>
+            </svg>
+          </span>
+        </div>
+        <h3>El consciente</h3><p>Quiere comer mejor: entender sellos y elegir lo de menor riesgo.</p>
+        <div class="pill-list" style="margin-top:18px;"><span class="badge badge-mid">riesgo</span></div>
+      </div>
+      <div class="card persona" data-anim style="--d:.32s;">
+        <div class="persona-top">
+          <span class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 18V6M10 18V10M16 18V4M20 18v-6" stroke-linecap="round"/></svg></span>
+          <span class="pillus" aria-label="Comparando dos productos">
+            <svg viewBox="0 0 120 120">
+              <circle cx="60" cy="30" r="11" fill="none" stroke="var(--green)" stroke-width="4"/>
+              <path d="M60 41 v18 M60 47 l-23 9 M60 47 l23 9" fill="none" stroke="var(--green)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect class="an-tilt" x="22" y="54" width="24" height="28" rx="3" fill="var(--green-soft)" stroke="var(--green)" stroke-width="3.4"/>
+              <rect class="an-tilt2" x="74" y="54" width="24" height="28" rx="3" fill="var(--green-soft)" stroke="var(--green)" stroke-width="3.4"/>
+              <text class="an-bob" x="60" y="16" text-anchor="middle" font-size="22" font-weight="800" fill="var(--green-strong)" font-family="'Space Grotesk',sans-serif">?</text>
+            </svg>
+          </span>
+        </div>
+        <h3>El comparador</h3><p>Tiene dos opciones en la mano y quiere la de mejor perfil nutricional.</p>
+        <div class="pill-list" style="margin-top:18px;"><span class="badge badge-green">chat</span></div>
+      </div>
+    </div>
+    <p class="lead mt-l" data-anim style="--d:.42s;">En góndola, decidir es un test de lectura rápida que casi siempre se pierde. <strong style="color:var(--text);">NutriLens lo gana por vos.</strong></p>
+  </div>
+</section>
+
+<!-- ░░ 05 · LA SOLUCIÓN ░░ -->
+<section id="s5" class="green-slide" data-screen-label="05 La Solución">
+  <div class="dotgrid" style="opacity:.12;"></div>
+  <div class="pad" style="align-items:center; text-align:center;">
+    <div class="eyebrow" data-anim>La solución</div>
+    <h2 class="h1 mt-s" data-anim style="--d:.08s; color:#fff; font-size:100px;">Sacá la foto.<br><span class="em">NutriLens hace el resto.</span></h2>
+    <p class="lead mt" data-anim style="--d:.2s; max-width:56ch; margin-left:auto; margin-right:auto;">Una IA multimodal lee la etiqueta y la traduce a algo que entendés de un vistazo: <strong style="color:#fff;">qué tiene, si es apto para vos y qué tan saludable es.</strong></p>
+    <div class="pill-list mt-l" data-anim style="--d:.3s; justify-content:center; gap:20px;">
+      <span class="chip pulse-pill" style="font-size:24px; padding:16px 30px; background:rgba(255,255,255,.16); border-color:rgba(255,255,255,.4); color:#fff;">⚡ En segundos</span>
+      <span class="chip pulse-pill" style="font-size:24px; padding:16px 30px; background:rgba(255,255,255,.16); border-color:rgba(255,255,255,.4); color:#fff;">🗣️ En castellano claro</span>
+      <span class="chip pulse-pill" style="font-size:24px; padding:16px 30px; background:rgba(255,255,255,.16); border-color:rgba(255,255,255,.4); color:#fff;">🔍 Todo el detalle si lo querés</span>
+    </div>
+  </div>
+  <span class="spark" style="top:18%; left:11%; font-size:26px;">✦</span>
+  <span class="spark" style="bottom:20%; right:14%; font-size:18px; animation-delay:1s;">✦</span>
+</section>
+
+<!-- ░░ 06 · CÓMO FUNCIONA ░░ -->
+<section id="s6" data-screen-label="06 Cómo Funciona">
+  <div class="pad">
+    <div class="eyebrow" data-anim>Cómo funciona</div>
+    <h2 class="h2 mt-s" data-anim style="--d:.06s;">Tres pasos. Cero fricción.</h2>
+    <div style="display:flex; align-items:stretch; gap:20px; margin-top:60px;">
+      <div class="card" data-anim style="--d:.16s; flex:1;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+          <span class="icobox" style="margin:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4l1.5 2h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3l1.5-2h5z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+          <span class="mono" style="font-size:15px; color:var(--green); font-weight:600; letter-spacing:.1em;">PASO 01</span>
+        </div>
+        <h3 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:30px;">Sacás la foto</h3>
+        <p style="color:var(--muted); font-size:20px; line-height:1.5; margin-top:10px;">Una foto del frente, los ingredientes o la tabla nutricional. Validamos que sea un producto antes de gastar un token.</p>
+      </div>
+      <div style="display:flex; align-items:center; color:var(--green); font-size:30px;">→</div>
+      <div class="card" data-anim style="--d:.28s; flex:1;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+          <span class="icobox" style="margin:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 17l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg></span>
+          <span class="mono" style="font-size:15px; color:var(--green); font-weight:600; letter-spacing:.1em;">PASO 02</span>
+        </div>
+        <h3 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:30px;">La IA la lee</h3>
+        <p style="color:var(--muted); font-size:20px; line-height:1.5; margin-top:10px;">Extrae ingredientes, alérgenos y sellos a un JSON estructurado y validado con Zod.</p>
+      </div>
+      <div style="display:flex; align-items:center; color:var(--green); font-size:30px;">→</div>
+      <div class="card" data-anim style="--d:.4s; flex:1; border-color:var(--green-border); box-shadow:0 24px 50px -28px rgba(22,163,74,.5);">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+          <span class="icobox" style="margin:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span>
+          <span class="mono" style="font-size:15px; color:var(--green); font-weight:600; letter-spacing:.1em;">PASO 03</span>
+        </div>
+        <h3 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:30px;">Obtenés el veredicto</h3>
+        <p style="color:var(--muted); font-size:20px; line-height:1.5; margin-top:10px;">Riesgo, aptitudes y una explicación clara. Todo queda guardado en tu catálogo.</p>
+      </div>
+    </div>
+    <div class="card soft mt-l" data-anim style="--d:.52s;">
+      <p style="color:var(--text); font-size:24px; line-height:1.5;">🔒 <strong>El LLM extrae. Nuestras reglas deciden.</strong> La aptitud y el riesgo nunca dependen de lo que "opine" el modelo — se calculan con reglas propias y deterministas.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ░░ 07 · PRODUCTO EN ACCIÓN ░░ -->
+<section id="s7" data-screen-label="07 Producto en Acción">
+  <div class="split">
+    <div class="col">
+      <div class="eyebrow" data-anim>El producto</div>
+      <h2 class="h2 mt-s" data-anim style="--d:.06s; font-size:66px;">Toda la info,<br>en una pantalla.</h2>
+      <p class="lead mt" data-anim style="--d:.16s;">Riesgo arriba, aptitudes con íconos, ingredientes, alérgenos y sellos regulatorios. Todo en una sola pantalla, en lenguaje claro — sin tecnicismos ni letra chica.</p>
+      <div class="pill-list mt-l" data-anim style="--d:.26s;">
+        <span class="chip">Resultado visual</span><span class="chip">Explicación clara</span><span class="chip">Guardado en tu catálogo</span>
+      </div>
+    </div>
+    <div class="panel" style="background:var(--surface);">
+      <img src="assets/app-result-desktop.png" alt="Pantalla de resultado de NutriLens" data-anim="grow" style="--d:.2s; width:780px; border-radius:22px; border:1px solid var(--border); box-shadow:0 40px 90px -40px rgba(15,23,42,.45);">
+    </div>
+  </div>
+</section>
+
+<!-- ░░ 08 · RIESGO + APTITUDES (la estrella) ░░ -->
+<section id="s8" data-screen-label="08 Riesgo y Aptitudes">
+  <div class="split">
+    <div class="col">
+      <div class="eyebrow" data-anim>La función estrella</div>
+      <h2 class="h2 mt-s" data-anim style="--d:.06s;">Un semáforo<br>para lo que comés.</h2>
+      <p class="lead mt" data-anim style="--d:.16s;">Calculamos un <strong style="color:var(--text);">riesgo</strong> bajo / medio / alto con fórmula propia, y resolvemos la <strong style="color:var(--text);">aptitud</strong> para tres dietas con reglas auditables. Sin cajas negras.</p>
+      <div class="pill-list mt-l" data-anim style="--d:.26s;">
+        <span class="badge badge-low">● Bajo</span><span class="badge badge-mid">● Medio</span><span class="badge badge-high">● Alto</span>
+      </div>
+    </div>
+    <div class="panel">
+      <div style="width:600px;">
+        <div class="card" data-anim="grow" style="--d:.18s; background:var(--risk-mid-bg); border-color:#f3d18a; text-align:center; padding:30px;">
+          <svg viewBox="0 0 200 116" style="width:300px; height:174px;"><path d="M14 100 A86 86 0 0 1 57 25.5" fill="none" stroke="#16a34a" stroke-width="17" stroke-linecap="round"/><path d="M57 25.5 A86 86 0 0 1 143 25.5" fill="none" stroke="#f59e0b" stroke-width="17" stroke-linecap="round"/><path d="M143 25.5 A86 86 0 0 1 186 100" fill="none" stroke="#ef4444" stroke-width="17" stroke-linecap="round"/><g transform="rotate(0 100 100)"><line x1="100" y1="100" x2="100" y2="32" stroke="#b45309" stroke-width="5" stroke-linecap="round"/><circle cx="100" cy="100" r="8" fill="#b45309"/></g></svg>
+          <div class="h3" style="color:var(--risk-mid-fg); font-size:34px;">Riesgo medio</div>
+          <div style="color:var(--risk-mid-fg); opacity:.85; font-size:18px; font-weight:600; margin-top:6px;">Por 2 sellos: exceso en azúcares y sodio</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:14px; margin-top:18px;">
+          <div class="card" data-anim style="--d:.3s; display:flex; align-items:center; gap:16px; padding:18px 22px;">
+            <span class="icobox" style="margin:0; width:50px; height:50px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8q6 0 6-6-6 0-6 6"/><path d="M17.41 3.59a10 10 0 1 0 3 3"/><path d="M2 2a26.6 26.6 0 0 1 10 20c.9-6.82 1.5-9.5 4-14"/></svg></span>
+            <div style="flex:1;"><div style="font-weight:700; font-size:21px;">Vegano</div><div style="color:var(--green-strong); font-weight:600; font-size:17px;">Apto</div></div>
+            <span style="width:34px; height:34px; border-radius:999px; background:var(--green); color:#fff; display:flex; align-items:center; justify-content:center;"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l4 4L19 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+          <div class="card" data-anim style="--d:.38s; display:flex; align-items:center; gap:16px; padding:18px 22px;">
+            <span class="icobox" style="margin:0; width:50px; height:50px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22 16 8"/><path d="M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"/><path d="M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"/><path d="M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"/><path d="M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z"/><path d="M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"/><path d="M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"/><path d="M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"/></svg></span>
+            <div style="flex:1;"><div style="font-weight:700; font-size:21px;">Apto celíaco</div><div style="color:var(--green-strong); font-weight:600; font-size:17px;">Apto</div></div>
+            <span style="width:34px; height:34px; border-radius:999px; background:var(--green); color:#fff; display:flex; align-items:center; justify-content:center;"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l4 4L19 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+          <div class="card" data-anim style="--d:.46s; display:flex; align-items:center; gap:16px; padding:18px 22px;">
+            <span class="icobox" style="margin:0; width:50px; height:50px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8"/><path d="M8 2v3l-2 3v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8l-2-3V2"/><path d="M8 14h8"/></svg></span>
+            <div style="flex:1;"><div style="font-weight:700; font-size:21px;">Sin lactosa</div><div style="color:var(--green-strong); font-weight:600; font-size:17px;">Apto</div></div>
+            <span style="width:34px; height:34px; border-radius:999px; background:var(--green); color:#fff; display:flex; align-items:center; justify-content:center;"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l4 4L19 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ░░ 09 · SELLOS + ALÉRGENOS ░░ -->
+<section id="s9" data-screen-label="09 Sellos y Alérgenos">
+  <div class="pad">
+    <div class="eyebrow" data-anim>Datos que importan</div>
+    <h2 class="h2 mt-s" data-anim style="--d:.06s;">Sellos regulatorios y alérgenos, claros.</h2>
+    <div class="grid g2 mt-l" style="gap:48px;">
+      <div class="card" data-anim style="--d:.16s;">
+        <h3 style="margin-bottom:22px;">Sellos y leyendas (Ley 27.642)</h3>
+        <div style="display:flex; gap:14px; flex-wrap:wrap;">
+          <span class="octo"><span class="w"><span class="i"><span class="t1">EXCESO EN</span><span class="t2">AZÚCARES</span><span class="ms">MINISTERIO<br>DE SALUD</span></span></span></span>
+          <span class="octo"><span class="w"><span class="i"><span class="t1">EXCESO EN</span><span class="t2s">GRASAS<br>TOTALES</span><span class="ms">MINISTERIO<br>DE SALUD</span></span></span></span>
+          <span class="octo"><span class="w"><span class="i"><span class="t1">EXCESO EN</span><span class="t2s">GRASAS<br>SATURADAS</span><span class="ms">MINISTERIO<br>DE SALUD</span></span></span></span>
+          <span class="octo"><span class="w"><span class="i"><span class="t1">EXCESO EN</span><span class="t2">SODIO</span><span class="ms">MINISTERIO<br>DE SALUD</span></span></span></span>
+          <span class="octo"><span class="w"><span class="i"><span class="t1">EXCESO EN</span><span class="t2">CALORÍAS</span><span class="ms">MINISTERIO<br>DE SALUD</span></span></span></span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:22px;">
+          <span class="leyenda"><b>CONTIENE EDULCORANTES, NO RECOMENDABLE EN NIÑOS/AS</b><small>Ministerio de Salud</small></span>
+          <span class="leyenda"><b>CONTIENE CAFEÍNA. EVITAR EN NIÑOS/AS</b><small>Ministerio de Salud</small></span>
+        </div>
+        <p class="muted" style="font-size:18px; margin-top:20px;">Sellos octogonales + leyendas precautorias, detectados del frente del paquete y explicados en contexto.</p>
+      </div>
+      <div class="card" data-anim style="--d:.26s;">
+        <h3 style="margin-bottom:24px;">Alérgenos</h3>
+        <div class="pill-list">
+          <span class="chip" style="border-color:#fecaca; background:#fef2f2; color:#b91c1c;">🌾 Gluten</span>
+          <span class="chip" style="border-color:#fecaca; background:#fef2f2; color:#b91c1c;">🥛 Leche</span>
+          <span class="chip" style="border-color:#fecaca; background:#fef2f2; color:#b91c1c;">🥚 Huevo</span>
+          <span class="chip" style="border-color:#fecaca; background:#fef2f2; color:#b91c1c;">🌰 Frutos secos</span>
+          <span class="chip" style="border-color:#fecaca; background:#fef2f2; color:#b91c1c;">🫘 Soja</span>
+        </div>
+        <p class="muted" style="font-size:19px; margin-top:24px;">10 alérgenos canónicos, cada uno con su glifo. Inferencia propia desde los ingredientes.</p>
+        <div class="card soft" style="margin-top:24px; padding:20px;"><p style="color:var(--text); font-size:19px;">⚖️ La aptitud se deriva de estas reglas — no de la "opinión" del modelo.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ░░ 10 · CATÁLOGO ░░ -->
+<section id="s10" data-screen-label="10 Catálogo">
+  <div class="split">
+    <div class="panel" style="background:var(--surface);">
+      <div data-anim="grow" style="--d:.18s; width:860px;">
+        <div style="display:flex; align-items:center; gap:14px; margin-bottom:22px;">
+          <div style="display:flex; background:#fff; border:1px solid var(--border); border-radius:999px; padding:5px;">
+            <span style="padding:9px 20px; border-radius:999px; font-size:16px; font-weight:600; color:var(--muted);">Todos</span>
+            <span style="padding:9px 20px; border-radius:999px; font-size:16px; font-weight:700; background:var(--green); color:#fff;">Analizados por vos</span>
+          </div>
+          <span class="chip" style="font-size:15px;">Categoría</span>
+          <span class="chip" style="font-size:15px;">Riesgo</span>
+          <span class="chip" style="font-size:15px;">Sin gluten</span>
+        </div>
+        <div class="catgrid">
+          <div class="prodcard"><div class="ph" style="background:var(--risk-low-bg);">🌾</div><div class="pn">Avena Crunch Sin TACC</div><div class="pc">Galletitas</div><span class="badge badge-low" style="margin-top:12px; font-size:14px;">Riesgo bajo</span></div>
+          <div class="prodcard"><div class="ph" style="background:#e0f2fe;">🥥</div><div class="pn">Yogur de Coco</div><div class="pc">Bebidas</div><span class="badge badge-low" style="margin-top:12px; font-size:14px;">Riesgo bajo</span></div>
+          <div class="prodcard"><div class="ph" style="background:var(--risk-mid-bg);">🍪</div><div class="pn">Galletas Veganas de Coco</div><div class="pc">Galletitas</div><span class="badge badge-mid" style="margin-top:12px; font-size:14px;">Riesgo medio</span></div>
+          <div class="prodcard"><div class="ph" style="background:var(--risk-hi-bg);">🥔</div><div class="pn">Papas Onduladas</div><div class="pc">Snacks</div><span class="badge badge-high" style="margin-top:12px; font-size:14px;">Riesgo alto</span></div>
+          <div class="prodcard"><div class="ph" style="background:#e0f2fe;">🥛</div><div class="pn">Leche de Almendras</div><div class="pc">Bebidas</div><span class="badge badge-low" style="margin-top:12px; font-size:14px;">Riesgo bajo</span></div>
+          <div class="prodcard"><div class="ph" style="background:var(--risk-hi-bg);">🍫</div><div class="pn">Choco Crunch</div><div class="pc">Snacks</div><span class="badge badge-high" style="margin-top:12px; font-size:14px;">Riesgo alto</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="eyebrow" data-anim>Catálogo universal</div>
+      <h2 class="h2 mt-s" data-anim style="--d:.06s; font-size:66px;">Todo lo que analizaste,<br>a mano y filtrable.</h2>
+      <p class="lead mt" data-anim style="--d:.16s;">Cada análisis queda guardado. Filtrá por categoría, riesgo o alérgeno, y entrá a <strong style="color:var(--text);">"Analizados por vos"</strong> para ver solo lo tuyo.</p>
+      <div class="pill-list mt-l" data-anim style="--d:.26s;">
+        <span class="chip">Filtros combinables</span><span class="chip">Analizados por vos</span><span class="chip">Historial persistente</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ░░ 11 · CHAT RAG ░░ -->
+<section id="s11" data-screen-label="11 Chat RAG">
+  <div class="pad">
+    <div class="eyebrow" data-anim>Chat con tus productos</div>
+    <h2 class="h2 mt-s" data-anim style="--d:.06s; font-size:62px;">Preguntá. Compará. Decidí.</h2>
+    <p class="lead mt-s" data-anim style="--d:.14s; max-width:84ch;">Un chat con <strong style="color:var(--text);">RAG</strong> sobre los productos que cargaste — responde en texto o con <strong style="color:var(--text);">tarjetas y tablas</strong>.</p>
+    <div style="display:flex; gap:96px; justify-content:center; align-items:center; margin-top:70px;">
+      <!-- respuesta en texto -->
+      <div class="scene" data-anim="grow" style="--d:.24s;">
+        <div class="card3d r" style="width:560px; background:var(--surface); padding:30px; display:flex; flex-direction:column; gap:16px; border:1px solid var(--border);">
+          <div class="pop3" style="align-self:flex-end; max-width:80%; background:var(--green); color:#fff; padding:15px 21px; border-radius:20px; border-bottom-right-radius:7px; font-size:19px; box-shadow:0 26px 44px -20px rgba(22,163,74,.6);">¿Cuál tiene menos azúcar?</div>
+          <div class="pop" style="align-self:flex-start; max-width:92%; background:#fff; border:1px solid var(--border); padding:17px 21px; border-radius:20px; border-bottom-left-radius:7px; font-size:19px; line-height:1.45; box-shadow:0 28px 54px -24px rgba(15,23,42,.55);">El de menor azúcar es <strong style="color:var(--green-strong);">Yogur de Coco</strong> — riesgo bajo y sin sellos. 🌱</div>
+          <div class="mono pop2" style="font-size:14px; color:var(--muted); text-align:center; margin-top:4px;">respuesta en texto</div>
+        </div>
+      </div>
+      <!-- respuesta con tarjetas -->
+      <div class="scene" data-anim="grow" style="--d:.38s;">
+        <div class="card3d l" style="width:560px; background:var(--surface); padding:30px; display:flex; flex-direction:column; gap:16px; border:1px solid var(--border);">
+          <div class="pop3" style="align-self:flex-end; max-width:80%; background:var(--green); color:#fff; padding:15px 21px; border-radius:20px; border-bottom-right-radius:7px; font-size:19px; box-shadow:0 26px 44px -20px rgba(22,163,74,.6);">Compará las dos galletitas</div>
+          <div class="pop" style="display:flex; gap:14px;">
+            <div style="flex:1; background:#fff; border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:0 24px 44px -20px rgba(15,23,42,.5);"><div style="font-weight:700; font-size:17px;">Avena Crunch</div><div class="pc" style="color:var(--muted); font-size:13px;">Galletitas</div><span class="badge badge-low" style="margin-top:10px; font-size:13px;">Riesgo bajo</span></div>
+            <div style="flex:1; background:#fff; border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:0 24px 44px -20px rgba(15,23,42,.5);"><div style="font-weight:700; font-size:17px;">Choco Crunch</div><div class="pc" style="color:var(--muted); font-size:13px;">Snacks</div><span class="badge badge-high" style="margin-top:10px; font-size:13px;">Riesgo alto</span></div>
+          </div>
+          <div class="mono pop2" style="font-size:14px; color:var(--muted); text-align:center;">respuesta con tarjetas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ░░ 12 · OFF + CÓDIGO DE BARRAS ░░ -->
+<section id="s12" data-screen-label="12 OFF + Barcode">
+  <div class="pad">
+    <div class="eyebrow" data-anim>Más precisión</div>
+    <h2 class="h2 mt-s" data-anim style="--d:.06s;">¿Tenés el código de barras? Mejor todavía.</h2>
+    <div class="grid g3 mt-l">
+      <div class="card" data-anim style="--d:.16s;"><div class="icobox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14M21 5v14" stroke-linecap="round"/></svg></div><h3>Escaneamos el EAN</h3><p>Decodificamos el código de barras de la foto (o de una foto dedicada).</p></div>
+      <div class="card" data-anim style="--d:.26s;"><div class="icobox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v5c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V7l8-4Z" stroke-linejoin="round"/></svg></div><h3>Cruzamos con Open Food Facts</h3><p>Base abierta y colaborativa. Si el producto está, es fuente autoritativa.</p></div>
+      <div class="card soft" data-anim style="--d:.36s;"><div class="icobox" style="background:#fff;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4 4L19 6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>Completa nombre, categoría e ingredientes</h3><p>Y sube la confianza del análisis. Si no decodifica, el flujo igual avanza.</p></div>
+    </div>
+    <p class="lead mt-l" data-anim style="--d:.46s;">Validación <strong style="color:var(--text);">soft</strong>: el código de barras es un <em style="font-style:normal; color:var(--green);">booster de confianza</em>, nunca una barrera.</p>
+  </div>
+</section>
+
+
+
+
+<!-- ░░ 18 · ARQUITECTURA ░░ -->
+<section id="s18" data-screen-label="18 Arquitectura">
+  <div class="pad">
+    <div class="eyebrow" data-anim>Cómo está armado por dentro</div>
+    <h2 class="h2 mt-s" data-anim style="--d:.06s;">Arquitectura.</h2>
+    <div style="display:flex; align-items:center; gap:16px; margin-top:40px;">
+      <div class="node" data-anim style="--d:.1s; align-self:center; width:130px;"><div class="nt">🌐 Navegador</div><div class="nd">foto / PDF</div></div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;"><div style="color:var(--green); font-size:24px;">→</div></div>
+      <div class="node" data-anim style="--d:.14s; align-self:center; width:150px; border-color:var(--green-border); background:var(--green-soft);"><div class="nt">🔐 Login</div><div class="nd">Google OAuth · Auth.js</div></div>
+      <div style="color:var(--green); font-size:24px;">→</div>
+      <div class="cloudbox" data-anim style="--d:.2s; flex:1;">
+        <span class="cloudtag">☁️ Azure</span>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div class="node" style="flex:1;"><div class="nt">App Service</div><div class="nd">Next.js · UI + API + Auth</div></div>
+          <div style="color:var(--green); font-size:24px;">→</div>
+          <div class="node" style="flex:1; border-color:var(--green-border); background:var(--green-soft);"><div class="nt">Pipeline</div><div class="nd">9 steps · reglas propias</div></div>
+          <div style="color:var(--green); font-size:24px;">→</div>
+          <div style="display:flex; flex-direction:column; gap:10px; flex:1.15;">
+            <div class="node"><div class="nt">Azure OpenAI</div><div class="nd">gpt-5.1 · extrae</div></div>
+            <div class="node" style="opacity:.72;"><div class="nt">Azure AI Foundry</div><div class="nd">Phi-4 · descartado</div></div>
+          </div>
+          <div style="color:var(--green); font-size:24px;">→</div>
+          <div style="display:flex; flex-direction:column; gap:10px; flex:1.15;">
+            <div class="node"><div class="nt">Azure Postgres</div><div class="nd">+ pgvector · historial</div></div>
+            <div class="node"><div class="nt">Azure Blob Storage</div><div class="nd">imágenes · SAS firmada</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="color:var(--green); font-size:24px;">→</div>
+      <div class="node" data-anim style="--d:.32s; align-self:center; width:150px;"><div class="nt">Open Food Facts</div><div class="nd">API externa</div></div>
+    </div>
+    <div style="display:flex; gap:20px; margin-top:26px; justify-content:center;">
+      <div class="node" data-anim style="--d:.4s; width:255px;"><div class="nt">Azure App Service · Docs</div><div class="nd">Docusaurus · guías paso a paso</div></div>
+      <div class="node" data-anim style="--d:.46s; width:255px;"><div class="nt">GitHub Actions</div><div class="nd">CI/CD · 7 checks en verde</div></div>
+      <div class="node" data-anim style="--d:.52s; width:255px;"><div class="nt">Azure DevOps</div><div class="nd">board ↔ código (auto-close)</div></div>
+      <div class="node" data-anim style="--d:.58s; width:255px;"><div class="nt">Docker Compose</div><div class="nd">dev reproducible</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ░░ 19 · PIPELINE OBSERVABLE ░░ -->
+<section id="s19" data-screen-label="19 Pipeline Observable">
+  <div class="pad">
+    <div class="eyebrow" data-anim>Sin cajas negras</div>
+    <h2 class="h2 mt-s" data-anim style="--d:.06s;">9 pasos trazables. Todos visibles en la UI.</h2>
+    <div class="flow mt-l">
+      <div class="flowcard" data-anim style="--d:.12s;"><span class="tagmini"></span><div class="si">01 · validate_file</div><div class="stt">Archivo válido o fuera</div></div>
+      <div class="flowcard" data-anim style="--d:.16s;"><span class="tagmini"></span><div class="si">02 · detect_label_kind</div><div class="stt">¿Es un producto?</div></div>
+      <div class="flowcard ia" data-anim style="--d:.2s;"><span class="tagmini"></span><div class="si">03 · extract_with_ia</div><div class="stt">La IA lee la etiqueta</div></div>
+      <div class="flowcard" data-anim style="--d:.24s;"><span class="tagmini"></span><div class="si">04 · validate_schema</div><div class="stt">JSON estricto con Zod</div></div>
+      <div class="flowcard" data-anim style="--d:.28s;"><span class="tagmini"></span><div class="si">05 · enrich_with_off</div><div class="stt">Cruza Open Food Facts</div></div>
+      <div class="flowcard rule" data-anim style="--d:.32s;"><span class="tagmini"></span><div class="si">06 · apply_rules</div><div class="stt">Las reglas deciden aptitud</div></div>
+      <div class="flowcard rule" data-anim style="--d:.36s;"><span class="tagmini"></span><div class="si">07 · compute_risk</div><div class="stt">Calcula el riesgo</div></div>
+      <div class="flowcard ia" data-anim style="--d:.4s;"><span class="tagmini"></span><div class="si">08 · generate_explanation</div><div class="stt">Lo explica en claro</div></div>
+      <div class="flowcard" data-anim style="--d:.44s;"><span class="tagmini"></span><div class="si">09 · persist</div><div class="stt">Guarda y traza todo</div></div>
+    </div>
+    <div class="pill-list mt-l" data-anim style="--d:.5s;">
+      <span class="chip"><span class="dot" style="background:var(--lime);"></span>La IA extrae</span>
+      <span class="chip"><span class="dot" style="background:var(--green-strong);"></span>Las reglas deciden</span>
+      <span class="chip"><span class="dot" style="background:var(--muted);"></span>Validación · infra</span>
+    </div>
+  </div>
+</section>
+
+
+
+
+<!-- ░░ DOCUMENTACIÓN ░░ -->
+<section id="s_docs" data-screen-label="Documentación">
+  <div class="split">
+    <div class="col">
+      <div class="eyebrow" data-anim>Documentación</div>
+      <h2 class="h2 mt-s" data-anim style="--d:.06s; font-size:62px;">Cómo usar cada feature,<br>paso a paso.</h2>
+      <p class="lead mt" data-anim style="--d:.16s;">Un sitio de documentación con <strong style="color:var(--text);">Docusaurus</strong>: una guía por cada funcionalidad, con <span class="em">capturas reales</span> de la app, búsqueda y modo claro/oscuro.</p>
+      <div class="grid g2 mt-l" style="gap:14px;">
+        <div class="card" data-anim style="--d:.26s; padding:20px;"><h3 style="font-size:22px;">Guías por feature</h3><p style="font-size:16px;">Analizar · resultado · catálogo · chat · NutriWorld.</p></div>
+        <div class="card" data-anim style="--d:.32s; padding:20px;"><h3 style="font-size:22px;">Para todos</h3><p style="font-size:16px;">Primeros pasos, administración y un FAQ con el disclaimer.</p></div>
+      </div>
+      <div class="pill-list mt-l" data-anim style="--d:.4s;"><span class="chip">Docusaurus</span><span class="chip">Capturas reales</span><span class="chip">Paso a paso</span></div>
+    </div>
+    <div class="panel" style="background:var(--surface);">
+      <img src="assets/docs-site.png" alt="Sitio de documentación de NutriLens (Docusaurus)" data-anim="grow" style="--d:.2s; width:820px; border-radius:18px; border:1px solid var(--border); box-shadow:-26px 46px 90px -42px rgba(15,23,42,.5); transform:perspective(1700px) rotateY(-12deg) rotateX(4deg);">
+    </div>
+  </div>
+</section>
+
+<!-- ░░ 23 · MÉTRICAS ░░ -->
+<section id="s23" class="dark" data-screen-label="23 Métricas">
+  <div class="dotgrid"></div>
+  <div class="pad">
+    <div class="eyebrow" data-anim style="color:var(--lime);">En números</div>
+    <h2 class="h2 mt-s" data-anim style="--d:.06s; color:#fff;">El proyecto, en una mirada.</h2>
+    <div class="grid g4 mt-l" style="gap:36px;">
+      <div data-anim style="--d:.14s;"><div style="font-family:'Space Grotesk'; font-weight:700; font-size:84px; line-height:1; color:#fff;">1465</div><div class="muted" style="color:rgba(255,255,255,.65); font-size:19px; margin-top:8px;">tests automatizados en verde</div></div>
+      <div data-anim style="--d:.2s;"><div style="font-family:'Space Grotesk'; font-weight:700; font-size:84px; line-height:1; color:var(--lime);">174</div><div class="muted" style="color:rgba(255,255,255,.65); font-size:19px; margin-top:8px;">story points · 100% completados</div></div>
+      <div data-anim style="--d:.26s;"><div style="font-family:'Space Grotesk'; font-weight:700; font-size:84px; line-height:1; color:#fff;">182</div><div class="muted" style="color:rgba(255,255,255,.65); font-size:19px; margin-top:8px;">work items en Azure DevOps</div></div>
+      <div data-anim style="--d:.32s;"><div style="font-family:'Space Grotesk'; font-weight:700; font-size:84px; line-height:1; color:var(--lime);">&lt;5s</div><div class="muted" style="color:rgba(255,255,255,.65); font-size:19px; margin-top:8px;">de la foto al veredicto</div></div>
+      <div data-anim style="--d:.38s;"><div style="font-family:'Space Grotesk'; font-weight:700; font-size:84px; line-height:1; color:#fff;">342</div><div class="muted" style="color:rgba(255,255,255,.65); font-size:19px; margin-top:8px;">commits</div></div>
+      <div data-anim style="--d:.44s;"><div style="font-family:'Space Grotesk'; font-weight:700; font-size:84px; line-height:1; color:#fff;">61</div><div class="muted" style="color:rgba(255,255,255,.65); font-size:19px; margin-top:8px;">pull requests mergeados</div></div>
+      <div data-anim style="--d:.5s;"><div style="font-family:'Space Grotesk'; font-weight:700; font-size:84px; line-height:1; color:var(--lime);">16</div><div class="muted" style="color:rgba(255,255,255,.65); font-size:19px; margin-top:8px;">prompts de IA versionados</div></div>
+      <div data-anim style="--d:.56s;"><div style="font-family:'Space Grotesk'; font-weight:700; font-size:84px; line-height:1; color:#fff;">9</div><div class="muted" style="color:rgba(255,255,255,.65); font-size:19px; margin-top:8px;">pasos de pipeline trazables</div></div>
+    </div>
+    <div class="card mt-l" data-anim style="--d:.64s; background:rgba(199,240,74,.1); border:1.5px solid rgba(199,240,74,.32); border-radius:24px;"><p style="color:#fff; font-size:25px; line-height:1.5;">🍬 Una corrida completa de evaluación del modelo cuesta <strong style="color:var(--lime);">~US$0,02</strong> — menos de $20. <strong>Con menos de lo que sale un caramelo, entendés qué estás comiendo.</strong></p></div>
+  </div>
+</section>
+
+
+
+<!-- ░░ 26 · ROADMAP ░░ -->
+<section id="s26" data-screen-label="26 Roadmap">
+  <div class="pad">
+    <div class="eyebrow" data-anim>Visión a largo plazo</div>
+    <h2 class="h2 mt-s" data-anim style="--d:.06s;">Del MVP a la góndola de todos.</h2>
+    <div class="grid g4 mt-l" style="gap:24px;">
+      <div data-anim style="--d:.16s; border-top:3px solid var(--green); padding-top:22px;"><div style="width:14px; height:14px; border-radius:999px; background:var(--green); box-shadow:0 0 0 6px var(--green-soft); margin-top:-30px; margin-bottom:18px;"></div><h3 class="h3" style="font-size:26px;">Penetrar el nicho</h3><p class="muted" style="font-size:19px; margin-top:8px;">Empezar por quienes más lo necesitan: celíacos, veganos e intolerantes. Dolor real, boca a boca.</p></div>
+      <div data-anim style="--d:.24s; border-top:3px solid var(--border); padding-top:22px;"><div style="width:14px; height:14px; border-radius:999px; background:var(--border); margin-top:-30px; margin-bottom:18px;"></div><h3 class="h3" style="font-size:26px;">Alianzas</h3><p class="muted" style="font-size:19px; margin-top:8px;">Dietéticas, nutricionistas y obras sociales como canal de distribución.</p></div>
+      <div data-anim style="--d:.32s; border-top:3px solid var(--border); padding-top:22px;"><div style="width:14px; height:14px; border-radius:999px; background:var(--border); margin-top:-30px; margin-bottom:18px;"></div><h3 class="h3" style="font-size:26px;">App móvil nativa</h3><p class="muted" style="font-size:19px; margin-top:8px;">La góndola se recorre con el celular: la cámara, como entrada principal.</p></div>
+      <div data-anim style="--d:.4s; border-top:3px solid var(--green); padding-top:22px;"><div style="width:14px; height:14px; border-radius:999px; background:var(--green); box-shadow:0 0 0 6px var(--green-soft); margin-top:-30px; margin-bottom:18px;"></div><h3 class="h3" style="font-size:26px;">Plataforma abierta</h3><p class="muted" style="font-size:19px; margin-top:8px;">API para marcas y retailers que quieran mostrar transparencia.</p></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ░░ PROBALO AHORA (QR) ░░ -->
+<section id="s15" class="green-slide" data-screen-label="15 Probalo ahora">
+  <div class="dotgrid" style="opacity:.12;"></div>
+  <div class="pad" style="align-items:center; text-align:center;">
+    <div class="eyebrow" data-anim>Probalo ahora</div>
+    <h2 class="h2 mt-s" data-anim style="--d:.06s; color:#fff;">Escaneá y entrá a NutriLens.</h2>
+    <div style="display:flex; gap:40px; margin-top:54px; justify-content:center;">
+      <div data-anim="grow" style="--d:.18s; background:#fff; border-radius:28px; padding:30px; text-align:center; width:330px;">
+        <img src="assets/qr-web.png" alt="QR a la app web" style="width:236px; height:236px; image-rendering:pixelated;">
+        <div class="h3" style="font-size:25px; margin-top:16px; color:var(--text);">App web</div>
+        <div class="mono" style="font-size:14px; color:var(--muted); margin-top:6px;">nutrilens-app.azurewebsites.net</div>
+      </div>
+      <div data-anim="grow" style="--d:.3s; background:#fff; border-radius:28px; padding:30px; text-align:center; width:330px;">
+        <img src="assets/qr-docs.png" alt="QR a la documentación" style="width:236px; height:236px; image-rendering:pixelated;">
+        <div class="h3" style="font-size:25px; margin-top:16px; color:var(--text);">Documentación</div>
+        <div class="mono" style="font-size:14px; color:var(--muted); margin-top:6px;">nutrilens-docs.azurewebsites.net</div>
+      </div>
+      <div data-anim="grow" style="--d:.42s; background:#fff; border-radius:28px; padding:30px; text-align:center; width:330px;">
+        <img src="assets/qr-mobile.png" alt="QR a la app mobile (Expo)" style="width:236px; height:236px; image-rendering:pixelated;">
+        <div class="h3" style="font-size:25px; margin-top:16px; color:var(--text);">App móvil</div>
+        <div class="mono" style="font-size:14px; color:var(--muted); margin-top:6px;">Escaneá con Expo Go</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ░░ TEASER SORPRESA (antes del cierre) ░░ -->
+<section id="s_teaser" class="dark" data-screen-label="Una última cosa">
+  <div class="dotgrid"></div>
+  <div class="glow" style="width:900px; height:900px; left:50%; top:50%; transform:translate(-50%,-50%); background:radial-gradient(circle,rgba(199,240,74,.18) 0%,transparent 70%);"></div>
+  <div class="pad" style="align-items:center; text-align:center;">
+    <div class="eyebrow" data-anim style="--d:.05s; color:var(--lime);">Una última cosa...</div>
+    <h2 class="h1 mt" data-anim style="--d:.15s; color:#fff; font-size:120px;">¿Y si comprar<br>fuera un <span class="em">juego</span>?</h2>
+    <div class="mt-l" data-anim="fade" style="--d:.5s;">
+      <span style="display:inline-flex; align-items:center; gap:18px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:46px; color:#fff; letter-spacing:-.015em;">
+        Continuemos
+        <span class="cont-arrow" style="color:var(--lime); display:inline-flex; font-size:50px;">→</span>
+      </span>
+    </div>
+  </div>
+</section>
+
+<!-- ░░ NUTRIWORLD REVEAL (antes del cierre) ░░ -->
+<section id="s_nutriworld" class="dark" data-screen-label="NutriWorld">
+  <div class="split">
+    <div class="col">
+      <div style="display:flex; align-items:center; gap:16px;" data-anim>
+        <div class="eyebrow" style="color:var(--lime);">Innovación · Beta</div>
+        <span class="badge" style="background:rgba(199,240,74,.16); color:var(--lime); border:1px solid rgba(199,240,74,.35);">solo admins</span>
+      </div>
+      <h2 class="h1 mt-s" data-anim style="--d:.08s; color:#fff; font-size:92px;">NutriWorld.</h2>
+      <p class="lead mt" data-anim style="--d:.18s; color:rgba(255,255,255,.8);">Tu góndola, en 3D. Le hablás en lenguaje natural y NutriLens —en forma de robot— <span class="em">te guía a la góndola correcta</span> y resalta los productos aptos. La misma IA del chat, ahora caminando con vos.</p>
+      <div class="pill-list mt-l" data-anim style="--d:.28s;"><span class="chip">Avatar + robot guía</span><span class="chip">Misma IA del chat</span><span class="chip">Minimapa + voz</span></div>
+    </div>
+    <div class="panel" style="background:#0a1322;">
+      <img src="assets/nutriworld.png" alt="NutriWorld — supermercado 3D con NutriLens guiando" data-anim="grow" style="--d:.22s; width:860px; border-radius:20px; border:1px solid rgba(255,255,255,.12); box-shadow:0 50px 100px -40px rgba(0,0,0,.7); transform:perspective(1800px) rotateY(-8deg) rotateX(3deg);">
+    </div>
+  </div>
+</section>
+
+<!-- ░░ 27 · CIERRE ░░ -->
+<section id="s27" class="dark" data-screen-label="27 Cierre">
+  <div class="dotgrid"></div>
+  <div class="glow" style="width:820px; height:820px; left:50%; top:42%; transform:translate(-50%,-50%);"></div>
+  <div class="pad" style="align-items:center; text-align:center;">
+    <span class="mark" data-anim="grow" style="--d:.05s; width:84px; height:84px; background:#fff;">
+      <svg width="50" height="50" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="12.4" stroke="#16a34a" stroke-width="1.7" opacity=".5"/><path d="M8.6 23.4C8.2 14.6 13.4 8.8 23.4 8.6 23.8 17.4 18.6 23.2 8.6 23.4Z" fill="#16a34a"/><path d="M11.4 20.6C14.8 16.4 17.8 13.4 20.4 11.6" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><circle cx="24.6" cy="7.4" r="2.1" fill="#C7F04A"/></svg>
+    </span>
+    <h2 class="h1 mt" data-anim style="--d:.12s; color:#fff; font-size:110px;">Comé con<br><span class="em">información.</span></h2>
+    <p class="lead mt" data-anim style="--d:.24s; color:rgba(255,255,255,.7); text-align:center; max-width:60ch;">NutriLens es informativo — no reemplaza el consejo de un profesional de la salud.</p>
+    <div class="mono mt-l" data-anim="fade" style="--d:.36s; font-size:20px; color:rgba(255,255,255,.7); line-height:2;">
+      Mateo, Federico&nbsp;·&nbsp;Pucci, Federico Axel&nbsp;·&nbsp;Branchesi, Tomás Agustín&nbsp;·&nbsp;Martucci, Federico Ariel
+    </div>
+    <div class="pill-list mt" data-anim="fade" style="--d:.44s; justify-content:center;">
+      <span class="chip">IA Aplicada · UNLaM</span><span class="chip">Prof. Ing. Damián Montefiori</span><span class="chip">¿Preguntas? 🙌</span>
+    </div>
+  </div>
+  <span class="spark" style="top:22%; left:16%; font-size:24px;">✦</span>
+  <span class="spark" style="bottom:24%; right:18%; font-size:20px; animation-delay:1.1s;">✦</span>
+</section>
+
+</deck-stage>
+<script>
+  /* Marca en todas las slides: logo (esquina) + estrellas titilando. */
+  (function () {
+    var LEAF =
+      '<svg width="17" height="17" viewBox="0 0 32 32" fill="none"><path d="M8.6 23.4C8.2 14.6 13.4 8.8 23.4 8.6 23.8 17.4 18.6 23.2 8.6 23.4Z" fill="#fff"/><path d="M11.4 20.6C14.8 16.4 17.8 13.4 20.4 11.6" stroke="#15803d" stroke-width="1.9" stroke-linecap="round"/><circle cx="24.6" cy="7.4" r="2" fill="#C7F04A"/></svg>';
+    function deco() {
+      document.querySelectorAll('deck-stage > section').forEach(function (s) {
+        if (s.dataset.deco) return;
+        s.dataset.deco = '1';
+        // logo lockup (salvo portada y cierre, que ya tienen logo grande)
+        if (s.id !== 's1' && s.id !== 's27') {
+          var b = document.createElement('div');
+          b.className = 'brandmark';
+          b.innerHTML = '<span class="lf">' + LEAF + '</span><span class="t">NutriLens</span>';
+          s.appendChild(b);
+        }
+        // estrellas titilando si la slide no tiene
+        if (!s.querySelector('.spark')) {
+          [
+            ['93%', '13%', '17px', '0s'],
+            ['95%', '58%', '13px', '1.2s'],
+          ].forEach(function (p) {
+            var sp = document.createElement('span');
+            sp.className = 'spark';
+            sp.textContent = '✦';
+            sp.style.left = p[0];
+            sp.style.top = p[1];
+            sp.style.fontSize = p[2];
+            sp.style.animationDelay = p[3];
+            s.appendChild(sp);
+          });
+        }
+      });
+    }
+    if (document.readyState !== 'loading') deco();
+    else document.addEventListener('DOMContentLoaded', deco);
+  })();
+</script>
+</body>
+</html>
