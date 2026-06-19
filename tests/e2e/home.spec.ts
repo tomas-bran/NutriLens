@@ -14,6 +14,7 @@ test('home renderiza hero, cómo funciona, ejemplos y disclaimer', async ({ page
   await home.expectHeroVisible();
   await home.expectHowItWorksSection();
   await home.expectExamplesSection();
+  await home.expectDocsLink();
   await home.expectDisclaimer();
 });
 
