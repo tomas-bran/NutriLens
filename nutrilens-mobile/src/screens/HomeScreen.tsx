@@ -29,13 +29,7 @@ export default function HomeScreen() {
   const fadeAnimShortcuts = useRef(new Animated.Value(0)).current;
   const slideAnimShortcuts = useRef(new Animated.Value(16)).current;
 
-  // Valor animado para los chips flotantes
-  const floatAnim1 = useRef(new Animated.Value(0)).current;
-  const floatAnim2 = useRef(new Animated.Value(0)).current;
-
   useEffect(() => {
-    const timeouts: ReturnType<typeof setTimeout>[] = [];
-    const floatLoops: Animated.CompositeAnimation[] = [];
     // Configurar la entrada en cascada
     const createAnim = (fade: Animated.Value, slide: Animated.Value) => {
       return Animated.parallel([
@@ -50,29 +44,6 @@ export default function HomeScreen() {
       createAnim(fadeAnimExamples, slideAnimExamples),
       createAnim(fadeAnimShortcuts, slideAnimShortcuts),
     ]).start();
-
-    // Animación continua de levitación (desfasada para más naturalidad)
-    const createFloat = (anim: Animated.Value, delay: number, duration: number) => {
-      const timeout = setTimeout(() => {
-        const loop = Animated.loop(
-          Animated.sequence([
-            Animated.timing(anim, { toValue: -10, duration: duration, useNativeDriver: true }),
-            Animated.timing(anim, { toValue: 0, duration: duration, useNativeDriver: true }),
-          ]),
-        );
-        floatLoops.push(loop);
-        loop.start();
-      }, delay);
-      timeouts.push(timeout);
-    };
-
-    createFloat(floatAnim1, 0, 3000);
-    createFloat(floatAnim2, 500, 3200);
-
-    return () => {
-      timeouts.forEach(clearTimeout);
-      floatLoops.forEach((loop) => loop.stop());
-    };
   }, []);
 
   return (
@@ -97,30 +68,6 @@ export default function HomeScreen() {
             end={{ x: 1, y: 1 }}
             style={styles.heroGradient}
           >
-            {/* Decoración flotante (Chips) */}
-            <Animated.View
-              style={[
-                styles.floatingChip,
-                { top: '15%', right: '5%', transform: [{ translateY: floatAnim1 }] },
-              ]}
-            >
-              <View style={styles.chipContent}>
-                <Ionicons name="nutrition" size={12} color={colors.primaryStrong || '#1f8e60'} />
-                <Text style={styles.chipText}>vegano</Text>
-              </View>
-            </Animated.View>
-            <Animated.View
-              style={[
-                styles.floatingChip,
-                { top: '65%', right: '8%', transform: [{ translateY: floatAnim2 }] },
-              ]}
-            >
-              <View style={styles.chipContent}>
-                <Ionicons name="leaf" size={12} color={colors.primaryStrong || '#1f8e60'} />
-                <Text style={styles.chipText}>sin gluten</Text>
-              </View>
-            </Animated.View>
-
             <View style={styles.heroContent}>
               <View style={styles.badgeContainer}>
                 <Ionicons name="sparkles" size={12} color="#fff" style={{ marginRight: 6 }} />
@@ -230,21 +177,21 @@ export default function HomeScreen() {
           </ScrollView>
         </Animated.View>
 
-        {/* Sección: Tu Historial */}
+        {/* Sección: Tu Catálogo */}
         <Animated.View
           style={[
             styles.section,
             { opacity: fadeAnimShortcuts, transform: [{ translateY: slideAnimShortcuts }] },
           ]}
         >
-          <Text style={styles.sectionTitle}>Tu Historial</Text>
+          <Text style={styles.sectionTitle}>Tu Catálogo</Text>
 
-          <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Historial')}>
+          <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Catálogo')}>
             <View style={[styles.cardIcon, { backgroundColor: colors.primarySoft || '#e6f5ee' }]}>
               <Ionicons name="time" size={28} color={colors.primaryStrong || '#1f8e60'} />
             </View>
             <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Ver últimos análisis</Text>
+              <Text style={styles.cardTitle}>Ver catálogo</Text>
               <Text style={styles.cardDescription}>Revisá los productos que ya escaneaste.</Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color={colors.textMuted || '#6b7280'} />
@@ -348,29 +295,6 @@ const styles = StyleSheet.create({
   },
   buttonIcon: {
     marginRight: 8,
-  },
-  floatingChip: {
-    position: 'absolute',
-    zIndex: 10,
-  },
-  chipContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 100,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  chipText: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: colors.primaryStrong || '#1f8e60',
-    marginLeft: 4,
   },
   section: {
     marginBottom: 32,

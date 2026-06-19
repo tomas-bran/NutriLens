@@ -6,6 +6,12 @@
  */
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PrismaClient, type Prisma } from '@prisma/client';
+
+const { getUserIdMock } = vi.hoisted(() => ({ getUserIdMock: vi.fn() }));
+vi.mock('@/lib/auth/current-user', () => ({
+  getUserId: getUserIdMock,
+}));
+
 import { GET } from '@/app/api/products/route';
 
 const prisma = new PrismaClient();
@@ -42,6 +48,8 @@ function getRequest(query: string): Request {
 }
 
 beforeEach(() => {
+  getUserIdMock.mockReset();
+  getUserIdMock.mockResolvedValue(null);
   vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
   vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
 });

@@ -15,6 +15,11 @@ jest.mock('@react-navigation/native', () => ({
   }),
 }));
 jest.mock('@expo/vector-icons', () => ({ Ionicons: 'Ionicons' }));
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(() => Promise.resolve(null)),
+  setItem: jest.fn(() => Promise.resolve()),
+  removeItem: jest.fn(() => Promise.resolve()),
+}));
 
 describe('HistoryScreen', () => {
   const mockNavigation = { navigate: jest.fn() };
@@ -23,7 +28,7 @@ describe('HistoryScreen', () => {
     jest.clearAllMocks();
   });
 
-  it('muestra el estado vacío si no hay historial', async () => {
+  it('muestra el estado vacío si no hay catálogo', async () => {
     (getHistory as jest.Mock).mockResolvedValueOnce({ items: [] });
 
     const { getByText, getAllByText } = await render(<HistoryScreen navigation={mockNavigation} />);
@@ -86,7 +91,7 @@ describe('HistoryScreen', () => {
     });
   });
 
-  it('envía filtros al endpoint de historial', async () => {
+  it('envía filtros al endpoint de catálogo', async () => {
     (getHistory as jest.Mock).mockResolvedValue({ items: [] });
 
     const { getByTestId, getByText } = await render(<HistoryScreen navigation={mockNavigation} />);
@@ -102,5 +107,38 @@ describe('HistoryScreen', () => {
         }),
       );
     });
+  });
+
+  it('aplica el alcance Analizados por vos cuando llega desde perfil', async () => {
+    (getHistory as jest.Mock).mockResolvedValue({ items: [], total: 0 });
+
+    await render(
+      <HistoryScreen navigation={mockNavigation} route={{ params: { onlyMine: true } }} />,
+    );
+
+    await waitFor(() => {
+      expect(getHistory).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          filtro: 'mios',
+          pageSize: 50,
+        }),
+      );
+    });
+  });
+
+  it('el toggle Todos / Analizados por vos cambia el filtro mios', async () => {
+    (getHistory as jest.Mock).mockResolvedValue({ items: [] });
+
+    const { getByText } = await render(<HistoryScreen navigation={mockNavigation} />);
+
+    await fireEvent.press(getByText('Analizados por vos'));
+    await waitFor(() =>
+      expect(getHistory).toHaveBeenLastCalledWith(expect.objectContaining({ filtro: 'mios' })),
+    );
+
+    await fireEvent.press(getByText('Todos'));
+    await waitFor(() =>
+      expect(getHistory).toHaveBeenLastCalledWith(expect.objectContaining({ filtro: undefined })),
+    );
   });
 });

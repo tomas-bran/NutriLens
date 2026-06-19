@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,25 @@ import {
   Alert,
   ScrollView,
   TextInput,
+  AppState,
+  AppStateStatus,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getHistory, getProductDetail } from '../services/api';
 import { colors, typography } from '../theme/tokens';
+
+interface PendingCatalogDetail {
+  productId: string;
+  createdAt: number;
+  attempts: number;
+}
+
+const PENDING_CATALOG_DETAIL_KEY = '@nutrilens/pending-catalog-detail';
+const PENDING_CATALOG_DETAIL_TTL_MS = 15 * 60 * 1000;
+const MAX_PENDING_CATALOG_DETAIL_ATTEMPTS = 3;
 
 const CATEGORY_OPTIONS = [
   'galletitas',
@@ -38,8 +52,9 @@ const APTO_OPTIONS = [
 ];
 const ALLERGEN_OPTIONS = ['gluten', 'leche', 'huevo', 'soja', 'frutos secos', 'maní'];
 
-export default function HistoryScreen({ navigation }: any) {
+export default function HistoryScreen({ navigation, route }: any) {
   const [history, setHistory] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -47,8 +62,23 @@ export default function HistoryScreen({ navigation }: any) {
   const [riesgo, setRiesgo] = useState<string | undefined>();
   const [apto, setApto] = useState<string | undefined>();
   const [alergeno, setAlergeno] = useState<string | undefined>();
+  const [onlyMine, setOnlyMine] = useState(false);
+  const openingIdRef = useRef<string | null>(null);
 
-  const hasActiveFilters = Boolean(query.trim() || categoria || riesgo || apto || alergeno);
+  const hasQueryFilters = Boolean(query.trim() || categoria || riesgo || apto || alergeno);
+  const hasActiveFilters = hasQueryFilters;
+  const isOnlyMineEmpty = onlyMine && !hasQueryFilters;
+
+  useEffect(() => {
+    if (typeof route?.params?.onlyMine === 'boolean') {
+      setOnlyMine(route.params.onlyMine);
+    }
+  }, [route?.params?.onlyMine]);
+
+  const setCatalogOpeningId = (value: string | null) => {
+    openingIdRef.current = value;
+    setOpeningId(value);
+  };
 
   const fetchHistory = async () => {
     try {
@@ -59,8 +89,11 @@ export default function HistoryScreen({ navigation }: any) {
         riesgo,
         apto,
         alergeno,
+        filtro: onlyMine ? 'mios' : undefined,
+        pageSize: 50,
       });
       setHistory(data.items || []);
+      setTotal(data.total || 0);
     } catch (error) {
       console.error('Error fetching history:', error);
     } finally {
@@ -71,8 +104,21 @@ export default function HistoryScreen({ navigation }: any) {
   useFocusEffect(
     useCallback(() => {
       fetchHistory();
-    }, [query, categoria, riesgo, apto, alergeno]),
+    }, [query, categoria, riesgo, apto, alergeno, onlyMine]),
   );
+
+  useEffect(() => {
+    recoverPendingCatalogDetail();
+
+    const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
+      if (nextState === 'active') {
+        fetchHistory();
+        recoverPendingCatalogDetail();
+      }
+    });
+
+    return () => subscription.remove();
+  }, [query, categoria, riesgo, apto, alergeno, onlyMine]);
 
   const clearFilters = () => {
     setQuery('');
@@ -80,6 +126,7 @@ export default function HistoryScreen({ navigation }: any) {
     setRiesgo(undefined);
     setApto(undefined);
     setAlergeno(undefined);
+    setOnlyMine(false);
   };
 
   const getRiskColor = (risk: string) => {
@@ -150,18 +197,68 @@ export default function HistoryScreen({ navigation }: any) {
   const capitalize = (s: string) =>
     s && s.length > 0 ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
-  const openDetail = async (item: any) => {
+  const openDetail = (item: any) => {
+    openCatalogDetail(item.id, 0, 'new');
+  };
+
+  const openCatalogDetail = async (productId: string, attempts: number, mode: 'new' | 'retry') => {
+    if (openingIdRef.current) return;
+
+    const pending: PendingCatalogDetail = {
+      productId,
+      createdAt: Date.now(),
+      attempts,
+    };
+
     try {
-      setOpeningId(item.id);
-      const detail = await getProductDetail(item.id);
+      await AsyncStorage.setItem(PENDING_CATALOG_DETAIL_KEY, JSON.stringify(pending));
+      setCatalogOpeningId(productId);
+      const detail = await getProductDetail(productId);
+      await AsyncStorage.removeItem(PENDING_CATALOG_DETAIL_KEY);
       navigation.navigate('Result', {
         data: mapDetailToResultData(detail),
         photoUri: detail.imagenUrl || undefined,
       });
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'No se pudo abrir el detalle del producto.');
+      const nextAttempts = attempts + 1;
+      if (nextAttempts >= MAX_PENDING_CATALOG_DETAIL_ATTEMPTS) {
+        await AsyncStorage.removeItem(PENDING_CATALOG_DETAIL_KEY);
+      } else {
+        await AsyncStorage.setItem(
+          PENDING_CATALOG_DETAIL_KEY,
+          JSON.stringify({ ...pending, attempts: nextAttempts }),
+        );
+      }
+
+      if (mode === 'new' || nextAttempts >= MAX_PENDING_CATALOG_DETAIL_ATTEMPTS) {
+        Alert.alert('Error', error?.message || 'No se pudo abrir el detalle del producto.');
+      }
     } finally {
-      setOpeningId(null);
+      setCatalogOpeningId(null);
+    }
+  };
+
+  const recoverPendingCatalogDetail = async () => {
+    if (openingIdRef.current) return;
+
+    const rawPending = await AsyncStorage.getItem(PENDING_CATALOG_DETAIL_KEY);
+    if (!rawPending) return;
+
+    try {
+      const pending = JSON.parse(rawPending) as PendingCatalogDetail;
+      if (!pending.productId || !pending.createdAt) {
+        await AsyncStorage.removeItem(PENDING_CATALOG_DETAIL_KEY);
+        return;
+      }
+
+      if (Date.now() - pending.createdAt > PENDING_CATALOG_DETAIL_TTL_MS) {
+        await AsyncStorage.removeItem(PENDING_CATALOG_DETAIL_KEY);
+        return;
+      }
+
+      openCatalogDetail(pending.productId, pending.attempts || 0, 'retry');
+    } catch (error) {
+      await AsyncStorage.removeItem(PENDING_CATALOG_DETAIL_KEY);
     }
   };
 
@@ -173,19 +270,25 @@ export default function HistoryScreen({ navigation }: any) {
       disabled={openingId === item.id}
     >
       <View style={styles.cardContent}>
-        <View style={styles.iconContainer}>
-          <Ionicons name="scan" size={28} color={colors.primary} />
+        <View style={styles.thumbnailContainer}>
+          {item.imagenUrl ? (
+            <Image source={{ uri: item.imagenUrl }} style={styles.thumbnailImage} />
+          ) : (
+            <View style={styles.thumbnailFallback}>
+              <Ionicons name="scan" size={28} color={colors.primary} />
+            </View>
+          )}
+          <View style={[styles.thumbnailRiskBadge, { backgroundColor: getRiskBg(item.riesgo) }]}>
+            <Text style={[styles.thumbnailRiskText, { color: getRiskColor(item.riesgo) }]}>
+              {translateRisk(item.riesgo)}
+            </Text>
+          </View>
         </View>
         <View style={styles.cardInfo}>
           <View style={styles.cardTopRow}>
             <Text style={styles.itemName} numberOfLines={1}>
               {item.nombre || 'Producto Desconocido'}
             </Text>
-            <View style={[styles.riskBadge, { backgroundColor: getRiskBg(item.riesgo) }]}>
-              <Text style={[styles.riskText, { color: getRiskColor(item.riesgo) }]}>
-                {translateRisk(item.riesgo)}
-              </Text>
-            </View>
           </View>
 
           <Text style={styles.itemMeta}>
@@ -194,15 +297,20 @@ export default function HistoryScreen({ navigation }: any) {
             {formatRelativeDate(item.createdAt)}
           </Text>
 
-          {item.alergenos && item.alergenos.length > 0 && (
-            <View style={styles.allergensContainer}>
-              {item.alergenos.map((a: string, index: number) => (
+          <View style={styles.allergensContainer}>
+            {item.alergenos && item.alergenos.length > 0 ? (
+              item.alergenos.slice(0, 3).map((a: string, index: number) => (
                 <View key={`allergen-${index}`} style={styles.allergenChip}>
                   <Text style={styles.allergenText}>{capitalize(a)}</Text>
                 </View>
-              ))}
-            </View>
-          )}
+              ))
+            ) : (
+              <View style={styles.cleanChip}>
+                <Ionicons name="checkmark" size={12} color={colors.risk.low} />
+                <Text style={styles.cleanText}>Sin alergenos</Text>
+              </View>
+            )}
+          </View>
         </View>
         {openingId === item.id ? (
           <ActivityIndicator size="small" color={colors.primary} style={styles.chevron} />
@@ -222,7 +330,7 @@ export default function HistoryScreen({ navigation }: any) {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Mi Historial</Text>
+          <Text style={styles.headerTitle}>Mi Catálogo</Text>
         </View>
 
         <View style={styles.filters}>
@@ -242,6 +350,37 @@ export default function HistoryScreen({ navigation }: any) {
                 <Ionicons name="close-circle" size={18} color={colors.textMuted} />
               </TouchableOpacity>
             )}
+          </View>
+
+          <View style={styles.ownerToggle}>
+            <TouchableOpacity
+              style={[styles.ownerOption, !onlyMine && styles.ownerOptionSelected]}
+              onPress={() => setOnlyMine(false)}
+              activeOpacity={0.75}
+            >
+              <Ionicons
+                name="albums-outline"
+                size={15}
+                color={!onlyMine ? colors.primaryStrong : colors.textMuted}
+              />
+              <Text style={[styles.ownerOptionText, !onlyMine && styles.ownerOptionTextSelected]}>
+                Todos
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.ownerOption, onlyMine && styles.ownerOptionSelected]}
+              onPress={() => setOnlyMine(true)}
+              activeOpacity={0.75}
+            >
+              <Ionicons
+                name="person-circle-outline"
+                size={15}
+                color={onlyMine ? colors.primaryStrong : colors.textMuted}
+              />
+              <Text style={[styles.ownerOptionText, onlyMine && styles.ownerOptionTextSelected]}>
+                Analizados por vos
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <FilterSection
@@ -265,11 +404,25 @@ export default function HistoryScreen({ navigation }: any) {
           />
 
           {hasActiveFilters && (
-            <TouchableOpacity style={styles.clearFiltersButton} onPress={clearFilters}>
-              <Ionicons name="close" size={16} color={colors.textMuted} />
-              <Text style={styles.clearFiltersText}>Limpiar filtros</Text>
+            <TouchableOpacity
+              style={styles.clearFiltersButton}
+              onPress={isOnlyMineEmpty ? () => setOnlyMine(false) : clearFilters}
+            >
+              <Ionicons
+                name={isOnlyMineEmpty ? 'albums-outline' : 'close'}
+                size={16}
+                color={colors.textMuted}
+              />
+              <Text style={styles.clearFiltersText}>
+                {isOnlyMineEmpty ? 'Ver catalogo completo' : 'Limpiar filtros'}
+              </Text>
             </TouchableOpacity>
           )}
+          <Text style={styles.resultCount}>
+            {loading && history.length > 0
+              ? 'Actualizando catalogo...'
+              : `${total} ${total === 1 ? 'producto' : 'productos'}`}
+          </Text>
         </View>
 
         {loading && history.length === 0 ? (
@@ -386,6 +539,7 @@ function mapDetailToResultData(detail: any) {
       'NutriLens es un asistente informativo, no reemplaza el consejo de un profesional de nutrición.',
     savedAt: detail.createdAt,
     pipelineTrace: detail.pipelineTrace,
+    offEnrichment: detail.offEnrichment ?? null,
   };
 }
 
@@ -421,6 +575,34 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   searchInput: { flex: 1, color: colors.text, fontSize: typography.fontSize.sm },
+  ownerToggle: {
+    flexDirection: 'row',
+    gap: 6,
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    padding: 4,
+    marginBottom: 12,
+  },
+  ownerOption: {
+    flex: 1,
+    minHeight: 36,
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  ownerOptionSelected: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+  },
+  ownerOptionText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  ownerOptionTextSelected: { color: colors.primaryStrong },
   filterSection: { marginBottom: 10 },
   filterTitle: {
     color: colors.textMuted,
@@ -457,6 +639,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   clearFiltersText: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
+  resultCount: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 2,
+  },
   listContainer: { padding: 16 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
 
@@ -528,14 +716,38 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cardContent: { flexDirection: 'row', alignItems: 'flex-start' },
-  iconContainer: {
+  thumbnailContainer: {
     width: 64,
     height: 64,
     borderRadius: 10,
+    overflow: 'hidden',
+    marginRight: 12,
     backgroundColor: colors.primarySoft,
+  },
+  thumbnailImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  thumbnailFallback: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+  },
+  thumbnailRiskBadge: {
+    position: 'absolute',
+    right: 4,
+    bottom: 4,
+    borderRadius: 999,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.85)',
+  },
+  thumbnailRiskText: {
+    fontSize: 9,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
   cardInfo: { flex: 1, justifyContent: 'center' },
   cardTopRow: {
@@ -546,12 +758,6 @@ const styles = StyleSheet.create({
   },
   itemName: { fontSize: 15, fontWeight: 'bold', color: colors.text, flex: 1, marginRight: 8 },
   itemMeta: { fontSize: 12, color: colors.textMuted },
-  riskBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 16,
-  },
-  riskText: { fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' },
 
   allergensContainer: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 8, gap: 6 },
   allergenChip: {
@@ -561,6 +767,16 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   allergenText: { fontSize: 10, fontWeight: 'bold', color: colors.risk.high },
+  cleanChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.risk.lowBg,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 16,
+  },
+  cleanText: { fontSize: 10, fontWeight: '800', color: colors.risk.low },
 
   chevron: { marginTop: 4, marginLeft: 8 },
 });

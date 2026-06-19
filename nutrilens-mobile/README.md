@@ -1,6 +1,6 @@
 # NutriLens Mobile
 
-Aplicacion mobile de NutriLens construida con Expo y React Native. Replica el flujo principal de la version web: inicio, captura o seleccion de imagen, analisis con IA, resultado, historial y chat sobre productos guardados.
+Aplicacion mobile de NutriLens construida con Expo y React Native. Replica el flujo principal de la version web: inicio, captura o seleccion de imagen, analisis con IA, resultado, catalogo y chat sobre productos guardados.
 
 ## Requisitos
 
@@ -8,6 +8,7 @@ Aplicacion mobile de NutriLens construida con Expo y React Native. Replica el fl
 - npm
 - Expo Go en el telefono, o un simulador iOS/Android
 - Backend web de NutriLens levantado en `http://localhost:3000`
+- Client IDs de Google para Expo/mobile si se quiere probar login real
 
 ## Levantar el backend
 
@@ -86,6 +87,70 @@ Fallbacks:
 
 Si se prueba en un celular fisico, la PC y el telefono tienen que estar en la misma red Wi-Fi. Si la app no conecta, revisar firewall, Docker y que `localhost:3000` este accesible desde la PC.
 
+## Login con Google
+
+La app obtiene un `id_token` de Google con `expo-auth-session` y lo intercambia por
+un token mobile firmado por el backend (`POST /api/mobile/auth/google`). Ese token
+viaja como `Authorization: Bearer <token>` en cada request.
+
+> **Importante (Expo SDK 54):** el login con Google **no funciona en Expo Go** —
+> Google ya no acepta el redirect del proxy. Necesitás un **development build**
+> (`npx expo run:ios` / `run:android` o EAS dev client). Para una demo rápida en
+> Expo Go, usá el bypass de abajo.
+
+Identificadores de la app (ya configurados en `app.json`): bundle id iOS y package
+Android = **`com.nutrilens.mobile`**, scheme = **`nutrilens`**.
+
+### 1. Crear los OAuth clients en Google Cloud Console (APIs & Services → Credentials)
+
+- **Web application** → copiá su Client ID a `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`.
+- **iOS** → Bundle ID `com.nutrilens.mobile` → Client ID a `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`.
+- **Android** → Package name `com.nutrilens.mobile` + el **SHA-1** del keystore
+  (para EAS: `eas credentials` → Android → ver el SHA-1) → Client ID a
+  `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID`.
+
+### 2. Completar el `.env` de la app (copiá de `.env.example`)
+
+```bash
+EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=<ios>.apps.googleusercontent.com
+EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=<android>.apps.googleusercontent.com
+EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=<web>.apps.googleusercontent.com
+```
+
+### 3. iOS: registrar el URL scheme (reversed client ID) en `app.json`
+
+Bajo `expo.ios.infoPlist`:
+
+```json
+"CFBundleURLTypes": [
+  { "CFBundleURLSchemes": ["com.googleusercontent.apps.<ios-client-id-sin-sufijo>"] }
+]
+```
+
+### 4. Backend: permitir esos client IDs como audience
+
+En `.env.local` (local) y en las App Settings de Azure (prod):
+
+```bash
+MOBILE_GOOGLE_CLIENT_IDS="<ios>.apps.googleusercontent.com,<android>.apps.googleusercontent.com,<web>.apps.googleusercontent.com"
+```
+
+```bash
+# Azure (prod)
+az webapp config appsettings set -g nutrilens-rg -n nutrilens-app \
+  --settings MOBILE_GOOGLE_CLIENT_IDS="<ios>,<android>,<web>"
+```
+
+### Demo en Expo Go sin Google (bypass)
+
+Con el backend en `E2E_AUTH_BYPASS=true`, la app entra con un usuario fijo:
+
+```bash
+EXPO_PUBLIC_AUTH_DEV_BYPASS=true
+```
+
+> Nunca uses el bypass en un build real ni con `WEBSITE_HOSTNAME` seteado (Azure lo desactiva solo).
+
 ## Compartir una prueba local con otras personas
 
 Para que otras personas prueben la app sin estar en tu Wi-Fi, se puede exponer el backend local con ngrok y correr Expo en modo tunnel.
@@ -133,8 +198,17 @@ O cerrar la terminal y abrir una nueva.
 La app mobile usa los mismos endpoints del backend web:
 
 ```txt
+POST /api/mobile/auth/google
+GET  /api/me
+GET  /api/me/prefs
+PATCH /api/me/prefs
 POST /api/analyze
 POST /api/chat
+GET  /api/conversations
+POST /api/conversations
+GET  /api/conversations/:id
+PATCH /api/conversations/:id
+DELETE /api/conversations/:id
 GET  /api/products
 GET  /api/products/:id
 ```
@@ -197,7 +271,7 @@ src/
 
 ## Funcionalidades actuales
 
-- Home mobile con accesos a analizar, historial y chat.
+- Home mobile con accesos a analizar, catalogo y chat.
 - Captura con camara.
 - Seleccion de imagen desde galeria.
 - Envio de imagen a `POST /api/analyze`.
@@ -210,9 +284,9 @@ src/
   - alergenos
   - explicacion
   - disclaimer
-- Historial conectado a `GET /api/products`.
+- Catalogo conectado a `GET /api/products`.
 - Detalle real desde `GET /api/products/:id`.
-- Filtros de historial:
+- Filtros de catalogo:
   - busqueda
   - riesgo
   - aptitud

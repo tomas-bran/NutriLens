@@ -7,9 +7,11 @@
  * por el matcher). El analyzer/catalogo/chat y sus APIs quedan protegidos.
  */
 import { auth } from '@/lib/auth';
+import { getMobileUserFromAuthorization } from '@/lib/auth/mobile-token';
 import { NextResponse } from 'next/server';
 
 const PUBLIC_PATHS = ['/login'];
+const PUBLIC_API_PREFIXES = ['/api/auth', '/api/mobile/auth'];
 
 /**
  * Bypass de auth para E2E (NL-202): se activa con el flag explícito
@@ -26,14 +28,18 @@ const PUBLIC_PATHS = ['/login'];
 // `next start` → NODE_ENV=production, y eso desactivaba el bypass.)
 const E2E_BYPASS = process.env.E2E_AUTH_BYPASS === 'true' && !process.env.WEBSITE_HOSTNAME;
 
-export default auth((req) => {
+export default auth(async (req) => {
   if (E2E_BYPASS) return NextResponse.next();
 
   const { pathname } = req.nextUrl;
   const isLoggedIn = Boolean(req.auth?.user);
+  const mobileUser = await getMobileUserFromAuthorization(req.headers.get('authorization'));
 
   // El flujo de Auth.js y la pantalla de login son siempre accesibles.
-  if (pathname.startsWith('/api/auth') || PUBLIC_PATHS.includes(pathname)) {
+  if (
+    PUBLIC_API_PREFIXES.some((prefix) => pathname.startsWith(prefix)) ||
+    PUBLIC_PATHS.includes(pathname)
+  ) {
     // Si ya está logueado y entra a /login, lo mandamos al inicio.
     if (pathname === '/login' && isLoggedIn) {
       return NextResponse.redirect(new URL('/', req.nextUrl));
@@ -41,7 +47,7 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  if (isLoggedIn) return NextResponse.next();
+  if (isLoggedIn || mobileUser) return NextResponse.next();
 
   // API protegida sin sesión → 401 JSON (no redirect, el cliente lo maneja).
   if (pathname.startsWith('/api/')) {
