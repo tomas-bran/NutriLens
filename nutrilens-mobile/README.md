@@ -89,28 +89,67 @@ Si se prueba en un celular fisico, la PC y el telefono tienen que estar en la mi
 
 ## Login con Google
 
-La app mobile usa Google Sign-In con Expo y luego intercambia el `id_token` por un token mobile firmado por el backend. Para habilitarlo:
+La app obtiene un `id_token` de Google con `expo-auth-session` y lo intercambia por
+un token mobile firmado por el backend (`POST /api/mobile/auth/google`). Ese token
+viaja como `Authorization: Bearer <token>` en cada request.
 
-```powershell
-$env:EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID="..."
-$env:EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID="..."
-$env:EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID="..."
-```
+> **Importante (Expo SDK 54):** el login con Google **no funciona en Expo Go** —
+> Google ya no acepta el redirect del proxy. Necesitás un **development build**
+> (`npx expo run:ios` / `run:android` o EAS dev client). Para una demo rápida en
+> Expo Go, usá el bypass de abajo.
 
-En el backend, permitir esos clientes:
+Identificadores de la app (ya configurados en `app.json`): bundle id iOS y package
+Android = **`com.nutrilens.mobile`**, scheme = **`nutrilens`**.
+
+### 1. Crear los OAuth clients en Google Cloud Console (APIs & Services → Credentials)
+
+- **Web application** → copiá su Client ID a `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`.
+- **iOS** → Bundle ID `com.nutrilens.mobile` → Client ID a `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`.
+- **Android** → Package name `com.nutrilens.mobile` + el **SHA-1** del keystore
+  (para EAS: `eas credentials` → Android → ver el SHA-1) → Client ID a
+  `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID`.
+
+### 2. Completar el `.env` de la app (copiá de `.env.example`)
 
 ```bash
-MOBILE_GOOGLE_CLIENT_IDS="ios-client-id,android-client-id,web-client-id"
-AUTH_SECRET="un-secreto-largo"
+EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=<ios>.apps.googleusercontent.com
+EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=<android>.apps.googleusercontent.com
+EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=<web>.apps.googleusercontent.com
 ```
 
-Si no se configuran los client IDs, la pantalla de login se muestra pero deshabilita el boton de Google con un aviso.
+### 3. iOS: registrar el URL scheme (reversed client ID) en `app.json`
 
-Para desarrollo local sin Google OAuth, se puede usar el bypass junto al backend con `E2E_AUTH_BYPASS=true`:
+Bajo `expo.ios.infoPlist`:
 
-```powershell
-$env:EXPO_PUBLIC_AUTH_DEV_BYPASS="true"
+```json
+"CFBundleURLTypes": [
+  { "CFBundleURLSchemes": ["com.googleusercontent.apps.<ios-client-id-sin-sufijo>"] }
+]
 ```
+
+### 4. Backend: permitir esos client IDs como audience
+
+En `.env.local` (local) y en las App Settings de Azure (prod):
+
+```bash
+MOBILE_GOOGLE_CLIENT_IDS="<ios>.apps.googleusercontent.com,<android>.apps.googleusercontent.com,<web>.apps.googleusercontent.com"
+```
+
+```bash
+# Azure (prod)
+az webapp config appsettings set -g nutrilens-rg -n nutrilens-app \
+  --settings MOBILE_GOOGLE_CLIENT_IDS="<ios>,<android>,<web>"
+```
+
+### Demo en Expo Go sin Google (bypass)
+
+Con el backend en `E2E_AUTH_BYPASS=true`, la app entra con un usuario fijo:
+
+```bash
+EXPO_PUBLIC_AUTH_DEV_BYPASS=true
+```
+
+> Nunca uses el bypass en un build real ni con `WEBSITE_HOSTNAME` seteado (Azure lo desactiva solo).
 
 ## Compartir una prueba local con otras personas
 
