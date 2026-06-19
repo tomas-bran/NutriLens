@@ -9,7 +9,16 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.nutrilens.mobile"
+      "bundleIdentifier": "com.nutrilens.mobile",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.1067226099186-dqckr4jekmgmgu93pdr631q5ie05mj4c"
+            ]
+          }
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
