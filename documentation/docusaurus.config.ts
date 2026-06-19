@@ -13,7 +13,7 @@ const config: Config = {
     v4: true,
   },
 
-  url: 'https://docs.nutrilens.app',
+  url: 'https://nutrilens-docs.azurewebsites.net',
   baseUrl: '/',
 
   organizationName: 'tomas-bran',
