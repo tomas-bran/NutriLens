@@ -6,7 +6,7 @@
  */
 import type { IconName } from '@/components/ui/Icon';
 
-export type ActiveNavItem = 'inicio' | 'analizar' | 'catalogo' | 'chat' | 'perfil';
+export type ActiveNavItem = 'inicio' | 'analizar' | 'catalogo' | 'chat' | 'perfil' | 'nutriworld';
 
 export interface NavItem {
   id: ActiveNavItem;
@@ -15,6 +15,12 @@ export interface NavItem {
   label: string;
   /** Si es true, solo aparece en la barra mobile (en desktop vive en el UserMenu). */
   mobileOnly?: boolean;
+  /** Solo para admins. Para el resto aparece DISABLED (gated por rol). */
+  adminOnly?: boolean;
+  /** Beta: solo desktop. Se oculta en la barra mobile. */
+  desktopOnly?: boolean;
+  /** Etiqueta chica al lado del label (ej. "beta"). */
+  tag?: string;
 }
 
 export const NAV_ITEMS: ReadonlyArray<NavItem> = [
@@ -22,6 +28,17 @@ export const NAV_ITEMS: ReadonlyArray<NavItem> = [
   { id: 'analizar', href: '/analizar', icon: 'scan-line', label: 'Analizar' },
   { id: 'catalogo', href: '/catalogo', icon: 'salad', label: 'Catálogo' },
   { id: 'chat', href: '/chat', icon: 'chat', label: 'Chat' },
+  // NutriWorld: experiencia 3D beta, solo admins (disabled para el resto),
+  // solo desktop.
+  {
+    id: 'nutriworld',
+    href: '/nutriworld',
+    icon: 'sparkles',
+    label: 'NutriWorld',
+    adminOnly: true,
+    desktopOnly: true,
+    tag: 'beta',
+  },
   // Redesign: en desktop el acceso a la cuenta vive en el UserMenu del sidebar;
   // en mobile es una pestaña propia.
   { id: 'perfil', href: '/mi-cuenta', icon: 'user', label: 'Perfil', mobileOnly: true },

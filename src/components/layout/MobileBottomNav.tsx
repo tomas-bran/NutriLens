@@ -28,7 +28,7 @@ export function MobileBottomNav({ active, catalogoCount }: MobileBottomNavProps)
       aria-label="Navegación principal"
       className="flex flex-shrink-0 items-stretch justify-around border-t border-[var(--color-border)] bg-white pb-[env(safe-area-inset-bottom)] md:hidden"
     >
-      {NAV_ITEMS.map((item) => {
+      {NAV_ITEMS.filter((item) => !item.desktopOnly).map((item) => {
         const isActive = active === item.id;
         const badge = item.id === 'catalogo' ? catalogoCount : undefined;
         const hasBadge = typeof badge === 'number' && badge > 0;

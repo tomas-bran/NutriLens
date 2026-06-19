@@ -55,6 +55,15 @@ export function Dropzone({
       <BarcodeCaptureSlot file={barcodeFile} onPick={onBarcodeSelected} onClear={onBarcodeClear} />
 
       {/* ② Foto del producto (requerida). El drag-and-drop alimenta esta foto. */}
+      <div className="flex items-center gap-2">
+        <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] font-mono text-[11px] font-bold text-white">
+          2
+        </span>
+        <span className="text-[13px] font-bold text-[var(--color-text)]">Foto del producto</span>
+        <span className="rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-primary)]">
+          requerida
+        </span>
+      </div>
       <div
         data-testid="dropzone"
         onDragOver={(e: DragEvent<HTMLDivElement>) => {
@@ -94,6 +103,7 @@ export function Dropzone({
           />
         ) : (
           <IdleControls
+            hasBarcode={barcodeFile !== null}
             onCamera={() => cameraInputRef.current?.click()}
             onGallery={() => galleryInputRef.current?.click()}
           />
@@ -170,9 +180,28 @@ function DropzoneSparkles() {
   );
 }
 
-function IdleControls({ onCamera, onGallery }: { onCamera: () => void; onGallery: () => void }) {
+function IdleControls({
+  hasBarcode,
+  onCamera,
+  onGallery,
+}: {
+  hasBarcode: boolean;
+  onCamera: () => void;
+  onGallery: () => void;
+}) {
   return (
     <>
+      {/* Si ya cargó el código de barras (opcional) pero falta la foto del
+          producto, lo avisamos: sin esa foto el análisis no puede arrancar. */}
+      {hasBarcode && (
+        <div
+          data-testid="product-required-note"
+          className="flex items-center gap-2 rounded-full border border-[var(--color-warning)] bg-[var(--color-warning-bg)] px-3 py-1.5 text-[12.5px] font-semibold text-[var(--color-warning)]"
+        >
+          <Icon name="info" strokeWidth={2.2} className="h-4 w-4 flex-shrink-0" />
+          Falta la foto del producto para analizar.
+        </div>
+      )}
       <div className="flex flex-col gap-1">
         <h2 className="text-lg font-bold text-[var(--color-text)] md:text-xl">
           Arrastrá una foto acá

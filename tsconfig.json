@@ -34,5 +34,13 @@
     "vitest.config.ts",
     "playwright.config.ts"
   ],
-  "exclude": ["node_modules", ".next", "out", "dist", "coverage", "nutrilens-mobile"]
+  "exclude": [
+    "node_modules",
+    ".next",
+    "out",
+    "dist",
+    "coverage",
+    "nutrilens-mobile",
+    "documentation"
+  ]
 }

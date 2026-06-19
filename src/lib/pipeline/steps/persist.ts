@@ -44,19 +44,26 @@ export async function persist(
 
   const existing = await prisma.product.findUnique({ where: { fileHash: ctx.file.hash } });
   if (existing) {
+    // Re-analizar un producto borrado (soft delete) lo restaura: vuelve al
+    // catálogo y a contar para el usuario (el vínculo ProductAnalysis lo
+    // re-registra el caller). Si no estaba borrado, dedup normal.
+    const saved = existing.deletedAt
+      ? await prisma.product.update({ where: { id: existing.id }, data: { deletedAt: null } })
+      : existing;
     logger.info('persist.skipped_duplicate', {
       requestId: ctx.requestId,
       existingId: existing.id,
       fileHash: ctx.file.hash,
+      restored: existing.deletedAt !== null,
     });
     return {
       ...ctx,
-      saved: existing,
+      saved,
       cachedFromDedup: true,
       steps: [
         ...ctx.steps,
         makeTrace('persist', 'skipped', startedAt, {
-          reason: 'duplicate_hash',
+          reason: existing.deletedAt ? 'restored_soft_deleted' : 'duplicate_hash',
           id: existing.id,
         }),
       ],
