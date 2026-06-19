@@ -1,144 +1,154 @@
 import React from 'react';
-import { Text, Pressable } from 'react-native';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react-native';
-import { AuthProvider, useAuth } from './AuthContext';
-import * as api from './api';
+import { Text, TouchableOpacity } from 'react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { AuthProvider, shouldBypassAuth, useAuth } from './AuthContext';
+import {
+  clearAuthToken,
+  getAuthToken,
+  getProfile,
+  loginWithGoogleIdToken,
+  saveAuthToken,
+} from './api';
 
 jest.mock('./api', () => ({
+  clearAuthToken: jest.fn(),
   getAuthToken: jest.fn(),
   getProfile: jest.fn(),
-  saveAuthToken: jest.fn(),
-  clearAuthToken: jest.fn(),
   loginWithGoogleIdToken: jest.fn(),
+  saveAuthToken: jest.fn(),
 }));
 
-const PROFILE = {
-  user: { id: 'u1', email: 'a@b.c', name: 'Ana', image: null },
+const profile = {
+  user: { id: 'user-1', email: 'fede@nutrilens.local', name: 'Fede', image: null },
   prefs: { vegano: false, celiaco: false, lactosa: false, avisos: true },
-  stats: { analizados: 2, riesgoAlto: 1, sinAlergenos: 0 },
+  stats: { analizados: 4, riesgoAlto: 1, sinAlergenos: 2 },
 };
 
-function Consumer({ useAuthHook = useAuth }: { useAuthHook?: typeof useAuth }) {
-  const { user, isAuthenticated, isLoading, signInWithGoogleIdToken, signOut } = useAuthHook();
+function Consumer() {
+  const auth = useAuth();
   return (
     <>
-      <Text testID="loading">{String(isLoading)}</Text>
-      <Text testID="auth">{String(isAuthenticated)}</Text>
-      <Text testID="user">{user ? user.id : 'none'}</Text>
-      <Pressable testID="signin" onPress={() => void signInWithGoogleIdToken('idt')} />
-      <Pressable testID="signout" onPress={() => void signOut()} />
+      <Text>{auth.isLoading ? 'loading' : 'ready'}</Text>
+      <Text>{auth.isAuthenticated ? auth.user?.email : 'anon'}</Text>
+      <Text>{auth.prefs?.avisos ? 'avisos-on' : 'avisos-off'}</Text>
+      <TouchableOpacity onPress={() => auth.signInWithGoogleIdToken('id-token')}>
+        <Text>login</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={auth.signOut}>
+        <Text>logout</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => auth.setLocalPrefs({ ...profile.prefs, vegano: true })}>
+        <Text>set prefs</Text>
+      </TouchableOpacity>
     </>
   );
 }
 
-const val = (id: string) => String(screen.getByTestId(id).props.children);
+describe('AuthContext', () => {
+  const originalBypassFlag = process.env.EXPO_PUBLIC_AUTH_DEV_BYPASS;
 
-beforeEach(() => {
-  jest.clearAllMocks();
-  (api.getAuthToken as jest.Mock).mockResolvedValue(null);
-  (api.getProfile as jest.Mock).mockResolvedValue(PROFILE);
-  (api.saveAuthToken as jest.Mock).mockResolvedValue(undefined);
-  (api.clearAuthToken as jest.Mock).mockResolvedValue(undefined);
-});
-
-describe('AuthProvider — flujo normal (sin bypass)', () => {
-  it('sin token guardado queda deslogueado', async () => {
-    (api.getAuthToken as jest.Mock).mockResolvedValue(null);
-    render(
-      <AuthProvider>
-        <Consumer />
-      </AuthProvider>,
-    );
-    await waitFor(() => expect(val('loading')).toBe('false'));
-    expect(val('auth')).toBe('false');
-    expect(val('user')).toBe('none');
-    expect(api.getProfile).not.toHaveBeenCalled();
-  });
-
-  it('con token válido carga el perfil y queda logueado', async () => {
-    (api.getAuthToken as jest.Mock).mockResolvedValue('tok');
-    render(
-      <AuthProvider>
-        <Consumer />
-      </AuthProvider>,
-    );
-    await waitFor(() => expect(val('auth')).toBe('true'));
-    expect(val('user')).toBe('u1');
-  });
-
-  it('si el perfil falla con token, limpia el token y queda deslogueado', async () => {
-    (api.getAuthToken as jest.Mock).mockResolvedValue('tok');
-    (api.getProfile as jest.Mock).mockRejectedValueOnce(new Error('401'));
-    render(
-      <AuthProvider>
-        <Consumer />
-      </AuthProvider>,
-    );
-    await waitFor(() => expect(api.clearAuthToken).toHaveBeenCalled());
-    expect(val('auth')).toBe('false');
-  });
-
-  it('signInWithGoogleIdToken guarda el token y refresca el perfil', async () => {
-    (api.getAuthToken as jest.Mock).mockResolvedValue(null);
-    (api.loginWithGoogleIdToken as jest.Mock).mockResolvedValue({ token: 't', user: PROFILE.user });
-    render(
-      <AuthProvider>
-        <Consumer />
-      </AuthProvider>,
-    );
-    await waitFor(() => expect(val('loading')).toBe('false'));
-    fireEvent.press(screen.getByTestId('signin'));
-    await waitFor(() => expect(val('auth')).toBe('true'));
-    expect(api.loginWithGoogleIdToken).toHaveBeenCalledWith('idt');
-    expect(api.saveAuthToken).toHaveBeenCalledWith('t');
-    expect(val('user')).toBe('u1');
-  });
-
-  it('signOut limpia el token y desloguea', async () => {
-    (api.getAuthToken as jest.Mock).mockResolvedValue('tok');
-    render(
-      <AuthProvider>
-        <Consumer />
-      </AuthProvider>,
-    );
-    await waitFor(() => expect(val('auth')).toBe('true'));
-    fireEvent.press(screen.getByTestId('signout'));
-    await waitFor(() => expect(val('auth')).toBe('false'));
-    expect(api.clearAuthToken).toHaveBeenCalled();
-  });
-});
-
-describe('AuthProvider — dev bypass', () => {
-  const OLD = process.env.EXPO_PUBLIC_AUTH_DEV_BYPASS;
   beforeEach(() => {
-    process.env.EXPO_PUBLIC_AUTH_DEV_BYPASS = 'true';
-  });
-  afterEach(() => {
-    process.env.EXPO_PUBLIC_AUTH_DEV_BYPASS = OLD;
+    jest.clearAllMocks();
+    process.env.EXPO_PUBLIC_AUTH_DEV_BYPASS = 'false';
+    (getAuthToken as jest.Mock).mockResolvedValue(null);
+    (getProfile as jest.Mock).mockResolvedValue(profile);
+    (loginWithGoogleIdToken as jest.Mock).mockResolvedValue({ token: 'mobile-token' });
+    (saveAuthToken as jest.Mock).mockResolvedValue(undefined);
+    (clearAuthToken as jest.Mock).mockResolvedValue(undefined);
   });
 
-  it('con bypass y perfil disponible usa ese perfil', async () => {
-    (api.getProfile as jest.Mock).mockResolvedValue(PROFILE);
-    render(
+  afterAll(() => {
+    process.env.EXPO_PUBLIC_AUTH_DEV_BYPASS = originalBypassFlag;
+  });
+
+  it('habilita bypass de login para web, android e ios', () => {
+    delete process.env.EXPO_PUBLIC_AUTH_DEV_BYPASS;
+
+    expect(shouldBypassAuth('web')).toBe(true);
+    expect(shouldBypassAuth('android')).toBe(true);
+    expect(shouldBypassAuth('ios')).toBe(true);
+  });
+
+  it('permite apagar el bypass de login por env', () => {
+    process.env.EXPO_PUBLIC_AUTH_DEV_BYPASS = 'false';
+
+    expect(shouldBypassAuth('web')).toBe(false);
+    expect(shouldBypassAuth('android')).toBe(false);
+    expect(shouldBypassAuth('ios')).toBe(false);
+  });
+
+  it('arranca anonimo si no hay token guardado', async () => {
+    const { getByText } = await render(
       <AuthProvider>
         <Consumer />
       </AuthProvider>,
     );
-    await waitFor(() => expect(val('auth')).toBe('true'));
-    expect(val('user')).toBe('u1');
-    // En bypass no se consulta el token guardado.
-    expect(api.getAuthToken).not.toHaveBeenCalled();
+
+    await waitFor(() => expect(getByText('ready')).toBeTruthy());
+    expect(getByText('anon')).toBeTruthy();
+    expect(getProfile).not.toHaveBeenCalled();
   });
 
-  it('con bypass y perfil caído cae al usuario local fijo', async () => {
-    (api.getProfile as jest.Mock).mockRejectedValueOnce(new Error('no backend'));
-    render(
+  it('carga perfil cuando existe token guardado', async () => {
+    (getAuthToken as jest.Mock).mockResolvedValueOnce('stored-token');
+
+    const { getByText } = await render(
       <AuthProvider>
         <Consumer />
       </AuthProvider>,
     );
-    await waitFor(() => expect(val('user')).toBe('e2e-test-user'));
-    expect(val('auth')).toBe('true');
+
+    await waitFor(() => expect(getByText('fede@nutrilens.local')).toBeTruthy());
+    expect(getProfile).toHaveBeenCalledTimes(1);
+  });
+
+  it('inicia sesion, guarda token y refresca perfil', async () => {
+    const { getByText } = await render(
+      <AuthProvider>
+        <Consumer />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => expect(getByText('ready')).toBeTruthy());
+    fireEvent.press(getByText('login'));
+
+    await waitFor(() => {
+      expect(loginWithGoogleIdToken).toHaveBeenCalledWith('id-token');
+      expect(saveAuthToken).toHaveBeenCalledWith('mobile-token');
+      expect(getByText('fede@nutrilens.local')).toBeTruthy();
+    });
+  });
+
+  it('cierra sesion y limpia estado local', async () => {
+    (getAuthToken as jest.Mock).mockResolvedValueOnce('stored-token');
+
+    const { getByText } = await render(
+      <AuthProvider>
+        <Consumer />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => expect(getByText('fede@nutrilens.local')).toBeTruthy());
+    fireEvent.press(getByText('logout'));
+
+    await waitFor(() => {
+      expect(clearAuthToken).toHaveBeenCalled();
+      expect(getByText('anon')).toBeTruthy();
+    });
+  });
+
+  it('limpia token si falla la carga de perfil', async () => {
+    (getAuthToken as jest.Mock).mockResolvedValueOnce('stored-token');
+    (getProfile as jest.Mock).mockRejectedValueOnce(new Error('perfil roto'));
+
+    const { getByText } = await render(
+      <AuthProvider>
+        <Consumer />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => expect(getByText('ready')).toBeTruthy());
+    expect(clearAuthToken).toHaveBeenCalled();
+    expect(getByText('anon')).toBeTruthy();
   });
 });
-

@@ -1,82 +1,107 @@
 import React from 'react';
-import { Linking } from 'react-native';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react-native';
 import ProfileScreen from './ProfileScreen';
-import { useAuth } from '../services/AuthContext';
 import { updatePrefs } from '../services/api';
-import { DOCS_URL } from '../constants';
+import { useAuth } from '../services/AuthContext';
 
-jest.mock('@expo/vector-icons', () => ({ Ionicons: 'Ionicons' }));
 jest.mock('../services/AuthContext', () => ({ useAuth: jest.fn() }));
 jest.mock('../services/api', () => ({ updatePrefs: jest.fn() }));
+jest.mock('@expo/vector-icons', () => ({ Ionicons: 'Ionicons' }));
 
-const PREFS = { vegano: false, celiaco: false, lactosa: false, avisos: true };
-const baseAuth = () => ({
-  user: { id: 'u1', email: 'ana@nutri.app', name: 'Ana Test', image: null },
-  prefs: { ...PREFS },
-  stats: { analizados: 5, riesgoAlto: 2, sinAlergenos: 1 },
-  signOut: jest.fn(),
-  refreshProfile: jest.fn().mockResolvedValue(undefined),
-  setLocalPrefs: jest.fn(),
-});
+const mockNavigation = { navigate: jest.fn() };
+const mockUseAuth = useAuth as jest.Mock;
+const mockUpdatePrefs = updatePrefs as jest.Mock;
 
-const nav = { navigate: jest.fn() };
-
-beforeEach(() => {
-  jest.clearAllMocks();
-  (useAuth as jest.Mock).mockReturnValue(baseAuth());
-  (updatePrefs as jest.Mock).mockResolvedValue({ ...PREFS });
-  jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined as never);
-});
-
-it('muestra nombre, email, stats y preferencias', async () => {
-  await render(<ProfileScreen navigation={nav} />);
-  expect(screen.getByText('Ana Test')).toBeTruthy();
-  expect(screen.getByText('ana@nutri.app')).toBeTruthy();
-  expect(screen.getByText('5')).toBeTruthy();
-  expect(screen.getByText('Dieta vegana')).toBeTruthy();
-  expect(screen.getByText('Sin gluten')).toBeTruthy();
-});
-
-it('el link de Documentación abre el sitio de docs', async () => {
-  await render(<ProfileScreen navigation={nav} />);
-  fireEvent.press(screen.getByRole('link'));
-  expect(Linking.openURL).toHaveBeenCalledWith(DOCS_URL);
-});
-
-it('"Ver catálogo" navega al catálogo', async () => {
-  await render(<ProfileScreen navigation={nav} />);
-  fireEvent.press(screen.getByText('Ver catálogo'));
-  expect(nav.navigate).toHaveBeenCalledWith('Catálogo');
-});
-
-it('"Cerrar sesión" llama a signOut', async () => {
-  const auth = baseAuth();
-  (useAuth as jest.Mock).mockReturnValue(auth);
-  await render(<ProfileScreen navigation={nav} />);
-  fireEvent.press(screen.getByText('Cerrar sesión'));
-  expect(auth.signOut).toHaveBeenCalled();
-});
-
-it('togglear una preferencia la guarda en el backend', async () => {
-  const auth = baseAuth();
-  (useAuth as jest.Mock).mockReturnValue(auth);
-  await render(<ProfileScreen navigation={nav} />);
-  const veganoSwitch = screen.getAllByRole('switch')[0];
-  fireEvent(veganoSwitch, 'valueChange', true);
-  expect(auth.setLocalPrefs).toHaveBeenCalledWith({ ...PREFS, vegano: true });
-  await waitFor(() => expect(updatePrefs).toHaveBeenCalledWith({ ...PREFS, vegano: true }));
-});
-
-it('muestra el loader mientras no hay datos del perfil', async () => {
-  (useAuth as jest.Mock).mockReturnValue({
-    user: null,
-    prefs: null,
-    stats: null,
+function makeAuth() {
+  return {
+    user: {
+      id: 'user-1',
+      name: 'Fede Pucci',
+      email: 'fede@nutrilens.local',
+      image: null,
+    },
+    prefs: { vegano: false, celiaco: true, lactosa: false, avisos: true },
+    stats: {
+      catalogoTotal: 12,
+      analizados: 3,
+      riesgoAlto: 1,
+      sinAlergenos: 2,
+      ultimoAnalizado: {
+        id: 'prod-1',
+        nombre: 'Galletitas',
+        riesgo: 'alto',
+        analyzedAt: '2026-06-17T20:00:00.000Z',
+      },
+    },
     signOut: jest.fn(),
     refreshProfile: jest.fn().mockResolvedValue(undefined),
     setLocalPrefs: jest.fn(),
+  };
+}
+
+describe('ProfileScreen', () => {
+  let auth: ReturnType<typeof makeAuth>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    auth = makeAuth();
+    mockUseAuth.mockReturnValue(auth);
+    mockUpdatePrefs.mockResolvedValue(auth.prefs);
   });
-  await render(<ProfileScreen navigation={nav} />);
-  expect(screen.queryByText('Mi cuenta')).toBeNull();
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('muestra el perfil, estadisticas y accesos al catalogo', async () => {
+    const { getByText } = await render(<ProfileScreen navigation={mockNavigation} />);
+
+    expect(getByText('Fede Pucci')).toBeTruthy();
+    expect(getByText('fede@nutrilens.local')).toBeTruthy();
+    expect(getByText('Tus analisis')).toBeTruthy();
+    expect(getByText('12 productos en el catalogo')).toBeTruthy();
+    expect(getByText('Galletitas')).toBeTruthy();
+
+    await fireEvent.press(getByText('Ver mis analisis'));
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('Catálogo', { onlyMine: true });
+
+    await fireEvent.press(getByText('Ver catalogo completo'));
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('Catálogo', { onlyMine: false });
+  });
+
+  it('guarda preferencias con actualizacion optimista', async () => {
+    const savedPrefs = { ...auth.prefs, vegano: true };
+    mockUpdatePrefs.mockResolvedValueOnce(savedPrefs);
+
+    const { getByText } = await render(<ProfileScreen navigation={mockNavigation} />);
+    await fireEvent.press(getByText('Dieta vegana'));
+
+    await waitFor(() => {
+      expect(mockUpdatePrefs).toHaveBeenCalledWith(savedPrefs);
+      expect(auth.setLocalPrefs).toHaveBeenCalledWith(savedPrefs);
+    });
+  });
+
+  it('revierte preferencias y avisa si falla el guardado', async () => {
+    jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+    mockUpdatePrefs.mockRejectedValueOnce(new Error('Sin conexion'));
+
+    const { getByText } = await render(<ProfileScreen navigation={mockNavigation} />);
+    await fireEvent.press(getByText('Sin lactosa'));
+
+    await waitFor(() => {
+      expect(auth.setLocalPrefs).toHaveBeenCalledWith({ ...auth.prefs, lactosa: true });
+      expect(auth.setLocalPrefs).toHaveBeenCalledWith(auth.prefs);
+      expect(Alert.alert).toHaveBeenCalledWith('No pudimos guardar', 'Sin conexion');
+    });
+  });
+
+  it('muestra loader cuando todavia no hay perfil cargado', async () => {
+    mockUseAuth.mockReturnValue({ ...auth, user: null, prefs: null, stats: null });
+
+    const { queryByText } = await render(<ProfileScreen navigation={mockNavigation} />);
+
+    expect(queryByText('Mi cuenta')).toBeNull();
+  });
 });

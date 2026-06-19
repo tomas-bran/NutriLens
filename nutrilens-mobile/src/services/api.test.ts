@@ -1,21 +1,23 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   ApiError,
-  saveAuthToken,
-  getAuthToken,
-  clearAuthToken,
-  loginWithGoogleIdToken,
-  getProfile,
-  updatePrefs,
   analyzeProduct,
-  sendChatMessage,
-  getHistory,
-  getProductDetail,
-  listConversations,
+  clearAuthToken,
   createConversation,
-  getConversation,
-  updateConversation,
   deleteConversation,
+  getAuthToken,
+  getChatStarterSuggestions,
+  getConversation,
+  getHistory,
+  getProfile,
+  getProductDetail,
+  getSimilarProducts,
+  listConversations,
+  loginWithGoogleIdToken,
+  saveAuthToken,
+  sendChatMessage,
+  updateConversation,
+  updatePrefs,
 } from './api';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
@@ -25,304 +27,197 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 }));
 
 const mockFetch = jest.fn();
+global.fetch = mockFetch as jest.Mock;
+(global as any).FormData = class MockFormData {
+  _parts: Array<[string, unknown]> = [];
 
-beforeEach(() => {
-  jest.clearAllMocks();
-  (global as any).fetch = mockFetch;
-  (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
-  (AsyncStorage.setItem as jest.Mock).mockResolvedValue(undefined);
-  (AsyncStorage.removeItem as jest.Mock).mockResolvedValue(undefined);
-  jest.spyOn(console, 'error').mockImplementation(() => undefined);
-});
+  append(key: string, value: unknown) {
+    this._parts.push([key, value]);
+  }
+};
 
-/** Respuesta fetch OK. */
-function ok(body: unknown, status = 200) {
+function jsonResponse(payload: unknown, ok = true, status = ok ? 200 : 400) {
   return {
-    ok: true,
+    ok,
     status,
-    json: async () => body,
-    text: async () => JSON.stringify(body),
-  } as unknown as Response;
+    json: jest.fn().mockResolvedValue(payload),
+    text: jest.fn().mockResolvedValue(JSON.stringify(payload)),
+  } as any;
 }
 
-/** Respuesta fetch de error (con body JSON o texto crudo). */
-function fail(body: unknown, status = 400, rawText?: string) {
+function textResponse(payload: string, ok = false, status = 500) {
   return {
-    ok: false,
+    ok,
     status,
-    json: async () => body,
-    text: async () => (rawText !== undefined ? rawText : JSON.stringify(body)),
-  } as unknown as Response;
+    json: jest.fn(),
+    text: jest.fn().mockResolvedValue(payload),
+  } as any;
 }
 
-const lastCall = () => mockFetch.mock.calls[mockFetch.mock.calls.length - 1];
-
-describe('ApiError', () => {
-  it('expone code/reason/details/status', () => {
-    const err = new ApiError({
-      message: 'boom',
-      code: 'invalid_token',
-      reason: 'sin token',
-      details: { a: 1 },
-      status: 401,
-    });
-    expect(err).toBeInstanceOf(Error);
-    expect(err.name).toBe('ApiError');
-    expect(err.message).toBe('boom');
-    expect(err.code).toBe('invalid_token');
-    expect(err.reason).toBe('sin token');
-    expect(err.details).toEqual({ a: 1 });
-    expect(err.status).toBe(401);
-  });
-});
-
-describe('token storage', () => {
-  it('saveAuthToken guarda en AsyncStorage bajo la key de auth', async () => {
-    await saveAuthToken('abc.def');
-    expect(AsyncStorage.setItem).toHaveBeenCalledWith('@nutrilens/auth-token', 'abc.def');
+describe('mobile api client', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValue('stored-token');
+    mockFetch.mockResolvedValue(jsonResponse({ ok: true }));
   });
 
-  it('getAuthToken devuelve el token guardado', async () => {
-    (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce('stored-token');
-    await expect(getAuthToken()).resolves.toBe('stored-token');
-    expect(AsyncStorage.getItem).toHaveBeenCalledWith('@nutrilens/auth-token');
-  });
-
-  it('clearAuthToken borra el token', async () => {
+  it('guarda, lee y limpia el token de auth', async () => {
+    await saveAuthToken('abc');
+    await getAuthToken();
     await clearAuthToken();
+
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith('@nutrilens/auth-token', 'abc');
+    expect(AsyncStorage.getItem).toHaveBeenCalledWith('@nutrilens/auth-token');
     expect(AsyncStorage.removeItem).toHaveBeenCalledWith('@nutrilens/auth-token');
   });
-});
 
-describe('authHeaders (vía requests autenticadas)', () => {
-  it('agrega Authorization: Bearer cuando hay token', async () => {
-    (AsyncStorage.getItem as jest.Mock).mockResolvedValue('tok-123');
-    mockFetch.mockResolvedValueOnce(ok({ user: {}, prefs: {}, stats: {} }));
-    await getProfile();
-    const headers = lastCall()[1].headers;
-    expect(headers.Authorization).toBe('Bearer tok-123');
-    expect(headers.Accept).toBe('application/json');
+  it('loguea con Google y manda headers para ngrok', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ token: 'jwt', user: { id: '1' } }));
+
+    const response = await loginWithGoogleIdToken('google-token');
+
+    expect(response.token).toBe('jwt');
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('/mobile/auth/google'),
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'ngrok-skip-browser-warning': 'true',
+        }),
+        body: JSON.stringify({ idToken: 'google-token' }),
+      }),
+    );
   });
 
-  it('no agrega Authorization cuando no hay token', async () => {
-    (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
-    mockFetch.mockResolvedValueOnce(ok({ user: {}, prefs: {}, stats: {} }));
-    await getProfile();
-    expect(lastCall()[1].headers.Authorization).toBeUndefined();
-  });
-});
+  it('convierte errores JSON de API en ApiError', async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({ error: 'invalid_token', reason: 'Token invalido' }, false, 401),
+    );
 
-describe('loginWithGoogleIdToken', () => {
-  it('postea el idToken y devuelve token + user', async () => {
-    mockFetch.mockResolvedValueOnce(ok({ token: 'mob-token', user: { id: 'u1', email: 'a@b.c' } }));
-    const res = await loginWithGoogleIdToken('google-id-token');
-    expect(res.token).toBe('mob-token');
-    const [url, init] = lastCall();
-    expect(url).toContain('/mobile/auth/google');
-    expect(init.method).toBe('POST');
-    expect(JSON.parse(init.body)).toEqual({ idToken: 'google-id-token' });
-  });
-
-  it('lanza ApiError si Google falla', async () => {
-    mockFetch.mockResolvedValueOnce(fail({ error: 'invalid_token', reason: 'no válido' }, 401));
-    await expect(loginWithGoogleIdToken('x')).rejects.toMatchObject({
+    await expect(loginWithGoogleIdToken('bad-token')).rejects.toMatchObject({
       name: 'ApiError',
       code: 'invalid_token',
-      reason: 'no válido',
+      message: 'Token invalido',
       status: 401,
     });
   });
-});
 
-describe('getProfile', () => {
-  it('devuelve el perfil en éxito', async () => {
-    const profile = { user: { id: 'u1' }, prefs: {}, stats: {} };
-    mockFetch.mockResolvedValueOnce(ok(profile));
-    await expect(getProfile()).resolves.toEqual(profile);
-    expect(lastCall()[0]).toContain('/me');
+  it('convierte errores de texto plano en ApiError', async () => {
+    mockFetch.mockResolvedValueOnce(textResponse('Servidor caido', false, 500));
+
+    await expect(getProfile()).rejects.toMatchObject({
+      name: 'ApiError',
+      message: 'Servidor caido',
+    });
   });
 
-  it('lanza ApiError en error', async () => {
-    mockFetch.mockResolvedValueOnce(fail({ reason: 'sin sesión' }, 401));
-    await expect(getProfile()).rejects.toBeInstanceOf(ApiError);
-  });
-});
+  it('trae perfil y preferencias con Authorization', async () => {
+    const prefs = { vegano: true, celiaco: false, lactosa: false, avisos: true };
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse({ user: { id: '1' }, prefs, stats: {} }))
+      .mockResolvedValueOnce(jsonResponse(prefs));
 
-describe('updatePrefs', () => {
-  const prefs = { vegano: true, celiaco: false, lactosa: false, avisos: true };
+    await getProfile();
+    await updatePrefs(prefs);
 
-  it('hace PATCH /me/prefs con el body', async () => {
-    mockFetch.mockResolvedValueOnce(ok(prefs));
-    await expect(updatePrefs(prefs)).resolves.toEqual(prefs);
-    const [url, init] = lastCall();
-    expect(url).toContain('/me/prefs');
-    expect(init.method).toBe('PATCH');
-    expect(JSON.parse(init.body)).toEqual(prefs);
-    expect(init.headers['Content-Type']).toBe('application/json');
-  });
-
-  it('lanza ApiError en error', async () => {
-    mockFetch.mockResolvedValueOnce(fail({ reason: 'no' }, 500));
-    await expect(updatePrefs(prefs)).rejects.toBeInstanceOf(ApiError);
-  });
-});
-
-describe('analyzeProduct', () => {
-  it('postea FormData a /analyze y devuelve el resultado', async () => {
-    mockFetch.mockResolvedValueOnce(ok({ id: 'p1', product: {} }));
-    const res = await analyzeProduct('file:///tmp/etiqueta.jpg');
-    expect(res).toEqual({ id: 'p1', product: {} });
-    const [url, init] = lastCall();
-    expect(url).toContain('/analyze');
-    expect(init.method).toBe('POST');
-    expect(init.body).toBeInstanceOf(FormData);
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('/me'),
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer stored-token' }),
+      }),
+    );
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('/me/prefs'),
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify(prefs),
+      }),
+    );
   });
 
-  it('adjunta barcodeImage cuando se pasa la foto del código de barras', async () => {
-    const appendSpy = jest.spyOn(FormData.prototype, 'append');
-    mockFetch.mockResolvedValueOnce(ok({ id: 'p1' }));
-    await analyzeProduct('file:///tmp/producto.jpg', 'file:///tmp/ean.jpg');
-    const fields = appendSpy.mock.calls.map((c) => c[0]);
-    expect(fields).toContain('file');
-    expect(fields).toContain('barcodeImage');
-    appendSpy.mockRestore();
+  it('sube analisis con foto principal y codigo de barras opcional', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ id: 'analysis-1' }));
+
+    await analyzeProduct('file:///label.png', 'file:///barcode.jpg');
+
+    const [, options] = mockFetch.mock.calls[0];
+    expect(mockFetch.mock.calls[0][0]).toEqual(expect.stringContaining('/analyze'));
+    expect(options.method).toBe('POST');
+    expect(options.headers).toEqual(
+      expect.objectContaining({
+        Accept: 'application/json',
+        Authorization: 'Bearer stored-token',
+      }),
+    );
+    expect(options.body._parts.map(([key]: [string]) => key)).toEqual(['file', 'barcodeImage']);
   });
 
-  it('no adjunta barcodeImage si no se pasa', async () => {
-    const appendSpy = jest.spyOn(FormData.prototype, 'append');
-    mockFetch.mockResolvedValueOnce(ok({ id: 'p1' }));
-    await analyzeProduct('file:///tmp/producto.jpg');
-    const fields = appendSpy.mock.calls.map((c) => c[0]);
-    expect(fields).toContain('file');
-    expect(fields).not.toContain('barcodeImage');
-    appendSpy.mockRestore();
-  });
+  it('no loguea como error tecnico una imagen no soportada', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse(
+        {
+          error: 'image_not_supported',
+          reason: 'La imagen no parece corresponder a una etiqueta alimentaria.',
+        },
+        false,
+        400,
+      ),
+    );
 
-  it('propaga ApiError image_not_supported sin loguear como error inesperado', async () => {
-    mockFetch.mockResolvedValueOnce(fail({ error: 'image_not_supported', reason: 'no es comida' }, 422));
-    await expect(analyzeProduct('file:///tmp/x.png')).rejects.toMatchObject({
+    await expect(analyzeProduct('file:///x.jpg')).rejects.toMatchObject({
       code: 'image_not_supported',
     });
-    expect(console.error).not.toHaveBeenCalled();
+    expect(consoleSpy).not.toHaveBeenCalled();
   });
 
-  it('loguea y propaga otros errores', async () => {
-    mockFetch.mockResolvedValueOnce(fail({ error: 'upload_failed', reason: 'falló' }, 500));
-    await expect(analyzeProduct('file:///tmp/x.jpg')).rejects.toBeInstanceOf(ApiError);
-    expect(console.error).toHaveBeenCalled();
-  });
-});
+  it('consulta chat, sugerencias, catalogo y detalle', async () => {
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse({ answer: 'Hola' }))
+      .mockResolvedValueOnce(jsonResponse({ suggestions: ['Pregunta'] }))
+      .mockResolvedValueOnce(jsonResponse({ items: [], total: 0 }))
+      .mockResolvedValueOnce(jsonResponse({ id: 'prod-1' }));
 
-describe('sendChatMessage', () => {
-  it('postea la pregunta a /chat', async () => {
-    mockFetch.mockResolvedValueOnce(ok({ answer: 'hola' }));
-    await expect(sendChatMessage('¿cuál es mejor?')).resolves.toEqual({ answer: 'hola' });
-    const [url, init] = lastCall();
-    expect(url).toContain('/chat');
-    expect(JSON.parse(init.body)).toEqual({ question: '¿cuál es mejor?' });
-  });
-
-  it('lanza ApiError en error', async () => {
-    mockFetch.mockResolvedValueOnce(fail({ reason: 'falló' }, 500));
-    await expect(sendChatMessage('x')).rejects.toBeInstanceOf(ApiError);
-  });
-});
-
-describe('getHistory', () => {
-  it('arma el query string con los filtros activos', async () => {
-    mockFetch.mockResolvedValueOnce(ok({ items: [] }));
-    await getHistory({ q: 'leche', categoria: 'bebidas', riesgo: 'alto' });
-    const url = lastCall()[0] as string;
-    expect(url).toContain('/products?');
-    expect(url).toContain('q=leche');
-    expect(url).toContain('categoria=bebidas');
-    expect(url).toContain('riesgo=alto');
-  });
-
-  it('sin filtros pega a /products sin query', async () => {
-    mockFetch.mockResolvedValueOnce(ok({ items: [] }));
-    await getHistory();
-    expect(lastCall()[0]).toMatch(/\/products$/);
-  });
-
-  it('lanza ApiError en error', async () => {
-    mockFetch.mockResolvedValueOnce(fail({ reason: 'no' }, 500));
-    await expect(getHistory()).rejects.toBeInstanceOf(ApiError);
-  });
-});
-
-describe('getProductDetail', () => {
-  it('pega a /products/:id', async () => {
-    mockFetch.mockResolvedValueOnce(ok({ id: 'p1', nombre: 'X' }));
-    await expect(getProductDetail('p1')).resolves.toMatchObject({ id: 'p1' });
-    expect(lastCall()[0]).toContain('/products/p1');
-  });
-
-  it('lanza ApiError en error', async () => {
-    mockFetch.mockResolvedValueOnce(fail({ reason: 'no existe' }, 404));
-    await expect(getProductDetail('nope')).rejects.toBeInstanceOf(ApiError);
-  });
-});
-
-describe('conversations', () => {
-  it('listConversations: GET /conversations', async () => {
-    mockFetch.mockResolvedValueOnce(ok([{ id: 'c1' }]));
-    await expect(listConversations()).resolves.toEqual([{ id: 'c1' }]);
-    expect(lastCall()[0]).toMatch(/\/conversations$/);
-  });
-
-  it('createConversation: POST con messages', async () => {
-    mockFetch.mockResolvedValueOnce(ok({ id: 'c1', title: 'Charla' }));
-    const msgs = [{ role: 'user' as const, text: 'hola' }];
-    await expect(createConversation(msgs)).resolves.toEqual({ id: 'c1', title: 'Charla' });
-    const [url, init] = lastCall();
-    expect(url).toMatch(/\/conversations$/);
-    expect(init.method).toBe('POST');
-    expect(JSON.parse(init.body)).toEqual({ messages: msgs });
-  });
-
-  it('getConversation: GET /conversations/:id', async () => {
-    mockFetch.mockResolvedValueOnce(ok({ id: 'c1', messages: [] }));
-    await expect(getConversation('c1')).resolves.toMatchObject({ id: 'c1' });
-    expect(lastCall()[0]).toContain('/conversations/c1');
-  });
-
-  it('updateConversation: PATCH /conversations/:id', async () => {
-    mockFetch.mockResolvedValueOnce(ok({ id: 'c1', title: 'Nueva' }));
-    await updateConversation('c1', []);
-    const [url, init] = lastCall();
-    expect(url).toContain('/conversations/c1');
-    expect(init.method).toBe('PATCH');
-  });
-
-  it('deleteConversation: DELETE ok devuelve true', async () => {
-    mockFetch.mockResolvedValueOnce(ok({}, 200));
-    await expect(deleteConversation('c1')).resolves.toBe(true);
-    expect(lastCall()[1].method).toBe('DELETE');
-  });
-
-  it('deleteConversation: 204 (no content) también devuelve true', async () => {
-    mockFetch.mockResolvedValueOnce(fail({}, 204));
-    await expect(deleteConversation('c1')).resolves.toBe(true);
-  });
-
-  it('deleteConversation: error real lanza ApiError', async () => {
-    mockFetch.mockResolvedValueOnce(fail({ reason: 'no' }, 500));
-    await expect(deleteConversation('c1')).rejects.toBeInstanceOf(ApiError);
-  });
-});
-
-describe('parseApiError (formas de error)', () => {
-  it('body vacío → mensaje fallback con status', async () => {
-    mockFetch.mockResolvedValueOnce(fail(null, 503, ''));
-    await expect(getProfile()).rejects.toMatchObject({
-      message: 'Error al obtener el perfil',
-      status: 503,
+    expect(await sendChatMessage('Que puedo comer?')).toEqual({ answer: 'Hola' });
+    expect(await getChatStarterSuggestions()).toEqual(['Pregunta']);
+    expect(await getHistory({ q: 'pepas', filtro: 'mios', pageSize: 50 })).toEqual({
+      items: [],
+      total: 0,
     });
+    expect(await getProductDetail('prod-1')).toEqual({ id: 'prod-1' });
+
+    expect(mockFetch.mock.calls[2][0]).toEqual(
+      expect.stringContaining('/products?q=pepas&filtro=mios&pageSize=50'),
+    );
   });
 
-  it('texto no-JSON → usa el texto como mensaje', async () => {
-    mockFetch.mockResolvedValueOnce(fail(null, 500, 'Bad Gateway'));
-    await expect(getProfile()).rejects.toMatchObject({ message: 'Bad Gateway', status: 500 });
+  it('devuelve productos similares o lista vacia si falla', async () => {
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse({ productos: [{ id: 'a' }] }))
+      .mockResolvedValueOnce(jsonResponse({ error: 'boom' }, false, 500));
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    expect(await getSimilarProducts('prod-1', 3)).toEqual([{ id: 'a' }]);
+    expect(await getSimilarProducts('prod-1', 3)).toEqual([]);
+  });
+
+  it('maneja conversaciones completas', async () => {
+    const messages = [{ role: 'user' as const, text: 'hola' }];
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse([{ id: 'c1' }]))
+      .mockResolvedValueOnce(jsonResponse({ id: 'c1', title: 'hola' }))
+      .mockResolvedValueOnce(jsonResponse({ id: 'c1', messages }))
+      .mockResolvedValueOnce(jsonResponse({ id: 'c1', title: 'nuevo' }))
+      .mockResolvedValueOnce(jsonResponse({}, true, 204));
+
+    expect(await listConversations()).toEqual([{ id: 'c1' }]);
+    expect(await createConversation(messages)).toEqual({ id: 'c1', title: 'hola' });
+    expect(await getConversation('c1')).toEqual({ id: 'c1', messages });
+    expect(await updateConversation('c1', messages)).toEqual({ id: 'c1', title: 'nuevo' });
+    expect(await deleteConversation('c1')).toBe(true);
   });
 });

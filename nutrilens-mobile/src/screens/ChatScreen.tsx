@@ -22,6 +22,7 @@ import { colors, typography } from '../theme/tokens';
 import {
   createConversation,
   deleteConversation,
+  getChatStarterSuggestions,
   getConversation,
   getProductDetail,
   listConversations,
@@ -51,6 +52,12 @@ interface PendingChatRequest {
 const PENDING_CHAT_KEY = '@nutrilens/pending-chat-request';
 const PENDING_CHAT_TTL_MS = 15 * 60 * 1000;
 const MAX_PENDING_CHAT_ATTEMPTS = 3;
+const FALLBACK_STARTER_SUGGESTIONS = [
+  'Que productos tengo con menos azucar?',
+  'Cuales son aptos para celiacos?',
+  'Que puedo comer si evito lactosa?',
+  'Explicame los sellos de mis productos',
+];
 
 export default function ChatScreen({ route, navigation }: any) {
   const { isAuthenticated } = useAuth();
@@ -60,6 +67,11 @@ export default function ChatScreen({ route, navigation }: any) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [starterSuggestions, setStarterSuggestions] = useState<string[]>(
+    FALLBACK_STARTER_SUGGESTIONS,
+  );
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
@@ -84,28 +96,13 @@ export default function ChatScreen({ route, navigation }: any) {
   }, [isLoading]);
 
   useEffect(() => {
-    if (initialProduct) {
-      setMessages([
-        {
-          id: Date.now().toString(),
-          role: 'assistant',
-          text: `¡Hola! Veo que acabás de analizar **${initialProduct}**. ¿Qué te gustaría saber sobre este u otros productos?`,
-        },
-      ]);
-    } else {
-      setMessages([
-        {
-          id: Date.now().toString(),
-          role: 'assistant',
-          text: '¡Hola! Soy tu asistente nutricional. Preguntame sobre tus productos, por ejemplo: "¿Qué galletitas tengo con menos azúcar?".',
-        },
-      ]);
-    }
+    resetInitialMessages();
   }, [initialProduct]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
     refreshConversations();
+    refreshStarterSuggestions();
   }, [isAuthenticated]);
 
   useEffect(() => {
@@ -330,6 +327,20 @@ export default function ChatScreen({ route, navigation }: any) {
     }
   };
 
+  const refreshStarterSuggestions = async () => {
+    setIsLoadingSuggestions(true);
+    try {
+      const suggestions = await getChatStarterSuggestions();
+      setStarterSuggestions(
+        suggestions && suggestions.length >= 2 ? suggestions : FALLBACK_STARTER_SUGGESTIONS,
+      );
+    } catch {
+      setStarterSuggestions(FALLBACK_STARTER_SUGGESTIONS);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
   const persistConversation = async (nextMessages: Message[]) => {
     if (!isAuthenticated) return;
     const stored = nextMessages
@@ -354,6 +365,7 @@ export default function ChatScreen({ route, navigation }: any) {
     try {
       const conversation = await getConversation(id);
       setActiveConversationId(id);
+      setIsHistoryOpen(false);
       const restored = conversation.messages.map((message, index) => ({
         id: `${conversation.id}-${index}`,
         role: message.role,
@@ -383,6 +395,7 @@ export default function ChatScreen({ route, navigation }: any) {
 
   const startNewConversation = () => {
     setActiveConversationId(null);
+    setIsHistoryOpen(false);
     resetInitialMessages();
   };
 
@@ -391,17 +404,16 @@ export default function ChatScreen({ route, navigation }: any) {
       ? {
           id: createMessageId(),
           role: 'assistant' as const,
-          text: `¡Hola! Veo que acabás de analizar **${initialProduct}**. ¿Qué te gustaría saber sobre este u otros productos?`,
+          text: `Hola! Veo que acabas de analizar **${initialProduct}**. Que te gustaria saber sobre este u otros productos?`,
         }
       : {
           id: createMessageId(),
           role: 'assistant' as const,
-          text: '¡Hola! Soy tu asistente nutricional. Preguntame sobre tus productos, por ejemplo: "¿Qué galletitas tengo con menos azúcar?".',
+          text: 'Hola! Soy tu asistente nutricional. Preguntame sobre tus productos o elegi una sugerencia para empezar.',
         };
     messagesRef.current = [initial];
     setMessages([initial]);
   };
-
   const openProduct = async (product: any) => {
     if (!navigation) return;
     try {
@@ -507,13 +519,120 @@ export default function ChatScreen({ route, navigation }: any) {
         behavior={Platform.OS === 'android' ? 'height' : undefined}
       >
         <View style={styles.header}>
+          <TouchableOpacity
+            style={[styles.historyButton, isHistoryOpen && styles.headerButtonActive]}
+            onPress={() => setIsHistoryOpen((value) => !value)}
+            activeOpacity={0.75}
+          >
+            <Ionicons
+              name={isHistoryOpen ? 'chatbubbles' : 'chatbubbles-outline'}
+              size={18}
+              color={isHistoryOpen ? colors.primaryStrong : colors.textMuted}
+            />
+            {conversations.length > 0 && (
+              <View style={styles.historyBadge}>
+                <Text style={styles.historyBadgeText}>{Math.min(conversations.length, 9)}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
           <Text style={styles.headerTitle}>Asistente IA</Text>
-          <TouchableOpacity style={styles.newChatButton} onPress={startNewConversation}>
+          <TouchableOpacity
+            style={styles.newChatButton}
+            onPress={startNewConversation}
+            activeOpacity={0.75}
+          >
             <Ionicons name="add" size={18} color={colors.primaryStrong} />
           </TouchableOpacity>
         </View>
 
-        {conversations.length > 0 && (
+        {isHistoryOpen && (
+          <View style={styles.historyPanel}>
+            <View style={styles.historyPanelHeader}>
+              <View>
+                <Text style={styles.historyPanelTitle}>Conversaciones</Text>
+                <Text style={styles.historyPanelSubtitle}>
+                  {conversations.length > 0
+                    ? 'Abrí o eliminá chats anteriores'
+                    : 'Tus chats guardados van a aparecer acá'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.historyCloseButton}
+                onPress={() => setIsHistoryOpen(false)}
+                activeOpacity={0.75}
+              >
+                <Ionicons name="close" size={18} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+
+            {conversations.length === 0 ? (
+              <View style={styles.historyEmpty}>
+                <Ionicons name="chatbubble-ellipses-outline" size={22} color={colors.textMuted} />
+                <Text style={styles.historyEmptyText}>
+                  Cuando hagas una pregunta y NutriLens responda, el chat se guarda solo.
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.historyList}>
+                {conversations.slice(0, 6).map((item) => (
+                  <View key={item.id} style={styles.historyRow}>
+                    <TouchableOpacity
+                      style={styles.historyRowMain}
+                      onPress={() => openConversation(item.id)}
+                      activeOpacity={0.75}
+                    >
+                      <View
+                        style={[
+                          styles.historyRowIcon,
+                          activeConversationId === item.id && styles.historyRowIconActive,
+                        ]}
+                      >
+                        <Ionicons
+                          name="chatbubble-outline"
+                          size={16}
+                          color={
+                            activeConversationId === item.id
+                              ? colors.primaryStrong
+                              : colors.textMuted
+                          }
+                        />
+                      </View>
+                      <View style={styles.historyRowText}>
+                        <Text style={styles.historyRowTitle} numberOfLines={1}>
+                          {item.title || 'Consulta sin título'}
+                        </Text>
+                        <Text style={styles.historyRowPreview} numberOfLines={1}>
+                          {item.lastMessage || `${item.messageCount} mensajes`}
+                        </Text>
+                      </View>
+                      <Text style={styles.historyRowDate}>
+                        {formatConversationDate(item.updatedAt)}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.historyDeleteButton}
+                      onPress={() => removeConversation(item.id)}
+                      activeOpacity={0.75}
+                    >
+                      <Ionicons name="trash-outline" size={17} color={colors.textMuted} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <TouchableOpacity
+              style={styles.historyNewButton}
+              onPress={startNewConversation}
+              activeOpacity={0.75}
+            >
+              <Ionicons name="add" size={18} color={colors.primaryStrong} />
+              <Text style={styles.historyNewButtonText}>Nuevo chat</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {!isHistoryOpen && conversations.length > 0 && (
           <View style={styles.conversationRail}>
             <FlatList
               horizontal
@@ -542,6 +661,43 @@ export default function ChatScreen({ route, navigation }: any) {
                 </TouchableOpacity>
               )}
             />
+          </View>
+        )}
+
+        {!isHistoryOpen && !activeConversationId && messages.length <= 1 && (
+          <View style={styles.starterPanel}>
+            <View style={styles.starterHeader}>
+              <View>
+                <Text style={styles.starterTitle}>Ideas para empezar</Text>
+                <Text style={styles.starterSubtitle}>Basadas en productos del catalogo</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.regenerateButton}
+                onPress={refreshStarterSuggestions}
+                disabled={isLoadingSuggestions}
+                activeOpacity={0.75}
+              >
+                {isLoadingSuggestions ? (
+                  <ActivityIndicator size="small" color={colors.primaryStrong} />
+                ) : (
+                  <Ionicons name="refresh" size={16} color={colors.primaryStrong} />
+                )}
+                <Text style={styles.regenerateText}>Generar otras</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.starterPills}>
+              {starterSuggestions.map((suggestion) => (
+                <TouchableOpacity
+                  key={suggestion}
+                  style={styles.starterPill}
+                  onPress={() => resilientSubmitQuestion(suggestion)}
+                  disabled={isLoading}
+                  activeOpacity={0.75}
+                >
+                  <Text style={styles.starterPillText}>{suggestion}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         )}
 
@@ -654,6 +810,22 @@ function translateRisk(risk?: string) {
   }
 }
 
+function formatConversationDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const today = new Date();
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const dayDiff = Math.round((startOfToday - startOfDate) / (24 * 60 * 60 * 1000));
+
+  if (dayDiff === 0) {
+    return date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+  }
+  if (dayDiff === 1) return 'ayer';
+  return date.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
+}
+
 function mapDetailToResultData(detail: any) {
   return {
     id: detail.id,
@@ -678,6 +850,7 @@ function mapDetailToResultData(detail: any) {
       'NutriLens es un asistente informativo, no reemplaza el consejo de un profesional de nutrición.',
     savedAt: detail.createdAt,
     pipelineTrace: detail.pipelineTrace,
+    offEnrichment: detail.offEnrichment ?? null,
   };
 }
 
@@ -766,6 +939,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: { fontSize: typography.fontSize.xl, fontWeight: 'bold', color: colors.text },
+  historyButton: {
+    position: 'absolute',
+    left: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerButtonActive: {
+    backgroundColor: colors.primarySoft,
+    borderColor: colors.primaryBorder,
+  },
+  historyBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  historyBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '900',
+  },
   newChatButton: {
     position: 'absolute',
     right: 18,
@@ -775,6 +981,127 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  historyPanel: {
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  historyPanelHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 12,
+  },
+  historyPanelTitle: {
+    color: colors.text,
+    fontSize: typography.fontSize.lg,
+    fontWeight: '900',
+  },
+  historyPanelSubtitle: {
+    color: colors.textMuted,
+    fontSize: typography.fontSize.sm,
+    marginTop: 2,
+  },
+  historyCloseButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  historyEmpty: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
+  },
+  historyEmptyText: {
+    flex: 1,
+    color: colors.textMuted,
+    fontSize: typography.fontSize.sm,
+    lineHeight: 18,
+  },
+  historyList: { gap: 8, marginBottom: 10 },
+  historyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    backgroundColor: colors.bg,
+    padding: 8,
+  },
+  historyRowMain: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  historyRowIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  historyRowIconActive: { backgroundColor: colors.primarySoft },
+  historyRowText: { flex: 1, minWidth: 0 },
+  historyRowTitle: {
+    color: colors.text,
+    fontSize: typography.fontSize.sm,
+    fontWeight: '800',
+  },
+  historyRowPreview: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  historyRowDate: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    marginLeft: 4,
+  },
+  historyDeleteButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  historyNewButton: {
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  historyNewButtonText: {
+    color: colors.primaryStrong,
+    fontSize: typography.fontSize.sm,
+    fontWeight: '900',
   },
   conversationRail: {
     backgroundColor: colors.bg,
@@ -801,6 +1128,65 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   conversationChipTextActive: { color: colors.primaryStrong },
+  starterPanel: {
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  starterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 10,
+  },
+  starterTitle: {
+    color: colors.text,
+    fontSize: typography.fontSize.sm,
+    fontWeight: '900',
+  },
+  starterSubtitle: {
+    color: colors.textMuted,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  regenerateButton: {
+    minHeight: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+    backgroundColor: colors.primarySoft,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+  },
+  regenerateText: {
+    color: colors.primaryStrong,
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  starterPills: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  starterPill: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+    backgroundColor: colors.primarySoft,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  starterPillText: {
+    color: colors.primaryStrong,
+    fontSize: 12,
+    fontWeight: '800',
+  },
   chatContainer: { padding: 16, paddingBottom: 24 },
   messageWrapper: { flexDirection: 'row', marginBottom: 16, alignItems: 'flex-start' },
   messageWrapperUser: { justifyContent: 'flex-end' },

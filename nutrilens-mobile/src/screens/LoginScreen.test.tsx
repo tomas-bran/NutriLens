@@ -1,55 +1,78 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import LoginScreen from './LoginScreen';
-import * as Google from 'expo-auth-session/providers/google';
 import { useAuth } from '../services/AuthContext';
 
+let mockRequest: unknown = { id: 'request' };
+let mockResponse: any = null;
+const mockPromptAsync = jest.fn();
+const mockSignInWithGoogleIdToken = jest.fn();
+
+jest.mock('../services/AuthContext', () => ({ useAuth: jest.fn() }));
 jest.mock('@expo/vector-icons', () => ({ Ionicons: 'Ionicons' }));
 jest.mock('expo-web-browser', () => ({ maybeCompleteAuthSession: jest.fn() }));
-jest.mock('expo-auth-session/providers/google', () => ({ useIdTokenAuthRequest: jest.fn() }));
-jest.mock('../services/AuthContext', () => ({ useAuth: jest.fn() }));
+jest.mock('expo-auth-session/providers/google', () => ({
+  useIdTokenAuthRequest: jest.fn(() => [mockRequest, mockResponse, mockPromptAsync]),
+}));
 
-const signInWithGoogleIdToken = jest.fn().mockResolvedValue(undefined);
-const promptAsync = jest.fn();
+describe('LoginScreen', () => {
+  const oldEnv = process.env;
 
-const WEB_ID_KEY = 'EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID';
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockRequest = { id: 'request' };
+    mockResponse = null;
+    process.env = { ...oldEnv, EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: 'web-client-id' };
+    (useAuth as jest.Mock).mockReturnValue({
+      signInWithGoogleIdToken: mockSignInWithGoogleIdToken,
+    });
+  });
 
-function mockGoogle(response: unknown, request: unknown = {}) {
-  (Google.useIdTokenAuthRequest as jest.Mock).mockReturnValue([request, response, promptAsync]);
-}
+  afterAll(() => {
+    process.env = oldEnv;
+  });
 
-beforeEach(() => {
-  jest.clearAllMocks();
-  (useAuth as jest.Mock).mockReturnValue({ signInWithGoogleIdToken });
-  delete process.env[WEB_ID_KEY];
-  mockGoogle(null);
-});
+  it('muestra aviso y deshabilita Google si falta client ID', async () => {
+    process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID = '';
+    process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID = '';
+    process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID = '';
 
-it('sin client IDs configurados avisa y deshabilita el botón', async () => {
-  mockGoogle(null, null); // request null → botón deshabilitado
-  await render(<LoginScreen />);
-  expect(screen.getByText(/Falta configurar el client ID/i)).toBeTruthy();
-});
+    const { getByText } = await render(<LoginScreen />);
 
-it('con client ID, al tocar el botón dispara el prompt de Google', async () => {
-  process.env[WEB_ID_KEY] = 'web-client-id.apps.googleusercontent.com';
-  mockGoogle(null, { type: 'request' });
-  await render(<LoginScreen />);
-  fireEvent.press(screen.getByText('Continuar con Google'));
-  expect(promptAsync).toHaveBeenCalled();
-});
+    expect(getByText('Falta configurar el client ID de Google para mobile.')).toBeTruthy();
+    fireEvent.press(getByText('Continuar con Google'));
+    expect(mockPromptAsync).not.toHaveBeenCalled();
+  });
 
-it('ante una respuesta exitosa intercambia el id_token por sesión', async () => {
-  process.env[WEB_ID_KEY] = 'web-client-id.apps.googleusercontent.com';
-  mockGoogle({ type: 'success', params: { id_token: 'google-token' } });
-  await render(<LoginScreen />);
-  await waitFor(() => expect(signInWithGoogleIdToken).toHaveBeenCalledWith('google-token'));
-});
+  it('inicia sesion cuando Google devuelve id_token', async () => {
+    mockResponse = { type: 'success', params: { id_token: 'google-token' } };
+    mockSignInWithGoogleIdToken.mockResolvedValueOnce(undefined);
 
-it('si Google no devuelve id_token muestra un error', async () => {
-  process.env[WEB_ID_KEY] = 'web-client-id.apps.googleusercontent.com';
-  mockGoogle({ type: 'success', params: {} });
-  await render(<LoginScreen />);
-  await waitFor(() => expect(screen.getByText(/no devolvió una sesión válida/i)).toBeTruthy());
-  expect(signInWithGoogleIdToken).not.toHaveBeenCalled();
+    await render(<LoginScreen />);
+
+    await waitFor(() => {
+      expect(mockSignInWithGoogleIdToken).toHaveBeenCalledWith('google-token');
+    });
+  });
+
+  it('muestra error si Google no devuelve token', async () => {
+    mockResponse = { type: 'success', params: {} };
+
+    const { getByText } = await render(<LoginScreen />);
+
+    await waitFor(() => {
+      expect(getByText(/Google no devolvi/)).toBeTruthy();
+    });
+  });
+
+  it('muestra error si falla el login mobile', async () => {
+    mockResponse = { type: 'success', params: { id_token: 'google-token' } };
+    mockSignInWithGoogleIdToken.mockRejectedValueOnce(new Error('Login roto'));
+
+    const { getByText } = await render(<LoginScreen />);
+
+    await waitFor(() => {
+      expect(getByText('Login roto')).toBeTruthy();
+    });
+  });
 });

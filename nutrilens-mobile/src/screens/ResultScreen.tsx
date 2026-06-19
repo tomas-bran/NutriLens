@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, typography } from '../theme/tokens';
+import { getProductDetail, getSimilarProducts } from '../services/api';
 
 const RULE_LABELS: Record<string, string> = {
   contiene_gluten: 'Contiene gluten',
@@ -44,6 +45,8 @@ export default function ResultScreen({ route, navigation }: any) {
   const slideAnim4 = useRef(new Animated.Value(20)).current;
   const fadeAnim5 = useRef(new Animated.Value(0)).current;
   const slideAnim5 = useRef(new Animated.Value(20)).current;
+  const [similarProducts, setSimilarProducts] = useState<any[]>([]);
+  const [openingSimilarId, setOpeningSimilarId] = useState<string | null>(null);
 
   useEffect(() => {
     if (data) {
@@ -64,6 +67,24 @@ export default function ResultScreen({ route, navigation }: any) {
     }
   }, [data]);
 
+  useEffect(() => {
+    const productId = data?.id || data?.product?.id;
+    let cancelled = false;
+
+    if (!productId) {
+      setSimilarProducts([]);
+      return;
+    }
+
+    getSimilarProducts(productId, 4).then((items) => {
+      if (!cancelled) setSimilarProducts(items);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [data?.id, data?.product?.id]);
+
   if (!data) {
     return (
       <View style={styles.centered}>
@@ -81,7 +102,7 @@ export default function ResultScreen({ route, navigation }: any) {
     );
   }
 
-  const { product, rules, explanation, disclaimer } = data;
+  const { product, rules, explanation, disclaimer, offEnrichment } = data;
 
   const riesgo = product?.riesgo || rules?.risk_level;
   const sellos = product?.sellos || [];
@@ -128,6 +149,23 @@ export default function ResultScreen({ route, navigation }: any) {
   const ruleLabels = (rules?.reglas_aplicadas || []).map(
     (rule: string) => RULE_LABELS[rule] || rule,
   );
+
+  const openSimilarProduct = async (productId: string) => {
+    if (openingSimilarId) return;
+
+    try {
+      setOpeningSimilarId(productId);
+      const detail = await getProductDetail(productId);
+      navigation.navigate('Result', {
+        data: mapDetailToResultData(detail),
+        photoUri: detail.imagenUrl || undefined,
+      });
+    } catch (error) {
+      console.error('Error opening similar product:', error);
+    } finally {
+      setOpeningSimilarId(null);
+    }
+  };
 
   const getRiskColor = (risk: string) => {
     switch (risk?.toLowerCase()) {
@@ -207,6 +245,26 @@ export default function ResultScreen({ route, navigation }: any) {
             </View>
           )}
 
+          {(offEnrichment?.barcodeMismatch || offEnrichment?.barcodeUnreadable) && (
+            <View style={styles.barcodeWarningContainer}>
+              <View style={styles.barcodeWarningIcon}>
+                <Ionicons name="barcode-outline" size={20} color={colors.warning} />
+              </View>
+              <View style={styles.lowConfidenceTextContainer}>
+                <Text style={styles.barcodeWarningTitle}>
+                  {offEnrichment?.barcodeMismatch
+                    ? 'Revisa el codigo de barras'
+                    : 'No leimos el codigo de barras'}
+                </Text>
+                <Text style={styles.barcodeWarningText}>
+                  {offEnrichment?.barcodeMismatch
+                    ? 'El codigo parece corresponder a otro producto. Revisá que ambas fotos sean del mismo envase.'
+                    : 'Analizamos el producto con la foto principal. Probá con una foto mas clara del codigo si queres enriquecerlo.'}
+                </Text>
+              </View>
+            </View>
+          )}
+
           <View style={styles.card}>
             <View style={styles.titleRow}>
               <View style={{ flex: 1, paddingRight: 12 }}>
@@ -255,6 +313,15 @@ export default function ResultScreen({ route, navigation }: any) {
                     </Text>
                   </View>
                 ))}
+              </View>
+            )}
+
+            {offEnrichment?.matched && offEnrichment?.offProduct && (
+              <View style={styles.offBadge}>
+                <Ionicons name="leaf-outline" size={14} color={colors.primaryStrong} />
+                <Text style={styles.offBadgeText}>
+                  Datos completados con Open Food Facts · ODbL
+                </Text>
               </View>
             )}
           </View>
@@ -357,6 +424,53 @@ export default function ResultScreen({ route, navigation }: any) {
         </Animated.View>
 
         <Animated.View style={{ opacity: fadeAnim5, transform: [{ translateY: slideAnim5 }] }}>
+          {similarProducts.length > 0 && (
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Productos similares del catalogo</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.similarList}
+              >
+                {similarProducts.map((item) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.similarCard}
+                    activeOpacity={0.75}
+                    onPress={() => openSimilarProduct(item.id)}
+                    disabled={openingSimilarId === item.id}
+                  >
+                    <View style={styles.similarImageWrap}>
+                      {item.imagenUrl ? (
+                        <Image source={{ uri: item.imagenUrl }} style={styles.similarImage} />
+                      ) : (
+                        <Ionicons name="scan" size={24} color={colors.primary} />
+                      )}
+                    </View>
+                    <Text style={styles.similarName} numberOfLines={2}>
+                      {item.nombre}
+                    </Text>
+                    <View
+                      style={[
+                        styles.similarRisk,
+                        { backgroundColor: getRiskGradient(item.riesgo)[0] },
+                      ]}
+                    >
+                      <Text style={[styles.similarRiskText, { color: getRiskColor(item.riesgo) }]}>
+                        Riesgo {item.riesgo}
+                      </Text>
+                    </View>
+                    {openingSimilarId === item.id && (
+                      <View style={styles.similarLoading}>
+                        <Ionicons name="sync" size={14} color={colors.primary} />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
           {disclaimer && <Text style={styles.disclaimer}>{disclaimer}</Text>}
 
           <TouchableOpacity
@@ -379,6 +493,35 @@ export default function ResultScreen({ route, navigation }: any) {
       </ScrollView>
     </View>
   );
+}
+
+function mapDetailToResultData(detail: any) {
+  return {
+    id: detail.id,
+    product: {
+      id: detail.id,
+      producto: detail.nombre,
+      categoria: detail.categoria,
+      ingredientes_detectados: detail.ingredientes || [],
+      alergenos: detail.alergenos || [],
+      sellos: detail.sellos || [],
+      apto_vegano: detail.aptoVegano,
+      apto_celiaco: detail.aptoCeliaco,
+      apto_sin_lactosa: detail.aptoSinLactosa,
+      riesgo: detail.riesgo,
+      confidence: detail.confidence,
+    },
+    rules: {
+      reglas_aplicadas: detail.reglasAplicadas || [],
+      risk_level: detail.riesgo,
+    },
+    explanation: detail.explanation,
+    disclaimer:
+      'NutriLens es un asistente informativo, no reemplaza el consejo de un profesional de nutricion.',
+    savedAt: detail.createdAt,
+    pipelineTrace: detail.pipelineTrace,
+    offEnrichment: detail.offEnrichment ?? null,
+  };
 }
 
 const styles = StyleSheet.create({
@@ -466,6 +609,18 @@ const styles = StyleSheet.create({
   aptitudeChipPositive: { backgroundColor: colors.successBg, borderColor: colors.successBg },
   aptitudeChipNegative: { backgroundColor: colors.dangerBg, borderColor: colors.dangerBg },
   aptitudeText: { fontSize: 12, fontWeight: 'bold' },
+  offBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 14,
+  },
+  offBadgeText: {
+    flex: 1,
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+  },
 
   lowConfidenceContainer: {
     flexDirection: 'row',
@@ -488,6 +643,31 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   lowConfidenceText: { fontSize: 13, color: '#b45309', lineHeight: 18 },
+  barcodeWarningContainer: {
+    flexDirection: 'row',
+    backgroundColor: colors.warningBg,
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    alignItems: 'center',
+  },
+  barcodeWarningIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  barcodeWarningTitle: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#92400e',
+    marginBottom: 4,
+  },
+  barcodeWarningText: { fontSize: 13, color: '#b45309', lineHeight: 18 },
 
   riskBadge: {
     paddingHorizontal: 14,
@@ -554,6 +734,52 @@ const styles = StyleSheet.create({
   tagText: { fontSize: 12, fontWeight: 'bold' },
 
   explanation: { fontSize: 14, color: '#4b5563', lineHeight: 24 },
+  similarList: { gap: 12, paddingRight: 4 },
+  similarCard: {
+    width: 132,
+    minHeight: 176,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 16,
+    padding: 10,
+    backgroundColor: '#fff',
+  },
+  similarImageWrap: {
+    height: 82,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  similarImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  similarName: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '800',
+    lineHeight: 16,
+    minHeight: 32,
+  },
+  similarRisk: {
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginTop: 8,
+  },
+  similarRiskText: { fontSize: 9, fontWeight: '900', textTransform: 'uppercase' },
+  similarLoading: {
+    position: 'absolute',
+    right: 8,
+    top: 8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   disclaimer: {
     fontSize: 12,
     color: '#9ca3af',

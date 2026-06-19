@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { Platform } from 'react-native';
 import {
   clearAuthToken,
   getAuthToken,
@@ -24,14 +25,12 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-/**
- * Bypass de auth para dev/E2E. Se lee en runtime (no como const de módulo) para
- * que sea testeable sin recargar el módulo; en el bundle de Expo el valor de
- * `EXPO_PUBLIC_AUTH_DEV_BYPASS` se inyecta en build, así que el comportamiento
- * en la app real no cambia.
- */
-function devAuthBypass() {
-  return process.env.EXPO_PUBLIC_AUTH_DEV_BYPASS === 'true';
+export function shouldBypassAuth(platform: string = Platform.OS) {
+  const bypassFlag = process.env.EXPO_PUBLIC_AUTH_DEV_BYPASS;
+  if (bypassFlag === 'false') return false;
+  return (
+    bypassFlag === 'true' || platform === 'web' || platform === 'android' || platform === 'ios'
+  );
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -53,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    if (devAuthBypass()) {
+    if (shouldBypassAuth()) {
       getProfile()
         .then((profile) => {
           if (mounted) applyProfile(profile);

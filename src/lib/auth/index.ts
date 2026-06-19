@@ -12,9 +12,24 @@
  * detrás de proxy).
  */
 import NextAuth from 'next-auth';
+import type { Session } from 'next-auth';
 import Google from 'next-auth/providers/google';
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const E2E_SESSION: Session = {
+  user: {
+    id: 'e2e-test-user',
+    email: 'e2e@nutrilens.local',
+    name: 'Usuario E2E',
+    image: null,
+  },
+  expires: '2099-12-31T23:59:59.999Z',
+};
+
+function e2eBypass(): boolean {
+  return process.env.E2E_AUTH_BYPASS === 'true' && !process.env.WEBSITE_HOSTNAME;
+}
+
+const nextAuth = NextAuth({
   providers: [Google],
   pages: {
     signIn: '/login',
@@ -31,3 +46,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
+
+const rawAuth = nextAuth.auth;
+
+export const { handlers, signIn, signOut } = nextAuth;
+
+type AuthWithServerSession = typeof rawAuth & (() => Promise<Session | null>);
+
+export const auth = ((...args: unknown[]) => {
+  if (args.length === 0 && e2eBypass()) {
+    return Promise.resolve(E2E_SESSION);
+  }
+
+  return (rawAuth as (...rawArgs: unknown[]) => unknown)(...args);
+}) as AuthWithServerSession;

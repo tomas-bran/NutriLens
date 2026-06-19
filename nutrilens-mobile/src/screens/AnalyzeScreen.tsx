@@ -21,6 +21,7 @@ import { ApiError, analyzeProduct } from '../services/api';
 
 interface PendingAnalysisRequest {
   photoUri: string;
+  barcodeUri?: string | null;
   createdAt: number;
   attempts: number;
 }
@@ -154,15 +155,20 @@ export default function AnalyzeScreen({ navigation }: any) {
     }
   };
 
-  const handlePickBarcode = async () => {
-    const perm = galleryPermission || (await requestGalleryPermission());
-    if (!perm.granted) {
-      Alert.alert('Permiso denegado', 'Se necesita acceso a la galería.');
-      return;
-    }
+  const resetPhoto = () => {
+    setPhotoUri(null);
+    setBarcodeUri(null);
+  };
 
-    const result = await ImagePicker.launchImageLibraryAsync({
+  const handleAnalysis = () => {
+    if (!photoUri) return;
+    runAnalysisRequest(photoUri, barcodeUri, 0, 'new');
+  };
+
+  const handleCaptureBarcode = async () => {
+    const result = await ImagePicker.launchCameraAsync({
       mediaTypes: 'images',
+      allowsEditing: true,
       quality: 0.8,
     });
 
@@ -171,39 +177,49 @@ export default function AnalyzeScreen({ navigation }: any) {
     }
   };
 
-  const resetPhoto = () => {
-    setPhotoUri(null);
-    setBarcodeUri(null);
-  };
+  const handlePickBarcode = async () => {
+    const perm = galleryPermission || (await requestGalleryPermission());
+    if (!perm.granted) {
+      Alert.alert('Permiso denegado', 'Se necesita acceso a la galeria.');
+      return;
+    }
 
-  const handleAnalysis = () => {
-    if (!photoUri) return;
-    runAnalysisRequest(photoUri, 0, 'new', barcodeUri ?? undefined);
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: 'images',
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setBarcodeUri(result.assets[0].uri);
+    }
   };
 
   async function runAnalysisRequest(
     imageUri: string,
+    codeUri: string | null | undefined,
     attempts: number,
     mode: 'new' | 'retry',
-    barcodeImageUri?: string,
   ) {
     if (isAnalyzingRef.current) return;
 
     const pending: PendingAnalysisRequest = {
       photoUri: imageUri,
+      barcodeUri: codeUri ?? null,
       createdAt: Date.now(),
       attempts,
     };
 
     await AsyncStorage.setItem(PENDING_ANALYSIS_KEY, JSON.stringify(pending));
     setPhotoUri(imageUri);
+    setBarcodeUri(codeUri ?? null);
     setAnalysisLoading(true);
 
     try {
-      const data = await analyzeProduct(imageUri, barcodeImageUri);
+      const data = await analyzeProduct(imageUri, codeUri);
       await AsyncStorage.removeItem(PENDING_ANALYSIS_KEY);
       setAnalysisLoading(false);
-      navigation.navigate('Result', { data, photoUri: imageUri });
+      navigation.navigate('Result', { data, photoUri: imageUri, barcodeUri: codeUri });
       resetPhoto();
     } catch (err: any) {
       const isUnsupportedImage = err instanceof ApiError && err.code === 'image_not_supported';
@@ -251,11 +267,18 @@ export default function AnalyzeScreen({ navigation }: any) {
       if (Date.now() - pending.createdAt > PENDING_ANALYSIS_TTL_MS) {
         await AsyncStorage.removeItem(PENDING_ANALYSIS_KEY);
         setPhotoUri(pending.photoUri);
+        setBarcodeUri(pending.barcodeUri ?? null);
         return;
       }
 
       setPhotoUri(pending.photoUri);
-      runAnalysisRequest(pending.photoUri, pending.attempts || 0, 'retry');
+      setBarcodeUri(pending.barcodeUri ?? null);
+      runAnalysisRequest(
+        pending.photoUri,
+        pending.barcodeUri ?? null,
+        pending.attempts || 0,
+        'retry',
+      );
     } catch (error) {
       await AsyncStorage.removeItem(PENDING_ANALYSIS_KEY);
     }
@@ -351,39 +374,63 @@ export default function AnalyzeScreen({ navigation }: any) {
             </View>
           </LinearGradient>
         ) : (
-          <LinearGradient colors={['transparent', 'rgba(0,0,0,0.85)']} style={styles.bottomControls}>
-            <TouchableOpacity
-              style={styles.barcodeChip}
-              onPress={barcodeUri ? () => setBarcodeUri(null) : handlePickBarcode}
-              accessibilityRole="button"
-              accessibilityLabel={
-                barcodeUri ? 'Quitar código de barras' : 'Agregar código de barras'
-              }
-            >
-              <Ionicons
-                name={barcodeUri ? 'checkmark-circle' : 'barcode-outline'}
-                size={18}
-                color={barcodeUri ? colors.primary : '#fff'}
-              />
-              <Text style={styles.barcodeChipText}>
-                {barcodeUri
-                  ? 'Código de barras agregado · quitar'
-                  : 'Agregar código de barras (opcional)'}
-              </Text>
+          <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.bottomControls}>
+            <TouchableOpacity style={styles.secondaryButton} onPress={resetPhoto}>
+              <Ionicons name="refresh" size={22} color="#fff" />
+              <Text style={styles.secondaryButtonText}>Reintentar</Text>
             </TouchableOpacity>
 
-            <View style={styles.buttonsRow}>
-              <TouchableOpacity style={styles.secondaryButton} onPress={resetPhoto}>
-                <Ionicons name="refresh" size={22} color="#fff" />
-                <Text style={styles.secondaryButtonText}>Reintentar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.analyzeButton} onPress={handleAnalysis}>
-                <Ionicons name="color-wand" size={22} color={colors.primaryStrong || '#1f8e60'} />
-                <Text style={styles.analyzeButtonText}>Analizar foto</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity style={styles.analyzeButton} onPress={handleAnalysis}>
+              <Ionicons name="color-wand" size={22} color={colors.primaryStrong || '#1f8e60'} />
+              <Text style={styles.analyzeButtonText}>Analizar foto</Text>
+            </TouchableOpacity>
           </LinearGradient>
+        )}
+
+        {!isAnalyzing && (
+          <View style={styles.barcodePanel}>
+            <View style={styles.barcodeHeader}>
+              <View style={styles.barcodeIcon}>
+                <Ionicons name="barcode-outline" size={18} color={colors.primaryStrong} />
+              </View>
+              <View style={styles.barcodeTextBlock}>
+                <Text style={styles.barcodeTitle}>Codigo de barras opcional</Text>
+                <Text style={styles.barcodeSubtitle}>
+                  Ayuda a completar datos con Open Food Facts.
+                </Text>
+              </View>
+              {barcodeUri ? (
+                <TouchableOpacity
+                  style={styles.barcodeClearButton}
+                  onPress={() => setBarcodeUri(null)}
+                  activeOpacity={0.75}
+                >
+                  <Ionicons name="close" size={18} color={colors.textMuted} />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+
+            {barcodeUri ? (
+              <View style={styles.barcodePreviewRow}>
+                <Image source={{ uri: barcodeUri }} style={styles.barcodePreview} />
+                <View style={styles.barcodeReadyText}>
+                  <Text style={styles.barcodeReadyTitle}>Barcode agregado</Text>
+                  <Text style={styles.barcodeReadySubtitle}>Se enviara junto con la etiqueta.</Text>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.barcodeActions}>
+                <TouchableOpacity style={styles.barcodeActionButton} onPress={handleCaptureBarcode}>
+                  <Ionicons name="camera-outline" size={17} color={colors.primaryStrong} />
+                  <Text style={styles.barcodeActionText}>Sacar foto</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.barcodeActionButton} onPress={handlePickBarcode}>
+                  <Ionicons name="images-outline" size={17} color={colors.primaryStrong} />
+                  <Text style={styles.barcodeActionText}>Galeria</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
         )}
       </View>
     );
@@ -575,29 +622,105 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: 24,
-    paddingBottom: 40,
-    gap: 14,
-  },
-  buttonsRow: {
     flexDirection: 'row',
     justifyContent: 'center',
+    padding: 24,
+    paddingBottom: 40,
     gap: 16,
   },
-  barcodeChip: {
+  barcodePanel: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 126,
+    backgroundColor: 'rgba(255,255,255,0.96)',
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.7)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.22,
+    shadowRadius: 18,
+    elevation: 6,
+  },
+  barcodeHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.32)',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 100,
+    gap: 10,
   },
-  barcodeChipText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  barcodeIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  barcodeTextBlock: { flex: 1, minWidth: 0 },
+  barcodeTitle: {
+    color: colors.text,
+    fontSize: typography.fontSize.sm,
+    fontWeight: '900',
+  },
+  barcodeSubtitle: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  barcodeClearButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  barcodeActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  barcodeActionButton: {
+    flex: 1,
+    height: 40,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+    backgroundColor: colors.primarySoft,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+  },
+  barcodeActionText: {
+    color: colors.primaryStrong,
+    fontSize: typography.fontSize.sm,
+    fontWeight: '900',
+  },
+  barcodePreviewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 12,
+  },
+  barcodePreview: {
+    width: 52,
+    height: 52,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+  },
+  barcodeReadyText: { flex: 1, minWidth: 0 },
+  barcodeReadyTitle: {
+    color: colors.text,
+    fontSize: typography.fontSize.sm,
+    fontWeight: '800',
+  },
+  barcodeReadySubtitle: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: 2,
+  },
   secondaryButton: {
     flexDirection: 'row',
     alignItems: 'center',

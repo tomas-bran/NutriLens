@@ -45,8 +45,8 @@ export default function ProfileScreen({ navigation }: any) {
   if (!user || !prefs || !stats) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.primary} />
+        <View style={styles.centered} testID="profile-loading">
+          <ActivityIndicator testID="profile-loading" size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -59,7 +59,6 @@ export default function ProfileScreen({ navigation }: any) {
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.eyebrow}>Perfil</Text>
         <Text style={styles.title}>Mi cuenta</Text>
-
         <View style={styles.profileCard}>
           {user.image ? (
             <Image source={{ uri: user.image }} style={styles.avatarImage} />
@@ -77,13 +76,35 @@ export default function ProfileScreen({ navigation }: any) {
             </Text>
           </View>
         </View>
-
-        <View style={styles.statsRow}>
-          <StatBox value={stats.analizados} label="Analizados" />
-          <StatBox value={stats.riesgoAlto} label="Riesgo alto" />
-          <StatBox value={stats.sinAlergenos} label="Sin alérgenos" />
+        <View style={styles.statsHeader}>
+          <Text style={styles.sectionTitle}>Tus analisis</Text>
+          {stats.catalogoTotal !== undefined && (
+            <Text style={styles.statsHint}>{stats.catalogoTotal} productos en el catalogo</Text>
+          )}
         </View>
-
+        <View style={styles.statsRow}>
+          <StatBox value={stats.analizados} label="Analizados por vos" />
+          <StatBox value={stats.riesgoAlto} label="Riesgo alto" tone="danger" />
+          <StatBox value={stats.sinAlergenos} label="Sin alergenos" tone="success" />
+        </View>
+        {stats.ultimoAnalizado && (
+          <TouchableOpacity
+            style={styles.lastProductCard}
+            onPress={() => navigation.navigate('Catálogo', { onlyMine: true })}
+            activeOpacity={0.75}
+          >
+            <View style={styles.lastProductIcon}>
+              <Ionicons name="time-outline" size={20} color={colors.primaryStrong} />
+            </View>
+            <View style={styles.lastProductText}>
+              <Text style={styles.lastProductLabel}>Ultimo analisis</Text>
+              <Text style={styles.lastProductName} numberOfLines={1}>
+                {stats.ultimoAnalizado.nombre}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+        )}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Mis preferencias</Text>
           <PrefRow
@@ -93,6 +114,7 @@ export default function ProfileScreen({ navigation }: any) {
             value={prefs.vegano}
             loading={savingKey === 'vegano'}
             onChange={(value) => setPref('vegano', value)}
+            testID="pref-switch-vegano"
           />
           <PrefRow
             icon="nutrition-outline"
@@ -101,6 +123,7 @@ export default function ProfileScreen({ navigation }: any) {
             value={prefs.celiaco}
             loading={savingKey === 'celiaco'}
             onChange={(value) => setPref('celiaco', value)}
+            testID="pref-switch-celiaco"
           />
           <PrefRow
             icon="cafe-outline"
@@ -109,6 +132,7 @@ export default function ProfileScreen({ navigation }: any) {
             value={prefs.lactosa}
             loading={savingKey === 'lactosa'}
             onChange={(value) => setPref('lactosa', value)}
+            testID="pref-switch-lactosa"
           />
           <PrefRow
             icon="warning-outline"
@@ -117,14 +141,25 @@ export default function ProfileScreen({ navigation }: any) {
             value={prefs.avisos}
             loading={savingKey === 'avisos'}
             onChange={(value) => setPref('avisos', value)}
+            testID="pref-switch-avisos"
             last
           />
         </View>
-
         <View style={styles.section}>
-          <TouchableOpacity style={styles.linkRow} onPress={() => navigation.navigate('Catálogo')}>
+          <TouchableOpacity
+            style={styles.linkRow}
+            onPress={() => navigation.navigate('Catálogo', { onlyMine: true })}
+          >
+            <Ionicons name="person-circle-outline" size={22} color={colors.primary} />
+            <Text style={styles.linkText}>Ver mis analisis</Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.linkRow}
+            onPress={() => navigation.navigate('Catálogo', { onlyMine: false })}
+          >
             <Ionicons name="albums-outline" size={22} color={colors.primary} />
-            <Text style={styles.linkText}>Ver catálogo</Text>
+            <Text style={styles.linkText}>Ver catalogo completo</Text>
             <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
           </TouchableOpacity>
           <TouchableOpacity
@@ -138,7 +173,7 @@ export default function ProfileScreen({ navigation }: any) {
           </TouchableOpacity>
           <TouchableOpacity style={[styles.linkRow, styles.logoutRow]} onPress={signOut}>
             <Ionicons name="log-out-outline" size={22} color={colors.danger} />
-            <Text style={[styles.linkText, styles.logoutText]}>Cerrar sesión</Text>
+            <Text style={[styles.linkText, styles.logoutText]}>Cerrar sesion</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -146,10 +181,25 @@ export default function ProfileScreen({ navigation }: any) {
   );
 }
 
-function StatBox({ value, label }: { value: number; label: string }) {
+function StatBox({
+  value,
+  label,
+  tone = 'default',
+}: {
+  value: number;
+  label: string;
+  tone?: 'default' | 'danger' | 'success';
+}) {
+  const toneColor =
+    tone === 'danger'
+      ? colors.risk.high
+      : tone === 'success'
+        ? colors.success
+        : colors.primaryStrong;
+
   return (
     <View style={styles.statBox}>
-      <Text style={styles.statValue}>{value}</Text>
+      <Text style={[styles.statValue, { color: toneColor }]}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
@@ -162,6 +212,7 @@ function PrefRow({
   value,
   loading,
   onChange,
+  testID,
   last,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
@@ -170,10 +221,16 @@ function PrefRow({
   value: boolean;
   loading: boolean;
   onChange: (value: boolean) => void;
+  testID: string;
   last?: boolean;
 }) {
   return (
-    <View style={[styles.prefRow, !last && styles.prefDivider]}>
+    <TouchableOpacity
+      style={[styles.prefRow, !last && styles.prefDivider]}
+      onPress={() => onChange(!value)}
+      activeOpacity={0.75}
+      disabled={loading}
+    >
       <View style={[styles.prefIcon, value && styles.prefIconActive]}>
         <Ionicons name={icon} size={20} color={value ? colors.primaryStrong : colors.textMuted} />
       </View>
@@ -187,11 +244,13 @@ function PrefRow({
         <Switch
           value={value}
           onValueChange={onChange}
-          trackColor={{ false: colors.border, true: colors.primaryBorder }}
-          thumbColor={value ? colors.primary : '#fff'}
+          testID={testID}
+          trackColor={{ false: colors.border, true: colors.primary }}
+          thumbColor="#fff"
+          ios_backgroundColor={colors.border}
         />
       )}
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -230,6 +289,19 @@ const styles = StyleSheet.create({
   profileInfo: { flex: 1 },
   profileName: { color: colors.text, fontSize: typography.fontSize.lg, fontWeight: '900' },
   profileEmail: { color: colors.textMuted, fontSize: typography.fontSize.sm, marginTop: 2 },
+  statsHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: 18,
+  },
+  statsHint: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
   statsRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
   statBox: {
     flex: 1,
@@ -240,8 +312,41 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
   },
-  statValue: { color: colors.primaryStrong, fontSize: 22, fontWeight: '900' },
-  statLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '700', marginTop: 2 },
+  statValue: { fontSize: 22, fontWeight: '900' },
+  statLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  lastProductCard: {
+    marginTop: 10,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  lastProductIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  lastProductText: { flex: 1, minWidth: 0 },
+  lastProductLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '800' },
+  lastProductName: {
+    color: colors.text,
+    fontSize: typography.fontSize.sm,
+    fontWeight: '900',
+    marginTop: 2,
+  },
   section: {
     backgroundColor: '#fff',
     borderRadius: 18,

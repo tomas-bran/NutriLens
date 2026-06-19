@@ -13,6 +13,7 @@ export type Apto = (typeof APTO_VALUES)[number];
 
 export const SORT_VALUES = ['createdAt:desc', 'nombre:asc'] as const;
 export type Sort = (typeof SORT_VALUES)[number];
+export const FILTER_VALUES = ['mios'] as const;
 
 export const MAX_PAGE_SIZE = 50;
 export const DEFAULT_PAGE_SIZE = 20;
@@ -23,6 +24,7 @@ export const ProductsQuerySchema = z.object({
   alergeno: z.enum(ALERGENOS).optional(),
   apto: z.enum(APTO_VALUES).optional(),
   q: z.string().trim().min(1).optional(),
+  filtro: z.enum(FILTER_VALUES).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
   sort: z.enum(SORT_VALUES).default('createdAt:desc'),
