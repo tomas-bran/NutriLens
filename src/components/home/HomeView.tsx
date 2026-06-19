@@ -7,6 +7,7 @@
  */
 import { AppShell } from '@/components/layout/AppShell';
 import { Disclaimer } from '@/components/ui/Disclaimer';
+import { DocsCallout } from './DocsCallout';
 import { Examples } from './Examples';
 import { Hero } from './Hero';
 import { HistoryCard } from './HistoryCard';
@@ -34,8 +35,11 @@ export function HomeView({ historyCount, userName }: HomeViewProps) {
           <div className="home-rise-in" style={{ animationDelay: '0.16s' }}>
             <Examples />
           </div>
+          <div className="home-rise-in" style={{ animationDelay: '0.24s' }}>
+            <DocsCallout />
+          </div>
           {historyCount > 0 && (
-            <div className="home-rise-in" style={{ animationDelay: '0.24s' }}>
+            <div className="home-rise-in" style={{ animationDelay: '0.32s' }}>
               <HistoryCard count={historyCount} />
             </div>
           )}

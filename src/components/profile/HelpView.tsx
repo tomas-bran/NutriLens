@@ -9,6 +9,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
+import { DOCS_URL } from '@/lib/constants';
 
 const FAQS = [
   {
@@ -58,6 +59,29 @@ export function HelpSection() {
             onClick={() => setOpen(open === i ? -1 : i)}
           />
         ))}
+      </div>
+
+      <div className="flex flex-col items-center gap-3.5 rounded-2xl border border-[var(--color-border)] bg-white p-5 text-center md:flex-row md:text-left">
+        <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+          <Icon name="file-text" className="h-[22px] w-[22px]" />
+        </span>
+        <div className="flex-1">
+          <div className="text-[15px] font-bold text-[var(--color-text)]">
+            Documentación completa
+          </div>
+          <div className="mt-0.5 text-[13px] text-[var(--color-text-muted)]">
+            Guías paso a paso de cada función, con capturas de la app.
+          </div>
+        </div>
+        <a
+          href={DOCS_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--color-border)] bg-white px-4 py-2.5 text-[13.5px] font-bold text-[var(--color-text)] transition-colors hover:bg-[var(--color-surface)]"
+        >
+          <Icon name="external-link" className="h-[17px] w-[17px]" />
+          Ver documentación
+        </a>
       </div>
 
       <div className="flex flex-col items-center gap-3.5 rounded-2xl border border-[var(--color-primary-border)] bg-[var(--color-primary-soft)] p-5 text-center md:flex-row md:text-left">
