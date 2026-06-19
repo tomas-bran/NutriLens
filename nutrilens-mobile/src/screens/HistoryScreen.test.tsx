@@ -125,4 +125,20 @@ describe('HistoryScreen', () => {
       );
     });
   });
+
+  it('el toggle Todos / Analizados por vos cambia el filtro mios', async () => {
+    (getHistory as jest.Mock).mockResolvedValue({ items: [] });
+
+    const { getByText } = await render(<HistoryScreen navigation={mockNavigation} />);
+
+    await fireEvent.press(getByText('Analizados por vos'));
+    await waitFor(() =>
+      expect(getHistory).toHaveBeenLastCalledWith(expect.objectContaining({ filtro: 'mios' })),
+    );
+
+    await fireEvent.press(getByText('Todos'));
+    await waitFor(() =>
+      expect(getHistory).toHaveBeenLastCalledWith(expect.objectContaining({ filtro: undefined })),
+    );
+  });
 });

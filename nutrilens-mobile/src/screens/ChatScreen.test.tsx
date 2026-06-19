@@ -108,4 +108,17 @@ describe('ChatScreen', () => {
       expect(queryByText('| --- | --- |')).toBeNull();
     });
   });
+
+  it('muestra un mensaje de conexión cuando el chat falla', async () => {
+    (sendChatMessage as jest.Mock).mockRejectedValueOnce(new Error('boom'));
+
+    const { getByPlaceholderText, getByText, getByTestId } = await render(<ChatScreen route={{}} />);
+
+    await fireEvent.changeText(getByPlaceholderText('Preguntá lo que quieras...'), 'hola');
+    await fireEvent.press(getByTestId('send-button'));
+
+    await waitFor(() => {
+      expect(getByText(/intento recuperar la respuesta/i)).toBeTruthy();
+    });
+  });
 });
