@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>NutriLens — Informe Final</title>
+<style>
+  @page { size: A4; }
+  * { box-sizing: border-box; }
+  body { font-family: "Helvetica Neue", Arial, sans-serif; color: #1e293b; font-size: 11.2pt; line-height: 1.5; margin: 0; }
+  h1, h2, h3 { color: #0f172a; line-height: 1.2; }
+  h2 { font-size: 17pt; border-bottom: 2px solid #16a34a; padding-bottom: 4px; margin-top: 26px; }
+  h3 { font-size: 12.5pt; margin-top: 18px; color: #15803d; }
+  p { margin: 8px 0; text-align: justify; }
+  ul, ol { margin: 8px 0; padding-left: 22px; }
+  li { margin: 3px 0; }
+  code, .mono { font-family: "JetBrains Mono", Consolas, monospace; font-size: 9.5pt; background: #f1f5f9; padding: 1px 4px; border-radius: 4px; }
+  pre { background: #0f172a; color: #e2e8f0; padding: 12px 14px; border-radius: 8px; font-family: "JetBrains Mono", Consolas, monospace; font-size: 9pt; line-height: 1.45; overflow-x: auto; white-space: pre-wrap; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 10pt; }
+  th, td { border: 1px solid #cbd5e1; padding: 6px 9px; text-align: left; vertical-align: top; }
+  th { background: #f0fdf4; color: #15803d; font-weight: bold; }
+  .cover { text-align: center; padding-top: 60px; page-break-after: always; }
+  .cover .eyebrow { color: #16a34a; font-weight: bold; letter-spacing: 1px; font-size: 11pt; }
+  .cover h1 { font-size: 34pt; margin: 18px 0 6px; }
+  .cover .sub { font-size: 14pt; color: #475569; margin-bottom: 40px; }
+  .cover .tag { display: inline-block; background: #16a34a; color: #fff; padding: 6px 18px; border-radius: 999px; font-weight: bold; font-size: 11pt; }
+  .cover .meta { margin-top: 50px; color: #475569; font-size: 11pt; line-height: 1.9; }
+  .callout { background: #f0fdf4; border: 1px solid #86efac; border-left: 4px solid #16a34a; border-radius: 8px; padding: 10px 14px; margin: 12px 0; }
+  .arch img { width: 100%; max-width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; }
+  .toc li { margin: 4px 0; }
+  .new { background: #dcfce7; color: #15803d; font-size: 8pt; font-weight: bold; padding: 1px 6px; border-radius: 4px; vertical-align: middle; }
+  .pagebreak { page-break-before: always; }
+  figure { margin: 12px 0; text-align: center; }
+  figcaption { font-size: 9pt; color: #64748b; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ░░ PORTADA ░░ -->
+<section class="cover">
+  <div class="eyebrow">UNIVERSIDAD NACIONAL DE LA MATANZA</div>
+  <p style="color:#475569; margin:6px 0;">Departamento de Ingeniería e Investigaciones Tecnológicas<br>Inteligencia Artificial Aplicada (01-5900) — Docente: Ing. Damián Montefiori<br>Trabajo Práctico Integrador</p>
+  <h1>NutriLens</h1>
+  <div class="sub">Aplicación inteligente de análisis de etiquetas alimentarias</div>
+  <span class="tag">Informe Final — Evolución sobre el MVP</span>
+  <div class="meta">
+    <strong>Integrantes</strong><br>
+    Branchesi, Tomás Agustín · Martucci, Federico Ariel<br>
+    Mateo, Federico · Pucci, Federico<br><br>
+    Año 2026 — 1.º Cuatrimestre
+  </div>
+</section>
+
+<!-- ░░ ÍNDICE ░░ -->
+<section>
+  <h2>Índice</h2>
+  <ol class="toc">
+    <li>Introducción y resumen ejecutivo</li>
+    <li>Problema a resolver y usuarios objetivo</li>
+    <li>Objetivos</li>
+    <li>Alcance: del MVP a la entrega final</li>
+    <li>La parte inteligente del sistema</li>
+    <li>Arquitectura del sistema y pipeline</li>
+    <li>Infraestructura en la nube y despliegue (Azure)</li>
+    <li>CI/CD, DevOps y la IA en el ciclo de vida</li>
+    <li>Funcionalidades y casos de uso</li>
+    <li>Aplicación mobile (Expo / React Native)</li>
+    <li>Requerimientos</li>
+    <li>Pruebas, calidad y evaluación del modelo</li>
+    <li>Problemas encontrados y mitigaciones</li>
+    <li>Métricas del proyecto</li>
+    <li>Conclusiones y próximos pasos</li>
+  </ol>
+  <p style="color:#64748b; font-size:10pt;">Las secciones y subsecciones marcadas con <span class="new">NUEVO</span> corresponden a desarrollo posterior al MVP documentado en la entrega parcial.</p>
+</section>
+
+<!-- ░░ 1 ░░ -->
+<section class="pagebreak">
+  <h2>1. Introducción y resumen ejecutivo</h2>
+  <p>NutriLens es una aplicación inteligente que analiza etiquetas de alimentos a partir de imágenes o archivos PDF. El usuario sube una foto del frente del producto, de la lista de ingredientes o de la tabla nutricional, y el sistema extrae información estructurada, detecta posibles alérgenos, identifica sellos o advertencias, clasifica el nivel de riesgo del producto y genera una explicación simple y entendible.</p>
+  <p>La propuesta resuelve un problema cotidiano: muchas personas no logran interpretar rápidamente si un alimento es compatible con sus restricciones, preferencias o necesidades. NutriLens funciona como un asistente <em>informativo</em> basado en la información visible de la etiqueta; no reemplaza a un profesional de nutrición ni garantiza seguridad médica absoluta.</p>
+  <p>Este informe documenta la evolución del producto desde el MVP de la entrega parcial hacia una <strong>versión desplegada en la nube, ampliada y de extremo a extremo</strong>. Respecto del MVP, se sumaron: el <strong>despliegue completo en Microsoft Azure</strong> (web y documentación), <strong>autenticación con Google (OAuth)</strong>, <strong>integración con Open Food Facts mediante código de barras</strong>, <strong>catálogo con filtro "Analizados por vos"</strong>, un <strong>chat RAG con embeddings vectoriales</strong>, una <strong>aplicación mobile (Expo/React Native)</strong>, un <strong>sitio de documentación (Docusaurus)</strong>, un <strong>arnés de evaluación del modelo</strong>, una funcionalidad 3D experimental (<strong>NutriWorld</strong>) y un <strong>pipeline de CI/CD</strong> con cobertura de pruebas exigida.</p>
+  <div class="callout"><strong>Regla de oro del producto:</strong> el modelo de IA <strong>extrae</strong> los datos crudos de la etiqueta; las <strong>aptitudes</strong> (vegano, celíaco, sin lactosa) y el <strong>riesgo</strong> se calculan con <strong>reglas propias y deterministas</strong>. La decisión que afecta la salud del usuario nunca depende de lo que "opine" el modelo: es auditable y reproducible.</p></div>
+</section>
+
+<!-- ░░ 2 ░░ -->
+<section>
+  <h2>2. Problema a resolver y usuarios objetivo</h2>
+  <p>Las etiquetas alimentarias suelen presentar información técnica, extensa y difícil de interpretar con rapidez. Un consumidor puede no saber si un producto contiene gluten, lactosa, ingredientes de origen animal, exceso de azúcar o componentes problemáticos para sus preferencias. Esto genera fricción en una decisión que ocurre muchas veces por día, frente a la góndola.</p>
+  <h3>2.1. Usuarios objetivo</h3>
+  <ul>
+    <li><strong>El de restricciones:</strong> celíaco o intolerante a la lactosa; necesita confirmar la aptitud antes de comprar.</li>
+    <li><strong>El consciente:</strong> quiere comer mejor, entender los sellos y elegir lo de menor riesgo.</li>
+    <li><strong>El comparador:</strong> tiene dos opciones en la mano y quiere la de mejor perfil nutricional.</li>
+  </ul>
+</section>
+
+<!-- ░░ 3 ░░ -->
+<section>
+  <h2>3. Objetivos</h2>
+  <h3>3.1. Objetivo general</h3>
+  <p>Diseñar y desarrollar una aplicación inteligente capaz de procesar etiquetas alimentarias mediante IA multimodal, extraer información relevante y ayudar al usuario a interpretar productos de forma clara, rápida y estructurada.</p>
+  <h3>3.2. Objetivos específicos</h3>
+  <ul>
+    <li>Permitir la carga de imágenes o PDFs de etiquetas alimentarias.</li>
+    <li>Detectar si el archivo corresponde a un producto alimenticio válido (antes del paso costoso).</li>
+    <li>Extraer ingredientes, alérgenos, sellos, categoría y datos nutricionales visibles, normalizados en JSON validado por Zod.</li>
+    <li>Clasificar el producto según riesgo bajo, medio o alto mediante reglas propias.</li>
+    <li>Mostrar una explicación simple y entendible, con disclaimer.</li>
+    <li>Guardar los productos analizados y mostrarlos en un catálogo filtrable.</li>
+    <li>Permitir consultas sobre productos guardados mediante un chat con recuperación de información (RAG).</li>
+    <li>Transparentar el flujo interno del análisis (pipeline observable).</li>
+    <li><span class="new">NUEVO</span> Desplegar el sistema de forma pública y multiplataforma (web y mobile).</li>
+    <li><span class="new">NUEVO</span> Autenticar usuarios y persistir su catálogo y conversaciones por cuenta.</li>
+    <li><span class="new">NUEVO</span> Aumentar la precisión cruzando con Open Food Facts mediante el código de barras.</li>
+    <li><span class="new">NUEVO</span> Evaluar la calidad del modelo de forma medible y reproducible.</li>
+  </ul>
+</section>
+
+<!-- ░░ 4 ░░ -->
+<section>
+  <h2>4. Alcance: del MVP a la entrega final</h2>
+  <h3>4.1. Alcance del MVP (entrega parcial)</h3>
+  <ol>
+    <li>Carga de imagen o PDF de etiqueta y validación básica del archivo.</li>
+    <li>Extracción de datos con IA multimodal y normalización en JSON.</li>
+    <li>Clasificación de alérgenos y aptitudes (vegano, celíaco, sin lactosa).</li>
+    <li>Cálculo de riesgo con reglas propias y visualización clara del análisis.</li>
+    <li>Guardado del producto e historial; chat simple para consultar lo guardado.</li>
+  </ol>
+  <h3>4.2. Ampliaciones posteriores al MVP <span class="new">NUEVO</span></h3>
+  <table>
+    <tr><th>Área</th><th>Qué se incorporó</th></tr>
+    <tr><td>Infraestructura</td><td>Despliegue completo en Azure (App Service web + docs, PostgreSQL Flexible, Blob Storage, Azure OpenAI).</td></tr>
+    <tr><td>Identidad</td><td>Login con Google (OAuth 2.0 / Auth.js v5); catálogo y conversaciones por usuario.</td></tr>
+    <tr><td>Precisión</td><td>Código de barras (EAN) + Open Food Facts como fuente autoritativa (validación <em>soft</em>).</td></tr>
+    <tr><td>Catálogo</td><td>Filtro "Analizados por vos", búsqueda y filtros combinables (riesgo, aptitud, categoría, alérgeno).</td></tr>
+    <tr><td>Chat</td><td>RAG con <em>embeddings</em> vectoriales (pgvector) además de la búsqueda por filtros.</td></tr>
+    <tr><td>Mobile</td><td>Aplicación nativa con Expo / React Native (cámara, catálogo, chat, perfil).</td></tr>
+    <tr><td>Documentación</td><td>Sitio Docusaurus con guías paso a paso por feature, desplegado en Azure.</td></tr>
+    <tr><td>Calidad</td><td>Pirámide de pruebas (unit/integración/E2E), gates de cobertura y arnés de evaluación del modelo.</td></tr>
+    <tr><td>Innovación</td><td>NutriWorld: supermercado 3D guiado por IA (beta, solo administradores).</td></tr>
+  </table>
+  <h3>4.3. Fuera del alcance</h3>
+  <p>No se persigue diagnóstico médico, trazabilidad nutricional certificada ni cobertura exhaustiva de todas las marcas. El sistema es informativo y depende de la información visible en la etiqueta.</p>
+</section>
+
+<!-- ░░ 5 ░░ -->
+<section class="pagebreak">
+  <h2>5. La parte inteligente del sistema</h2>
+  <h3>5.1. IA multimodal para extracción</h3>
+  <p>El componente central es un modelo multimodal (imagen + texto). A partir de la foto o PDF de la etiqueta, el modelo realiza la lectura visual del contenido, interpreta los campos y devuelve la información ya estructurada como JSON, evitando depender de un OCR tradicional seguido de reglas frágiles de parsing.</p>
+  <h3>5.2. Modelo de lenguaje para explicación y chat (RAG con embeddings) <span class="new">NUEVO</span></h3>
+  <p>Un LLM cumple dos tareas: traducir la salida técnica a una explicación en lenguaje claro, y responder consultas sobre los productos guardados. El chat implementa <strong>RAG (Retrieval-Augmented Generation)</strong>: primero recupera los productos relevantes y luego los entrega al modelo como contexto, de modo que la respuesta esté fundamentada solo en los datos disponibles. Respecto del MVP, la recuperación se reforzó con <strong>búsqueda semántica por <em>embeddings</em></strong>: cada producto se vectoriza con <code>text-embedding-3-small</code> y se almacena en una columna <code>vector(1536)</code> con índice HNSW de <strong>pgvector</strong>, combinando relevancia semántica con los filtros por categoría/riesgo.</p>
+  <h3>5.3. Selección del modelo, abstracción e iteración</h3>
+  <p>La elección del modelo fue un proceso de prueba y error:</p>
+  <ul>
+    <li><strong>Phi-3.5 y Phi-4</strong> (Azure AI Foundry, MaaS): se probaron por ser livianos y de bajo costo. No alcanzaron la calidad necesaria para la extracción multimodal de etiquetas.</li>
+    <li><strong>gpt-5.1</strong> (Azure OpenAI): solución adoptada, con lectura confiable y JSON estructurado consistente.</li>
+  </ul>
+  <p><span class="new">NUEVO</span> Para que ese cambio no implicara reescribir lógica, los proveedores de IA viven detrás de una única interfaz <code>IaProvider</code> con cuatro implementaciones: <strong>Mock</strong>, <strong>Foundry</strong>, <strong>Azure OpenAI</strong> y <strong>OpenAI</strong>. La migración de Phi-4 a gpt-5.1 se hizo <strong>cambiando solo variables de entorno</strong>, sin tocar la lógica de negocio. En CI se usa el Mock determinista para no consumir crédito.</p>
+  <h3>5.4. Evaluación del modelo <span class="new">NUEVO</span></h3>
+  <p>Se construyó un arnés de evaluación propio: un dataset etiquetado (~35 archivos: fotos propias, productos de Open Food Facts e imágenes que no son comida), cada uno con su <code>expected</code> JSON. Un <em>runner</em> por línea de comandos calcula <strong>precision, recall, F1 y exact-match</strong> por campo (ingredientes, alérgenos, sellos, categoría, aptitudes, riesgo) y compara versiones de prompt (v1→v2). Si una métrica baja, el cambio no se mergea. Una corrida completa cuesta del orden de <strong>US$0,02</strong>.</p>
+</section>
+
+<!-- ░░ 6 ░░ -->
+<section>
+  <h2>6. Arquitectura del sistema y pipeline</h2>
+  <h3>6.1. Componentes</h3>
+  <ul>
+    <li><strong>Frontend web:</strong> Next.js 15 / React 19 (Server Components + API routes).</li>
+    <li><strong>App mobile:</strong> Expo / React Native, consumiendo la misma API.</li>
+    <li><strong>Capa de IA:</strong> modelo multimodal (gpt-5.1) y LLM para explicación/chat, vía API externa, detrás de <code>IaProvider</code>.</li>
+    <li><strong>Base de datos:</strong> PostgreSQL (tipos ENUM para riesgo y categoría) con <strong>pgvector</strong> para la búsqueda semántica.</li>
+    <li><strong>Almacenamiento de imágenes:</strong> Azure Blob Storage (acceso por SAS temporal).</li>
+    <li><strong>Fuente externa:</strong> Open Food Facts para enriquecer por código de barras.</li>
+  </ul>
+  <h3>6.2. Pipeline observable (9 pasos)</h3>
+  <p>El análisis es una secuencia de pasos, todos visibles en la UI, lo que transparenta cómo trabaja el sistema:</p>
+  <table>
+    <tr><th>#</th><th>Paso</th><th>Qué hace</th></tr>
+    <tr><td>1</td><td><code>validate_file</code></td><td>Valida tipo y tamaño del archivo.</td></tr>
+    <tr><td>2</td><td><code>detect_label_kind</code></td><td>¿Es un producto/etiqueta? (antes del paso costoso).</td></tr>
+    <tr><td>3</td><td><code>extract_with_ia</code></td><td>La IA multimodal lee la etiqueta → JSON.</td></tr>
+    <tr><td>4</td><td><code>validate_schema</code></td><td>Valida el JSON con Zod (estricto).</td></tr>
+    <tr><td>5</td><td><code>enrich_with_off</code></td><td>Cruza con Open Food Facts si hay código de barras.</td></tr>
+    <tr><td>6</td><td><code>apply_rules</code></td><td>Reglas propias → aptitudes.</td></tr>
+    <tr><td>7</td><td><code>compute_risk</code></td><td>Fórmula propia → riesgo bajo/medio/alto.</td></tr>
+    <tr><td>8</td><td><code>generate_explanation</code></td><td>Explicación en lenguaje claro.</td></tr>
+    <tr><td>9</td><td><code>persist</code></td><td>Guarda el producto, el vínculo con el usuario y el trace.</td></tr>
+  </table>
+  <h3>6.3. Datos y privacidad</h3>
+  <p>El catálogo y las conversaciones quedan asociados a cada usuario. Los productos son una base de conocimiento compartida (no llevan identidad); el vínculo "Analizados por vos" solo registra quién analizó qué. Las imágenes se guardan para mostrar el resultado y auditar el análisis.</p>
+</section>
+
+<!-- ░░ 7 — INFRA CLOUD ░░ -->
+<section class="pagebreak">
+  <h2>7. Infraestructura en la nube y despliegue (Azure) <span class="new">NUEVO</span></h2>
+  <p>El sistema dejó atrás el entorno puramente local del MVP y pasó a estar desplegado en <strong>Microsoft Azure</strong>, bajo el resource group <code>nutrilens-rg</code>. A continuación se detalla cada servicio utilizado.</p>
+  <figure class="arch">
+    <img src="arch.svg" alt="Diagrama de arquitectura en la nube de NutriLens">
+    <figcaption>Diagrama de arquitectura: clientes, autenticación, servicios de Azure, fuente externa y CI/CD.</figcaption>
+  </figure>
+  <h3>7.1. Servicios de cómputo</h3>
+  <ul>
+    <li><strong>Azure App Service <code>nutrilens-app</code></strong> — aloja la app web Next.js (UI + API + autenticación). Plan App Service <strong>F1</strong>, runtime <strong>Node 22 LTS</strong> (Linux), despliegue por ZIP del <em>output standalone</em>.</li>
+    <li><strong>Azure App Service <code>nutrilens-docs</code></strong> — aloja el sitio de documentación (Docusaurus), servido como estático con un server Node mínimo. Comparte el plan con la web (costo incremental nulo).</li>
+  </ul>
+  <h3>7.2. Datos y almacenamiento</h3>
+  <ul>
+    <li><strong>Azure Database for PostgreSQL — Flexible Server <code>nutrilens-db</code></strong>: base relacional con extensión <strong>pgvector</strong> habilitada (índice HNSW) para la búsqueda semántica del chat. Alojada en una región habilitada para la suscripción (north central US).</li>
+    <li><strong>Azure Blob Storage (cuenta <code>nutrilensimg</code>)</strong>: container privado <code>uploads</code> para las imágenes de los productos; se sirven mediante <strong>SAS</strong> (URL firmada temporal, ~1 h) para no exponer el contenedor.</li>
+  </ul>
+  <h3>7.3. Servicios de inteligencia artificial</h3>
+  <ul>
+    <li><strong>Azure OpenAI</strong>: despliegues de <code>gpt-5.1</code> (extracción multimodal + explicación/chat) y <code>text-embedding-3-small</code> (vectores para RAG).</li>
+    <li><strong>Azure AI Foundry</strong>: usado durante la exploración inicial (Phi-3.5 / Phi-4 como <em>Models-as-a-Service</em>); descartado por calidad, pero conservado como proveedor intercambiable vía <code>IaProvider</code>.</li>
+  </ul>
+  <h3>7.4. Identidad y acceso</h3>
+  <ul>
+    <li><strong>Google OAuth 2.0</strong> vía <strong>Auth.js v5</strong> (sesión JWT; identidad = <code>sub</code> de Google). En mobile, la app intercambia el <code>id_token</code> de Google por un token propio firmado por el backend.</li>
+    <li>Secretos (credenciales OAuth, claves de Azure OpenAI, cadena de conexión de Blob y DB) se gestionan como <strong>App Settings</strong> del App Service y nunca se versionan.</li>
+  </ul>
+  <h3>7.5. Integración externa</h3>
+  <ul>
+    <li><strong>Open Food Facts (API pública)</strong>: se consulta por código de barras (EAN) decodificado de la imagen; cuando el producto existe, actúa como fuente autoritativa para nombre, categoría e ingredientes.</li>
+  </ul>
+  <h3>7.6. Operación, costos y observabilidad</h3>
+  <ul>
+    <li><strong>Presupuesto y alertas:</strong> tope mensual con alertas por correo para evitar sorpresas de consumo.</li>
+    <li><strong>Logging estructurado</strong> (JSON con <code>requestId</code>, sin PII) y <em>trace</em> del pipeline persistido para auditoría.</li>
+    <li>Gotchas resueltos en el camino: regiones restringidas para PostgreSQL Flexible en la suscripción, motor de Prisma y <code>@napi-rs/canvas</code> faltantes en el runtime Linux del <em>standalone</em>.</li>
+  </ul>
+</section>
+
+<!-- ░░ 8 — CI/CD + SDLC ░░ -->
+<section>
+  <h2>8. CI/CD, DevOps y la IA en el ciclo de vida</h2>
+  <h3>8.1. Integración y despliegue continuos <span class="new">NUEVO</span></h3>
+  <p>Cada <em>push</em> dispara un pipeline de <strong>GitHub Actions</strong> con siete <em>checks</em> requeridos: <strong>Lint &amp; format</strong>, <strong>TypeScript</strong>, <strong>Mobile app</strong>, <strong>Next.js build</strong>, <strong>Unit &amp; integration tests</strong>, <strong>E2E (Playwright)</strong> y un <em>gate</em> final <strong>CI Success</strong>. Ningún PR se mergea con un check en rojo.</p>
+  <h3>8.2. Gestión con Azure DevOps</h3>
+  <p>Las historias de usuario y los <em>work items</em> se gestionan en <strong>Azure DevOps</strong>. El board refleja el código: al mergear un PR, el <em>work item</em> asociado se cierra automáticamente, manteniendo trazabilidad entre planificación y entrega.</p>
+  <h3>8.3. La IA en cada etapa del SDLC</h3>
+  <ul>
+    <li><strong>Análisis:</strong> Claude para el <em>product brief</em>, los perfiles de usuario y la matriz de riesgos; Claude Code para generar y refinar historias en formato Gherkin y consolidar requerimientos.</li>
+    <li><strong>Diseño:</strong> bocetado de pantallas y <em>design system</em> con herramientas asistidas por IA (wireframes iterativos de escritorio y mobile).</li>
+    <li><strong>Codificación:</strong> <em>spec-driven development</em> — contratos de API, schemas Zod y casos borde antes del código; la IA implementa contra el spec, no improvisa.</li>
+    <li><strong>Pruebas y documentación:</strong> generación asistida de tests y de la documentación (sitio Docusaurus).</li>
+  </ul>
+</section>
+
+<!-- ░░ 9 — FUNCIONALIDADES ░░ -->
+<section class="pagebreak">
+  <h2>9. Funcionalidades y casos de uso</h2>
+  <h3>9.1. Analizar producto</h3>
+  <p>El usuario sube una foto o PDF; el backend envía el archivo al modelo multimodal, normaliza el JSON, aplica las reglas, guarda el producto y muestra el resumen: riesgo, aptitudes, sellos, ingredientes, alérgenos y explicación simple.</p>
+  <h3>9.2. Código de barras + Open Food Facts <span class="new">NUEVO</span></h3>
+  <p>Opcionalmente, el usuario agrega una foto del <strong>código de barras</strong>. El sistema decodifica el EAN y cruza con Open Food Facts: si el producto existe, completa nombre, categoría e ingredientes y sube la confianza. La validación es <em>soft</em>: el código de barras es un <em>booster</em> de confianza, nunca una barrera; si no decodifica, el análisis igual avanza.</p>
+  <h3>9.3. Resultado y entrada inválida</h3>
+  <p>El resultado muestra el mismo dato en varias vistas (semáforo de riesgo, aptitudes con íconos, sellos, alérgenos, explicación). Si la imagen no es una etiqueta, el sistema devuelve un error estructurado (<code>image_not_supported</code>) y permite reintentar.</p>
+  <h3>9.4. Catálogo y "Analizados por vos" <span class="new">NUEVO</span></h3>
+  <p>Cada análisis queda en un catálogo filtrable por categoría, riesgo, aptitud y alérgeno, con búsqueda por texto. El toggle <strong>"Analizados por vos"</strong> filtra los productos que el usuario logueado analizó (vínculo usuario↔producto registrado de forma <em>fail-open</em>).</p>
+  <h3>9.5. Chat RAG</h3>
+  <p>Ante una consulta (p. ej. "¿cuál tiene menos azúcar?"), el sistema recupera productos relevantes (por filtros + embeddings), los envía al modelo como contexto y responde con texto o con tarjetas/tablas, siempre fundamentado en lo guardado.</p>
+  <h3>9.6. NutriWorld — supermercado 3D <span class="new">NUEVO</span></h3>
+  <p>Funcionalidad experimental (beta, solo administradores): una góndola en 3D donde un avatar recorre el supermercado y NutriLens —en forma de robot— guía al usuario en lenguaje natural hacia los productos aptos, usando la misma IA del chat. Implementado con react-three-fiber.</p>
+  <h3>9.7. Ejemplo de salida estructurada</h3>
+  <pre>{
+  "producto": "Galletitas Choco Crunch",
+  "categoria": "Galletitas dulces",
+  "ingredientes_detectados": ["harina de trigo", "azúcar", "aceite vegetal", "cacao", "leche en polvo"],
+  "alergenos": ["gluten", "leche"],
+  "sellos": ["exceso en azúcares", "exceso en grasas saturadas"],
+  "apto_vegano": false, "apto_celiaco": false, "apto_sin_lactosa": false,
+  "riesgo": "alto", "confidence": 0.94
+}</pre>
+</section>
+
+<!-- ░░ 10 — MOBILE ░░ -->
+<section>
+  <h2>10. Aplicación mobile (Expo / React Native) <span class="new">NUEVO</span></h2>
+  <p>Además de la web, se desarrolló una app nativa con <strong>Expo / React Native</strong> que consume la misma API. Cubre los flujos clave: cámara para analizar, catálogo con filtros y "Analizados por vos", chat RAG, perfil con preferencias y acceso a la documentación.</p>
+  <ul>
+    <li><strong>Autenticación:</strong> login con Google (Google Sign-In + intercambio del <code>id_token</code> por un token mobile firmado por el backend); modo de <em>bypass</em> para demos.</li>
+    <li><strong>Resiliencia:</strong> recuperación de análisis/consultas pendientes ante cortes de conexión (persistencia local con AsyncStorage).</li>
+    <li><strong>Calidad:</strong> suite de pruebas con Jest + Testing Library (servicios de API, contexto de auth y pantallas).</li>
+  </ul>
+</section>
+
+<!-- ░░ 11 — REQUERIMIENTOS ░░ -->
+<section>
+  <h2>11. Requerimientos</h2>
+  <h3>11.1. Requerimientos funcionales (selección)</h3>
+  <table>
+    <tr><th>Código</th><th>Requerimiento</th></tr>
+    <tr><td>RF-01/02</td><td>Subir imágenes y PDFs de etiquetas.</td></tr>
+    <tr><td>RF-03</td><td>Validar si el archivo corresponde a un producto alimenticio.</td></tr>
+    <tr><td>RF-04/05/06</td><td>Extraer ingredientes; detectar alérgenos y sellos visibles.</td></tr>
+    <tr><td>RF-07/08</td><td>Clasificar aptitud (vegano/celíaco/sin lactosa) y calcular riesgo.</td></tr>
+    <tr><td>RF-09..12</td><td>Explicación simple, guardado, catálogo y chat sobre lo guardado.</td></tr>
+    <tr><td>RF-13/14/15</td><td>Errores estructurados; mostrar JSON extraído y pipeline.</td></tr>
+    <tr><td>RF-16 <span class="new">NUEVO</span></td><td>Autenticar con Google y asociar catálogo/conversaciones al usuario.</td></tr>
+    <tr><td>RF-17 <span class="new">NUEVO</span></td><td>Enriquecer por código de barras vía Open Food Facts.</td></tr>
+    <tr><td>RF-18 <span class="new">NUEVO</span></td><td>Filtrar el catálogo por "Analizados por vos".</td></tr>
+    <tr><td>RF-19 <span class="new">NUEVO</span></td><td>Disponer de app web y mobile desplegadas públicamente.</td></tr>
+  </table>
+  <h3>11.2. Requerimientos no funcionales (selección)</h3>
+  <table>
+    <tr><th>Código</th><th>Requerimiento</th></tr>
+    <tr><td>RNF-01/02</td><td>Interfaz clara y responsive; estados de carga y error.</td></tr>
+    <tr><td>RNF-03/04</td><td>Evitar afirmaciones médicas absolutas; aclarar dependencia de lo visible.</td></tr>
+    <tr><td>RNF-05/06</td><td>Validar la salida del modelo (Zod) antes de guardar; JSON consistente.</td></tr>
+    <tr><td>RNF-08 <span class="new">NUEVO</span></td><td>Cobertura de pruebas exigida en CI (≥80% líneas en <code>src/lib</code>).</td></tr>
+    <tr><td>RNF-09 <span class="new">NUEVO</span></td><td>Secretos fuera del repositorio; acceso a imágenes por URL firmada.</td></tr>
+  </table>
+</section>
+
+<!-- ░░ 12 — PRUEBAS ░░ -->
+<section class="pagebreak">
+  <h2>12. Pruebas, calidad y evaluación del modelo <span class="new">NUEVO</span></h2>
+  <ul>
+    <li><strong>Unit:</strong> reglas, schemas Zod, sanitizers, steps del pipeline, hooks y componentes.</li>
+    <li><strong>Integración:</strong> endpoints contra PostgreSQL real con <code>MockIaProvider</code>.</li>
+    <li><strong>E2E (Playwright):</strong> flujos completos en <strong>desktop y mobile-web</strong>, con Page Object Model.</li>
+    <li><strong>Mobile:</strong> Jest + Testing Library para servicios y pantallas.</li>
+    <li><strong>Evaluación del modelo:</strong> arnés propio con dataset etiquetado y métricas P/R/F1 por campo (sección 5.4).</li>
+  </ul>
+  <p>El CI exige <em>gates</em> de cobertura y corre con un proveedor de IA <em>mock</em> determinista (sin costo). Cada escenario Gherkin de una historia se traduce en al menos un test.</p>
+</section>
+
+<!-- ░░ 13 — PROBLEMAS ░░ -->
+<section>
+  <h2>13. Problemas encontrados y mitigaciones</h2>
+  <table>
+    <tr><th>Problema</th><th>Mitigación</th></tr>
+    <tr><td>Definir un producto innovador y abarcable</td><td>Acotar a un MVP demostrable con un caso de uso claro.</td></tr>
+    <tr><td>Selección del modelo (Phi-4 no rindió)</td><td>Interfaz <code>IaProvider</code> + migración a gpt-5.1 cambiando solo env vars.</td></tr>
+    <tr><td>El modelo alucinaba datos</td><td>Bajar la temperatura + validación Zod + reglas propias deterministas.</td></tr>
+    <tr><td>Respuestas con tono médico</td><td>Prompt anti-medical, sanitizer y disclaimer obligatorio.</td></tr>
+    <tr><td>Cobertura de Open Food Facts incompleta en LatAm <span class="new">NUEVO</span></td><td>Validación <em>soft</em>: el barcode suma confianza pero nunca bloquea el análisis.</td></tr>
+    <tr><td>Runtime Linux en Azure (Prisma engine, canvas) <span class="new">NUEVO</span></td><td>Inyectar binarios nativos faltantes en el <em>standalone</em> antes de empaquetar.</td></tr>
+    <tr><td>Regiones restringidas para PostgreSQL <span class="new">NUEVO</span></td><td>Desplegar la DB en una región habilitada para la suscripción.</td></tr>
+    <tr><td>OAuth de Google en Expo Go (SDK 54) <span class="new">NUEVO</span></td><td>Requiere development build; para demos rápidas, modo bypass.</td></tr>
+  </table>
+</section>
+
+<!-- ░░ 14 — MÉTRICAS ░░ -->
+<section>
+  <h2>14. Métricas del proyecto <span class="new">NUEVO</span></h2>
+  <table>
+    <tr><th>Métrica</th><th>Valor</th></tr>
+    <tr><td>Tests automatizados en verde</td><td>~1465 (unit + integración + E2E)</td></tr>
+    <tr><td>Story points · avance</td><td>174 · 100% completados</td></tr>
+    <tr><td>Work items (Azure DevOps)</td><td>182</td></tr>
+    <tr><td>Pull requests mergeados</td><td>61</td></tr>
+    <tr><td>Commits</td><td>342</td></tr>
+    <tr><td>Pasos de pipeline trazables</td><td>9</td></tr>
+    <tr><td>Prompts de IA versionados</td><td>16</td></tr>
+    <tr><td>Tiempo de la foto al veredicto</td><td>&lt; 5 s</td></tr>
+    <tr><td>Costo de una corrida de evaluación</td><td>~US$0,02</td></tr>
+  </table>
+</section>
+
+<!-- ░░ 15 — CONCLUSIONES ░░ -->
+<section>
+  <h2>15. Conclusiones y próximos pasos</h2>
+  <p>NutriLens evolucionó de un MVP local a un sistema <strong>desplegado en la nube, multiplataforma y de extremo a extremo</strong>, con identidad, integración externa, evaluación medible del modelo y un pipeline de calidad. El desarrollo asistido por IA aceleró el diseño, la codificación, las pruebas y la documentación, y el proceso de selección del modelo dejó aprendizajes valiosos sobre las diferencias prácticas entre modelos multimodales.</p>
+  <p><strong>Próximos pasos:</strong> CI/CD automático de los despliegues, app mobile distribuida (dev/standalone build) con OAuth real en dispositivo, comparador de productos más completo, y maduración de NutriWorld de beta a una experiencia estable.</p>
+  <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;">
+  <p style="color:#64748b;font-size:9.5pt;"><strong>Anexo A — Design system:</strong> paleta, tipografía y componentes base definidos para la interfaz. <strong>Anexo B — Diagrama de arquitectura:</strong> ver figura de la sección 7.</p>
+  <p style="color:#64748b;font-size:9.5pt;"><em>NutriLens es un asistente informativo y no reemplaza el consejo de un profesional de la salud.</em></p>
+</section>
+
+</body>
+</html>

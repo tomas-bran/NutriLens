@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>NutriLens — Fondo de cámara</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green:#16A34A; --green-strong:#15803D; --green-soft:#F0FDF4; --green-border:#86EFAC;
+    --lime:#C7F04A; --ink:#0F172A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{width:100%; height:100%;}
+  /* Fondo de cortesía verde por si quedara algún borde al exportar */
+  body{background:#15803D; display:grid; place-items:center; overflow:hidden;}
+
+  /* Lienzo 1920×1080 que se escala para llenar el viewport (mismo aspect 16:9) */
+  .stage{
+    position:relative; width:1920px; height:1080px; overflow:hidden; transform-origin:center center;
+    font-family:'Inter',system-ui,sans-serif; color:#fff;
+    background:
+      radial-gradient(900px 700px at 86% 10%, rgba(199,240,74,.30), transparent 60%),
+      radial-gradient(1000px 760px at 12% 96%, rgba(8,70,40,.55), transparent 64%),
+      linear-gradient(145deg,#1aa64e 0%, #16A34A 45%, #15803D 100%);
+  }
+  .dotgrid{position:absolute; inset:0; background-image:radial-gradient(circle,rgba(255,255,255,.55) 1.5px,transparent 1.5px); background-size:46px 46px; opacity:.10;}
+  .glow{position:absolute; border-radius:50%; filter:blur(10px);}
+
+  /* Logo + nombre (arriba izquierda) */
+  .brand{position:absolute; top:84px; left:96px; display:flex; align-items:center; gap:22px;}
+  .mark{width:92px; height:92px; border-radius:24px; background:#fff; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 20px 48px -14px rgba(0,0,0,.4);}
+  .brand .name{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:46px; letter-spacing:-.02em; color:#fff; line-height:1;}
+
+  /* Eslogan (abajo izquierda) */
+  .slogan{position:absolute; bottom:96px; left:100px; max-width:760px;
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:60px; line-height:1.02; letter-spacing:-.025em; color:#fff;}
+  .slogan em{color:var(--lime); font-style:normal;}
+
+  .spark{position:absolute; color:var(--lime); font-size:26px; opacity:.9;}
+
+  /* ── Variante VERDE CLARA ── */
+  .stage.light{
+    color:var(--ink);
+    background:
+      radial-gradient(900px 700px at 86% 10%, rgba(22,163,74,.28), transparent 60%),
+      radial-gradient(1000px 760px at 12% 96%, rgba(22,163,74,.22), transparent 64%),
+      linear-gradient(145deg,#eafaee 0%, #ddf3e2 55%, #cfeed6 100%);
+  }
+  .stage.light .dotgrid{background-image:radial-gradient(circle,var(--green-border) 1.6px,transparent 1.6px); opacity:.28;}
+  .stage.light .mark{background:var(--green);}
+  .stage.light .brand .name{color:var(--ink);}
+  .stage.light .slogan{color:var(--ink);}
+  .stage.light .slogan em{color:var(--green);}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="dotgrid"></div>
+  <div class="glow" style="width:560px; height:560px; top:-140px; right:-100px; background:radial-gradient(circle,rgba(199,240,74,.4) 0%,transparent 70%);"></div>
+  <div class="glow" style="width:620px; height:620px; bottom:-200px; left:-160px; background:radial-gradient(circle,rgba(255,255,255,.18) 0%,transparent 70%);"></div>
+
+  <div class="brand">
+    <span class="mark" id="mark">
+      <svg width="56" height="56" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="12.4" stroke="#16a34a" stroke-width="1.7" opacity=".5"/><path d="M8.6 23.4C8.2 14.6 13.4 8.8 23.4 8.6 23.8 17.4 18.6 23.2 8.6 23.4Z" fill="#16a34a"/><path d="M11.4 20.6C14.8 16.4 17.8 13.4 20.4 11.6" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><circle cx="24.6" cy="7.4" r="2.1" fill="#C7F04A"/></svg>
+    </span>
+    <span class="name">NutriLens</span>
+  </div>
+
+  <div class="slogan">Entendé qué comés<br><em>en segundos.</em></div>
+
+  <span class="spark" style="top:30%; right:10%;">✦</span>
+  <span class="spark" style="bottom:40%; left:9%; font-size:18px;">✦</span>
+  <span class="spark" style="top:18%; right:26%; font-size:16px;">✦</span>
+</div>
+<script>
+  // En la variante clara el logo va con caja verde + hoja blanca; en la verde, caja blanca + hoja verde.
+  function syncMark(){
+    var light = document.getElementById('stage').classList.contains('light');
+    var leaf = light ? '#fff' : '#16a34a';
+    var vein = light ? '#16a34a' : '#fff';
+    document.getElementById('mark').innerHTML =
+      '<svg width="56" height="56" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="12.4" stroke="'+leaf+'" stroke-width="1.7" opacity=".5"/><path d="M8.6 23.4C8.2 14.6 13.4 8.8 23.4 8.6 23.8 17.4 18.6 23.2 8.6 23.4Z" fill="'+leaf+'"/><path d="M11.4 20.6C14.8 16.4 17.8 13.4 20.4 11.6" stroke="'+vein+'" stroke-width="1.8" stroke-linecap="round"/><circle cx="24.6" cy="7.4" r="2.1" fill="#C7F04A"/></svg>';
+  }
+  syncMark();
+  window._syncMark = syncMark;
+
+  // Escala el lienzo 1920×1080 para que llene el viewport (sin bordes negros).
+  function fit(){
+    var s = window.innerWidth / 1920;
+    document.getElementById('stage').style.transform = 'scale(' + s + ')';
+  }
+  fit();
+  window.addEventListener('resize', fit);
+  window._fit = fit;
+</script>
+</body>
+</html>
