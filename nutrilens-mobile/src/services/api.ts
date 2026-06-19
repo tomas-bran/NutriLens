@@ -58,7 +58,18 @@ export interface DietPrefs {
 export interface ProfilePayload {
   user: AuthUser;
   prefs: DietPrefs;
-  stats: { analizados: number; riesgoAlto: number; sinAlergenos: number };
+  stats: {
+    catalogoTotal?: number;
+    analizados: number;
+    riesgoAlto: number;
+    sinAlergenos: number;
+    ultimoAnalizado?: {
+      id: string;
+      nombre: string;
+      riesgo: string;
+      analyzedAt: string;
+    } | null;
+  };
 }
 
 export interface StoredChatMessage {
@@ -94,7 +105,11 @@ export const clearAuthToken = async () => {
 export const loginWithGoogleIdToken = async (idToken: string) => {
   const response = await fetch(`${API_BASE_URL}/mobile/auth/google`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'ngrok-skip-browser-warning': 'true',
+    },
     body: JSON.stringify({ idToken }),
   });
 
@@ -132,18 +147,13 @@ export const updatePrefs = async (prefs: DietPrefs) => {
   return (await response.json()) as DietPrefs;
 };
 
-export const analyzeProduct = async (photoUri: string) => {
+export const analyzeProduct = async (photoUri: string, barcodeUri?: string | null) => {
   const formData = new FormData();
 
-  const filename = photoUri.split('/').pop() || 'photo.jpg';
-  const match = /\.(\w+)$/.exec(filename);
-  const type = match ? `image/${match[1]}` : 'image/jpeg';
-
-  formData.append('file', {
-    uri: photoUri,
-    name: filename,
-    type,
-  } as any);
+  formData.append('file', toMultipartImage(photoUri, 'photo.jpg') as any);
+  if (barcodeUri) {
+    formData.append('barcodeImage', toMultipartImage(barcodeUri, 'barcode.jpg') as any);
+  }
 
   try {
     const response = await fetch(`${API_BASE_URL}/analyze`, {
@@ -165,6 +175,18 @@ export const analyzeProduct = async (photoUri: string) => {
   }
 };
 
+function toMultipartImage(uri: string, fallbackName: string) {
+  const filename = uri.split('/').pop() || fallbackName;
+  const match = /\.(\w+)$/.exec(filename);
+  const extension = match?.[1]?.toLowerCase();
+  const type = extension === 'png' ? 'image/png' : 'image/jpeg';
+  return {
+    uri,
+    name: filename,
+    type,
+  };
+}
+
 export const sendChatMessage = async (question: string) => {
   try {
     const response = await fetch(`${API_BASE_URL}/chat`, {
@@ -184,12 +206,30 @@ export const sendChatMessage = async (question: string) => {
   }
 };
 
+export const getChatStarterSuggestions = async () => {
+  const response = await fetch(`${API_BASE_URL}/chat/suggestions`, {
+    method: 'GET',
+    headers: await authHeaders(),
+  });
+
+  if (!response.ok) {
+    throw await parseApiError(response, 'Error al obtener sugerencias');
+  }
+
+  const payload = (await response.json()) as { suggestions?: string[] | null };
+  return Array.isArray(payload.suggestions) ? payload.suggestions : null;
+};
+
 export interface HistoryFilters {
   q?: string;
   categoria?: string;
   riesgo?: string;
   apto?: string;
   alergeno?: string;
+  filtro?: 'mios';
+  page?: number;
+  pageSize?: number;
+  sort?: 'createdAt:desc' | 'nombre:asc';
 }
 
 export const getHistory = async (filters: HistoryFilters = {}) => {
@@ -230,6 +270,25 @@ export const getProductDetail = async (id: string) => {
   } catch (error) {
     console.error('Error in getProductDetail:', error);
     throw error;
+  }
+};
+
+export const getSimilarProducts = async (id: string, k = 4) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/products/${id}/similar?k=${k}`, {
+      method: 'GET',
+      headers: await authHeaders(),
+    });
+
+    if (!response.ok) {
+      throw await parseApiError(response, 'Error al obtener productos similares');
+    }
+
+    const payload = (await response.json()) as { productos?: any[] | null };
+    return Array.isArray(payload.productos) ? payload.productos : [];
+  } catch (error) {
+    console.error('Error in getSimilarProducts:', error);
+    return [];
   }
 };
 
@@ -304,6 +363,7 @@ async function authHeaders(extra: Record<string, string> = {}) {
   const token = await getAuthToken();
   return {
     Accept: 'application/json',
+    'ngrok-skip-browser-warning': 'true',
     ...extra,
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };

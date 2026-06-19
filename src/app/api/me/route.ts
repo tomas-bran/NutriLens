@@ -14,16 +14,37 @@ export async function GET(): Promise<NextResponse> {
     );
   }
 
-  const [analizados, riesgoAlto, sinAlergenos, prefs] = await Promise.all([
-    prisma.product.count(),
-    prisma.product.count({ where: { riesgo: 'alto' } }),
-    prisma.product.count({ where: { alergenos: '[]' } }),
-    getUserPrefs(user.id),
-  ]);
+  const mine = { analyses: { some: { userId: user.id } } };
+  const [catalogoTotal, analizados, riesgoAlto, sinAlergenos, lastAnalysis, prefs] =
+    await Promise.all([
+      prisma.product.count(),
+      prisma.product.count({ where: mine }),
+      prisma.product.count({ where: { ...mine, riesgo: 'alto' } }),
+      prisma.product.count({ where: { ...mine, alergenos: '[]' } }),
+      prisma.productAnalysis.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+        include: { product: { select: { id: true, nombre: true, riesgo: true, createdAt: true } } },
+      }),
+      getUserPrefs(user.id),
+    ]);
 
   return NextResponse.json({
     user,
     prefs,
-    stats: { analizados, riesgoAlto, sinAlergenos },
+    stats: {
+      catalogoTotal,
+      analizados,
+      riesgoAlto,
+      sinAlergenos,
+      ultimoAnalizado: lastAnalysis
+        ? {
+            id: lastAnalysis.product.id,
+            nombre: lastAnalysis.product.nombre,
+            riesgo: lastAnalysis.product.riesgo,
+            analyzedAt: lastAnalysis.createdAt.toISOString(),
+          }
+        : null,
+    },
   });
 }

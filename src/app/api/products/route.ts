@@ -13,6 +13,7 @@ import { randomUUID } from 'node:crypto';
 import type { Prisma } from '@prisma/client';
 import { ApiError } from '@schemas/errors';
 import { apiErrorResponse } from '@/lib/api/error-response';
+import { getUserId } from '@/lib/auth/current-user';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { mapCategoriaToPrisma, toListItem } from '@/lib/products/serializers';
@@ -46,6 +47,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     if (q.apto) {
       Object.assign(where, aptoFilter(q.apto));
     }
+    if (q.filtro === 'mios') {
+      const userId = await getUserId();
+      where.analyses = { some: { userId: userId ?? '\0' } };
+    }
 
     const orderBy: Prisma.ProductOrderByWithRelationInput =
       q.sort === 'nombre:asc' ? { nombre: 'asc' } : { createdAt: 'desc' };
@@ -66,6 +71,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         alergeno: q.alergeno,
         apto: q.apto,
         q: q.q,
+        filtro: q.filtro,
       },
       total,
       page: q.page,

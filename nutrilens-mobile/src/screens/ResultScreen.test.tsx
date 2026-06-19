@@ -1,6 +1,12 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import ResultScreen from '../../src/screens/ResultScreen';
+import { getProductDetail, getSimilarProducts } from '../services/api';
+
+jest.mock('../../src/services/api', () => ({
+  getProductDetail: jest.fn(),
+  getSimilarProducts: jest.fn().mockResolvedValue([]),
+}));
 
 // Mockeamos la navegación de React Navigation
 const mockNavigation = {
@@ -10,6 +16,7 @@ const mockNavigation = {
 
 describe('ResultScreen Component', () => {
   beforeEach(() => {
+    jest.clearAllMocks();
     jest.useFakeTimers();
   });
 
@@ -76,5 +83,68 @@ describe('ResultScreen Component', () => {
     expect(
       getByText('El análisis puede tener errores. Probá con una foto más nítida.'),
     ).toBeTruthy();
+  });
+
+  it('muestra productos similares y abre su detalle', async () => {
+    (getSimilarProducts as jest.Mock).mockResolvedValueOnce([
+      {
+        id: 'similar-1',
+        nombre: 'Cereal integral',
+        riesgo: 'bajo',
+        imagenUrl: '',
+      },
+    ]);
+    (getProductDetail as jest.Mock).mockResolvedValueOnce({
+      id: 'similar-1',
+      nombre: 'Cereal integral',
+      categoria: 'cereales',
+      riesgo: 'bajo',
+      alergenos: [],
+      sellos: [],
+      ingredientes: ['avena'],
+      reglasAplicadas: [],
+      confidence: 0.95,
+      imagenUrl: '',
+      createdAt: new Date().toISOString(),
+      explanation: 'Buena alternativa.',
+      pipelineTrace: [],
+      offEnrichment: null,
+    });
+
+    const route = {
+      params: {
+        data: {
+          id: 'prod-1',
+          product: {
+            producto: 'Galletitas',
+            confidence: 0.9,
+            riesgo: 'alto',
+            ingredientes_detectados: ['harina'],
+          },
+          rules: { reglas_aplicadas: [] },
+        },
+      },
+    };
+
+    const { getByText } = await render(<ResultScreen route={route} navigation={mockNavigation} />);
+
+    await waitFor(() => {
+      expect(getByText('Productos similares del catalogo')).toBeTruthy();
+      expect(getByText('Cereal integral')).toBeTruthy();
+    });
+
+    await fireEvent.press(getByText('Cereal integral'));
+
+    await waitFor(() => {
+      expect(getProductDetail).toHaveBeenCalledWith('similar-1');
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(
+        'Result',
+        expect.objectContaining({
+          data: expect.objectContaining({
+            product: expect.objectContaining({ producto: 'Cereal integral' }),
+          }),
+        }),
+      );
+    });
   });
 });

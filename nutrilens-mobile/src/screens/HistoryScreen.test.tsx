@@ -108,4 +108,21 @@ describe('HistoryScreen', () => {
       );
     });
   });
+
+  it('aplica el alcance Analizados por vos cuando llega desde perfil', async () => {
+    (getHistory as jest.Mock).mockResolvedValue({ items: [], total: 0 });
+
+    await render(
+      <HistoryScreen navigation={mockNavigation} route={{ params: { onlyMine: true } }} />,
+    );
+
+    await waitFor(() => {
+      expect(getHistory).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          filtro: 'mios',
+          pageSize: 50,
+        }),
+      );
+    });
+  });
 });
