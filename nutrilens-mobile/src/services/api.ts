@@ -132,18 +132,23 @@ export const updatePrefs = async (prefs: DietPrefs) => {
   return (await response.json()) as DietPrefs;
 };
 
-export const analyzeProduct = async (photoUri: string) => {
+/**
+ * Sube la foto del producto y, opcionalmente, una foto del código de barras
+ * (EAN). El backend usa el barcode como *booster* de confianza vía Open Food
+ * Facts; si falta o no decodifica, el análisis igual avanza (validación soft).
+ */
+export const analyzeProduct = async (photoUri: string, barcodeUri?: string) => {
   const formData = new FormData();
 
-  const filename = photoUri.split('/').pop() || 'photo.jpg';
-  const match = /\.(\w+)$/.exec(filename);
-  const type = match ? `image/${match[1]}` : 'image/jpeg';
+  const appendImage = (field: string, uri: string) => {
+    const filename = uri.split('/').pop() || `${field}.jpg`;
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1]}` : 'image/jpeg';
+    formData.append(field, { uri, name: filename, type } as any);
+  };
 
-  formData.append('file', {
-    uri: photoUri,
-    name: filename,
-    type,
-  } as any);
+  appendImage('file', photoUri);
+  if (barcodeUri) appendImage('barcodeImage', barcodeUri);
 
   try {
     const response = await fetch(`${API_BASE_URL}/analyze`, {

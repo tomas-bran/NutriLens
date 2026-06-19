@@ -62,6 +62,7 @@ export default function AnalyzeScreen({ navigation }: any) {
     useState<ImagePicker.MediaLibraryPermissionResponse | null>(null);
 
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [barcodeUri, setBarcodeUri] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStepIndex, setAnalysisStepIndex] = useState(0);
   const cameraRef = useRef<CameraView>(null);
@@ -153,16 +154,39 @@ export default function AnalyzeScreen({ navigation }: any) {
     }
   };
 
+  const handlePickBarcode = async () => {
+    const perm = galleryPermission || (await requestGalleryPermission());
+    if (!perm.granted) {
+      Alert.alert('Permiso denegado', 'Se necesita acceso a la galería.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: 'images',
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setBarcodeUri(result.assets[0].uri);
+    }
+  };
+
   const resetPhoto = () => {
     setPhotoUri(null);
+    setBarcodeUri(null);
   };
 
   const handleAnalysis = () => {
     if (!photoUri) return;
-    runAnalysisRequest(photoUri, 0, 'new');
+    runAnalysisRequest(photoUri, 0, 'new', barcodeUri ?? undefined);
   };
 
-  async function runAnalysisRequest(imageUri: string, attempts: number, mode: 'new' | 'retry') {
+  async function runAnalysisRequest(
+    imageUri: string,
+    attempts: number,
+    mode: 'new' | 'retry',
+    barcodeImageUri?: string,
+  ) {
     if (isAnalyzingRef.current) return;
 
     const pending: PendingAnalysisRequest = {
@@ -176,7 +200,7 @@ export default function AnalyzeScreen({ navigation }: any) {
     setAnalysisLoading(true);
 
     try {
-      const data = await analyzeProduct(imageUri);
+      const data = await analyzeProduct(imageUri, barcodeImageUri);
       await AsyncStorage.removeItem(PENDING_ANALYSIS_KEY);
       setAnalysisLoading(false);
       navigation.navigate('Result', { data, photoUri: imageUri });
@@ -327,16 +351,38 @@ export default function AnalyzeScreen({ navigation }: any) {
             </View>
           </LinearGradient>
         ) : (
-          <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.bottomControls}>
-            <TouchableOpacity style={styles.secondaryButton} onPress={resetPhoto}>
-              <Ionicons name="refresh" size={22} color="#fff" />
-              <Text style={styles.secondaryButtonText}>Reintentar</Text>
+          <LinearGradient colors={['transparent', 'rgba(0,0,0,0.85)']} style={styles.bottomControls}>
+            <TouchableOpacity
+              style={styles.barcodeChip}
+              onPress={barcodeUri ? () => setBarcodeUri(null) : handlePickBarcode}
+              accessibilityRole="button"
+              accessibilityLabel={
+                barcodeUri ? 'Quitar código de barras' : 'Agregar código de barras'
+              }
+            >
+              <Ionicons
+                name={barcodeUri ? 'checkmark-circle' : 'barcode-outline'}
+                size={18}
+                color={barcodeUri ? colors.primary : '#fff'}
+              />
+              <Text style={styles.barcodeChipText}>
+                {barcodeUri
+                  ? 'Código de barras agregado · quitar'
+                  : 'Agregar código de barras (opcional)'}
+              </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.analyzeButton} onPress={handleAnalysis}>
-              <Ionicons name="color-wand" size={22} color={colors.primaryStrong || '#1f8e60'} />
-              <Text style={styles.analyzeButtonText}>Analizar foto</Text>
-            </TouchableOpacity>
+            <View style={styles.buttonsRow}>
+              <TouchableOpacity style={styles.secondaryButton} onPress={resetPhoto}>
+                <Ionicons name="refresh" size={22} color="#fff" />
+                <Text style={styles.secondaryButtonText}>Reintentar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.analyzeButton} onPress={handleAnalysis}>
+                <Ionicons name="color-wand" size={22} color={colors.primaryStrong || '#1f8e60'} />
+                <Text style={styles.analyzeButtonText}>Analizar foto</Text>
+              </TouchableOpacity>
+            </View>
           </LinearGradient>
         )}
       </View>
@@ -529,12 +575,29 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: 'column',
+    alignItems: 'center',
     padding: 24,
     paddingBottom: 40,
+    gap: 14,
+  },
+  buttonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     gap: 16,
   },
+  barcodeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.32)',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 100,
+  },
+  barcodeChipText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   secondaryButton: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -178,6 +178,26 @@ describe('analyzeProduct', () => {
     expect(init.body).toBeInstanceOf(FormData);
   });
 
+  it('adjunta barcodeImage cuando se pasa la foto del código de barras', async () => {
+    const appendSpy = jest.spyOn(FormData.prototype, 'append');
+    mockFetch.mockResolvedValueOnce(ok({ id: 'p1' }));
+    await analyzeProduct('file:///tmp/producto.jpg', 'file:///tmp/ean.jpg');
+    const fields = appendSpy.mock.calls.map((c) => c[0]);
+    expect(fields).toContain('file');
+    expect(fields).toContain('barcodeImage');
+    appendSpy.mockRestore();
+  });
+
+  it('no adjunta barcodeImage si no se pasa', async () => {
+    const appendSpy = jest.spyOn(FormData.prototype, 'append');
+    mockFetch.mockResolvedValueOnce(ok({ id: 'p1' }));
+    await analyzeProduct('file:///tmp/producto.jpg');
+    const fields = appendSpy.mock.calls.map((c) => c[0]);
+    expect(fields).toContain('file');
+    expect(fields).not.toContain('barcodeImage');
+    appendSpy.mockRestore();
+  });
+
   it('propaga ApiError image_not_supported sin loguear como error inesperado', async () => {
     mockFetch.mockResolvedValueOnce(fail({ error: 'image_not_supported', reason: 'no es comida' }, 422));
     await expect(analyzeProduct('file:///tmp/x.png')).rejects.toMatchObject({
