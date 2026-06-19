@@ -2,8 +2,65 @@
  * Tests for the Open Food Facts enrichment logic (NL-601).
  */
 import { describe, expect, it } from 'vitest';
-import { buildEnrichment, parseOffIngredients } from '@/lib/off/enrich';
+import {
+  buildEnrichment,
+  isGenericProductName,
+  mapOffCategory,
+  parseOffIngredients,
+  productNamesOverlap,
+} from '@/lib/off/enrich';
 import type { OFFProduct } from '@/lib/off/client';
+
+describe('isGenericProductName (NL-601 — preferir nombre de OFF)', () => {
+  it('marca como genéricos los nombres inútiles', () => {
+    for (const n of ['otros', 'Otros', 'producto', 'desconocido', '', 'a', 'N/A']) {
+      expect(isGenericProductName(n)).toBe(true);
+    }
+  });
+
+  it('no marca un nombre real', () => {
+    expect(isGenericProductName('Galletitas Chocolinas')).toBe(false);
+    expect(isGenericProductName('Coca Cola')).toBe(false);
+  });
+});
+
+describe('mapOffCategory (NL-601 — categoría desde OFF)', () => {
+  it('mapea tags de OFF a categorías de NutriLens', () => {
+    expect(mapOffCategory(['en:biscuits'])).toBe('galletitas');
+    expect(mapOffCategory(['en:breakfast-cereals'])).toBe('cereales');
+    expect(mapOffCategory(['en:sodas', 'en:beverages'])).toBe('bebidas');
+    expect(mapOffCategory(['en:dairies', 'en:yogurts'])).toBe('lácteos');
+    expect(mapOffCategory(['en:salty-snacks', 'en:chips'])).toBe('snacks');
+  });
+
+  it('devuelve null cuando no hay categoría conocida (o sin tags)', () => {
+    expect(mapOffCategory(['en:plant-based-foods'])).toBeNull();
+    expect(mapOffCategory([])).toBeNull();
+  });
+});
+
+describe('productNamesOverlap (NL-601 — validación soft barcode↔foto)', () => {
+  it('detecta solapamiento por token significativo', () => {
+    expect(productNamesOverlap('Galletitas Chocolinas', 'Chocolinas Bagley')).toBe(true);
+  });
+
+  it('ignora tildes y mayúsculas', () => {
+    expect(productNamesOverlap('Maíz Frito', 'maiz tostado')).toBe(true);
+  });
+
+  it('marca falta de correspondencia cuando no comparten tokens', () => {
+    expect(productNamesOverlap('Coca Cola Original', 'Yogur Entero Natural')).toBe(false);
+  });
+
+  it('ignora stopwords (de/la/con) al comparar', () => {
+    expect(productNamesOverlap('Agua de la Sierra', 'Pan de la Abuela')).toBe(false);
+  });
+
+  it('es indulgente: si algún nombre no tiene tokens evaluables, no marca discrepancia', () => {
+    expect(productNamesOverlap('', 'Cualquier Cosa')).toBe(true);
+    expect(productNamesOverlap('A B', 'Coca Cola')).toBe(true); // tokens < 3 chars
+  });
+});
 
 describe('parseOffIngredients (NL-601)', () => {
   it('separa por comas, recorta y saca los guiones bajos de alérgenos', () => {
@@ -32,6 +89,7 @@ function makeOff(overrides: Partial<OFFProduct> = {}): OFFProduct {
     ingredients_text: 'Harina de trigo, azúcar',
     allergens_tags: ['en:gluten', 'en:milk'],
     labels_tags: [],
+    categories_tags: [],
     nutriments: {},
     url: 'https://world.openfoodfacts.org/product/7790895000658',
     ...overrides,

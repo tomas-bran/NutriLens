@@ -13,7 +13,7 @@ import { logger } from '@/lib/logger';
  */
 export const getCatalogoCount = cache(async (): Promise<number> => {
   try {
-    return await prisma.product.count();
+    return await prisma.product.count({ where: { deletedAt: null } });
   } catch (err) {
     logger.warn('catalogo.count_failed', {
       message: err instanceof Error ? err.message : String(err),

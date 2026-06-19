@@ -10,6 +10,7 @@
  */
 import { AllergenList } from './AllergenList';
 import { AptitudeRows } from './AptitudeRows';
+import { BarcodeWarningBanner } from './BarcodeWarningBanner';
 import { ExplanationCard } from './ExplanationCard';
 import { IngredientList } from './IngredientList';
 import { JsonViewer } from './JsonViewer';
@@ -58,6 +59,13 @@ export function ResultView({
       <ResultHeader product={product} back={back} contextLabel={contextLabel} />
 
       {showLowConfidence && <LowConfidenceBanner />}
+
+      {(product.offEnrichment?.barcodeMismatch || product.offEnrichment?.barcodeUnreadable) && (
+        <BarcodeWarningBanner
+          barcodeMismatch={product.offEnrichment.barcodeMismatch}
+          barcodeUnreadable={product.offEnrichment.barcodeUnreadable}
+        />
+      )}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-[1fr_1.6fr] md:items-start">
         <div className="flex flex-col gap-5">

@@ -50,6 +50,7 @@ function makeRow(overrides: Partial<PrismaProduct> = {}): PrismaProduct {
     promptVersion: overrides.promptVersion ?? 'extract_product-v1',
     offEnrichment: overrides.offEnrichment ?? null,
     createdAt: overrides.createdAt ?? now,
+    deletedAt: overrides.deletedAt ?? null,
   };
 }
 
@@ -94,14 +95,12 @@ describe('buildWhere — combinaciones de filtros (US-28 AC §1-§3)', () => {
     expect(buildWhere({ ...BASE_INTENT, riesgo_max: 'bajo' }).riesgo).toBe('bajo');
   });
 
-  it('riesgo_max=medio → riesgo in ["bajo","medio"]', () => {
-    expect(buildWhere({ ...BASE_INTENT, riesgo_max: 'medio' }).riesgo).toEqual({
-      in: ['bajo', 'medio'],
-    });
+  it('riesgo_max=medio → riesgo exacto "medio" (lo que pide el usuario)', () => {
+    expect(buildWhere({ ...BASE_INTENT, riesgo_max: 'medio' }).riesgo).toBe('medio');
   });
 
-  it('riesgo_max=alto → sin filtro de riesgo (todos los niveles aceptables)', () => {
-    expect(buildWhere({ ...BASE_INTENT, riesgo_max: 'alto' }).riesgo).toBeUndefined();
+  it('riesgo_max=alto → riesgo exacto "alto"', () => {
+    expect(buildWhere({ ...BASE_INTENT, riesgo_max: 'alto' }).riesgo).toBe('alto');
   });
 
   it('alergeno_excluido → NOT { alergenos contains "<term>" } con quotes (AC §2 invertido)', () => {

@@ -12,7 +12,7 @@
  * which branch to mount.
  */
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { AnalyzingPanel } from '@/components/upload/AnalyzingPanel';
 import { Dropzone } from '@/components/upload/Dropzone';
 import { HiddenFileInputs } from '@/components/upload/HiddenFileInputs';
@@ -34,6 +34,10 @@ export function UploadFlow() {
   const router = useRouter();
   const { showToast } = useToast();
   const [state, dispatch] = useReducer(reducer, initialState);
+  // NL-601: foto opcional del código de barras. Vive como estado del componente
+  // (no en la FSM): es un acompañante opcional de la foto del producto, no parte
+  // del ciclo de vida del upload. Se adjunta al submit y sobrevive a un retry.
+  const [barcodeFile, setBarcodeFile] = useState<File | null>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -73,6 +77,31 @@ export function UploadFlow() {
     [showToast],
   );
 
+  // Barcode: solo imágenes JPG/PNG (el backend ignora otros formatos). No bloquea
+  // el flujo — es opcional — así que un archivo inválido sólo dispara un toast.
+  const handleBarcodeSelected = useCallback(
+    (file: File) => {
+      const result = validateClientFile(file);
+      if (!result.ok) {
+        const ui = mapErrorCodeToUi(result.error);
+        showToast({ variant: 'error', title: ui.title, description: result.reason });
+        return;
+      }
+      if (file.type === 'application/pdf') {
+        showToast({
+          variant: 'error',
+          title: 'Formato no soportado',
+          description: 'El código de barras tiene que ser una foto (JPG o PNG).',
+        });
+        return;
+      }
+      setBarcodeFile(file);
+    },
+    [showToast],
+  );
+
+  const handleBarcodeClear = useCallback(() => setBarcodeFile(null), []);
+
   const handleSubmit = useCallback(async () => {
     if (state.kind !== 'SELECTED') return;
     const file = state.file;
@@ -97,6 +126,7 @@ export function UploadFlow() {
     const result = await xhrUpload({
       file,
       fileHash,
+      barcodeImage: barcodeFile ?? undefined,
       onProgress: (progress) => dispatch({ type: 'PROGRESS', progress }),
       onUploadDone: () => dispatch({ type: 'UPLOAD_DONE' }),
     });
@@ -122,7 +152,7 @@ export function UploadFlow() {
         requestId: result.requestId,
       });
     }
-  }, [state, showToast]);
+  }, [state, barcodeFile, showToast]);
 
   // NL-501: global paste listener — active when user hasn't already submitted.
   useEffect(() => {
@@ -201,6 +231,7 @@ export function UploadFlow() {
     return (
       <AnalyzingPanel
         file={state.file}
+        barcodeFile={barcodeFile}
         progress={state.kind === 'UPLOADING' ? state.progress : 1}
         stage={state.kind}
       />
@@ -231,6 +262,9 @@ export function UploadFlow() {
         cameraInputRef={cameraInputRef}
         galleryInputRef={galleryInputRef}
         pdfInputRef={pdfInputRef}
+        barcodeFile={barcodeFile}
+        onBarcodeSelected={handleBarcodeSelected}
+        onBarcodeClear={handleBarcodeClear}
       />
       <ObservablePipeline />
     </div>

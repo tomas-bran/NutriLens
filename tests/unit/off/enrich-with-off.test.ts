@@ -4,15 +4,30 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@/lib/off/decode-barcode', () => ({ decodeBarcode: vi.fn() }));
+// Solo stubeamos `decodeBarcode` (zxing); `extractValidBarcode`/`isValidGtin`
+// quedan reales para ejercitar el parseo + checksum del fallback OCR.
+vi.mock('@/lib/off/decode-barcode', async (importActual) => {
+  const actual = await importActual<typeof import('@/lib/off/decode-barcode')>();
+  return { ...actual, decodeBarcode: vi.fn() };
+});
 vi.mock('@/lib/off/client', () => ({ fetchByBarcode: vi.fn(), fetchByName: vi.fn() }));
 
 import { enrich_with_off } from '@/lib/pipeline/steps/enrich-with-off';
 import { decodeBarcode } from '@/lib/off/decode-barcode';
 import { fetchByBarcode, fetchByName } from '@/lib/off/client';
 import type { OFFProduct } from '@/lib/off/client';
+import type { IaProvider } from '@/lib/ai/types';
 import type { AnalysisContext } from '@/lib/pipeline/context';
 import type { ProductExtraction } from '@schemas/product';
+
+/** IaProvider falso con solo `readBarcodeDigits` (lo único que usa el fallback OCR). */
+function mkIa(rawDigits: string): IaProvider {
+  return {
+    readBarcodeDigits: vi
+      .fn()
+      .mockResolvedValue({ raw: rawDigits, usage: { in: 0, out: 0 }, latencyMs: 1 }),
+  } as unknown as IaProvider;
+}
 
 const decodeMock = vi.mocked(decodeBarcode);
 const byBarcodeMock = vi.mocked(fetchByBarcode);
@@ -26,6 +41,7 @@ function mkOff(over: Partial<OFFProduct> = {}): OFFProduct {
     ingredients_text: 'Harina, _leche_, azúcar, sal',
     allergens_tags: ['en:milk'],
     labels_tags: [],
+    categories_tags: [],
     nutriments: {},
     url: 'https://world.openfoodfacts.org/product/7790001112223',
     ...over,
@@ -182,5 +198,128 @@ describe('enrich_with_off — merge de datos de OFF (NL-601)', () => {
     const out = await enrich_with_off(mkCtx(mkProduct({ confidence: 0.3, alergenos: [] })));
     expect(out.product?.confidence).toBe(0.3);
     expect(out.product?.alergenos).toEqual([]);
+  });
+
+  it('match por barcode con nombre genérico ("otros") → nombre + categoría de OFF', async () => {
+    decodeMock.mockResolvedValue('7790001112223');
+    byBarcodeMock.mockResolvedValue(
+      mkOff({ product_name: 'Fideos Spaghetti', categories_tags: ['en:biscuits'] }),
+    );
+    const out = await enrich_with_off(mkCtx(mkProduct({ producto: 'otros', categoria: 'otros' })));
+    expect(out.product?.producto).toBe('Fideos Spaghetti');
+    expect(out.product?.categoria).toBe('galletitas');
+  });
+
+  it('match por barcode (autoritativo) pisa el nombre de la IA con el de OFF', async () => {
+    decodeMock.mockResolvedValue('7790001112223');
+    byBarcodeMock.mockResolvedValue(mkOff({ product_name: 'Galletitas Reales OFF' }));
+    const out = await enrich_with_off(mkCtx(mkProduct({ producto: 'Galletitas Test' })));
+    expect(out.product?.producto).toBe('Galletitas Reales OFF');
+  });
+
+  it('categoría OFF sin mapeo conocido → conserva la del producto', async () => {
+    decodeMock.mockResolvedValue('7790001112223');
+    byBarcodeMock.mockResolvedValue(mkOff({ categories_tags: ['en:plant-based-foods'] }));
+    const out = await enrich_with_off(mkCtx(mkProduct({ producto: 'otros', categoria: 'otros' })));
+    expect(out.product?.categoria).toBe('otros');
+  });
+
+  it('match por nombre con nombre IA válido → NO pisa el nombre del usuario', async () => {
+    decodeMock.mockResolvedValue(null);
+    byNameMock.mockResolvedValue(mkOff({ product_name: 'Otro Nombre OFF' }));
+    const out = await enrich_with_off(
+      mkCtx(mkProduct({ barcode: undefined, producto: 'Galletitas Test' })),
+    );
+    expect(out.product?.producto).toBe('Galletitas Test');
+  });
+});
+
+describe('enrich_with_off — validación soft barcode↔foto (NL-601)', () => {
+  function withBarcodeImage(ctx: AnalysisContext): AnalysisContext {
+    ctx.barcodeImage = {
+      name: 'bc.jpg',
+      mime: 'image/jpeg',
+      sizeBytes: 5,
+      hash: 'h2',
+      buffer: Buffer.from('bc'),
+    };
+    return ctx;
+  }
+
+  it('marca barcodeUnreadable cuando el usuario subió la imagen pero no decodifica', async () => {
+    decodeMock.mockResolvedValue(null); // ni la imagen del código ni la foto decodifican
+    const out = await enrich_with_off(withBarcodeImage(mkCtx(mkProduct())));
+    expect(out.offEnrichment?.barcodeUnreadable).toBe(true);
+  });
+
+  it('NO marca barcodeUnreadable si no se subió imagen de código', async () => {
+    decodeMock.mockResolvedValue(null);
+    const out = await enrich_with_off(mkCtx(mkProduct()));
+    expect(out.offEnrichment?.barcodeUnreadable).toBeFalsy();
+  });
+
+  it('marca barcodeMismatch cuando el nombre de OFF no se corresponde con la foto', async () => {
+    decodeMock.mockResolvedValue('7790001112223'); // imagen del código decodifica
+    byBarcodeMock.mockResolvedValue(mkOff({ product_name: 'Coca Cola Original' }));
+    const out = await enrich_with_off(
+      withBarcodeImage(mkCtx(mkProduct({ producto: 'Yogur Entero Natural' }))),
+    );
+    expect(out.offEnrichment?.barcodeMismatch).toBe(true);
+  });
+
+  it('NO marca barcodeMismatch cuando los nombres se solapan', async () => {
+    decodeMock.mockResolvedValue('7790001112223');
+    byBarcodeMock.mockResolvedValue(mkOff({ product_name: 'Galletitas Test Chocolate' }));
+    const out = await enrich_with_off(
+      withBarcodeImage(mkCtx(mkProduct({ producto: 'Galletitas Test' }))),
+    );
+    expect(out.offEnrichment?.barcodeMismatch).toBe(false);
+  });
+});
+
+describe('enrich_with_off — fallback OCR del código de barras (NL-601)', () => {
+  function withBarcodeImage(ctx: AnalysisContext): AnalysisContext {
+    ctx.barcodeImage = {
+      name: 'bc.jpg',
+      mime: 'image/jpeg',
+      sizeBytes: 5,
+      hash: 'h2',
+      buffer: Buffer.from('bc'),
+    };
+    return ctx;
+  }
+
+  it('usa el OCR cuando zxing no pudo con las barras (foto borrosa)', async () => {
+    decodeMock.mockResolvedValue(null); // zxing falla con la imagen del código y la foto
+    byBarcodeMock.mockResolvedValue(mkOff({ product_name: 'Galletitas Test' }));
+    const out = await enrich_with_off(withBarcodeImage(mkCtx(mkProduct())), mkIa('7793704000911'));
+    expect(byBarcodeMock).toHaveBeenCalledWith('7793704000911');
+    const trace = out.steps.find((s) => s.name === 'enrich_with_off');
+    expect(trace?.details?.barcodeSource).toBe('barcode-image-ocr');
+    // Leído por OCR ⇒ ya no es "unreadable".
+    expect(out.offEnrichment?.barcodeUnreadable).toBeFalsy();
+  });
+
+  it('marca barcodeUnreadable si el OCR tampoco puede leerlo (NONE)', async () => {
+    decodeMock.mockResolvedValue(null);
+    const out = await enrich_with_off(withBarcodeImage(mkCtx(mkProduct())), mkIa('NONE'));
+    expect(byBarcodeMock).not.toHaveBeenCalled();
+    expect(out.offEnrichment?.barcodeUnreadable).toBe(true);
+  });
+
+  it('descarta una lectura OCR con checksum inválido y queda unreadable', async () => {
+    decodeMock.mockResolvedValue(null);
+    const out = await enrich_with_off(
+      withBarcodeImage(mkCtx(mkProduct())),
+      mkIa('7793704000912'), // checksum incorrecto
+    );
+    expect(byBarcodeMock).not.toHaveBeenCalled();
+    expect(out.offEnrichment?.barcodeUnreadable).toBe(true);
+  });
+
+  it('sin provider IA no intenta OCR (comportamiento previo)', async () => {
+    decodeMock.mockResolvedValue(null);
+    const out = await enrich_with_off(withBarcodeImage(mkCtx(mkProduct())));
+    expect(out.offEnrichment?.barcodeUnreadable).toBe(true);
   });
 });

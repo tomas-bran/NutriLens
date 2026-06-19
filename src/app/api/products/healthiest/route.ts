@@ -25,7 +25,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const topK = Math.min(20, Math.max(1, Math.floor(Number(topKParam ?? 5)) || 5));
 
-    const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = { deletedAt: null };
     if (categoriaParam) {
       if (!(CATEGORIAS as readonly string[]).includes(categoriaParam)) {
         return NextResponse.json(

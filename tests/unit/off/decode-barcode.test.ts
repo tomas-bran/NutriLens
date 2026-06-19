@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { writeBarcode } from 'zxing-wasm/writer';
-import { decodeBarcode } from '@/lib/off/decode-barcode';
+import { decodeBarcode, extractValidBarcode, isValidGtin } from '@/lib/off/decode-barcode';
 
 async function barcodePng(value: string, format: 'EAN-13' | 'EAN-8' = 'EAN-13'): Promise<Buffer> {
   const res = await writeBarcode(value, { format, scale: 4 });
@@ -36,5 +36,43 @@ describe('decodeBarcode (NL-601)', () => {
 
   it('devuelve null (no lanza) ante bytes inválidos', async () => {
     expect(await decodeBarcode(Buffer.from('no soy una imagen'), 'image/png')).toBeNull();
+  });
+});
+
+describe('isValidGtin (NL-601 — checksum del fallback OCR)', () => {
+  it('valida un EAN-13 real (Playadito)', () => {
+    expect(isValidGtin('7793704000911')).toBe(true);
+  });
+
+  it('valida EAN-8 y UPC-A', () => {
+    expect(isValidGtin('96385074')).toBe(true); // EAN-8
+    expect(isValidGtin('036000291452')).toBe(true); // UPC-A (12)
+  });
+
+  it('rechaza un dígito verificador incorrecto', () => {
+    expect(isValidGtin('7793704000912')).toBe(false);
+  });
+
+  it('rechaza largos inválidos / no numéricos', () => {
+    expect(isValidGtin('123')).toBe(false);
+    expect(isValidGtin('abcdefghijklm')).toBe(false);
+  });
+});
+
+describe('extractValidBarcode (NL-601 — parseo de la respuesta OCR)', () => {
+  it('extrae los dígitos de una respuesta limpia', () => {
+    expect(extractValidBarcode('7793704000911')).toBe('7793704000911');
+  });
+
+  it('limpia espacios/texto y valida el checksum', () => {
+    expect(extractValidBarcode('7 793704 000911')).toBe('7793704000911');
+  });
+
+  it('devuelve null para "NONE"', () => {
+    expect(extractValidBarcode('NONE')).toBeNull();
+  });
+
+  it('devuelve null si el checksum no cierra (lectura OCR errónea)', () => {
+    expect(extractValidBarcode('7793704000912')).toBeNull();
   });
 });

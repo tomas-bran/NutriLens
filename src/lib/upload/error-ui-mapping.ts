@@ -62,8 +62,9 @@ const MAPPING: Record<ErrorCode, ErrorUi> = {
     actionKind: 'new_file',
   },
   image_not_supported: {
-    title: 'No parece una etiqueta',
-    description: null,
+    title: 'No parece un producto',
+    description:
+      'La imagen no parece ser de un producto alimentario. Probá con la foto del envase.',
     primaryActionLabel: 'Probar con otro archivo',
     secondaryActionLabel: null,
     actionKind: 'new_file',

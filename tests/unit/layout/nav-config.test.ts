@@ -2,15 +2,23 @@ import { describe, expect, it } from 'vitest';
 import { NAV_ITEMS } from '@/components/layout/nav-config';
 
 describe('NAV_ITEMS — single source of truth for app navigation', () => {
-  it('tiene las 5 entradas (Inicio / Analizar / Catálogo / Chat / Perfil)', () => {
-    expect(NAV_ITEMS).toHaveLength(5);
+  it('tiene las 6 entradas (Inicio / Analizar / Catálogo / Chat / NutriWorld / Perfil)', () => {
+    expect(NAV_ITEMS).toHaveLength(6);
     expect(NAV_ITEMS.map((i) => i.id)).toEqual([
       'inicio',
       'analizar',
       'catalogo',
       'chat',
+      'nutriworld',
       'perfil',
     ]);
+  });
+
+  it('NutriWorld es adminOnly + desktopOnly (beta gated por rol)', () => {
+    const nw = NAV_ITEMS.find((i) => i.id === 'nutriworld');
+    expect(nw?.adminOnly).toBe(true);
+    expect(nw?.desktopOnly).toBe(true);
+    expect(nw?.href).toBe('/nutriworld');
   });
 
   it('Perfil es mobileOnly (en desktop vive en el UserMenu)', () => {

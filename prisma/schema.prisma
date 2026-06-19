@@ -7,7 +7,7 @@
 // easier mocking and serialization on the application side.
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   // "native" para dev local + el engine Linux que necesita App Service:
   // sin él, el bundle standalone buildeado desde macOS levanta en Azure
   // pero todo acceso a DB devuelve 500 (query engine not found).
@@ -20,23 +20,23 @@ datasource db {
 }
 
 model Product {
-  id              String   @id @default(uuid())
-  fileHash        String   @unique
+  id              String                       @id @default(uuid())
+  fileHash        String                       @unique
   nombre          String
   categoria       Categoria
-  ingredientes    String   // JSON.stringify(string[])
-  alergenos       String   // JSON.stringify(string[])
-  sellos          String   // JSON.stringify(string[])
+  ingredientes    String // JSON.stringify(string[])
+  alergenos       String // JSON.stringify(string[])
+  sellos          String // JSON.stringify(string[])
   aptoVegano      Boolean
   aptoCeliaco     Boolean
   aptoSinLactosa  Boolean
   riesgo          Riesgo
   confidence      Float
-  reglasAplicadas String   // JSON.stringify(string[])
+  reglasAplicadas String // JSON.stringify(string[])
   explanation     String?
-  jsonRaw         String   @db.Text
-  pipelineTrace   String   @db.Text  // JSON.stringify(StepTrace[])
-  offEnrichment   String?  @db.Text  // JSON.stringify(OFFEnrichmentResult) — NL-601
+  jsonRaw         String                       @db.Text
+  pipelineTrace   String                       @db.Text // JSON.stringify(StepTrace[])
+  offEnrichment   String?                      @db.Text // JSON.stringify(OFFEnrichmentResult) — NL-601
   imagenPath      String
   /// NL-401: embedding del producto (nombre+categoria+ingredientes+alérgenos+sellos).
   /// Unsupported => Prisma Client lo ignora; se lee/escribe con $queryRaw.
@@ -46,11 +46,34 @@ model Product {
   imagenMime      String?
   imagenBytes     Int?
   promptVersion   String
-  createdAt       DateTime @default(now())
+  createdAt       DateTime                     @default(now())
+  /// Soft delete: cuando un admin elimina un producto se setea `deletedAt` en
+  /// vez de borrar la fila. Todas las lecturas (catálogo, detalle, conteos,
+  /// RAG) filtran `deletedAt: null`; re-analizar el mismo `fileHash` lo restaura.
+  deletedAt       DateTime?
+  /// NL-XXX: vínculos por-usuario ("Analizados por vos"). El producto sigue
+  /// siendo compartido; esta relación solo registra quién lo analizó.
+  analyses        ProductAnalysis[]
 
   @@index([categoria])
   @@index([riesgo])
   @@index([createdAt])
+  @@index([deletedAt])
+}
+
+// "Analizados por vos": vínculo usuario↔producto. Se registra de ahora en
+// adelante cuando un usuario logueado analiza (o re-analiza) un producto —
+// sin backfill. El catálogo sigue siendo una base compartida; este join solo
+// alimenta el filtro `?filtro=mios`. `userId` = Google `sub` (igual que
+// Conversation/UserPrefs).
+model ProductAnalysis {
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([userId, productId])
+  @@index([userId, createdAt])
 }
 
 enum Categoria {
@@ -74,7 +97,7 @@ enum Riesgo {
 model Conversation {
   id        String   @id @default(uuid())
   title     String
-  messages  String   @db.Text  // JSON.stringify(StoredMessage[])
+  messages  String   @db.Text // JSON.stringify(StoredMessage[])
   /// NL-203: dueño de la conversación (Google `sub` del usuario logueado).
   /// El historial de chats es por-usuario; los productos siguen siendo una
   /// base de conocimiento compartida (no llevan userId).

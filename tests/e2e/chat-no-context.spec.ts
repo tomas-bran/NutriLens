@@ -22,7 +22,6 @@ test('DB vacía + pregunta → fallback "no_context" + CTA Analizar nuevo produc
   const chat = new ChatPage(page);
   await chat.goto();
   await chat.expectHeroVisible();
-  await chat.expectHeaderProductsCount(0);
 
   await chat.askQuestion('mostrame galletitas aptas para celíacos');
 

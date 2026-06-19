@@ -6,8 +6,8 @@
  * `#F0FDF4` bg, cornerRadius 24, padding 40, gap 20.
  */
 import Image from 'next/image';
-import { useState } from 'react';
-import type { DragEvent, RefObject } from 'react';
+import { useRef, useState } from 'react';
+import type { ChangeEvent, DragEvent, RefObject } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/cn';
@@ -24,6 +24,10 @@ export interface DropzoneProps {
   cameraInputRef: RefObject<HTMLInputElement | null>;
   galleryInputRef: RefObject<HTMLInputElement | null>;
   pdfInputRef: RefObject<HTMLInputElement | null>;
+  /** NL-601: foto opcional del código de barras (estado del padre). */
+  barcodeFile: File | null;
+  onBarcodeSelected: (file: File) => void;
+  onBarcodeClear: () => void;
 }
 
 export function Dropzone({
@@ -34,6 +38,9 @@ export function Dropzone({
   cameraInputRef,
   galleryInputRef,
   pdfInputRef,
+  barcodeFile,
+  onBarcodeSelected,
+  onBarcodeClear,
 }: DropzoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const selected = state.kind === 'SELECTED' ? state.file : null;
@@ -42,51 +49,73 @@ export function Dropzone({
   const showsImagePreview = selected?.type.startsWith('image/') ?? false;
 
   return (
-    <div
-      data-testid="dropzone"
-      onDragOver={(e: DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        setIsDragging(true);
-      }}
-      onDragLeave={() => setIsDragging(false)}
-      onDrop={(e: DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        setIsDragging(false);
-        const f = e.dataTransfer.files?.[0];
-        if (f) onFileSelected(f);
-      }}
-      style={
-        isDragging
-          ? undefined
-          : { background: 'linear-gradient(160deg, var(--color-primary-soft), #e7faee)' }
-      }
-      className={cn(
-        // Alto: chico en mobile; en desktop estira para igualar el alto del
-        // "Pipeline observable" de al lado (grid lg:items-stretch + h-full).
-        'relative flex min-h-[300px] flex-col items-center justify-center gap-5 overflow-hidden rounded-[24px] border-2 border-dashed p-10 text-center transition-colors lg:h-full lg:min-h-0',
-        isDragging
-          ? 'border-[var(--color-primary-strong)] bg-[var(--color-risk-low-bg)]'
-          : 'border-[var(--color-primary-border)]',
-      )}
-    >
-      <DropzoneSparkles />
-      {!showsImagePreview && <CloudUploadBadge />}
+    <div className="flex flex-col gap-4 lg:h-full">
+      {/* ① Código de barras (opcional). NL-601: mejora la precisión cuando OFF
+          tiene el producto; el análisis igual avanza sin él. */}
+      <BarcodeCaptureSlot file={barcodeFile} onPick={onBarcodeSelected} onClear={onBarcodeClear} />
 
-      {selected ? (
-        <SelectedFilePreview file={selected} onSubmit={onSubmit} onClear={onClear} />
-      ) : (
-        <IdleControls
-          onCamera={() => cameraInputRef.current?.click()}
-          onGallery={() => galleryInputRef.current?.click()}
+      {/* ② Foto del producto (requerida). El drag-and-drop alimenta esta foto. */}
+      <div className="flex items-center gap-2">
+        <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] font-mono text-[11px] font-bold text-white">
+          2
+        </span>
+        <span className="text-[13px] font-bold text-[var(--color-text)]">Foto del producto</span>
+        <span className="rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-primary)]">
+          requerida
+        </span>
+      </div>
+      <div
+        data-testid="dropzone"
+        onDragOver={(e: DragEvent<HTMLDivElement>) => {
+          e.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={(e: DragEvent<HTMLDivElement>) => {
+          e.preventDefault();
+          setIsDragging(false);
+          const f = e.dataTransfer.files?.[0];
+          if (f) onFileSelected(f);
+        }}
+        style={
+          isDragging
+            ? undefined
+            : { background: 'linear-gradient(160deg, var(--color-primary-soft), #e7faee)' }
+        }
+        className={cn(
+          // Alto: chico en mobile; en desktop estira para igualar el alto del
+          // "Pipeline observable" de al lado (grid lg:items-stretch + h-full).
+          'relative flex min-h-[260px] flex-1 flex-col items-center justify-center gap-5 overflow-hidden rounded-[24px] border-2 border-dashed p-8 text-center transition-colors lg:min-h-0',
+          isDragging
+            ? 'border-[var(--color-primary-strong)] bg-[var(--color-risk-low-bg)]'
+            : 'border-[var(--color-primary-border)]',
+        )}
+      >
+        <DropzoneSparkles />
+        {!showsImagePreview && <CloudUploadBadge />}
+
+        {selected ? (
+          <SelectedFilePreview
+            file={selected}
+            hasBarcode={barcodeFile !== null}
+            onSubmit={onSubmit}
+            onClear={onClear}
+          />
+        ) : (
+          <IdleControls
+            hasBarcode={barcodeFile !== null}
+            onCamera={() => cameraInputRef.current?.click()}
+            onGallery={() => galleryInputRef.current?.click()}
+          />
+        )}
+
+        <HiddenFileInputs
+          cameraRef={cameraInputRef}
+          galleryRef={galleryInputRef}
+          pdfRef={pdfInputRef}
+          onFileSelected={onFileSelected}
         />
-      )}
-
-      <HiddenFileInputs
-        cameraRef={cameraInputRef}
-        galleryRef={galleryInputRef}
-        pdfRef={pdfInputRef}
-        onFileSelected={onFileSelected}
-      />
+      </div>
     </div>
   );
 }
@@ -151,9 +180,28 @@ function DropzoneSparkles() {
   );
 }
 
-function IdleControls({ onCamera, onGallery }: { onCamera: () => void; onGallery: () => void }) {
+function IdleControls({
+  hasBarcode,
+  onCamera,
+  onGallery,
+}: {
+  hasBarcode: boolean;
+  onCamera: () => void;
+  onGallery: () => void;
+}) {
   return (
     <>
+      {/* Si ya cargó el código de barras (opcional) pero falta la foto del
+          producto, lo avisamos: sin esa foto el análisis no puede arrancar. */}
+      {hasBarcode && (
+        <div
+          data-testid="product-required-note"
+          className="flex items-center gap-2 rounded-full border border-[var(--color-warning)] bg-[var(--color-warning-bg)] px-3 py-1.5 text-[12.5px] font-semibold text-[var(--color-warning)]"
+        >
+          <Icon name="info" strokeWidth={2.2} className="h-4 w-4 flex-shrink-0" />
+          Falta la foto del producto para analizar.
+        </div>
+      )}
       <div className="flex flex-col gap-1">
         <h2 className="text-lg font-bold text-[var(--color-text)] md:text-xl">
           Arrastrá una foto acá
@@ -193,10 +241,12 @@ function IdleControls({ onCamera, onGallery }: { onCamera: () => void; onGallery
 
 function SelectedFilePreview({
   file,
+  hasBarcode,
   onSubmit,
   onClear,
 }: {
   file: File;
+  hasBarcode: boolean;
   onSubmit: () => void;
   onClear: () => void;
 }) {
@@ -221,12 +271,138 @@ function SelectedFilePreview({
           {formatFileSize(file.size)} · {file.type}
         </p>
       </div>
+
+      {/* Sin código de barras → el análisis igual corre, pero avisamos que puede
+          ser menos preciso (NL-601, decisión de producto). */}
+      {!hasBarcode && (
+        <p
+          data-testid="barcode-missing-note"
+          className="flex max-w-xs items-center justify-center gap-1.5 text-[12px] text-[var(--color-text-muted)]"
+        >
+          <Icon name="info" strokeWidth={2} className="h-3.5 w-3.5 flex-shrink-0" />
+          Sin el código de barras el análisis puede ser menos preciso.
+        </p>
+      )}
+
       <div className="flex w-full max-w-xs flex-col gap-2">
         <Button onClick={onSubmit}>Analizar producto</Button>
         <Button variant="ghost" onClick={onClear}>
           Elegir otro archivo
         </Button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Slot opcional para la foto del código de barras (NL-601). Autocontenido:
+ * maneja sus propios inputs ocultos (cámara + galería, solo imágenes) y delega
+ * la validación al padre vía `onPick`. Vacío muestra los CTAs; con archivo,
+ * un thumbnail + botón para quitar.
+ */
+function BarcodeCaptureSlot({
+  file,
+  onPick,
+  onClear,
+}: {
+  file: File | null;
+  onPick: (file: File) => void;
+  onClear: () => void;
+}) {
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+  const previewUrl = useFilePreviewUrl(file);
+
+  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) onPick(f);
+    e.target.value = '';
+  };
+
+  return (
+    <div
+      data-testid="barcode-slot"
+      className="flex flex-col gap-3 rounded-[18px] border border-[var(--color-border)] bg-white p-4"
+    >
+      <div className="flex items-center gap-2">
+        <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] font-mono text-[11px] font-bold text-white">
+          1
+        </span>
+        <span className="text-[13px] font-bold text-[var(--color-text)]">Código de barras</span>
+        <span className="rounded-full bg-[var(--color-surface)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+          opcional
+        </span>
+      </div>
+
+      {file ? (
+        <div className="flex items-center gap-3" data-testid="barcode-selected">
+          {previewUrl && (
+            <Image
+              src={previewUrl}
+              alt={`Vista previa del código de barras ${file.name}`}
+              width={64}
+              height={64}
+              unoptimized
+              data-testid="barcode-preview"
+              className="h-14 w-14 flex-shrink-0 rounded-[10px] bg-[var(--color-surface)] object-cover"
+            />
+          )}
+          <div className="flex min-w-0 flex-1 flex-col">
+            <p className="truncate text-[13px] font-medium text-[var(--color-text)]">{file.name}</p>
+            <p className="text-[11px] text-[var(--color-text-muted)]">
+              {formatFileSize(file.size)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClear}
+            data-testid="barcode-clear"
+            aria-label="Quitar código de barras"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
+          >
+            <Icon name="close" strokeWidth={2.4} className="h-4 w-4" />
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-3">
+          <Icon
+            name="scan-line"
+            strokeWidth={1.9}
+            className="h-7 w-7 text-[var(--color-primary)]"
+          />
+          <p className="flex-1 text-[12.5px] text-[var(--color-text-muted)]">
+            Enfocá el código de barras del envase para un análisis más preciso.
+          </p>
+          <div className="flex gap-2" data-testid="barcode-cta-group">
+            <Button onClick={() => cameraRef.current?.click()}>
+              <Icon name="camera" strokeWidth={2.25} className="h-4 w-4" />
+              Cámara
+            </Button>
+            <Button variant="ghost" onClick={() => galleryRef.current?.click()}>
+              <Icon name="image" strokeWidth={2.25} className="h-4 w-4" />
+              Galería
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        aria-label="Tomar foto del código de barras"
+        onChange={onChange}
+      />
+      <input
+        ref={galleryRef}
+        type="file"
+        accept="image/jpeg,image/png"
+        className="hidden"
+        aria-label="Subir foto del código de barras"
+        onChange={onChange}
+      />
     </div>
   );
 }

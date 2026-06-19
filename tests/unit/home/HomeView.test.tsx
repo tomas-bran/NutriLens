@@ -6,6 +6,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { HomeView } from '@/components/home/HomeView';
+import { DOCS_URL } from '@/lib/constants';
 
 describe('<HomeView> — common sections (US-07 §AC1)', () => {
   it('renders the hero with title + CTA to /analizar', () => {
@@ -34,6 +35,14 @@ describe('<HomeView> — common sections (US-07 §AC1)', () => {
     expect(
       screen.getByRole('heading', { level: 3, name: 'Tabla nutricional' }),
     ).toBeInTheDocument();
+  });
+
+  it('renders the documentation callout with an external link to the docs site', () => {
+    render(<HomeView historyCount={0} />);
+    const docsCta = screen.getByTestId('docs-cta');
+    expect(docsCta).toHaveAttribute('href', DOCS_URL);
+    expect(docsCta).toHaveAttribute('target', '_blank');
+    expect(docsCta).toHaveAttribute('rel', expect.stringContaining('noopener'));
   });
 
   it('renders the disclaimer footer', () => {

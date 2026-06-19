@@ -14,3 +14,8 @@ process.env.IA_PROVIDER = 'mock';
 vi.mock('@/components/layout/SidebarUser', () => ({
   SidebarUser: () => null,
 }));
+
+// Mismo motivo: server component async (resuelve rol vía auth()).
+vi.mock('@/components/layout/SidebarNutriWorldLink', () => ({
+  SidebarNutriWorldLink: () => null,
+}));

@@ -14,6 +14,7 @@ import type { IaProvider, SavedProductLite } from '@/lib/ai/types';
 import { stripJsonFences } from '@/lib/ai/strip-json-fences';
 
 export const SUGGESTIONS_PROMPT_VERSION = 'chat_suggestions-v1' as const;
+export const STARTER_SUGGESTIONS_PROMPT_VERSION = 'chat_starter_suggestions-v1' as const;
 
 /** Presupuesto corto: las pills no justifican estirar la respuesta del chat. */
 const SUGGESTIONS_TIMEOUT_MS = 5_000;
@@ -49,6 +50,39 @@ export async function generateSuggestions(
       .slice(0, MAX_SUGGESTIONS);
 
     // Con menos de 2 sugerencias útiles preferimos el set estático.
+    return clean.length >= 2 ? clean : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * NL-503: sugerencias INICIALES del empty state del chat, autogeneradas por IA
+ * a partir de una muestra del catálogo (no de una conversación). Fail-open:
+ * cualquier fallo devuelve `null` y la UI cae al set estático `CHAT_SUGGESTIONS`.
+ */
+export async function generateStarterSuggestions(
+  products: SavedProductLite[],
+  { ia }: GenerateSuggestionsDeps,
+): Promise<string[] | null> {
+  if (products.length === 0) return null;
+  try {
+    // Reutilizamos answerWithContext (inyecta `products_json` en el prompt);
+    // la "pregunta" va vacía porque el prompt starter no la usa.
+    const { raw } = await ia.answerWithContext('', products, {
+      promptVersion: STARTER_SUGGESTIONS_PROMPT_VERSION,
+      timeoutMs: SUGGESTIONS_TIMEOUT_MS,
+    });
+
+    const parsed: unknown = JSON.parse(stripJsonFences(raw));
+    if (!Array.isArray(parsed)) return null;
+
+    const clean = parsed
+      .filter((s): s is string => typeof s === 'string')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0 && s.length <= MAX_SUGGESTION_CHARS)
+      .slice(0, MAX_SUGGESTIONS);
+
     return clean.length >= 2 ? clean : null;
   } catch {
     return null;

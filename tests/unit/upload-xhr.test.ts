@@ -172,7 +172,7 @@ describe('xhrUpload — error responses', () => {
           status: 422,
           responseText: JSON.stringify({
             error: 'image_not_supported',
-            reason: 'La imagen no parece corresponder a una etiqueta alimentaria.',
+            reason: 'La imagen no parece corresponder a un producto alimentario.',
           }),
           trigger: 'load',
         }),
@@ -314,6 +314,45 @@ describe('xhrUpload — request setup', () => {
     });
     expect(captured.open).toHaveBeenCalledWith('POST', '/api/analyze');
     expect(captured.setRequestHeader).toHaveBeenCalledWith('X-File-Hash', TEST_HASH);
+  });
+
+  it('appends barcodeImage to the multipart when provided (NL-601)', async () => {
+    let captured!: XMLHttpRequest & { send: ReturnType<typeof vi.fn> };
+    const barcode = new File([new Uint8Array(4)], 'barcode.jpg', { type: 'image/jpeg' });
+    await xhrUpload({
+      file: TEST_FILE,
+      fileHash: TEST_HASH,
+      barcodeImage: barcode,
+      onProgress: vi.fn(),
+      onUploadDone: vi.fn(),
+      xhrFactory: () => {
+        const x = makeFakeXhr({ status: 200, responseText: '{"id":"x"}', trigger: 'load' });
+        captured = x as unknown as typeof captured;
+        return x;
+      },
+    });
+    const fd = captured.send.mock.calls[0]![0] as FormData;
+    const sent = fd.get('barcodeImage');
+    expect(sent).toBeInstanceOf(File);
+    expect((sent as File).name).toBe('barcode.jpg');
+  });
+
+  it('omits barcodeImage from the multipart when not provided', async () => {
+    let captured!: XMLHttpRequest & { send: ReturnType<typeof vi.fn> };
+    await xhrUpload({
+      file: TEST_FILE,
+      fileHash: TEST_HASH,
+      onProgress: vi.fn(),
+      onUploadDone: vi.fn(),
+      xhrFactory: () => {
+        const x = makeFakeXhr({ status: 200, responseText: '{"id":"x"}', trigger: 'load' });
+        captured = x as unknown as typeof captured;
+        return x;
+      },
+    });
+    const fd = captured.send.mock.calls[0]![0] as FormData;
+    expect(fd.get('barcodeImage')).toBeNull();
+    expect(fd.get('file')).toBeInstanceOf(File);
   });
 
   // US-39: hard client timeout so the browser never hangs.

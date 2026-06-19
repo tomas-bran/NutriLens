@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { HelpSection } from '@/components/profile/HelpView';
+import { DOCS_URL } from '@/lib/constants';
 
 describe('<HelpSection> — Ayuda embebida en Mi cuenta', () => {
   it('renderiza el título y el ancla #ayuda', () => {
@@ -15,8 +16,16 @@ describe('<HelpSection> — Ayuda embebida en Mi cuenta', () => {
   it('lista las preguntas frecuentes y el contacto de soporte', () => {
     render(<HelpSection />);
     expect(screen.getByText('¿Qué es NutriLens?')).toBeInTheDocument();
-    expect(screen.getByText('¿Es un consejo médico?')).toBeInTheDocument();
+    expect(screen.getByText('¿Es un consejero médico?')).toBeInTheDocument();
     expect(screen.getByText(/soporte@nutrilens\.app/)).toBeInTheDocument();
+  });
+
+  it('ofrece un acceso externo a la documentación', () => {
+    render(<HelpSection />);
+    const docsLink = screen.getByRole('link', { name: /Ver documentación/i });
+    expect(docsLink).toHaveAttribute('href', DOCS_URL);
+    expect(docsLink).toHaveAttribute('target', '_blank');
+    expect(docsLink).toHaveAttribute('rel', expect.stringContaining('noopener'));
   });
 
   it('abrir/cerrar un FAQ alterna aria-expanded', async () => {

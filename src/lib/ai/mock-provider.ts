@@ -6,6 +6,7 @@
 import type {
   AnalyzeOpts,
   AnswerOpts,
+  BarcodeOcrOpts,
   ExplainOpts,
   IaCallResult,
   IaProvider,
@@ -44,6 +45,16 @@ export class MockIaProvider implements IaProvider {
       usage: { in: 0, out: 0 },
       latencyMs: 3,
     };
+  }
+
+  // NL-601: el mock no "ve" la imagen, así que nunca aporta dígitos (NONE). Los
+  // tests que ejercitan el fallback OCR espían/mokean este método.
+  async readBarcodeDigits(
+    _file: Buffer,
+    _mime: string,
+    _opts: BarcodeOcrOpts = {},
+  ): Promise<IaCallResult> {
+    return { raw: 'NONE', usage: { in: 0, out: 0 }, latencyMs: 1 };
   }
 
   async generateExplanation(product: ProductExtraction, _opts: ExplainOpts): Promise<IaCallResult> {
@@ -124,7 +135,7 @@ export class MockIaProvider implements IaProvider {
     const names = products.map((p) => p.nombre).join(', ') || 'ninguno';
     // User-facing string kept in Spanish on purpose: it's the product output.
     return {
-      raw: `Mock answer sobre productos: ${names}. Basado en productos analizados por vos. NutriLens es un asistente informativo.`,
+      raw: `Mock answer sobre productos: ${names}. Basado en productos del catálogo. NutriLens es un asistente informativo.`,
       usage: { in: 0, out: 0 },
       latencyMs: 3,
     };
@@ -199,7 +210,7 @@ function buildMockCompareAnswer(products: SavedProductLite[]): string {
     '',
     `Te recomiendo ${a.nombre} (mock).`,
     '',
-    'Basado en productos analizados por vos. NutriLens es un asistente informativo.',
+    'Basado en productos del catálogo. NutriLens es un asistente informativo.',
   ].join('\n');
 }
 

@@ -17,6 +17,15 @@ import { APIConnectionTimeoutError, APIError } from 'openai';
 import { PrismaClient } from '@prisma/client';
 import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
+
+// La route ahora vincula el producto al usuario vía getUserId (→ @/lib/auth →
+// next-auth, que no resuelve `next/server` bajo vitest). Mockeamos getUserId a
+// null: estos tests no ejercitan "Analizados por vos" (ver
+// api-analyze-records-user.test.ts), así que no se crea ningún vínculo.
+vi.mock('@/lib/auth/current-user', () => ({
+  getUserId: vi.fn().mockResolvedValue(null),
+}));
+
 import { POST } from '@/app/api/analyze/route';
 import { MockIaProvider, getIaProvider, _resetIaProvider } from '@/lib/ai';
 import { cache } from '@/lib/cache';

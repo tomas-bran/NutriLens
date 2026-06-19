@@ -13,6 +13,8 @@ const FIXTURES_DIR = path.resolve(__dirname, '..', 'fixtures');
 export class UploadPage {
   private readonly dropzone: Locator;
   private readonly fileInput: Locator;
+  private readonly barcodeInput: Locator;
+  private readonly barcodeSelected: Locator;
   private readonly submitButton: Locator;
   private readonly chooseOtherFileButton: Locator;
   private readonly uploadingState: Locator;
@@ -25,6 +27,9 @@ export class UploadPage {
     // PDF inputs have distinct labels. Targeting the gallery input keeps the
     // E2E behavior aligned with how users typically pick a saved image.
     this.fileInput = page.getByLabel('Subir foto o PDF');
+    // NL-601: slot opcional de la foto del código de barras.
+    this.barcodeInput = page.getByLabel('Subir foto del código de barras');
+    this.barcodeSelected = page.getByTestId('barcode-selected');
     this.submitButton = page.getByRole('button', { name: 'Analizar producto' });
     this.chooseOtherFileButton = page.getByRole('button', { name: 'Elegir otro archivo' });
     this.uploadingState = page.getByTestId('uploading-state');
@@ -45,6 +50,14 @@ export class UploadPage {
 
   async pickFile(fixtureName: string) {
     await this.fileInput.setInputFiles(path.join(FIXTURES_DIR, fixtureName));
+  }
+
+  async pickBarcode(fixtureName: string) {
+    await this.barcodeInput.setInputFiles(path.join(FIXTURES_DIR, fixtureName));
+  }
+
+  async expectBarcodeSelected() {
+    await expect(this.barcodeSelected).toBeVisible();
   }
 
   async expectSelected(filename: string) {

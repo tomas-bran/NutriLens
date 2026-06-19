@@ -100,4 +100,15 @@ export interface IaProvider {
    * producto) y por el retrieve semántico del chat (NL-402).
    */
   embed(text: string, opts?: EmbedOpts): Promise<EmbedResult>;
+  /**
+   * NL-601 (fallback OCR): lee los dígitos impresos del código de barras de una
+   * imagen cuando zxing no pudo decodificar las barras (foto borrosa). Devuelve
+   * el `raw` del modelo — el caller extrae/valida el EAN/UPC (checksum). Opcional:
+   * un provider que no lo implemente simplemente no aporta este fallback.
+   */
+  readBarcodeDigits?(file: Buffer, mime: string, opts?: BarcodeOcrOpts): Promise<IaCallResult>;
 }
+
+export type BarcodeOcrOpts = {
+  timeoutMs?: number;
+};

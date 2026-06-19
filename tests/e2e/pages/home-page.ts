@@ -12,6 +12,7 @@ export class HomePage {
   private readonly howItWorksHeading: Locator;
   private readonly examplesHeading: Locator;
   private readonly historyCta: Locator;
+  private readonly docsCta: Locator;
   private readonly sidebar: Locator;
   private readonly disclaimer: Locator;
 
@@ -24,6 +25,7 @@ export class HomePage {
     this.howItWorksHeading = page.getByRole('heading', { level: 2, name: 'Cómo funciona' });
     this.examplesHeading = page.getByRole('heading', { level: 2, name: 'Ejemplos válidos' });
     this.historyCta = page.getByTestId('catalogo-cta');
+    this.docsCta = page.getByTestId('docs-cta');
     this.sidebar = page.getByTestId('app-sidebar');
     this.disclaimer = page.getByRole('note');
   }
@@ -82,5 +84,11 @@ export class HomePage {
 
   async expectHistoryCtaHidden() {
     await expect(this.historyCta).toHaveCount(0);
+  }
+
+  async expectDocsLink() {
+    await expect(this.docsCta).toBeVisible();
+    await expect(this.docsCta).toHaveAttribute('href', /nutrilens-docs\.azurewebsites\.net/);
+    await expect(this.docsCta).toHaveAttribute('target', '_blank');
   }
 }
