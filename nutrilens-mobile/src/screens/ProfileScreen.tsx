@@ -10,11 +10,13 @@ import {
   ActivityIndicator,
   Image,
   Alert,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography } from '../theme/tokens';
 import { updatePrefs, type DietPrefs } from '../services/api';
 import { useAuth } from '../services/AuthContext';
+import { DOCS_URL } from '../constants';
 
 export default function ProfileScreen({ navigation }: any) {
   const { user, prefs, stats, signOut, refreshProfile, setLocalPrefs } = useAuth();
@@ -124,6 +126,15 @@ export default function ProfileScreen({ navigation }: any) {
             <Ionicons name="albums-outline" size={22} color={colors.primary} />
             <Text style={styles.linkText}>Ver catálogo</Text>
             <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.linkRow, styles.linkDivider]}
+            onPress={() => Linking.openURL(DOCS_URL)}
+            accessibilityRole="link"
+          >
+            <Ionicons name="document-text-outline" size={22} color={colors.primary} />
+            <Text style={styles.linkText}>Documentación</Text>
+            <Ionicons name="open-outline" size={18} color={colors.textMuted} />
           </TouchableOpacity>
           <TouchableOpacity style={[styles.linkRow, styles.logoutRow]} onPress={signOut}>
             <Ionicons name="log-out-outline" size={22} color={colors.danger} />
@@ -262,6 +273,7 @@ const styles = StyleSheet.create({
   prefSubtitle: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
   linkRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
   linkText: { color: colors.text, fontSize: typography.fontSize.sm, fontWeight: '800', flex: 1 },
+  linkDivider: { borderTopWidth: 1, borderTopColor: colors.border },
   logoutRow: { borderTopWidth: 1, borderTopColor: colors.border },
   logoutText: { color: colors.danger },
 });

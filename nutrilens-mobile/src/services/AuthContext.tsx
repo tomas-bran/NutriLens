@@ -23,7 +23,16 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-const DEV_AUTH_BYPASS = process.env.EXPO_PUBLIC_AUTH_DEV_BYPASS === 'true';
+
+/**
+ * Bypass de auth para dev/E2E. Se lee en runtime (no como const de módulo) para
+ * que sea testeable sin recargar el módulo; en el bundle de Expo el valor de
+ * `EXPO_PUBLIC_AUTH_DEV_BYPASS` se inyecta en build, así que el comportamiento
+ * en la app real no cambia.
+ */
+function devAuthBypass() {
+  return process.env.EXPO_PUBLIC_AUTH_DEV_BYPASS === 'true';
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -44,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    if (DEV_AUTH_BYPASS) {
+    if (devAuthBypass()) {
       getProfile()
         .then((profile) => {
           if (mounted) applyProfile(profile);
