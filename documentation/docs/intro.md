@@ -5,7 +5,7 @@ title: Bienvenida a NutriLens
 description: Entendé qué comés en segundos. Análisis de etiquetas alimentarias con IA.
 ---
 
-# Bienvenida a NutriLens
+# Te damos la bienvenida a NutriLens
 
 **NutriLens** es una app web que lee la **etiqueta de un producto alimentario** (una foto o un PDF) y, en segundos, te dice en lenguaje claro **qué tiene, si es apto para tu dieta y qué tan saludable es**.
 
